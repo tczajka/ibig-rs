@@ -1,5 +1,5 @@
 [package]
-name = "ibig-rs"
+name = "ibig"
 version = "0.0.0"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
