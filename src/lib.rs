@@ -1,7 +1,9 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+//! Big integer library.
+
+#![no_std]
+
+extern crate alloc;
+
+mod ubig;
+
+pub use crate::ubig::UBig;
