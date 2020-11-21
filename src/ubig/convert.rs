@@ -4,6 +4,7 @@ use crate::{
     ubig::{allocate::allocate_words, UBig},
     word::{bit_size, Word, WORD_BITS},
 };
+use core::convert::TryFrom;
 
 macro_rules! impl_from_unsigned {
     ($t:ty) => {
@@ -50,6 +51,26 @@ impl From<char> for UBig {
     }
 }
 
+macro_rules! impl_from_signed {
+    ($t:ty as $u:ty) => {
+        impl TryFrom<$t> for UBig {
+            type Error = <$u as TryFrom<$t>>::Error;
+
+            fn try_from(x: $t) -> Result<UBig, Self::Error> {
+                let y = <$u as TryFrom<$t>>::try_from(x)?;
+                Ok(y.into())
+            }
+        }
+    };
+}
+
+impl_from_signed!(i8 as u8);
+impl_from_signed!(i16 as u16);
+impl_from_signed!(i32 as u32);
+impl_from_signed!(i64 as u64);
+impl_from_signed!(i128 as u128);
+impl_from_signed!(isize as usize);
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -83,5 +104,12 @@ mod tests {
     fn test_from_char() {
         assert_eq!(UBig::from('a'), UBig::from(0x61u8));
         assert_eq!(UBig::from('Ł'), UBig::from(0x141u16));
+    }
+
+    #[test]
+    fn test_from_signed() {
+        assert!(UBig::try_from(-5i32).is_err());
+        assert_eq!(UBig::try_from(5i32), Ok(UBig::from(5u32)));
+        assert_eq!(UBig::try_from(5i128 << 120), Ok(UBig::from(5u128 << 120)));
     }
 }
