@@ -1,9 +1,8 @@
 //! Conversions of UBig to and from primitive integer types.
 
 use super::{
-    UBig,
-    allocate::allocate_words,
     word::{bit_size, Word, WORD_BITS},
+    UBig,
 };
 use core::convert::TryFrom;
 
@@ -16,7 +15,7 @@ macro_rules! impl_from_unsigned {
                 } else {
                     let n = (bit_size::<$t>() - x.leading_zeros() as usize + (WORD_BITS - 1))
                         / WORD_BITS;
-                    let mut words = allocate_words(n);
+                    let mut words = UBig::allocate_words(n);
                     let mut remaining_bits = x;
                     // Makes the shift non-constant to silence error for smaller bit sizes where
                     // we never reach this loop.
@@ -25,8 +24,9 @@ macro_rules! impl_from_unsigned {
                         words.push(remaining_bits as Word);
                         remaining_bits >>= shift;
                     }
+                    debug_assert!(words[n - 1] != 0);
                     debug_assert!(remaining_bits == 0);
-                    UBig::from_words_normalized_correct_capacity(words)
+                    UBig::from_words(words)
                 }
             }
         }
