@@ -1,10 +1,8 @@
 //! Allocation of UBig storage on the heap.
 
-use crate::{
-    ubig::{
-        UBig,
-        UBigRepr::{Large, Small},
-    },
+use super::{
+    UBig,
+    UBigRepr::{Large, Small},
     word::{Word, WORD_BITS},
 };
 use alloc::vec::Vec;

@@ -1,7 +1,8 @@
 //! Conversions of UBig to and from primitive integer types.
 
-use crate::{
-    ubig::{allocate::allocate_words, UBig},
+use super::{
+    UBig,
+    allocate::allocate_words,
     word::{bit_size, Word, WORD_BITS},
 };
 use core::convert::TryFrom;

@@ -1,10 +1,11 @@
 //! Unsigned big integers.
 
-use crate::word::Word;
+use self::word::Word;
 use alloc::vec::Vec;
 
 mod allocate;
 mod convert;
+mod word;
 
 /// An unsigned big integer.
 #[derive(Debug, Eq, PartialEq)]

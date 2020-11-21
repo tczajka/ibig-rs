@@ -6,6 +6,5 @@
 extern crate alloc;
 
 mod ubig;
-mod word;
 
-pub use crate::ubig::UBig;
+pub use self::ubig::UBig;
