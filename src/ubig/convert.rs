@@ -38,6 +38,18 @@ impl_from_unsigned!(u64);
 impl_from_unsigned!(u128);
 impl_from_unsigned!(usize);
 
+impl From<bool> for UBig {
+    fn from(b: bool) -> UBig {
+        u8::from(b).into()
+    }
+}
+
+impl From<char> for UBig {
+    fn from(c: char) -> UBig {
+        u32::from(c).into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -59,5 +71,17 @@ mod tests {
         );
         assert_eq!(UBig::from(5u128), UBig::from_word(5));
         assert_eq!(UBig::from(5usize), UBig::from_word(5));
+    }
+
+    #[test]
+    fn test_from_bool() {
+        assert_eq!(UBig::from(false), UBig::from(0u8));
+        assert_eq!(UBig::from(true), UBig::from(1u8));
+    }
+
+    #[test]
+    fn test_from_char() {
+        assert_eq!(UBig::from('a'), UBig::from(0x61u8));
+        assert_eq!(UBig::from('Ł'), UBig::from(0x141u16));
     }
 }
