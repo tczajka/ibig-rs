@@ -49,12 +49,12 @@ pub fn allocate_words(num_words: usize) -> Vec<Word> {
 
 impl UBig {
     /// Create UBig from one Word.
-    pub fn from_word(word: Word) -> UBig {
+    pub(in crate::ubig) fn from_word(word: Word) -> UBig {
         UBig(Small(word))
     }
 
     /// Create UBig from a Vec of Words.
-    pub fn from_words(mut words: Vec<Word>) -> UBig {
+    pub(in crate::ubig) fn from_words(mut words: Vec<Word>) -> UBig {
         while let Some(&0) = words.last() {
             words.pop();
         }
@@ -74,7 +74,7 @@ impl UBig {
     }
 
     /// Create UBig from a Vec of at least 2 Words with no leading zeros and with valid capacity.
-    pub fn from_words_normalized_correct_capacity(words: Vec<Word>) -> UBig {
+    pub(in crate::ubig) fn from_words_normalized_correct_capacity(words: Vec<Word>) -> UBig {
         debug_assert!(words.len() >= 2);
         debug_assert!(*words.last().unwrap() != 0);
         debug_assert!(words.capacity() <= max_ubig_capacity(words.len()));
