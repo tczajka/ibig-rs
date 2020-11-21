@@ -1,15 +1,17 @@
 //! Unsigned big integers.
 
-use self::word::Word;
-
+use crate::word::Word;
 use alloc::vec::Vec;
 
-mod word;
+mod allocate;
+mod convert;
 
 /// An unsigned big integer.
+#[derive(Debug, Eq, PartialEq)]
 pub struct UBig(UBigRepr);
 
 /// Internal representation of UBig.
+#[derive(Debug, Eq, PartialEq)]
 enum UBigRepr {
     /// A number that fits in a single Word.
     Small(Word),
