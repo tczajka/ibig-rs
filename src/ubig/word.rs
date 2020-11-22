@@ -43,11 +43,11 @@ mod tests {
 
     #[test]
     fn test_word_from_le_bytes_partial() {
-        assert_eq!(word_from_le_bytes_partial(&[1, 2, 3]), 0x030201);
+        assert_eq!(word_from_le_bytes_partial(&[1, 2]), 0x0201);
     }
 
     #[test]
     fn test_word_from_be_bytes_partial() {
-        assert_eq!(word_from_be_bytes_partial(&[1, 2, 3]), 0x010203);
+        assert_eq!(word_from_be_bytes_partial(&[1, 2]), 0x0102);
     }
 }
