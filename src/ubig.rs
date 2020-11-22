@@ -22,13 +22,8 @@ use Repr::*;
 #[derive(Debug, Eq, PartialEq)]
 pub struct UBig(Repr);
 
-impl UBig {
-    fn from_word(word: Word) -> UBig {
-        UBig(Small(word))
-    }
-}
-
 impl Clone for UBig {
+    #[inline]
     fn clone(&self) -> UBig {
         match self.0 {
             Small(x) => UBig(Small(x)),
@@ -36,6 +31,7 @@ impl Clone for UBig {
         }
     }
 
+    #[inline]
     fn clone_from(&mut self, other: &UBig) {
         if let Large(ref mut large) = self.0 {
             if let Large(ref other_large) = other.0 {
@@ -51,11 +47,6 @@ impl Clone for UBig {
 mod tests {
     use super::buffer::Buffer;
     use super::*;
-
-    #[test]
-    fn test_from_word() {
-        assert_eq!(UBig::from_word(5), UBig(Small(5)));
-    }
 
     #[test]
     fn test_clone() {
