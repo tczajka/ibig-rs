@@ -1,6 +1,7 @@
 //! Conversions of UBig to and from primitive integer types.
 
-use super::{
+use crate::ubig::{
+    buffer::Buffer,
     word::{bit_size, Word, WORD_BITS},
     UBig,
 };
@@ -10,23 +11,24 @@ macro_rules! impl_from_unsigned {
     ($t:ty) => {
         impl From<$t> for UBig {
             fn from(x: $t) -> UBig {
-                if bit_size::<$t>() <= WORD_BITS || x <= Word::MAX as $t {
-                    UBig::from_word(x as Word)
-                } else {
-                    let n = (bit_size::<$t>() - x.leading_zeros() as usize + (WORD_BITS - 1))
-                        / WORD_BITS;
-                    let mut words = UBig::allocate_words(n);
-                    let mut remaining_bits = x;
-                    // Makes the shift non-constant to silence error for smaller bit sizes where
-                    // we never reach this loop.
-                    let shift = WORD_BITS;
-                    for _ in 0..n {
-                        words.push(remaining_bits as Word);
-                        remaining_bits >>= shift;
+                match Word::try_from(x) {
+                    Ok(w) => UBig::from_word(w),
+                    Err(_) => {
+                        let n = (bit_size::<$t>() - x.leading_zeros() as usize + (WORD_BITS - 1))
+                            / WORD_BITS;
+                        let mut buffer = Buffer::allocate(n);
+                        let mut remaining_bits = x;
+                        // Makes the shift non-constant to silence error for smaller bit sizes where
+                        // we never reach this loop.
+                        let shift = WORD_BITS;
+                        for _ in 0..n {
+                            buffer.push(remaining_bits as Word);
+                            remaining_bits >>= shift;
+                        }
+                        debug_assert!(*buffer.last().unwrap() != 0);
+                        debug_assert!(remaining_bits == 0);
+                        buffer.into()
                     }
-                    debug_assert!(words[n - 1] != 0);
-                    debug_assert!(remaining_bits == 0);
-                    UBig::from_words(words)
                 }
             }
         }
@@ -76,7 +78,7 @@ impl_from_signed!(isize as usize);
 mod tests {
     use super::*;
 
-    // TODO: test for all word sizes by not using from_words
+    // TODO: test for all word sizes by not using Buffer
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_from_unsigned() {
@@ -87,10 +89,11 @@ mod tests {
             UBig::from(0xf123456701234567u64),
             UBig::from_word(0xf123456701234567)
         );
-        assert_eq!(
-            UBig::from(0xf1234567012345670123456701234567u128),
-            UBig::from_words(vec![0x0123456701234567, 0xf123456701234567])
-        );
+        let mut buf = Buffer::allocate(2);
+        buf.push(0x0123456701234567);
+        buf.push(0xf123456701234567);
+        let num: UBig = buf.into();
+        assert_eq!(UBig::from(0xf1234567012345670123456701234567u128), num);
         assert_eq!(UBig::from(5u128), UBig::from_word(5));
         assert_eq!(UBig::from(5usize), UBig::from_word(5));
     }
