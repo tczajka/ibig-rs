@@ -6,6 +6,7 @@ use crate::ubig::{
     Repr::*,
     UBig,
 };
+use alloc::vec::Vec;
 use core::{
     convert::{TryFrom, TryInto},
     mem::size_of,
@@ -21,7 +22,7 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_le_bytes(&[1, 2, 3]), UBig::from(0x030201u32));
+    /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), UBig::from(0x010203u32));
     /// ```
     #[inline]
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
@@ -71,6 +72,64 @@ impl UBig {
         }
         buffer.push(word_from_be_bytes_partial(chunks.remainder()));
         buffer.into()
+    }
+
+    /// Return little-endian bytes.
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert!(UBig::from(0u32).to_le_bytes().is_empty());
+    /// assert_eq!(UBig::from(0x010203u32).to_le_bytes(), [3, 2, 1]);
+    /// ```
+    pub fn to_le_bytes(&self) -> Vec<u8> {
+        match self.0 {
+            Small(x) => {
+                let bytes = x.to_le_bytes();
+                let skip_bytes = x.leading_zeros() as usize / 8;
+                bytes[..WORD_BYTES - skip_bytes].to_vec()
+            }
+            Large(ref buffer) => {
+                let n = buffer.len();
+                let last = buffer[n - 1];
+                let skip_last_bytes = last.leading_zeros() as usize / 8;
+                let mut bytes = Vec::with_capacity(n * WORD_BYTES - skip_last_bytes);
+                for word in &buffer[..n - 1] {
+                    bytes.extend_from_slice(&word.to_le_bytes());
+                }
+                let last_bytes = last.to_le_bytes();
+                bytes.extend_from_slice(&last_bytes[..WORD_BYTES - skip_last_bytes]);
+                bytes
+            }
+        }
+    }
+
+    /// Return big-endian bytes.
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert!(UBig::from(0u32).to_be_bytes().is_empty());
+    /// assert_eq!(UBig::from(0x010203u32).to_be_bytes(), [1, 2, 3]);
+    /// ```
+    pub fn to_be_bytes(&self) -> Vec<u8> {
+        match self.0 {
+            Small(x) => {
+                let bytes = x.to_be_bytes();
+                let skip_bytes = x.leading_zeros() as usize / 8;
+                bytes[skip_bytes..].to_vec()
+            }
+            Large(ref buffer) => {
+                let n = buffer.len();
+                let last = buffer[n - 1];
+                let skip_last_bytes = last.leading_zeros() as usize / 8;
+                let mut bytes = Vec::with_capacity(n * WORD_BYTES - skip_last_bytes);
+                let last_bytes = last.to_be_bytes();
+                bytes.extend_from_slice(&last_bytes[skip_last_bytes..]);
+                for word in buffer[..n - 1].iter().rev() {
+                    bytes.extend_from_slice(&word.to_be_bytes());
+                }
+                bytes
+            }
+        }
     }
 }
 
@@ -151,40 +210,24 @@ mod tests {
         assert_eq!(UBig::from_word(5), UBig(Small(5)));
     }
 
-    // TODO: test for all word sizes by not using Buffer
-    #[cfg(target_pointer_width = "64")]
     #[test]
-    fn test_from_le_bytes() {
+    fn test_from_to_le_bytes() {
         assert_eq!(UBig::from_le_bytes(&[]), UBig::from_word(0));
         assert_eq!(UBig::from_le_bytes(&[0; 100]), UBig::from_word(0));
-        assert_eq!(UBig::from_le_bytes(&[1, 2, 3]), UBig::from_word(0x030201));
-        let mut buf = Buffer::allocate(3);
-        buf.push(0x0706050403020100);
-        buf.push(0x0f0e0d0c0b0a0908);
-        buf.push(0x10);
-        let num = buf.into();
-        assert_eq!(
-            UBig::from_le_bytes(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-            num
-        );
+        assert_eq!(UBig::from_le_bytes(&[1, 2, 3, 0]).to_le_bytes(), [1, 2, 3]);
+        let bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+        assert_eq!(UBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
     }
 
-    // TODO: test for all word sizes by not using Buffer
-    #[cfg(target_pointer_width = "64")]
     #[test]
-    fn test_from_be_bytes() {
+    fn test_from_to_be_bytes() {
         assert_eq!(UBig::from_be_bytes(&[]), UBig::from_word(0));
         assert_eq!(UBig::from_be_bytes(&[0; 100]), UBig::from_word(0));
-        assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), UBig::from_word(0x010203));
-        let mut buf = Buffer::allocate(3);
-        buf.push(0x0706050403020100);
-        buf.push(0x0f0e0d0c0b0a0908);
-        buf.push(0x10);
-        let num = buf.into();
-        assert_eq!(
-            UBig::from_be_bytes(&[16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]),
-            num
-        );
+        assert_eq!(UBig::from_be_bytes(&[0, 1, 2, 3]).to_be_bytes(), [1, 2, 3]);
+        let bytes = [
+            100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        ];
+        assert_eq!(UBig::from_be_bytes(&bytes).to_be_bytes(), bytes);
     }
 
     #[test]
