@@ -1,6 +1,6 @@
 //! Conversions of UBig to and from primitive integer types.
 
-use super::{
+use crate::{
     buffer::Buffer,
     word::{Word, WORD_BITS, WORD_BYTES},
     Repr::*,
@@ -12,13 +12,13 @@ use core::{
     mem::size_of,
 };
 
-pub(super) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
+pub(crate) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[..bytes.len()].copy_from_slice(bytes);
     Word::from_le_bytes(word_bytes)
 }
 
-pub(super) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
+pub(crate) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[WORD_BYTES - bytes.len()..].copy_from_slice(bytes);
     Word::from_be_bytes(word_bytes)
@@ -26,7 +26,7 @@ pub(super) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
 
 impl UBig {
     /// Construct from one word.
-    pub(super) fn from_word(word: Word) -> UBig {
+    pub(crate) fn from_word(word: Word) -> UBig {
         UBig(Small(word))
     }
 

@@ -1,9 +1,9 @@
-use super::{Repr::*, UBig};
+use crate::{Repr::*, UBig};
 
 impl UBig {
     #[cfg(test)]
     /// Current capacity in Words.
-    pub(super) fn capacity(&self) -> usize {
+    pub(crate) fn capacity(&self) -> usize {
         match self.0 {
             Small(_) => 1,
             Large(ref large) => large.capacity(),
@@ -35,7 +35,7 @@ impl Clone for UBig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ubig::buffer::Buffer;
+    use crate::buffer::Buffer;
 
     #[test]
     fn test_clone() {

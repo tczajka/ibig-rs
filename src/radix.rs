@@ -1,4 +1,4 @@
-use super::UBig;
+use crate::UBig;
 
 use core::fmt::{self, Formatter};
 
@@ -36,11 +36,11 @@ impl UBig {
     /// `radix` must be between 2 and 36 inclusive.
     #[inline]
     pub fn in_radix(&self, radix: u8) -> InRadix {
-        assert!((2..37).contains(&radix), "radix must be between 2 and 36 inclusive");
-        InRadix {
-            num: self,
-            radix
-        }
+        assert!(
+            (2..37).contains(&radix),
+            "radix must be between 2 and 36 inclusive"
+        );
+        InRadix { num: self, radix }
     }
 
     /*

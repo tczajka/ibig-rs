@@ -1,4 +1,4 @@
-use super::word::{Word, WORD_BITS};
+use crate::word::{Word, WORD_BITS};
 
 use alloc::vec::Vec;
 use core::{cmp::min, ops::Deref};
@@ -16,14 +16,14 @@ impl Buffer {
     /// Creates a `Buffer` with at least specified capacity.
     ///
     /// It leaves some extra space for future growth.
-    pub(super) fn allocate(num_words: usize) -> Buffer {
+    pub(crate) fn allocate(num_words: usize) -> Buffer {
         assert!(num_words <= Buffer::MAX_CAPACITY, "UBig too large");
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
     }
 
     /// Ensure there is enough capacity in the buffer for `num_words`. Will reallocate if there is
     /// not enough.
-    pub(super) fn ensure_capacity(&mut self, num_words: usize) {
+    pub(crate) fn ensure_capacity(&mut self, num_words: usize) {
         if num_words > self.capacity() {
             self.reallocate(num_words);
         }
@@ -32,7 +32,7 @@ impl Buffer {
     /// Change capacity to store `num_words` plus some extra space for future growth.
     ///
     /// Panics if `num_words < len()`.
-    pub(super) fn reallocate(&mut self, num_words: usize) {
+    pub(crate) fn reallocate(&mut self, num_words: usize) {
         assert!(num_words >= self.len());
         let mut new_buffer = Buffer::allocate(num_words);
         new_buffer.clone_from(self);
@@ -42,13 +42,13 @@ impl Buffer {
     /// Append a Word to the buffer.
     ///
     /// Panics if there is not enough capacity.
-    pub(super) fn push(&mut self, word: Word) {
+    pub(crate) fn push(&mut self, word: Word) {
         assert!(self.len() < self.capacity());
         self.0.push(word)
     }
 
     /// Pop the most significant `Word`.
-    pub(super) fn pop(&mut self) -> Option<Word> {
+    pub(crate) fn pop(&mut self) -> Option<Word> {
         self.0.pop()
     }
 
@@ -58,7 +58,7 @@ impl Buffer {
     /// operations, and for radix conversions (even base 2 can be represented).
     ///
     /// It also ensures that we can add two lengths without overflow.
-    pub(super) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS;
+    pub(crate) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS;
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).

@@ -4,6 +4,24 @@
 
 extern crate alloc;
 
-mod ubig;
+use crate::{normalize::NormalizedBuffer, word::Word};
 
-pub use self::ubig::UBig;
+mod buffer;
+mod convert;
+mod memory;
+mod normalize;
+mod radix;
+mod word;
+
+/// Internal representation of UBig.
+#[derive(Debug, Eq, PartialEq)]
+enum Repr {
+    /// A number that fits in a single Word.
+    Small(Word),
+    /// A number that does not fit in a single Word.
+    Large(NormalizedBuffer),
+}
+
+/// An unsigned big integer.
+#[derive(Debug, Eq, PartialEq)]
+pub struct UBig(Repr);
