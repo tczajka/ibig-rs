@@ -3,8 +3,8 @@
 use self::{normalize::NormalizedBuffer, word::Word};
 
 mod buffer;
-mod clone;
 mod convert;
+mod memory;
 mod normalize;
 mod word;
 

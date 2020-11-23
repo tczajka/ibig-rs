@@ -115,10 +115,7 @@ mod tests {
         buf.push(3);
         buf.push(4);
         let num: UBig = buf.into();
-        match num.0 {
-            Small(_) => panic!("fail"),
-            Large(large) => assert_eq!(large.capacity(), 7),
-        }
+        assert_eq!(num.capacity(), 7);
 
         let mut buf = Buffer::allocate(100);
         buf.push(1);
@@ -126,9 +123,6 @@ mod tests {
         buf.push(3);
         buf.push(4);
         let num: UBig = buf.into();
-        match num.0 {
-            Small(_) => panic!("fail"),
-            Large(large) => assert_eq!(large.capacity(), 6),
-        }
+        assert_eq!(num.capacity(), 6);
     }
 }

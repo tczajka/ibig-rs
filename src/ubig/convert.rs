@@ -1,6 +1,6 @@
 //! Conversions of UBig to and from primitive integer types.
 
-use crate::ubig::{
+use super::{
     buffer::Buffer,
     word::{word_from_be_bytes_partial, word_from_le_bytes_partial, Word, WORD_BITS, WORD_BYTES},
     Repr::*,

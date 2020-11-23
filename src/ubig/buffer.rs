@@ -17,9 +17,7 @@ impl Buffer {
     ///
     /// It leaves some extra space for future growth.
     pub(super) fn allocate(num_words: usize) -> Buffer {
-        if num_words > Buffer::MAX_CAPACITY {
-            panic!("Buffer too large");
-        }
+        assert!(num_words <= Buffer::MAX_CAPACITY, "UBig too large");
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
     }
 
@@ -35,9 +33,7 @@ impl Buffer {
     ///
     /// Panics if `num_words < len()`.
     pub(super) fn reallocate(&mut self, num_words: usize) {
-        if num_words < self.len() {
-            panic!("New capacity too small to fit data in Buffer");
-        }
+        assert!(num_words >= self.len());
         let mut new_buffer = Buffer::allocate(num_words);
         new_buffer.clone_from(self);
         *self = new_buffer
@@ -47,9 +43,7 @@ impl Buffer {
     ///
     /// Panics if there is not enough capacity.
     pub(super) fn push(&mut self, word: Word) {
-        if self.len() >= self.capacity() {
-            panic!("Buffer capacity exceeded");
-        }
+        assert!(self.len() < self.capacity());
         self.0.push(word)
     }
 
@@ -88,9 +82,7 @@ impl Clone for Buffer {
 
     /// If capacity is exceeded, panic.
     fn clone_from(&mut self, other: &Buffer) {
-        if self.capacity() < other.len() {
-            panic!("Buffer capacity exceeded");
-        }
+        assert!(self.capacity() >= other.len());
         self.0.clone_from(&other.0);
     }
 }

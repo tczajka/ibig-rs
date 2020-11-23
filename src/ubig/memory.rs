@@ -1,4 +1,15 @@
-use crate::ubig::{Repr::*, UBig};
+use super::{Repr::*, UBig};
+
+impl UBig {
+    #[cfg(test)]
+    /// Current capacity in Words.
+    pub(super) fn capacity(&self) -> usize {
+        match self.0 {
+            Small(_) => 1,
+            Large(ref large) => large.capacity(),
+        }
+    }
+}
 
 impl Clone for UBig {
     #[inline]
@@ -38,7 +49,7 @@ mod tests {
         let a: UBig = buf.into();
         let b = a.clone();
         assert_eq!(a, b);
-        assert_ne!(buffer_capacity(&a), buffer_capacity(&b));
+        assert_ne!(a.capacity(), b.capacity());
     }
 
     #[test]
@@ -55,32 +66,25 @@ mod tests {
         assert_eq!(a, b);
 
         let mut a = gen_large(9);
-        let prev_cap = buffer_capacity(&a);
+        let prev_cap = a.capacity();
         a.clone_from(&num);
         // The buffer should be reused, 9 is close enough to 10.
-        assert_eq!(buffer_capacity(&a), prev_cap);
-        assert_ne!(buffer_capacity(&a), buffer_capacity(&num));
+        assert_eq!(a.capacity(), prev_cap);
+        assert_ne!(a.capacity(), num.capacity());
 
         let mut a = gen_large(2);
-        let prev_cap = buffer_capacity(&a);
+        let prev_cap = a.capacity();
         a.clone_from(&num);
         // The buffer should now be reallocated, it's too small.
-        assert_ne!(buffer_capacity(&a), prev_cap);
-        assert_eq!(buffer_capacity(&a), buffer_capacity(&num));
+        assert_ne!(a.capacity(), prev_cap);
+        assert_eq!(a.capacity(), num.capacity());
 
         let mut a = gen_large(100);
-        let prev_cap = buffer_capacity(&a);
+        let prev_cap = a.capacity();
         a.clone_from(&num);
         // The buffer should now be reallocated, it's too large.
-        assert_ne!(buffer_capacity(&a), prev_cap);
-        assert_eq!(buffer_capacity(&a), buffer_capacity(&num));
-    }
-
-    fn buffer_capacity(x: &UBig) -> usize {
-        match x.0 {
-            Small(_) => 1,
-            Large(ref large) => large.capacity(),
-        }
+        assert_ne!(a.capacity(), prev_cap);
+        assert_eq!(a.capacity(), num.capacity());
     }
 
     fn gen_large(num_words: usize) -> UBig {
