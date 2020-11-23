@@ -24,30 +24,3 @@ pub(super) type DoubleWord = u128;
 
 pub(super) const WORD_BYTES: usize = size_of::<Word>();
 pub(super) const WORD_BITS: usize = WORD_BYTES * 8;
-
-pub(super) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
-    let mut word_bytes = [0; WORD_BYTES];
-    word_bytes[..bytes.len()].copy_from_slice(bytes);
-    Word::from_le_bytes(word_bytes)
-}
-
-pub(super) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
-    let mut word_bytes = [0; WORD_BYTES];
-    word_bytes[WORD_BYTES - bytes.len()..].copy_from_slice(bytes);
-    Word::from_be_bytes(word_bytes)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_word_from_le_bytes_partial() {
-        assert_eq!(word_from_le_bytes_partial(&[1, 2]), 0x0201);
-    }
-
-    #[test]
-    fn test_word_from_be_bytes_partial() {
-        assert_eq!(word_from_be_bytes_partial(&[1, 2]), 0x0102);
-    }
-}

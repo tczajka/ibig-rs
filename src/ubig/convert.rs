@@ -2,7 +2,7 @@
 
 use super::{
     buffer::Buffer,
-    word::{word_from_be_bytes_partial, word_from_le_bytes_partial, Word, WORD_BITS, WORD_BYTES},
+    word::{Word, WORD_BITS, WORD_BYTES},
     Repr::*,
     UBig,
 };
@@ -11,6 +11,18 @@ use core::{
     convert::{TryFrom, TryInto},
     mem::size_of,
 };
+
+pub(super) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
+    let mut word_bytes = [0; WORD_BYTES];
+    word_bytes[..bytes.len()].copy_from_slice(bytes);
+    Word::from_le_bytes(word_bytes)
+}
+
+pub(super) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
+    let mut word_bytes = [0; WORD_BYTES];
+    word_bytes[WORD_BYTES - bytes.len()..].copy_from_slice(bytes);
+    Word::from_be_bytes(word_bytes)
+}
 
 impl UBig {
     /// Construct from one word.
@@ -200,3 +212,18 @@ impl_from_signed!(i32 as u32);
 impl_from_signed!(i64 as u64);
 impl_from_signed!(i128 as u128);
 impl_from_signed!(isize as usize);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_word_from_le_bytes_partial() {
+        assert_eq!(word_from_le_bytes_partial(&[1, 2]), 0x0201);
+    }
+
+    #[test]
+    fn test_word_from_be_bytes_partial() {
+        assert_eq!(word_from_be_bytes_partial(&[1, 2]), 0x0102);
+    }
+}
