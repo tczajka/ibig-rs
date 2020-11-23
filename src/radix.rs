@@ -1,4 +1,4 @@
-use crate::UBig;
+use crate::{Sign::{self, *}, UBig};
 
 use core::fmt::{self, Formatter};
 
@@ -7,7 +7,8 @@ use core::fmt::{self, Formatter};
 // TODO: Make it support both UBig and IBig. Change num to IBig.
 #[derive(Debug)]
 pub struct InRadix<'a> {
-    num: &'a UBig,
+    sign: Sign,
+    magnitude: &'a UBig,
     radix: u8,
 }
 
@@ -40,7 +41,7 @@ impl UBig {
             (2..37).contains(&radix),
             "radix must be between 2 and 36 inclusive"
         );
-        InRadix { num: self, radix }
+        InRadix { sign: Positive, magnitude: self, radix }
     }
 
     /*
