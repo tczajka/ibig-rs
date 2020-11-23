@@ -1,6 +1,9 @@
 //! Printing and parsing in any radix.
 
-use crate::{ibig::Sign::{self, *}, ubig::UBig};
+use crate::{
+    ibig::Sign::{self, *},
+    ubig::UBig,
+};
 
 /// Representation of `UBig` or `IBig` in some radix between 2 and 36.
 // TODO: Document with an example (lower-case and upper-case).
@@ -41,7 +44,11 @@ impl UBig {
             (2..37).contains(&radix),
             "radix must be between 2 and 36 inclusive"
         );
-        InRadix { sign: Positive, magnitude: self, radix }
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix,
+        }
     }
 
     /*

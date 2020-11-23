@@ -4,14 +4,11 @@
 
 extern crate alloc;
 
-pub use crate::{
-    ibig::IBig,
-    ubig::UBig,
-};
+pub use crate::{ibig::IBig, ubig::UBig};
 
 mod buffer;
 mod convert;
 mod ibig;
 pub mod radix;
-mod word;
 mod ubig;
+mod word;

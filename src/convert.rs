@@ -2,8 +2,8 @@
 
 use crate::{
     buffer::Buffer,
-    word::{Word, WORD_BITS, WORD_BYTES},
     ubig::{Repr::*, UBig},
+    word::{Word, WORD_BITS, WORD_BYTES},
 };
 use alloc::vec::Vec;
 use core::{

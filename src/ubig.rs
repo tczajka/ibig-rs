@@ -1,7 +1,7 @@
 //! Unsigned big integer.
 
-use crate::{buffer::Buffer, word::Word};
 use self::Repr::*;
+use crate::{buffer::Buffer, word::Word};
 
 /// Internal representation of UBig.
 #[derive(Debug, Eq, PartialEq)]

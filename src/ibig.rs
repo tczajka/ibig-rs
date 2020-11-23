@@ -1,6 +1,6 @@
 //! Signed big integer.
 
-use crate::{ubig::UBig};
+use crate::ubig::UBig;
 
 /// Sign of IBig.
 #[derive(Debug, Eq, PartialEq)]
