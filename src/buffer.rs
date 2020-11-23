@@ -65,17 +65,17 @@ impl Buffer {
     ///
     /// Equivalent to, but more efficient than:
     /// ```text
-    /// self.ensure_capacity(other.len());
-    /// self.clone_from(other);
+    /// self.ensure_capacity(source.len());
+    /// self.clone_from(source);
     /// self.shrink();
     /// ```
-    pub(crate) fn resizing_clone_from(&mut self, other: &Buffer) {
+    pub(crate) fn resizing_clone_from(&mut self, source: &Buffer) {
         let cap = self.capacity();
-        let n = other.len();
+        let n = source.len();
         if cap >= n && cap <= Buffer::max_compact_capacity(n) {
-            self.clone_from(&other);
+            self.clone_from(&source);
         } else {
-            *self = other.clone();
+            *self = source.clone();
         }
     }
 
@@ -118,9 +118,9 @@ impl Clone for Buffer {
     }
 
     /// If capacity is exceeded, panic.
-    fn clone_from(&mut self, other: &Buffer) {
-        assert!(self.capacity() >= other.len());
-        self.0.clone_from(&other.0);
+    fn clone_from(&mut self, source: &Buffer) {
+        assert!(self.capacity() >= source.len());
+        self.0.clone_from(&source.0);
     }
 }
 

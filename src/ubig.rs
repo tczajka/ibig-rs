@@ -52,14 +52,14 @@ impl Clone for UBig {
     }
 
     #[inline]
-    fn clone_from(&mut self, other: &UBig) {
+    fn clone_from(&mut self, source: &UBig) {
         if let Large(ref mut buffer) = self.0 {
-            if let Large(ref other_buffer) = other.0 {
-                buffer.resizing_clone_from(other_buffer);
+            if let Large(ref source_buffer) = source.0 {
+                buffer.resizing_clone_from(source_buffer);
                 return;
             }
         }
-        *self = other.clone();
+        *self = source.clone();
     }
 }
 
