@@ -1,6 +1,6 @@
-use crate::{Sign::{self, *}, UBig};
+//! Printing and parsing in any radix.
 
-use core::fmt::{self, Formatter};
+use crate::{ibig::Sign::{self, *}, ubig::UBig};
 
 /// Representation of `UBig` or `IBig` in some radix between 2 and 36.
 // TODO: Document with an example (lower-case and upper-case).

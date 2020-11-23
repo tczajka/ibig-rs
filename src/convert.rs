@@ -1,10 +1,9 @@
-//! Conversions of UBig to and from primitive integer types.
+//! Conversions between types.
 
 use crate::{
     buffer::Buffer,
     word::{Word, WORD_BITS, WORD_BYTES},
-    Repr::*,
-    UBig,
+    ubig::{Repr::*, UBig},
 };
 use alloc::vec::Vec;
 use core::{
@@ -25,11 +24,6 @@ pub(crate) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
 }
 
 impl UBig {
-    /// Construct from one word.
-    pub(crate) fn from_word(word: Word) -> UBig {
-        UBig(Small(word))
-    }
-
     /// Construct from little-endian bytes.
     ///
     /// ```
@@ -94,7 +88,7 @@ impl UBig {
     /// assert_eq!(UBig::from(0x010203u32).to_le_bytes(), [3, 2, 1]);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
-        match self.0 {
+        match self.repr() {
             Small(x) => {
                 let bytes = x.to_le_bytes();
                 let skip_bytes = x.leading_zeros() as usize / 8;
@@ -123,7 +117,7 @@ impl UBig {
     /// assert_eq!(UBig::from(0x010203u32).to_be_bytes(), [1, 2, 3]);
     /// ```
     pub fn to_be_bytes(&self) -> Vec<u8> {
-        match self.0 {
+        match self.repr() {
             Small(x) => {
                 let bytes = x.to_be_bytes();
                 let skip_bytes = x.leading_zeros() as usize / 8;
