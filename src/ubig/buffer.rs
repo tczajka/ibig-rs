@@ -1,4 +1,4 @@
-use crate::ubig::word::{Word, WORD_BITS};
+use super::word::{Word, WORD_BITS};
 
 use alloc::vec::Vec;
 use core::{cmp::min, ops::Deref};
@@ -10,13 +10,13 @@ use core::{cmp::min, ops::Deref};
 ///
 /// If its capacity is exceeded, the `Buffer` will panic.
 #[derive(Debug, Eq, PartialEq)]
-pub struct Buffer(Vec<Word>);
+pub(super) struct Buffer(Vec<Word>);
 
 impl Buffer {
     /// Creates a `Buffer` with at least specified capacity.
     ///
     /// It leaves some extra space for future growth.
-    pub fn allocate(num_words: usize) -> Buffer {
+    pub(super) fn allocate(num_words: usize) -> Buffer {
         if num_words > Buffer::MAX_CAPACITY {
             panic!("Buffer too large");
         }
@@ -25,7 +25,7 @@ impl Buffer {
 
     /// Ensure there is enough capacity in the buffer for `num_words`. Will reallocate if there is
     /// not enough.
-    pub fn ensure_capacity(&mut self, num_words: usize) {
+    pub(super) fn ensure_capacity(&mut self, num_words: usize) {
         if num_words > self.capacity() {
             self.reallocate(num_words);
         }
@@ -34,7 +34,7 @@ impl Buffer {
     /// Change capacity to store `num_words` plus some extra space for future growth.
     ///
     /// Panics if `num_words < len()`.
-    pub fn reallocate(&mut self, num_words: usize) {
+    pub(super) fn reallocate(&mut self, num_words: usize) {
         if num_words < self.len() {
             panic!("New capacity too small to fit data in Buffer");
         }
@@ -46,7 +46,7 @@ impl Buffer {
     /// Append a Word to the buffer.
     ///
     /// Panics if there is not enough capacity.
-    pub fn push(&mut self, word: Word) {
+    pub(super) fn push(&mut self, word: Word) {
         if self.len() >= self.capacity() {
             panic!("Buffer capacity exceeded");
         }
@@ -54,7 +54,7 @@ impl Buffer {
     }
 
     /// Pop the most significant `Word`.
-    pub fn pop(&mut self) -> Option<Word> {
+    pub(super) fn pop(&mut self) -> Option<Word> {
         self.0.pop()
     }
 
@@ -64,7 +64,7 @@ impl Buffer {
     /// operations, and for radix conversions (even base 2 can be represented).
     ///
     /// It also ensures that we can add two lengths without overflow.
-    pub const MAX_CAPACITY: usize = usize::MAX / WORD_BITS;
+    pub(super) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS;
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).

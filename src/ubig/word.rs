@@ -10,28 +10,28 @@ use core::mem::size_of;
 compile_error!("Machine architecture must be 16-bit, 32-bit or 64-bit.");
 
 /// Machine word.
-pub type Word = usize;
+pub(super) type Word = usize;
 
 #[cfg(target_pointer_width = "16")]
 /// Double machine word.
-pub type DoubleWord = u32;
+pub(super) type DoubleWord = u32;
 #[cfg(target_pointer_width = "32")]
 /// Double machine word.
-pub type DoubleWord = u64;
+pub(super) type DoubleWord = u64;
 #[cfg(target_pointer_width = "64")]
 /// Double machine word.
-pub type DoubleWord = u128;
+pub(super) type DoubleWord = u128;
 
-pub const WORD_BYTES: usize = size_of::<Word>();
-pub const WORD_BITS: usize = WORD_BYTES * 8;
+pub(super) const WORD_BYTES: usize = size_of::<Word>();
+pub(super) const WORD_BITS: usize = WORD_BYTES * 8;
 
-pub fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
+pub(super) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[..bytes.len()].copy_from_slice(bytes);
     Word::from_le_bytes(word_bytes)
 }
 
-pub fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
+pub(super) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[WORD_BYTES - bytes.len()..].copy_from_slice(bytes);
     Word::from_be_bytes(word_bytes)

@@ -1,6 +1,6 @@
 use core::{cmp::min, ops::Deref};
 
-use crate::ubig::{buffer::Buffer, Repr::*, UBig};
+use super::{buffer::Buffer, Repr::*, UBig};
 
 /// Normalized buffer.
 ///
@@ -9,7 +9,7 @@ use crate::ubig::{buffer::Buffer, Repr::*, UBig};
 /// * most significant word non-zero
 /// * capacity no larger than approximately 25% overhead
 #[derive(Debug, Eq, PartialEq)]
-pub struct NormalizedBuffer(Buffer);
+pub(super) struct NormalizedBuffer(Buffer);
 
 impl NormalizedBuffer {
     /// Maximum capacity for a given number of `Word`s.

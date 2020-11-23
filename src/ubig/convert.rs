@@ -14,7 +14,7 @@ use core::{
 
 impl UBig {
     /// Construct from one word.
-    pub(in crate::ubig) fn from_word(word: Word) -> UBig {
+    pub(super) fn from_word(word: Word) -> UBig {
         UBig(Small(word))
     }
 
