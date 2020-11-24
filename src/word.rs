@@ -1,7 +1,5 @@
 //! Machine word.
 
-use core::mem::size_of;
-
 #[cfg(not(any(
     target_pointer_width = "16",
     target_pointer_width = "32",
@@ -22,5 +20,5 @@ pub(crate) type DoubleWord = u64;
 /// Double machine word.
 pub(crate) type DoubleWord = u128;
 
-pub(crate) const WORD_BYTES: usize = size_of::<Word>();
-pub(crate) const WORD_BITS: usize = WORD_BYTES * 8;
+pub(crate) const WORD_BITS: u32 = (0 as Word).trailing_zeros();
+pub(crate) const WORD_BYTES: usize = (WORD_BITS / 8) as usize;

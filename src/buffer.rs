@@ -85,7 +85,7 @@ impl Buffer {
     /// operations, and for radix conversions (even base 2 can be represented).
     ///
     /// It also ensures that we can add two lengths without overflow.
-    pub(crate) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS;
+    pub(crate) const MAX_CAPACITY: usize = usize::MAX / (WORD_BITS as usize);
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).

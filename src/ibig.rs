@@ -10,7 +10,7 @@ pub(crate) enum Sign {
 }
 
 /// Signed big integer.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Eq, PartialEq)]
 pub struct IBig {
     sign: Sign,
     magnitude: UBig,

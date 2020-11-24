@@ -6,10 +6,7 @@ use crate::{
     word::{Word, WORD_BITS, WORD_BYTES},
 };
 use alloc::vec::Vec;
-use core::{
-    convert::{TryFrom, TryInto},
-    mem::size_of,
-};
+use core::convert::{TryFrom, TryInto};
 
 pub(crate) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
@@ -146,9 +143,8 @@ macro_rules! impl_from_unsigned {
                 match Word::try_from(x) {
                     Ok(w) => UBig::from_word(w),
                     Err(_) => {
-                        let n = (size_of::<$t>() * 8 - x.leading_zeros() as usize
-                            + (WORD_BITS - 1))
-                            / WORD_BITS;
+                        let n = (((0 as $t).trailing_zeros() - x.leading_zeros() + (WORD_BITS - 1))
+                            / WORD_BITS) as usize;
                         let mut buffer = Buffer::allocate(n);
                         let mut remaining_bits = x;
                         // Makes the shift non-constant to silence error for smaller bit sizes where

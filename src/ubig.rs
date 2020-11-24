@@ -18,7 +18,7 @@ pub(crate) enum Repr {
 }
 
 /// Unsigned big integer.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Eq, PartialEq)]
 pub struct UBig(Repr);
 
 impl UBig {
