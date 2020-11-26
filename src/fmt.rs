@@ -1,6 +1,7 @@
 //! Printing and parsing in any radix.
 
 use crate::{
+    buffer::Buffer,
     ibig::Sign::{self, *},
     radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, MAX_RADIX},
     ubig::{Repr::*, UBig},
@@ -46,7 +47,7 @@ pub struct InRadix<'a> {
     digit_case: Option<DigitCase>,
 }
 
-impl<'a> InRadix<'a> {
+impl InRadix<'_> {
     /// Format `InRadix`.
     ///
     /// Takes a continuation that completes formatting given a `PreparedForFormatting`.
@@ -63,7 +64,14 @@ impl<'a> InRadix<'a> {
                     panic!("Non-power-of-2 radix not implemented")
                 }
             }
-            Large(_) => panic!("Large number radix not implemented"),
+            Large(buffer) => {
+                if self.radix.is_power_of_two() {
+                    let mut prepared = PreparedLargeInPow2::new(buffer, self.radix);
+                    continuation(&mut prepared)
+                } else {
+                    panic!("Non-power-of-2 radix not implemented")
+                }
+            }
         }
     }
 
@@ -156,14 +164,14 @@ impl<'a> InRadix<'a> {
     }
 }
 
-impl<'a> Display for InRadix<'a> {
+impl Display for InRadix<'_> {
     #[inline]
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         self.format(|prepared| self.format_continuation_formatter(f, prepared))
     }
 }
 
-/// Trait for state of a partially-formatted `Big`.
+/// Trait for state of a partially-formatted `UBig`.
 ///
 /// The state must be such the width (number of digits) is already known.
 trait PreparedForFormatting {
@@ -174,7 +182,7 @@ trait PreparedForFormatting {
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result;
 }
 
-/// Partially formatted Word in a radix that is a power of 2.
+/// A `Word` prepared for formatting in a power-of-2 radix.
 struct PreparedWordInPow2 {
     word: Word,
     log_radix: u32,
@@ -182,6 +190,7 @@ struct PreparedWordInPow2 {
 }
 
 impl PreparedWordInPow2 {
+    /// Prepare a `Word` for formatting in a power-of-2 radix.
     fn new(word: Word, radix: Digit) -> PreparedWordInPow2 {
         debug_assert!(radix >= 2 && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
@@ -201,7 +210,7 @@ impl PreparedWordInPow2 {
 
 impl PreparedForFormatting for PreparedWordInPow2 {
     fn width(&self) -> usize {
-        return self.width;
+        self.width
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
@@ -215,6 +224,74 @@ impl PreparedForFormatting for PreparedWordInPow2 {
     }
 }
 
+/// A large number prepared for formatting in a power-of-2 radix.
+struct PreparedLargeInPow2<'a> {
+    words: &'a [Word],
+    log_radix: u32,
+    width: usize,
+}
+
+impl PreparedLargeInPow2<'_> {
+    /// Prepare a large number for formatting in a power-of-2 radix.
+    fn new(buffer: &Buffer, radix: Digit) -> PreparedLargeInPow2 {
+        debug_assert!(radix >= 2 && radix.is_power_of_two());
+        let log_radix = radix.trailing_zeros();
+        debug_assert!(log_radix <= WORD_BITS);
+        let words: &[Word] = &*buffer;
+        // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
+        // words.len() <= Buffer::MAX_CAPACITY.
+        let width = max(
+            (words.len() * WORD_BITS as usize - words.last().unwrap().leading_zeros() as usize
+                + (log_radix - 1) as usize)
+                / log_radix as usize,
+            1,
+        );
+        PreparedLargeInPow2 {
+            words,
+            log_radix,
+            width,
+        }
+    }
+}
+
+impl PreparedForFormatting for PreparedLargeInPow2<'_> {
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
+        let ascii10 = digit_case_to_ascii10(digit_case);
+        let mask: Digit = (1 << self.log_radix) - 1;
+
+        let mut it = self.words.iter().rev();
+        let mut word = it.next().unwrap();
+        let mut bits = (self.width * self.log_radix as usize
+            - (self.words.len() - 1) * WORD_BITS as usize) as u32;
+
+        loop {
+            let digit;
+            if bits < self.log_radix {
+                match it.next() {
+                    Some(w) => {
+                        let extra_bits = self.log_radix - bits;
+                        bits = WORD_BITS - extra_bits;
+                        digit = (word << extra_bits | w >> bits) as Digit & mask;
+                        word = w;
+                    }
+                    None => break,
+                }
+            } else {
+                bits -= self.log_radix;
+                digit = (word >> bits) as Digit & mask;
+            }
+            write_ascii_char(writer, digit_to_ascii(digit, ascii10))?;
+        }
+        debug_assert!(bits == 0);
+        Ok(())
+    }
+}
+
+/*
 impl Display for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         InRadix {
@@ -227,10 +304,13 @@ impl Display for UBig {
         .fmt(f)
     }
 }
+*/
 
 impl Debug for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(self, f)
+        // TODO: Show in decimal.
+        // Display::fmt(self, f)
+        LowerHex::fmt(self, f)
     }
 }
 

@@ -22,6 +22,35 @@ fn test_ubig_format() {
     assert_eq!(format!("{:X}", UBig::from(3000u32)), "BB8");
     assert_eq!(format!("{:#X}", UBig::from(3000u32)), "0xBB8");
     assert_eq!(format!("{:#10X}", UBig::from(3000u32)), "     0xBB8");
+
+    let a = UBig::from_be_bytes(&[
+        0x05, 0xee, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89,
+        0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67,
+        0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+    ]);
+    assert_eq!(
+        format!("{:x}", a),
+        "5ee0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    );
+    assert_eq!(
+        format!("{:X}", a),
+        "5EE0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+    );
+    assert_eq!(
+        format!("{:^100X}", a),
+        "        5EE0123456789ABCDEF\
+        0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF         "
+    );
+    assert_eq!(
+        format!("{:o}", a),
+        "1367001106425474232571573600443212636115274675700221505317046\
+        53633674011064254742325715736004432126361152746757"
+    );
+    assert_eq!(
+        format!("{:>120o}", a),
+        "         1367001106425474232571573600443212636115274675700221505317046\
+        53633674011064254742325715736004432126361152746757"
+    );
 }
 
 #[test]
