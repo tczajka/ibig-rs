@@ -8,7 +8,8 @@ pub use crate::{ibig::IBig, ubig::UBig};
 
 mod buffer;
 mod convert;
+pub mod fmt;
 mod ibig;
-pub mod radix;
+mod radix;
 mod ubig;
 mod word;
