@@ -52,14 +52,68 @@ fn test_from_bool() {
 }
 
 #[test]
-fn test_from_char() {
-    assert_eq!(UBig::from('a'), UBig::from(0x61u8));
-    assert_eq!(UBig::from('Ł'), UBig::from(0x141u16));
-}
-
-#[test]
 fn test_from_signed() {
     assert!(UBig::try_from(-5i32).is_err());
     assert_eq!(UBig::try_from(5i32), Ok(UBig::from(5u32)));
     assert_eq!(UBig::try_from(5i128 << 120), Ok(UBig::from(5u128 << 120)));
+}
+
+#[test]
+fn test_to_unsigned() {
+    assert_eq!(u8::try_from(UBig::from(0xeeu8)), Ok(0xeeu8));
+    assert!(u8::try_from(UBig::from(0x123u16)).is_err());
+
+    assert_eq!(u16::try_from(UBig::from(0x1234u16)), Ok(0x1234u16));
+    assert!(u16::try_from(UBig::from(0x12345u32)).is_err());
+
+    assert_eq!(u32::try_from(UBig::from(0xf1234567u32)), Ok(0xf1234567u32));
+    assert!(u32::try_from(UBig::from(0x101234567u64)).is_err());
+
+    assert_eq!(
+        u64::try_from(UBig::from(0xf123456789abcdefu64)),
+        Ok(0xf123456789abcdefu64)
+    );
+    assert!(u64::try_from(UBig::from(0x10123456789abcdefu128)).is_err());
+
+    assert_eq!(
+        u128::try_from(UBig::from(0xf123456789abcdef0123456789abcdefu128)),
+        Ok(0xf123456789abcdef0123456789abcdefu128)
+    );
+
+    let big = UBig::from_be_bytes(&[1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert!(u8::try_from(&big).is_err());
+    assert!(u128::try_from(&big).is_err());
+
+    assert_eq!(usize::try_from(UBig::from(5u8)), Ok(5usize));
+}
+
+#[test]
+fn test_to_signed() {
+    assert_eq!(i8::try_from(UBig::from(0x7eu8)), Ok(0x7ei8));
+    assert!(i8::try_from(UBig::from(0xeeu8)).is_err());
+    assert!(i8::try_from(UBig::from(0x100u16)).is_err());
+
+    assert_eq!(i16::try_from(UBig::from(0x1234u16)), Ok(0x1234i16));
+    assert!(i16::try_from(UBig::from(0x8234u32)).is_err());
+
+    assert_eq!(i32::try_from(UBig::from(0x61234567u32)), Ok(0x61234567i32));
+    assert!(i32::try_from(UBig::from(0x91234567u32)).is_err());
+
+    assert_eq!(
+        i64::try_from(UBig::from(0x3123456789abcdefu64)),
+        Ok(0x3123456789abcdefi64)
+    );
+    assert!(i64::try_from(UBig::from(0xf123456789abcdefu64)).is_err());
+
+    assert_eq!(
+        i128::try_from(UBig::from(0x6123456789abcdef0123456789abcdefu128)),
+        Ok(0x6123456789abcdef0123456789abcdefi128)
+    );
+    assert!(i128::try_from(UBig::from(0xf123456789abcdef0123456789abcdefu128)).is_err());
+
+    let big = UBig::from_be_bytes(&[1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    assert!(i8::try_from(&big).is_err());
+    assert!(i128::try_from(&big).is_err());
+
+    assert_eq!(isize::try_from(UBig::from(5u8)), Ok(5isize));
 }

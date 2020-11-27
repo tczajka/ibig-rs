@@ -6,7 +6,10 @@ use crate::{
     word::{Word, WORD_BITS, WORD_BYTES},
 };
 use alloc::vec::Vec;
-use core::convert::{TryFrom, TryInto};
+use core::{
+    convert::{TryFrom, TryInto},
+    num::TryFromIntError,
+};
 
 pub(crate) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
@@ -39,13 +42,15 @@ impl UBig {
 
     fn from_le_bytes_large(bytes: &[u8]) -> UBig {
         debug_assert!(bytes.len() > WORD_BYTES);
+        let mut buffer = Buffer::allocate((bytes.len() - 1) / WORD_BYTES + 1);
         // TODO: Switch to bytes.array_chunks when the API is stable.
         let mut chunks = bytes.chunks_exact(WORD_BYTES);
-        let mut buffer = Buffer::allocate(chunks.len() + 1);
         for chunk in &mut chunks {
             buffer.push(Word::from_le_bytes(chunk.try_into().unwrap()));
         }
-        buffer.push(word_from_le_bytes_partial(chunks.remainder()));
+        if chunks.remainder().len() > 0 {
+            buffer.push(word_from_le_bytes_partial(chunks.remainder()));
+        }
         buffer.into()
     }
 
@@ -67,13 +72,15 @@ impl UBig {
 
     fn from_be_bytes_large(bytes: &[u8]) -> UBig {
         debug_assert!(bytes.len() > WORD_BYTES);
+        let mut buffer = Buffer::allocate((bytes.len() - 1) / WORD_BYTES + 1);
         // TODO: Switch to bytes.array_chunks when the API is stable.
         let mut chunks = bytes.rchunks_exact(WORD_BYTES);
-        let mut buffer = Buffer::allocate(chunks.len() + 1);
         for chunk in &mut chunks {
             buffer.push(Word::from_be_bytes(chunk.try_into().unwrap()));
         }
-        buffer.push(word_from_be_bytes_partial(chunks.remainder()));
+        if chunks.remainder().len() > 0 {
+            buffer.push(word_from_be_bytes_partial(chunks.remainder()));
+        }
         buffer.into()
     }
 
@@ -136,40 +143,26 @@ impl UBig {
     }
 }
 
-macro_rules! impl_from_unsigned {
+macro_rules! impl_ubig_from_unsigned {
     ($t:ty) => {
         impl From<$t> for UBig {
+            #[inline]
             fn from(x: $t) -> UBig {
                 match Word::try_from(x) {
                     Ok(w) => UBig::from_word(w),
-                    Err(_) => {
-                        let n = (((0 as $t).trailing_zeros() - x.leading_zeros() + (WORD_BITS - 1))
-                            / WORD_BITS) as usize;
-                        let mut buffer = Buffer::allocate(n);
-                        let mut remaining_bits = x;
-                        // Makes the shift non-constant to silence error for smaller bit sizes where
-                        // we never reach this loop.
-                        let shift = WORD_BITS;
-                        for _ in 0..n {
-                            buffer.push(remaining_bits as Word);
-                            remaining_bits >>= shift;
-                        }
-                        debug_assert!(*buffer.last().unwrap() != 0);
-                        debug_assert!(remaining_bits == 0);
-                        buffer.into()
-                    }
+                    Err(_) => UBig::from_le_bytes(&x.to_le_bytes()),
                 }
             }
         }
     };
 }
 
-impl_from_unsigned!(u8);
-impl_from_unsigned!(u16);
-impl_from_unsigned!(u32);
-impl_from_unsigned!(u64);
-impl_from_unsigned!(u128);
-impl_from_unsigned!(usize);
+impl_ubig_from_unsigned!(u8);
+impl_ubig_from_unsigned!(u16);
+impl_ubig_from_unsigned!(u32);
+impl_ubig_from_unsigned!(u64);
+impl_ubig_from_unsigned!(u128);
+impl_ubig_from_unsigned!(usize);
 
 impl From<bool> for UBig {
     fn from(b: bool) -> UBig {
@@ -177,31 +170,127 @@ impl From<bool> for UBig {
     }
 }
 
-impl From<char> for UBig {
-    fn from(c: char) -> UBig {
-        u32::from(c).into()
-    }
-}
-
-macro_rules! impl_from_signed {
+macro_rules! impl_ubig_from_signed {
     ($t:ty as $u:ty) => {
         impl TryFrom<$t> for UBig {
-            type Error = <$u as TryFrom<$t>>::Error;
+            type Error = TryFromIntError;
 
-            fn try_from(x: $t) -> Result<UBig, Self::Error> {
-                let y = <$u as TryFrom<$t>>::try_from(x)?;
+            #[inline]
+            fn try_from(x: $t) -> Result<UBig, TryFromIntError> {
+                let y = <$u>::try_from(x)?;
                 Ok(y.into())
             }
         }
     };
 }
 
-impl_from_signed!(i8 as u8);
-impl_from_signed!(i16 as u16);
-impl_from_signed!(i32 as u32);
-impl_from_signed!(i64 as u64);
-impl_from_signed!(i128 as u128);
-impl_from_signed!(isize as usize);
+impl_ubig_from_signed!(i8 as u8);
+impl_ubig_from_signed!(i16 as u16);
+impl_ubig_from_signed!(i32 as u32);
+impl_ubig_from_signed!(i64 as u64);
+impl_ubig_from_signed!(i128 as u128);
+impl_ubig_from_signed!(isize as usize);
+
+trait TryFromLarge: Sized {
+    fn try_from_large(words: &[Word]) -> Result<Self, TryFromIntError>;
+}
+
+fn try_from_int_error() -> TryFromIntError {
+    u8::try_from(0x100u16).unwrap_err()
+}
+
+macro_rules! impl_unsigned_from_ubig {
+    ($t:ty) => {
+        impl TryFrom<UBig> for $t {
+            type Error = TryFromIntError;
+
+            #[inline]
+            fn try_from(num: UBig) -> Result<Self, TryFromIntError> {
+                Self::try_from(&num)
+            }
+        }
+
+        impl TryFrom<&UBig> for $t {
+            type Error = TryFromIntError;
+
+            #[inline]
+            fn try_from(num: &UBig) -> Result<Self, TryFromIntError> {
+                match num.repr() {
+                    Small(w) => match Self::try_from(*w) {
+                        Ok(val) => Ok(val),
+                        Err(_) => Err(try_from_int_error()),
+                    },
+                    Large(buffer) => Self::try_from_large(buffer),
+                }
+            }
+        }
+
+        impl TryFromLarge for $t {
+            fn try_from_large(words: &[Word]) -> Result<Self, TryFromIntError> {
+                debug_assert!(words.len() >= 2);
+                const T_BITS: u32 = (0 as $t).trailing_zeros();
+                const T_BYTES: usize = (T_BITS / 8) as usize;
+                const T_WORDS: usize = (T_BITS / WORD_BITS) as usize;
+                if T_BITS <= WORD_BITS || words.len() > T_WORDS {
+                    Err(try_from_int_error())
+                } else {
+                    assert!(
+                        T_BITS % WORD_BITS == 0,
+                        "A large primitive type not a multiple of word size."
+                    );
+                    let mut bytes = [0; T_BYTES];
+                    for (idx, w) in words.iter().enumerate() {
+                        let pos = idx * WORD_BYTES;
+                        bytes[pos..pos + WORD_BYTES].copy_from_slice(&w.to_le_bytes());
+                    }
+                    Ok(<$t>::from_le_bytes(bytes))
+                }
+            }
+        }
+    };
+}
+
+impl_unsigned_from_ubig!(u8);
+impl_unsigned_from_ubig!(u16);
+impl_unsigned_from_ubig!(u32);
+impl_unsigned_from_ubig!(u64);
+impl_unsigned_from_ubig!(u128);
+impl_unsigned_from_ubig!(usize);
+
+macro_rules! impl_signed_from_ubig {
+    ($t:ty as $u:ty) => {
+        impl TryFrom<UBig> for $t {
+            type Error = TryFromIntError;
+
+            #[inline]
+            fn try_from(num: UBig) -> Result<Self, TryFromIntError> {
+                Self::try_from(&num)
+            }
+        }
+
+        impl TryFrom<&UBig> for $t {
+            type Error = TryFromIntError;
+
+            #[inline]
+            fn try_from(num: &UBig) -> Result<Self, TryFromIntError> {
+                match num.repr() {
+                    Small(w) => Self::try_from(*w),
+                    Large(buffer) => {
+                        let u = <$u>::try_from_large(buffer)?;
+                        u.try_into()
+                    }
+                }
+            }
+        }
+    };
+}
+
+impl_signed_from_ubig!(i8 as u8);
+impl_signed_from_ubig!(i16 as u16);
+impl_signed_from_ubig!(i32 as u32);
+impl_signed_from_ubig!(i64 as u64);
+impl_signed_from_ubig!(i128 as u128);
+impl_signed_from_ubig!(isize as usize);
 
 #[cfg(test)]
 mod tests {
