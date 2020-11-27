@@ -233,11 +233,10 @@ struct PreparedLargeInPow2<'a> {
 
 impl PreparedLargeInPow2<'_> {
     /// Prepare a large number for formatting in a power-of-2 radix.
-    fn new(buffer: &Buffer, radix: Digit) -> PreparedLargeInPow2 {
+    fn new(words: &[Word], radix: Digit) -> PreparedLargeInPow2 {
         debug_assert!(radix >= 2 && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
-        let words: &[Word] = &*buffer;
         // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
         // words.len() <= Buffer::MAX_CAPACITY.
         let width = max(
