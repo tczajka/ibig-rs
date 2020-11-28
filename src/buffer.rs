@@ -1,6 +1,6 @@
 //! Word buffer.
 
-use crate::word::{Word, WORD_BITS};
+use crate::primitive::{Word, WORD_BITS};
 
 use alloc::vec::Vec;
 use core::{cmp::min, ops::Deref};

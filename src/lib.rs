@@ -10,6 +10,6 @@ mod buffer;
 mod convert;
 mod fmt;
 mod ibig;
+mod primitive;
 mod radix;
 mod ubig;
-mod word;

@@ -1,11 +1,10 @@
 //! Printing and parsing in any radix.
 
 use crate::{
-    buffer::Buffer,
     ibig::Sign::{self, *},
+    primitive::{Word, WORD_BITS},
     radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, MAX_RADIX},
     ubig::{Repr::*, UBig},
-    word::{Word, WORD_BITS},
 };
 use alloc::string::String;
 use core::{
@@ -84,7 +83,7 @@ impl InRadix<'_> {
         let mut width = prepared.width();
 
         // Adding sign and prefix to width will not overflow, because Buffer::MAX_CAPACITY leaves
-        // (WORD_BITS-1) spare bits before we would hit overflow.
+        // (WORD_BITS - 1) spare bits before we would hit overflow.
         let sign = if self.sign == Negative {
             "-"
         } else if f.sign_plus() {
