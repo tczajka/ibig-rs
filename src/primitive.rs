@@ -26,6 +26,19 @@ pub(crate) type DoubleWord = u64;
 /// Double machine word.
 pub(crate) type DoubleWord = u128;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Sign {
+    Positive,
+    Negative,
+}
+
+use Sign::*;
+
+/// Generate a `TryFromIntError`.
+pub(crate) fn try_from_int_error() -> TryFromIntError {
+    u8::try_from(0x100u16).unwrap_err()
+}
+
 pub(crate) trait PrimitiveUnsigned
 where
     Self: Copy,
@@ -50,6 +63,9 @@ where
     Self::Unsigned: TryInto<Self, Error = TryFromIntError>,
 {
     type Unsigned;
+
+    fn to_sign_magnitude(self) -> (Sign, Self::Unsigned);
+    fn try_from_sign_magnitude(sign: Sign, mag: Self::Unsigned) -> Result<Self, TryFromIntError>;
 }
 
 macro_rules! impl_primitive_unsigned {
@@ -68,20 +84,45 @@ macro_rules! impl_primitive_unsigned {
     };
 }
 
+macro_rules! impl_primitive_signed {
+    ($t:ty, $u:ty) => {
+        impl PrimitiveSigned for $t {
+            type Unsigned = $u;
+
+            fn to_sign_magnitude(self) -> (Sign, Self::Unsigned) {
+                if self >= 0 {
+                    (Positive, self as Self::Unsigned)
+                } else {
+                    (Negative, (self as Self::Unsigned).wrapping_neg())
+                }
+            }
+
+            fn try_from_sign_magnitude(
+                sign: Sign,
+                mag: Self::Unsigned,
+            ) -> Result<Self, TryFromIntError> {
+                match sign {
+                    Positive => mag.try_into(),
+                    Negative => {
+                        let x = mag.wrapping_neg() as Self;
+                        if x <= 0 {
+                            Ok(x)
+                        } else {
+                            Err(try_from_int_error())
+                        }
+                    }
+                }
+            }
+        }
+    };
+}
+
 impl_primitive_unsigned!(u8);
 impl_primitive_unsigned!(u16);
 impl_primitive_unsigned!(u32);
 impl_primitive_unsigned!(u64);
 impl_primitive_unsigned!(u128);
 impl_primitive_unsigned!(usize);
-
-macro_rules! impl_primitive_signed {
-    ($t:ty, $u:ty) => {
-        impl PrimitiveSigned for $t {
-            type Unsigned = $u;
-        }
-    };
-}
 
 impl_primitive_signed!(i8, u8);
 impl_primitive_signed!(i16, u16);
@@ -125,5 +166,41 @@ mod tests {
     #[test]
     fn test_word_from_be_bytes_partial() {
         assert_eq!(word_from_be_bytes_partial(&[1, 2]), 0x0102);
+    }
+
+    #[test]
+    fn test_double_word() {
+        assert_eq!(DoubleWord::BIT_SIZE, 2 * WORD_BITS);
+    }
+
+    #[test]
+    fn test_to_sign_magnitude() {
+        assert_eq!(0.to_sign_magnitude(), (Positive, 0u32));
+        assert_eq!(5.to_sign_magnitude(), (Positive, 5u32));
+        assert_eq!(0x7fffffff.to_sign_magnitude(), (Positive, 0x7fffffffu32));
+        assert_eq!((-0x80000000).to_sign_magnitude(), (Negative, 0x80000000u32));
+    }
+
+    #[test]
+    fn try_from_sign_magnitude() {
+        assert_eq!(i32::try_from_sign_magnitude(Positive, 0), Ok(0));
+        assert_eq!(i32::try_from_sign_magnitude(Positive, 5), Ok(5));
+        assert_eq!(
+            i32::try_from_sign_magnitude(Positive, 0x7fffffff),
+            Ok(0x7fffffff)
+        );
+        assert!(i32::try_from_sign_magnitude(Positive, 0x80000000).is_err());
+        assert_eq!(i32::try_from_sign_magnitude(Negative, 0), Ok(0));
+        assert_eq!(i32::try_from_sign_magnitude(Negative, 5), Ok(-5));
+        assert_eq!(
+            i32::try_from_sign_magnitude(Negative, 0x7fffffff),
+            Ok(-0x7fffffff)
+        );
+        assert_eq!(
+            i32::try_from_sign_magnitude(Negative, 0x80000000),
+            Ok(-0x80000000)
+        );
+        assert!(i32::try_from_sign_magnitude(Negative, 0x80000001).is_err());
+        assert!(i32::try_from_sign_magnitude(Negative, 0xffffffff).is_err());
     }
 }

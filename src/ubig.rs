@@ -40,6 +40,14 @@ impl UBig {
             Large(ref large) => large.capacity(),
         }
     }
+
+    /// Is it zero?
+    pub(crate) fn is_zero(&self) -> bool {
+        match self.0 {
+            Small(0) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Clone for UBig {

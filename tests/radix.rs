@@ -1,4 +1,4 @@
-use ibig::UBig;
+use ibig::{IBig, UBig};
 
 #[test]
 fn test_ubig_format() {
@@ -76,4 +76,87 @@ fn test_ubig_to_radix_str() {
     assert_eq!(UBig::from(3000u32).to_radix_str_uppercase(16), "BB8");
     assert_eq!(UBig::from(3000u32).to_radix_str(32), "2to");
     assert_eq!(UBig::from(3000u32).to_radix_str_uppercase(32), "2TO");
+}
+
+#[test]
+fn test_ibig_format() {
+    assert_eq!(format!("{:b}", IBig::from(0i32)), "0");
+    assert_eq!(format!("{:b}", IBig::from(100i32)), "1100100");
+    assert_eq!(format!("{:b}", IBig::from(-100i32)), "-1100100");
+    assert_eq!(format!("{:#b}", IBig::from(100i32)), "0b1100100");
+    assert_eq!(format!("{:#b}", IBig::from(-100i32)), "-0b1100100");
+    assert_eq!(format!("{:+b}", IBig::from(100i32)), "+1100100");
+    assert_eq!(format!("{:+b}", IBig::from(-100i32)), "-1100100");
+    assert_eq!(format!("{:+#b}", IBig::from(100i32)), "+0b1100100");
+    assert_eq!(format!("{:+#b}", IBig::from(-100i32)), "-0b1100100");
+    assert_eq!(format!("{:10b}", IBig::from(100i32)), "   1100100");
+    assert_eq!(format!("{:10b}", IBig::from(-100i32)), "  -1100100");
+    assert_eq!(format!("{:=<10b}", IBig::from(100i32)), "1100100===");
+    assert_eq!(format!("{:=<10b}", IBig::from(-100i32)), "-1100100==");
+    assert_eq!(format!("{:=>10b}", IBig::from(100i32)), "===1100100");
+    assert_eq!(format!("{:=>10b}", IBig::from(-100i32)), "==-1100100");
+    assert_eq!(format!("{:=^10b}", IBig::from(100i32)), "=1100100==");
+    assert_eq!(format!("{:=^10b}", IBig::from(-100i32)), "=-1100100=");
+    assert_eq!(format!("{:=^+10b}", IBig::from(100i32)), "=+1100100=");
+    assert_eq!(format!("{:=^+10b}", IBig::from(-100i32)), "=-1100100=");
+    assert_eq!(format!("{:+010b}", IBig::from(100i32)), "+001100100");
+    assert_eq!(format!("{:+010b}", IBig::from(-100i32)), "-001100100");
+    assert_eq!(format!("{:+#010b}", IBig::from(100i32)), "+0b1100100");
+    assert_eq!(format!("{:+#010b}", IBig::from(-100i32)), "-0b1100100");
+    assert_eq!(format!("{:+#01b}", IBig::from(100i32)), "+0b1100100");
+    assert_eq!(format!("{:+#01b}", IBig::from(-100i32)), "-0b1100100");
+    assert_eq!(format!("{:o}", IBig::from(100i32)), "144");
+    assert_eq!(format!("{:o}", IBig::from(-100i32)), "-144");
+    assert_eq!(format!("{:#o}", IBig::from(100i32)), "0o144");
+    assert_eq!(format!("{:#o}", IBig::from(-100i32)), "-0o144");
+    assert_eq!(format!("{:x}", IBig::from(3000i32)), "bb8");
+    assert_eq!(format!("{:x}", IBig::from(-3000i32)), "-bb8");
+    assert_eq!(format!("{:#x}", IBig::from(3000i32)), "0xbb8");
+    assert_eq!(format!("{:#x}", IBig::from(-3000i32)), "-0xbb8");
+    assert_eq!(format!("{:X}", IBig::from(3000i32)), "BB8");
+    assert_eq!(format!("{:X}", IBig::from(-3000i32)), "-BB8");
+    assert_eq!(format!("{:#X}", IBig::from(3000i32)), "0xBB8");
+    assert_eq!(format!("{:#X}", IBig::from(-3000i32)), "-0xBB8");
+    assert_eq!(format!("{:#10X}", IBig::from(3000i32)), "     0xBB8");
+    assert_eq!(format!("{:#10X}", IBig::from(-3000i32)), "    -0xBB8");
+}
+
+#[test]
+fn test_ibig_in_radix() {
+    assert_eq!(format!("{}", IBig::from(0i32).in_radix(2)), "0");
+    assert_eq!(format!("{}", IBig::from(100i32).in_radix(4)), "1210");
+    assert_eq!(format!("{}", IBig::from(-100i32).in_radix(4)), "-1210");
+    assert_eq!(format!("{}", IBig::from(3000i32).in_radix(16)), "bb8");
+    assert_eq!(format!("{}", IBig::from(-3000i32).in_radix(16)), "-bb8");
+    assert_eq!(
+        format!("{:+010}", IBig::from(3000i32).in_radix(16)),
+        "+000000bb8"
+    );
+    assert_eq!(
+        format!("{:+010}", IBig::from(-3000i32).in_radix(16)),
+        "-000000bb8"
+    );
+    assert_eq!(
+        format!("{:#010}", IBig::from(3000i32).in_radix(16)),
+        "0000000BB8"
+    );
+    assert_eq!(
+        format!("{:#010}", IBig::from(-3000i32).in_radix(16)),
+        "-000000BB8"
+    );
+}
+
+#[test]
+fn test_ibig_to_radix_str() {
+    assert_eq!(IBig::from(0i32).to_radix_str(16), "0");
+    assert_eq!(IBig::from(100i32).to_radix_str(4), "1210");
+    assert_eq!(IBig::from(-100i32).to_radix_str(4), "-1210");
+    assert_eq!(IBig::from(3000i32).to_radix_str(16), "bb8");
+    assert_eq!(IBig::from(-3000i32).to_radix_str(16), "-bb8");
+    assert_eq!(IBig::from(3000i32).to_radix_str_uppercase(16), "BB8");
+    assert_eq!(IBig::from(-3000i32).to_radix_str_uppercase(16), "-BB8");
+    assert_eq!(IBig::from(3000i32).to_radix_str(32), "2to");
+    assert_eq!(IBig::from(-3000i32).to_radix_str(32), "-2to");
+    assert_eq!(IBig::from(3000i32).to_radix_str_uppercase(32), "2TO");
+    assert_eq!(IBig::from(-3000i32).to_radix_str_uppercase(32), "-2TO");
 }

@@ -2,9 +2,10 @@
 
 use crate::{
     buffer::Buffer,
+    ibig::IBig,
     primitive::{
-        word_from_be_bytes_partial, word_from_le_bytes_partial, PrimitiveSigned, PrimitiveUnsigned,
-        Word, WORD_BITS, WORD_BYTES,
+        try_from_int_error, word_from_be_bytes_partial, word_from_le_bytes_partial,
+        PrimitiveSigned, PrimitiveUnsigned, Sign::*, Word, WORD_BITS, WORD_BYTES,
     },
     ubig::{Repr::*, UBig},
 };
@@ -206,9 +207,82 @@ impl From<bool> for UBig {
     }
 }
 
-/// Generate a `TryFromIntError`.
-fn try_from_int_error() -> TryFromIntError {
-    u8::try_from(0x100u16).unwrap_err()
+impl_from!(impl From<u8> for IBig as ibig_from_unsigned);
+impl_from!(impl From<u16> for IBig as ibig_from_unsigned);
+impl_from!(impl From<u32> for IBig as ibig_from_unsigned);
+impl_from!(impl From<u64> for IBig as ibig_from_unsigned);
+impl_from!(impl From<u128> for IBig as ibig_from_unsigned);
+impl_from!(impl From<usize> for IBig as ibig_from_unsigned);
+
+impl_from!(impl From<i8> for IBig as ibig_from_signed);
+impl_from!(impl From<i16> for IBig as ibig_from_signed);
+impl_from!(impl From<i32> for IBig as ibig_from_signed);
+impl_from!(impl From<i64> for IBig as ibig_from_signed);
+impl_from!(impl From<i128> for IBig as ibig_from_signed);
+impl_from!(impl From<isize> for IBig as ibig_from_signed);
+
+impl_try_from!(impl TryFrom<IBig> for u8 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for u16 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for u32 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for u64 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for u128 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for usize as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for u8 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for u16 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for u32 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for u64 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for u128 as unsigned_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for usize as unsigned_from_ibig);
+
+impl_try_from!(impl TryFrom<IBig> for i8 as signed_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for i16 as signed_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for i32 as signed_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for i64 as signed_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for i128 as signed_from_ibig);
+impl_try_from!(impl TryFrom<IBig> for isize as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for i8 as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for i16 as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for i32 as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for i64 as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for i128 as signed_from_ibig);
+impl_try_from!(impl TryFrom<&IBig> for isize as signed_from_ibig);
+
+impl From<UBig> for IBig {
+    #[inline]
+    fn from(x: UBig) -> IBig {
+        IBig::from_sign_magnitude(Positive, x)
+    }
+}
+
+impl From<&UBig> for IBig {
+    #[inline]
+    fn from(x: &UBig) -> IBig {
+        IBig::from(x.clone())
+    }
+}
+
+impl TryFrom<IBig> for UBig {
+    type Error = TryFromIntError;
+
+    #[inline]
+    fn try_from(x: IBig) -> Result<UBig, TryFromIntError> {
+        match x.into_sign_magnitude() {
+            (Positive, mag) => Ok(mag),
+            (Negative, _) => Err(try_from_int_error()),
+        }
+    }
+}
+
+impl TryFrom<&IBig> for UBig {
+    type Error = TryFromIntError;
+
+    #[inline]
+    fn try_from(x: &IBig) -> Result<UBig, TryFromIntError> {
+        match x.sign() {
+            Positive => Ok(x.magnitude().clone()),
+            Negative => Err(try_from_int_error()),
+        }
+    }
 }
 
 /// Convert an unsigned primitive to `UBig`.
@@ -286,6 +360,47 @@ where
             u.try_into()
         }
     }
+}
+
+/// Convert an unsigned primitive to `IBig`.
+fn ibig_from_unsigned<T>(x: T) -> IBig
+where
+    T: PrimitiveUnsigned,
+{
+    IBig::from(ubig_from_unsigned(x))
+}
+
+/// Convert a signed primitive to `IBig`.
+fn ibig_from_signed<T>(x: T) -> IBig
+where
+    T: PrimitiveSigned,
+{
+    let (sign, mag) = x.to_sign_magnitude();
+    IBig::from_sign_magnitude(sign, ubig_from_unsigned(mag))
+}
+
+/// Try to convert `IBig` to an unsigned primitive.
+fn unsigned_from_ibig<T, B>(num: B) -> Result<T, TryFromIntError>
+where
+    T: PrimitiveUnsigned,
+    B: Borrow<IBig>,
+{
+    let num = num.borrow();
+    match num.sign() {
+        Positive => unsigned_from_ubig(num.magnitude()),
+        Negative => Err(try_from_int_error()),
+    }
+}
+
+/// Try to convert `IBig` to an signed primitive.
+fn signed_from_ibig<T, B>(num: B) -> Result<T, TryFromIntError>
+where
+    T: PrimitiveSigned,
+    B: Borrow<IBig>,
+{
+    let num = num.borrow();
+    let u: T::Unsigned = unsigned_from_ubig(num.magnitude())?;
+    T::try_from_sign_magnitude(num.sign(), u)
 }
 
 #[cfg(test)]
