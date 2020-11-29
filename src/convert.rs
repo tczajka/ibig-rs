@@ -4,8 +4,8 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{
-        try_from_int_error, word_from_be_bytes_partial, word_from_le_bytes_partial,
-        PrimitiveSigned, PrimitiveUnsigned, Sign::*, Word, WORD_BITS, WORD_BYTES,
+        word_from_be_bytes_partial, word_from_le_bytes_partial, OutOfBoundsError, PrimitiveSigned,
+        PrimitiveUnsigned, Sign::*, Word, WORD_BITS, WORD_BYTES,
     },
     ubig::{Repr::*, UBig},
 };
@@ -13,7 +13,6 @@ use alloc::vec::Vec;
 use core::{
     borrow::Borrow,
     convert::{TryFrom, TryInto},
-    num::TryFromIntError,
 };
 
 impl UBig {
@@ -150,10 +149,10 @@ macro_rules! impl_from {
 macro_rules! impl_try_from {
     (impl TryFrom<$a:ty> for $b:ty as $f:ident) => {
         impl TryFrom<$a> for $b {
-            type Error = TryFromIntError;
+            type Error = OutOfBoundsError;
 
             #[inline]
-            fn try_from(value: $a) -> Result<$b, TryFromIntError> {
+            fn try_from(value: $a) -> Result<$b, OutOfBoundsError> {
                 $f(value)
             }
         }
@@ -262,25 +261,25 @@ impl From<&UBig> for IBig {
 }
 
 impl TryFrom<IBig> for UBig {
-    type Error = TryFromIntError;
+    type Error = OutOfBoundsError;
 
     #[inline]
-    fn try_from(x: IBig) -> Result<UBig, TryFromIntError> {
+    fn try_from(x: IBig) -> Result<UBig, OutOfBoundsError> {
         match x.into_sign_magnitude() {
             (Positive, mag) => Ok(mag),
-            (Negative, _) => Err(try_from_int_error()),
+            (Negative, _) => Err(OutOfBoundsError),
         }
     }
 }
 
 impl TryFrom<&IBig> for UBig {
-    type Error = TryFromIntError;
+    type Error = OutOfBoundsError;
 
     #[inline]
-    fn try_from(x: &IBig) -> Result<UBig, TryFromIntError> {
+    fn try_from(x: &IBig) -> Result<UBig, OutOfBoundsError> {
         match x.sign() {
             Positive => Ok(x.magnitude().clone()),
-            Negative => Err(try_from_int_error()),
+            Negative => Err(OutOfBoundsError),
         }
     }
 }
@@ -300,16 +299,18 @@ where
 }
 
 /// Try to convert a signed primitive to `UBig`.
-fn ubig_from_signed<T>(x: T) -> Result<UBig, TryFromIntError>
+fn ubig_from_signed<T>(x: T) -> Result<UBig, OutOfBoundsError>
 where
     T: PrimitiveSigned,
 {
-    let u = T::Unsigned::try_from(x)?;
-    Ok(ubig_from_unsigned(u))
+    match T::Unsigned::try_from(x) {
+        Ok(u) => Ok(ubig_from_unsigned(u)),
+        Err(_) => Err(OutOfBoundsError),
+    }
 }
 
 /// Try to convert `UBig` to an unsigned primitive.
-fn unsigned_from_ubig<T, B>(num: B) -> Result<T, TryFromIntError>
+fn unsigned_from_ubig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveUnsigned,
     B: Borrow<UBig>,
@@ -317,21 +318,21 @@ where
     match num.borrow().repr() {
         Small(w) => match T::try_from(*w) {
             Ok(val) => Ok(val),
-            Err(_) => Err(try_from_int_error()),
+            Err(_) => Err(OutOfBoundsError),
         },
         Large(buffer) => unsigned_from_words(buffer),
     }
 }
 
 /// Try to convert `Word`s to an unsigned primitive.
-fn unsigned_from_words<T>(words: &[Word]) -> Result<T, TryFromIntError>
+fn unsigned_from_words<T>(words: &[Word]) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveUnsigned,
 {
     debug_assert!(words.len() >= 2);
     let t_words = T::BYTE_SIZE / WORD_BYTES;
     if t_words <= 1 || words.len() > t_words {
-        Err(try_from_int_error())
+        Err(OutOfBoundsError)
     } else {
         assert!(
             T::BIT_SIZE % WORD_BITS == 0,
@@ -348,16 +349,16 @@ where
 }
 
 /// Try to convert `UBig` to a signed primitive.
-fn signed_from_ubig<T, B>(num: B) -> Result<T, TryFromIntError>
+fn signed_from_ubig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveSigned,
     B: Borrow<UBig>,
 {
     match num.borrow().repr() {
-        Small(w) => T::try_from(*w),
+        Small(w) => T::try_from(*w).map_err(|_| OutOfBoundsError),
         Large(buffer) => {
             let u: T::Unsigned = unsigned_from_words(buffer)?;
-            u.try_into()
+            u.try_into().map_err(|_| OutOfBoundsError)
         }
     }
 }
@@ -380,7 +381,7 @@ where
 }
 
 /// Try to convert `IBig` to an unsigned primitive.
-fn unsigned_from_ibig<T, B>(num: B) -> Result<T, TryFromIntError>
+fn unsigned_from_ibig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveUnsigned,
     B: Borrow<IBig>,
@@ -388,12 +389,12 @@ where
     let num = num.borrow();
     match num.sign() {
         Positive => unsigned_from_ubig(num.magnitude()),
-        Negative => Err(try_from_int_error()),
+        Negative => Err(OutOfBoundsError),
     }
 }
 
 /// Try to convert `IBig` to an signed primitive.
-fn signed_from_ibig<T, B>(num: B) -> Result<T, TryFromIntError>
+fn signed_from_ibig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveSigned,
     B: Borrow<IBig>,

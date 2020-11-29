@@ -1,10 +1,10 @@
 //! Big integer library.
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 
-pub use crate::{fmt::InRadix, ibig::IBig, ubig::UBig};
+pub use crate::{fmt::InRadix, ibig::IBig, primitive::OutOfBoundsError, ubig::UBig};
 
 mod buffer;
 mod convert;

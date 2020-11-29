@@ -1,17 +1,31 @@
 //! Primitive types.
 
-use core::{
-    convert::{TryFrom, TryInto},
-    mem::size_of,
-    num::TryFromIntError,
-};
-
 #[cfg(not(any(
     target_pointer_width = "16",
     target_pointer_width = "32",
     target_pointer_width = "64"
 )))]
 compile_error!("Machine architecture must be 16-bit, 32-bit or 64-bit.");
+
+use core::{
+    convert::{TryFrom, TryInto},
+    fmt::{self, Display, Formatter},
+    mem::size_of,
+};
+
+/// Number out of bounds.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct OutOfBoundsError;
+
+impl Display for OutOfBoundsError {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.write_str("number out of bounds")
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for OutOfBoundsError {}
 
 /// Machine word.
 pub(crate) type Word = usize;
@@ -34,11 +48,6 @@ pub(crate) enum Sign {
 
 use Sign::*;
 
-/// Generate a `TryFromIntError`.
-pub(crate) fn try_from_int_error() -> TryFromIntError {
-    u8::try_from(0x100u16).unwrap_err()
-}
-
 pub(crate) trait PrimitiveUnsigned
 where
     Self: Copy,
@@ -57,15 +66,15 @@ where
 pub(crate) trait PrimitiveSigned
 where
     Self: Copy,
-    Self: TryFrom<Word, Error = TryFromIntError>,
+    Self: TryFrom<Word>,
     Self::Unsigned: PrimitiveUnsigned,
-    Self::Unsigned: TryFrom<Self, Error = TryFromIntError>,
-    Self::Unsigned: TryInto<Self, Error = TryFromIntError>,
+    Self::Unsigned: TryFrom<Self>,
+    Self::Unsigned: TryInto<Self>,
 {
     type Unsigned;
 
     fn to_sign_magnitude(self) -> (Sign, Self::Unsigned);
-    fn try_from_sign_magnitude(sign: Sign, mag: Self::Unsigned) -> Result<Self, TryFromIntError>;
+    fn try_from_sign_magnitude(sign: Sign, mag: Self::Unsigned) -> Result<Self, OutOfBoundsError>;
 }
 
 macro_rules! impl_primitive_unsigned {
@@ -100,15 +109,15 @@ macro_rules! impl_primitive_signed {
             fn try_from_sign_magnitude(
                 sign: Sign,
                 mag: Self::Unsigned,
-            ) -> Result<Self, TryFromIntError> {
+            ) -> Result<Self, OutOfBoundsError> {
                 match sign {
-                    Positive => mag.try_into(),
+                    Positive => mag.try_into().map_err(|_| OutOfBoundsError),
                     Negative => {
                         let x = mag.wrapping_neg() as Self;
                         if x <= 0 {
                             Ok(x)
                         } else {
-                            Err(try_from_int_error())
+                            Err(OutOfBoundsError)
                         }
                     }
                 }

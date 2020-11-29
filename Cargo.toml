@@ -11,3 +11,9 @@ repository = "https://github.com/tczajka/ibig-rs"
 homepage = "https://github.com/tczajka/ibig-rs"
 
 [dependencies]
+
+[features]
+default = ["std"]
+
+# Interface with the std library.
+std = []
