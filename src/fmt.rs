@@ -277,7 +277,6 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
                     Some(w) => {
                         let extra_bits = self.log_radix - bits;
                         bits = WORD_BITS - extra_bits;
-                        println!("{} << {}", word, extra_bits);
                         digit = (word << extra_bits | w >> bits) as Digit & mask;
                         word = w;
                     }
