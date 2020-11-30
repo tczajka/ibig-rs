@@ -19,8 +19,8 @@ impl UBig {
     /// Construct from little-endian bytes.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), UBig::from(0x010203u32));
+    /// # use ibig::{ubig, UBig};
+    /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
     /// ```
     #[inline]
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
@@ -48,8 +48,8 @@ impl UBig {
     /// Construct from big-endian bytes.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), UBig::from(0x010203u32));
+    /// # use ibig::{ubig, UBig};
+    /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), ubig!(0x010203));
     /// ```
     #[inline]
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
@@ -77,9 +77,9 @@ impl UBig {
     /// Return little-endian bytes.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert!(UBig::from(0u32).to_le_bytes().is_empty());
-    /// assert_eq!(UBig::from(0x010203u32).to_le_bytes(), [3, 2, 1]);
+    /// # use ibig::ubig;
+    /// assert!(ubig!(0).to_le_bytes().is_empty());
+    /// assert_eq!(ubig!(0x010203).to_le_bytes(), [3, 2, 1]);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
         match self.repr() {
@@ -106,9 +106,9 @@ impl UBig {
     /// Return big-endian bytes.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert!(UBig::from(0u32).to_be_bytes().is_empty());
-    /// assert_eq!(UBig::from(0x010203u32).to_be_bytes(), [1, 2, 3]);
+    /// # use ibig::ubig;
+    /// assert!(ubig!(0).to_be_bytes().is_empty());
+    /// assert_eq!(ubig!(0x010203).to_be_bytes(), [1, 2, 3]);
     /// ```
     pub fn to_be_bytes(&self) -> Vec<u8> {
         match self.repr() {

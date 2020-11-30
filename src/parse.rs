@@ -29,10 +29,15 @@ impl Display for ParseError {
 impl UBig {
     /// Convert a string in a given base to `UBig`.
     ///
-    /// The string contains an optional `+` prefix.
+    /// `src` may contain an optional `+` prefix.
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
     ///
     /// Panics if `radix` not in range 2-36.
+    ///
+    /// ```
+    /// # use ibig::{ubig, UBig};
+    /// assert_eq!(UBig::from_str_radix("+7ab", 32).unwrap(), ubig!(7499));
+    /// ```
     #[inline]
     pub fn from_str_radix(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         assert!(
@@ -42,6 +47,35 @@ impl UBig {
         );
         let src = src.strip_prefix("+").unwrap_or(src);
         UBig::from_str_radix_no_sign(src, radix)
+    }
+
+    /// Convert a string with an optional radix prefix to `UBig`.
+    ///
+    /// `src` may contain an optional `+` prefix.
+    ///
+    /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
+    ///
+    /// ```
+    /// # use ibig::{ubig, UBig};
+    /// assert_eq!(UBig::from_str_with_radix_prefix("+0o17").unwrap(), ubig!(0o17));
+    /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f").unwrap(), ubig!(0x1f));
+    /// ```
+    #[inline]
+    pub fn from_str_with_radix_prefix(src: &str) -> Result<UBig, ParseError> {
+        let src = src.strip_prefix("+").unwrap_or(src);
+        UBig::from_str_with_radix_prefix_no_sign(src)
+    }
+
+    fn from_str_with_radix_prefix_no_sign(src: &str) -> Result<UBig, ParseError> {
+        if let Some(bin) = src.strip_prefix("0b") {
+            UBig::from_str_radix_no_sign(bin, 2)
+        } else if let Some(oct) = src.strip_prefix("0o") {
+            UBig::from_str_radix_no_sign(oct, 8)
+        } else if let Some(hex) = src.strip_prefix("0x") {
+            UBig::from_str_radix_no_sign(hex, 16)
+        } else {
+            UBig::from_str_radix_no_sign(src, 10)
+        }
     }
 
     fn from_str_radix_no_sign(src: &str, radix: Digit) -> Result<UBig, ParseError> {
@@ -133,6 +167,11 @@ impl IBig {
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
     ///
     /// Panics if `radix` not in range 2-36.
+    ///
+    /// ```
+    /// # use ibig::{ibig, IBig};
+    /// assert_eq!(IBig::from_str_radix("-7ab", 32).unwrap(), ibig!(-7499));
+    /// ```
     #[inline]
     pub fn from_str_radix(mut src: &str, radix: Digit) -> Result<IBig, ParseError> {
         assert!(
@@ -152,6 +191,34 @@ impl IBig {
             }
         }
         let mag = UBig::from_str_radix_no_sign(src, radix)?;
+        Ok(IBig::from_sign_magnitude(sign, mag))
+    }
+
+    /// Convert a string with an optional radix prefix to `IBig`.
+    ///
+    /// `src` may contain an '+' or `-` prefix..
+    ///
+    /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
+    ///
+    /// ```
+    /// # use ibig::{ibig, IBig};
+    /// assert_eq!(IBig::from_str_with_radix_prefix("+0o17").unwrap(), ibig!(0o17));
+    /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f").unwrap(), ibig!(-0x1f));
+    /// ```
+    #[inline]
+    pub fn from_str_with_radix_prefix(mut src: &str) -> Result<IBig, ParseError> {
+        let sign;
+        match src.strip_prefix("-") {
+            Some(s) => {
+                sign = Negative;
+                src = s;
+            }
+            None => {
+                sign = Positive;
+                src = src.strip_prefix("+").unwrap_or(src);
+            }
+        }
+        let mag = UBig::from_str_with_radix_prefix_no_sign(src)?;
         Ok(IBig::from_sign_magnitude(sign, mag))
     }
 }

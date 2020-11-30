@@ -32,15 +32,15 @@ fn write_ascii_char(writer: &mut dyn Write, ascii: u8) -> fmt::Result {
 /// The default format uses lower-case letters a-z for digits 10-35.
 /// The "alternative" format (`{:#}`) uses upper-case letters.
 /// ```
-/// # use ibig::{IBig, UBig};
-/// assert_eq!(format!("{}", UBig::from(100u32).in_radix(2)), "1100100");
-/// assert_eq!(format!("{}", IBig::from(-3000i32).in_radix(16)), "-bb8");
-/// assert_eq!(format!("{:#}", UBig::from(3000u32).in_radix(16)), "BB8");
-/// assert_eq!(format!("{:+010}", UBig::from(100u32).in_radix(2)), "+001100100");
-/// assert_eq!(format!("{:=^10}", UBig::from(100u32).in_radix(2)), "=1100100==");
+/// # use ibig::{ibig, ubig};
+/// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
+/// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
+/// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
+/// assert_eq!(format!("{:+010}", ubig!(100).in_radix(2)), "+001100100");
+/// assert_eq!(format!("{:=^10}", ubig!(100).in_radix(2)), "=1100100==");
 /// // For bases 2, 8, 10, 16 we don't have to use `InRadix`:
-/// assert_eq!(format!("{:x}", UBig::from(3000u32)), "bb8");
-/// assert_eq!(format!("{:x}", IBig::from(-3000i32)), "-bb8");
+/// assert_eq!(format!("{:x}", ubig!(3000)), "bb8");
+/// assert_eq!(format!("{:x}", ibig!(-3000)), "-bb8");
 /// ```
 pub struct InRadix<'a> {
     sign: Sign,
@@ -375,14 +375,14 @@ impl UBig {
     /// `radix` must be between 2 and 36 inclusive.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(format!("{}", UBig::from(100u32).in_radix(2)), "1100100");
-    /// assert_eq!(format!("{}", UBig::from(3000u32).in_radix(16)), "bb8");
-    /// assert_eq!(format!("{:#}", UBig::from(3000u32).in_radix(16)), "BB8");
-    /// assert_eq!(format!("{:+010}", UBig::from(100u32).in_radix(2)), "+001100100");
-    /// assert_eq!(format!("{:=^10}", UBig::from(100u32).in_radix(2)), "=1100100==");
+    /// # use ibig::ubig;
+    /// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
+    /// assert_eq!(format!("{}", ubig!(3000).in_radix(16)), "bb8");
+    /// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
+    /// assert_eq!(format!("{:+010}", ubig!(100).in_radix(2)), "+001100100");
+    /// assert_eq!(format!("{:=^10}", ubig!(100).in_radix(2)), "=1100100==");
     /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
-    /// assert_eq!(format!("{:x}", UBig::from(3000u32)), "bb8");
+    /// assert_eq!(format!("{:x}", ubig!(3000)), "bb8");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
@@ -405,8 +405,8 @@ impl UBig {
     /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0x123fu32).to_str_radix(16), "123f");
+    /// # use ibig::ubig;
+    /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         let in_radix = InRadix {
@@ -425,8 +425,8 @@ impl UBig {
     /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
     ///
     /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0x123fu32).to_str_radix_uppercase(16), "123F");
+    /// # use ibig::ubig;
+    /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         let in_radix = InRadix {
@@ -522,14 +522,14 @@ impl IBig {
     /// `radix` must be between 2 and 36 inclusive.
     ///
     /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(format!("{}", IBig::from(100i32).in_radix(2)), "1100100");
-    /// assert_eq!(format!("{}", IBig::from(-3000i32).in_radix(16)), "-bb8");
-    /// assert_eq!(format!("{:#}", IBig::from(3000i32).in_radix(16)), "BB8");
-    /// assert_eq!(format!("{:+010}", IBig::from(100i32).in_radix(2)), "+001100100");
-    /// assert_eq!(format!("{:=^10}", IBig::from(-100i32).in_radix(2)), "=-1100100=");
+    /// # use ibig::ibig;
+    /// assert_eq!(format!("{}", ibig!(100).in_radix(2)), "1100100");
+    /// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
+    /// assert_eq!(format!("{:#}", ibig!(3000).in_radix(16)), "BB8");
+    /// assert_eq!(format!("{:+010}", ibig!(100).in_radix(2)), "+001100100");
+    /// assert_eq!(format!("{:=^10}", ibig!(-100).in_radix(2)), "=-1100100=");
     /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
-    /// assert_eq!(format!("{:x}", IBig::from(-3000i32)), "-bb8");
+    /// assert_eq!(format!("{:x}", ibig!(-3000)), "-bb8");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
@@ -552,8 +552,8 @@ impl IBig {
     /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
     ///
     /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(-0x123fi32).to_str_radix(16), "-123f");
+    /// # use ibig::ibig;
+    /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         let in_radix = InRadix {
@@ -572,8 +572,8 @@ impl IBig {
     /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
     ///
     /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(-0x123fi32).to_str_radix_uppercase(16), "-123F");
+    /// # use ibig::ibig;
+    /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         let in_radix = InRadix {

@@ -12,7 +12,10 @@ mod buffer;
 mod convert;
 mod fmt;
 mod ibig;
+#[macro_use]
+mod macros;
 mod parse;
 mod primitive;
 mod radix;
+mod sub;
 mod ubig;
