@@ -19,7 +19,7 @@ impl Buffer {
     ///
     /// It leaves some extra space for future growth.
     pub(crate) fn allocate(num_words: usize) -> Buffer {
-        assert!(num_words <= Buffer::MAX_CAPACITY, "UBig too large");
+        assert!(num_words <= Buffer::MAX_CAPACITY, "number too large");
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
     }
 

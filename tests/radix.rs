@@ -1,4 +1,4 @@
-use ibig::{IBig, UBig};
+use ibig::{IBig, ParseError, UBig};
 
 #[test]
 fn test_ubig_format() {
@@ -69,13 +69,19 @@ fn test_ubig_in_radix() {
 }
 
 #[test]
-fn test_ubig_to_radix_str() {
-    assert_eq!(UBig::from(0u32).to_radix_str(16), "0");
-    assert_eq!(UBig::from(100u32).to_radix_str(4), "1210");
-    assert_eq!(UBig::from(3000u32).to_radix_str(16), "bb8");
-    assert_eq!(UBig::from(3000u32).to_radix_str_uppercase(16), "BB8");
-    assert_eq!(UBig::from(3000u32).to_radix_str(32), "2to");
-    assert_eq!(UBig::from(3000u32).to_radix_str_uppercase(32), "2TO");
+fn test_ubig_to_str_radix() {
+    assert_eq!(UBig::from(0u32).to_str_radix(16), "0");
+    assert_eq!(UBig::from(100u32).to_str_radix(4), "1210");
+    assert_eq!(UBig::from(3000u32).to_str_radix(16), "bb8");
+    assert_eq!(UBig::from(3000u32).to_str_radix_uppercase(16), "BB8");
+    assert_eq!(UBig::from(3000u32).to_str_radix(32), "2to");
+    assert_eq!(UBig::from(3000u32).to_str_radix_uppercase(32), "2TO");
+
+    let a = UBig::from_le_bytes(&[0xff; 50]);
+    assert_eq!(
+        a.to_str_radix(32),
+        "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+    );
 }
 
 #[test]
@@ -147,16 +153,103 @@ fn test_ibig_in_radix() {
 }
 
 #[test]
-fn test_ibig_to_radix_str() {
-    assert_eq!(IBig::from(0i32).to_radix_str(16), "0");
-    assert_eq!(IBig::from(100i32).to_radix_str(4), "1210");
-    assert_eq!(IBig::from(-100i32).to_radix_str(4), "-1210");
-    assert_eq!(IBig::from(3000i32).to_radix_str(16), "bb8");
-    assert_eq!(IBig::from(-3000i32).to_radix_str(16), "-bb8");
-    assert_eq!(IBig::from(3000i32).to_radix_str_uppercase(16), "BB8");
-    assert_eq!(IBig::from(-3000i32).to_radix_str_uppercase(16), "-BB8");
-    assert_eq!(IBig::from(3000i32).to_radix_str(32), "2to");
-    assert_eq!(IBig::from(-3000i32).to_radix_str(32), "-2to");
-    assert_eq!(IBig::from(3000i32).to_radix_str_uppercase(32), "2TO");
-    assert_eq!(IBig::from(-3000i32).to_radix_str_uppercase(32), "-2TO");
+fn test_ibig_to_str_radix() {
+    assert_eq!(IBig::from(0i32).to_str_radix(16), "0");
+    assert_eq!(IBig::from(100i32).to_str_radix(4), "1210");
+    assert_eq!(IBig::from(-100i32).to_str_radix(4), "-1210");
+    assert_eq!(IBig::from(3000i32).to_str_radix(16), "bb8");
+    assert_eq!(IBig::from(-3000i32).to_str_radix(16), "-bb8");
+    assert_eq!(IBig::from(3000i32).to_str_radix_uppercase(16), "BB8");
+    assert_eq!(IBig::from(-3000i32).to_str_radix_uppercase(16), "-BB8");
+    assert_eq!(IBig::from(3000i32).to_str_radix(32), "2to");
+    assert_eq!(IBig::from(-3000i32).to_str_radix(32), "-2to");
+    assert_eq!(IBig::from(3000i32).to_str_radix_uppercase(32), "2TO");
+    assert_eq!(IBig::from(-3000i32).to_str_radix_uppercase(32), "-2TO");
+}
+
+#[test]
+fn test_ubig_from_str_radix() {
+    assert_eq!(
+        UBig::from_str_radix("", 2).unwrap_err(),
+        ParseError::NoDigits
+    );
+    assert_eq!(
+        UBig::from_str_radix("+", 2).unwrap_err(),
+        ParseError::NoDigits
+    );
+    assert_eq!(
+        UBig::from_str_radix("012", 2).unwrap_err(),
+        ParseError::InvalidDigit
+    );
+    assert_eq!(
+        UBig::from_str_radix("-0", 2).unwrap_err(),
+        ParseError::InvalidDigit
+    );
+    assert_eq!(UBig::from_str_radix("+0", 2).unwrap(), UBig::from(0u32));
+    assert_eq!(UBig::from_str_radix("0", 2).unwrap(), UBig::from(0u32));
+    assert_eq!(
+        UBig::from_str_radix("1010110", 2).unwrap(),
+        UBig::from(0b1010110u32)
+    );
+    assert_eq!(
+        UBig::from_str_radix("f1Ee", 16).unwrap(),
+        UBig::from(0xf1eeu32)
+    );
+    assert_eq!(UBig::from_str_radix("Pp", 32).unwrap(), UBig::from(825u32));
+    assert_eq!(
+        UBig::from_str_radix("abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
+            .unwrap()
+            .to_str_radix(16),
+        "abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
+    );
+    assert_eq!(
+        UBig::from_str_radix(
+            "12341235234512341345356745634563563563457356356354645634563456",
+            8
+        )
+        .unwrap()
+        .to_str_radix(16),
+        "a70a75394a70b95dde5ce5cee77397bb9dcecd2e72e72e"
+    );
+}
+
+#[test]
+fn test_ibig_from_str_radix() {
+    assert_eq!(
+        IBig::from_str_radix("", 2).unwrap_err(),
+        ParseError::NoDigits
+    );
+    assert_eq!(
+        IBig::from_str_radix("+", 2).unwrap_err(),
+        ParseError::NoDigits
+    );
+    assert_eq!(
+        IBig::from_str_radix("-", 2).unwrap_err(),
+        ParseError::NoDigits
+    );
+    assert_eq!(
+        IBig::from_str_radix("-+5", 2).unwrap_err(),
+        ParseError::InvalidDigit
+    );
+    assert_eq!(
+        IBig::from_str_radix("-012", 2).unwrap_err(),
+        ParseError::InvalidDigit
+    );
+    assert_eq!(IBig::from_str_radix("0", 2).unwrap(), IBig::from(0i32));
+    assert_eq!(IBig::from_str_radix("+0", 2).unwrap(), IBig::from(0i32));
+    assert_eq!(IBig::from_str_radix("-0", 2).unwrap(), IBig::from(0i32));
+    assert_eq!(
+        IBig::from_str_radix("1010110", 2).unwrap(),
+        IBig::from(0b1010110i32)
+    );
+    assert_eq!(
+        IBig::from_str_radix("-1010110", 2).unwrap(),
+        IBig::from(-0b1010110i32)
+    );
+    assert_eq!(
+        IBig::from_str_radix("-abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
+            .unwrap()
+            .to_str_radix(16),
+        "-abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
+    );
 }

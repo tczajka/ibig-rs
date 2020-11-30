@@ -4,12 +4,15 @@
 
 extern crate alloc;
 
-pub use crate::{fmt::InRadix, ibig::IBig, primitive::OutOfBoundsError, ubig::UBig};
+pub use crate::{
+    fmt::InRadix, ibig::IBig, parse::ParseError, primitive::OutOfBoundsError, ubig::UBig,
+};
 
 mod buffer;
 mod convert;
 mod fmt;
 mod ibig;
+mod parse;
 mod primitive;
 mod radix;
 mod ubig;

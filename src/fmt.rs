@@ -277,6 +277,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
                     Some(w) => {
                         let extra_bits = self.log_radix - bits;
                         bits = WORD_BITS - extra_bits;
+                        println!("{} << {}", word, extra_bits);
                         digit = (word << extra_bits | w >> bits) as Digit & mask;
                         word = w;
                     }
@@ -387,7 +388,8 @@ impl UBig {
     pub fn in_radix(&self, radix: u32) -> InRadix {
         assert!(
             radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and 36 inclusive"
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX
         );
         InRadix {
             sign: Positive,
@@ -404,9 +406,9 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0x123fu32).to_radix_str(16), "123f");
+    /// assert_eq!(UBig::from(0x123fu32).to_str_radix(16), "123f");
     /// ```
-    pub fn to_radix_str(&self, radix: u32) -> String {
+    pub fn to_str_radix(&self, radix: u32) -> String {
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -424,9 +426,9 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0x123fu32).to_radix_str_uppercase(16), "123F");
+    /// assert_eq!(UBig::from(0x123fu32).to_str_radix_uppercase(16), "123F");
     /// ```
-    pub fn to_radix_str_uppercase(&self, radix: u32) -> String {
+    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -533,7 +535,8 @@ impl IBig {
     pub fn in_radix(&self, radix: u32) -> InRadix {
         assert!(
             radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and 36 inclusive"
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX,
         );
         InRadix {
             sign: self.sign(),
@@ -550,9 +553,9 @@ impl IBig {
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(-0x123fi32).to_radix_str(16), "-123f");
+    /// assert_eq!(IBig::from(-0x123fi32).to_str_radix(16), "-123f");
     /// ```
-    pub fn to_radix_str(&self, radix: u32) -> String {
+    pub fn to_str_radix(&self, radix: u32) -> String {
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -570,9 +573,9 @@ impl IBig {
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(-0x123fi32).to_radix_str_uppercase(16), "-123F");
+    /// assert_eq!(IBig::from(-0x123fi32).to_str_radix_uppercase(16), "-123F");
     /// ```
-    pub fn to_radix_str_uppercase(&self, radix: u32) -> String {
+    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
