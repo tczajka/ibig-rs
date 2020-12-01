@@ -32,7 +32,7 @@ pub use crate::{
     ibig::IBig,
     parse::ParseError,
     primitive::OutOfBoundsError,
-    sign::Abs,
+    sign::{Abs, UnsignedAbs},
     ubig::UBig,
 };
 
