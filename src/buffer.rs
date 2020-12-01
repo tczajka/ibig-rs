@@ -70,9 +70,9 @@ impl Buffer {
     /// Equivalent to, but more efficient than:
     ///
     /// ```ignore
-    /// self.ensure_capacity(source.len());
-    /// self.clone_from(source);
-    /// self.shrink();
+    /// buffer.ensure_capacity(source.len());
+    /// buffer.clone_from(source);
+    /// buffer.shrink();
     /// ```
     pub(crate) fn resizing_clone_from(&mut self, source: &Buffer) {
         let cap = self.capacity();

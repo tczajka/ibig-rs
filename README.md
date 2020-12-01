@@ -1,4 +1,3 @@
-# ibig-rs
 Big integer library.
 
 The library implements arbitrarily large integer arithmetic in pure Rust.

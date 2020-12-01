@@ -26,6 +26,9 @@ impl Display for ParseError {
     }
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for ParseError {}
+
 impl UBig {
     /// Convert a string in a given base to `UBig`.
     ///

@@ -374,6 +374,9 @@ impl UpperHex for UBig {
 impl UBig {
     /// Representation in a given radix.
     ///
+    /// Using `in_radix` is a bit more efficient for formatting than converting to a string and then
+    /// formatting.
+    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -389,6 +392,9 @@ impl UBig {
     /// assert_eq!(format!("{:=^10}", ubig!(100).in_radix(2)), "=1100100==");
     /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
     /// assert_eq!(format!("{:x}", ubig!(3000)), "bb8");
+    ///
+    /// // This performs an extra String allocation and is less efficient:
+    /// assert_eq!(format!("{:=^10}", ubig!(100).to_str_radix(2)), "=1100100==");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
@@ -408,8 +414,6 @@ impl UBig {
 
     /// String representation in an arbitrary radix.
     ///
-    /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
-    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -419,6 +423,9 @@ impl UBig {
     /// ```
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(ubig!(0x123f).in_radix(16).to_string(), "123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         assert!(
@@ -439,8 +446,6 @@ impl UBig {
 
     /// Upper-case string representation in an arbitrary radix.
     ///
-    /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
-    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -450,6 +455,9 @@ impl UBig {
     /// ```
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(format!("{:#}", ubig!(0x123f).in_radix(16)), "123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         assert!(
@@ -547,6 +555,9 @@ impl UpperHex for IBig {
 impl IBig {
     /// Representation in a given radix.
     ///
+    /// Using `in_radix` is a bit more efficient for formatting than converting to a string and then
+    /// formatting.
+    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -562,6 +573,9 @@ impl IBig {
     /// assert_eq!(format!("{:=^10}", ibig!(-100).in_radix(2)), "=-1100100=");
     /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
     /// assert_eq!(format!("{:x}", ibig!(-3000)), "-bb8");
+    ///
+    /// // This performs an extra String allocation and is less efficient:
+    /// assert_eq!(format!("{:=^10}", ibig!(-100).to_str_radix(2)), "=-1100100=");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
@@ -581,8 +595,6 @@ impl IBig {
 
     /// String representation in an arbitrary radix.
     ///
-    /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
-    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -592,6 +604,9 @@ impl IBig {
     /// ```
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(ibig!(-0x123f).in_radix(16).to_string(), "-123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         assert!(
@@ -612,8 +627,6 @@ impl IBig {
 
     /// Upper-case string representation in an arbitrary radix.
     ///
-    /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
-    ///
     /// # Panics
     ///
     /// Panics `radix` is not between 2 and 36 inclusive.
@@ -623,6 +636,9 @@ impl IBig {
     /// ```
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(format!("{:#}", ibig!(-0x123f).in_radix(16)), "-123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         assert!(
