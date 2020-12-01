@@ -44,6 +44,7 @@ mod operators;
 
 mod bits;
 mod buffer;
+mod cmp;
 mod convert;
 mod fmt;
 mod ibig;
