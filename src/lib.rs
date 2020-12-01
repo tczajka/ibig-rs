@@ -8,6 +8,7 @@ pub use crate::{
     fmt::InRadix, ibig::IBig, parse::ParseError, primitive::OutOfBoundsError, ubig::UBig,
 };
 
+mod bits;
 mod buffer;
 mod convert;
 mod fmt;
