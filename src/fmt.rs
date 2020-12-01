@@ -377,7 +377,7 @@ impl UBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///
@@ -414,7 +414,7 @@ impl UBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///
@@ -446,7 +446,7 @@ impl UBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///
@@ -558,7 +558,7 @@ impl IBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///
@@ -595,7 +595,7 @@ impl IBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///
@@ -627,7 +627,7 @@ impl IBig {
     ///
     /// # Panics
     ///
-    /// Panics `radix` is not between 2 and 36 inclusive.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     ///

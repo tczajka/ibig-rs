@@ -38,7 +38,7 @@ impl UBig {
     ///
     /// # Panics
     ///
-    /// Panics if `radix` not in range 2-36.
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     /// ```
@@ -178,7 +178,8 @@ impl IBig {
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
     ///
     /// # Panics
-    /// Panics if `radix` not in range 2-36.
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
     ///
     /// # Examples
     /// ```
