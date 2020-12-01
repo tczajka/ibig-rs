@@ -14,7 +14,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ubig!(17).trailing_zeros(), Some(0));
     /// assert_eq!(ubig!(48).trailing_zeros(), Some(4));
     /// assert_eq!(ubig!(0b101000000).trailing_zeros(), Some(6));
@@ -39,7 +39,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ubig!(17).ilog2(), Some(4));
     /// assert_eq!(ubig!(0b101000000).ilog2(), Some(8));
     /// assert_eq!(ubig!(0).ilog2(), None);
@@ -79,7 +79,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(17).trailing_zeros(), Some(0));
     /// assert_eq!(ibig!(-48).trailing_zeros(), Some(4));
     /// assert_eq!(ibig!(-0b101000000).trailing_zeros(), Some(6));

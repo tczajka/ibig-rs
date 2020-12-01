@@ -5,8 +5,9 @@ use crate::{
     ibig::IBig,
     primitive::{
         word_from_be_bytes_partial, word_from_le_bytes_partial, OutOfBoundsError, PrimitiveSigned,
-        PrimitiveUnsigned, Sign::*, Word, WORD_BITS, WORD_BYTES,
+        PrimitiveUnsigned, Word, WORD_BITS, WORD_BYTES,
     },
+    sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 use alloc::vec::Vec;
@@ -21,7 +22,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{ubig, UBig};
+    /// # use ibig::prelude::*;
     /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
     /// ```
     #[inline]
@@ -52,7 +53,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{ubig, UBig};
+    /// # use ibig::prelude::*;
     /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), ubig!(0x010203));
     /// ```
     #[inline]
@@ -83,7 +84,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert!(ubig!(0).to_le_bytes().is_empty());
     /// assert_eq!(ubig!(0x010203).to_le_bytes(), [3, 2, 1]);
     /// ```
@@ -114,7 +115,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert!(ubig!(0).to_be_bytes().is_empty());
     /// assert_eq!(ubig!(0x010203).to_be_bytes(), [1, 2, 3]);
     /// ```

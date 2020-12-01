@@ -1,4 +1,4 @@
-use ibig::{ibig, ubig};
+use ibig::prelude::*;
 
 #[test]
 fn test_trailing_zeros() {

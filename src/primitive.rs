@@ -7,6 +7,7 @@
 )))]
 compile_error!("Machine architecture must be 16-bit, 32-bit or 64-bit.");
 
+use crate::sign::Sign::{self, *};
 use core::{
     convert::{TryFrom, TryInto},
     fmt::{self, Display, Formatter},
@@ -39,14 +40,6 @@ pub(crate) type DoubleWord = u64;
 #[cfg(target_pointer_width = "64")]
 /// Double machine word.
 pub(crate) type DoubleWord = u128;
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum Sign {
-    Positive,
-    Negative,
-}
-
-use Sign::*;
 
 pub(crate) trait PrimitiveUnsigned
 where

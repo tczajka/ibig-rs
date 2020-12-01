@@ -1,4 +1,4 @@
-use ibig::{IBig, UBig};
+use ibig::prelude::*;
 use std::convert::TryFrom;
 
 #[test]

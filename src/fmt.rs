@@ -2,11 +2,9 @@
 
 use crate::{
     ibig::IBig,
-    primitive::{
-        Sign::{self, *},
-        Word, WORD_BITS,
-    },
+    primitive::{Word, WORD_BITS},
     radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, MAX_RADIX},
+    sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
 use alloc::string::String;
@@ -35,7 +33,7 @@ fn write_ascii_char(writer: &mut dyn Write, ascii: u8) -> fmt::Result {
 /// # Examples
 ///
 /// ```
-/// # use ibig::{ibig, ubig};
+/// # use ibig::prelude::*;
 /// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
 /// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
 /// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
@@ -384,7 +382,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
     /// assert_eq!(format!("{}", ubig!(3000).in_radix(16)), "bb8");
     /// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
@@ -421,7 +419,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
     ///
     /// // Equivalent but slightly less efficient:
@@ -453,7 +451,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ubig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
     ///
     /// // Equivalent but slightly less efficient:
@@ -565,7 +563,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(format!("{}", ibig!(100).in_radix(2)), "1100100");
     /// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
     /// assert_eq!(format!("{:#}", ibig!(3000).in_radix(16)), "BB8");
@@ -602,7 +600,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
     ///
     /// // Equivalent but slightly less efficient:
@@ -634,7 +632,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
     ///
     /// // Equivalent but slightly less efficient:

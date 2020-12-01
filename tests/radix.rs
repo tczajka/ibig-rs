@@ -1,4 +1,4 @@
-use ibig::{ibig, ubig, IBig, ParseError, UBig};
+use ibig::{prelude::*, ParseError};
 
 #[test]
 fn test_ubig_format() {

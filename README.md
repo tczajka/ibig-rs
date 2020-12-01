@@ -6,7 +6,7 @@ The two integer types are `UBig` (for unsigned integers) and `IBig` (for signed 
 
 Create numbers using the `ubig` and `ibig` macros
 ```rust
-use ibig::{ibig, ubig};
+use ibig::prelude::*;
 let a = ubig!(0x10ff);
 let b = ibig!(-abcd base 32);
 ```

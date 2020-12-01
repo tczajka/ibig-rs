@@ -1,7 +1,7 @@
 //! Signed big integer.
 
 use crate::{
-    primitive::Sign::{self, *},
+    sign::Sign::{self, *},
     ubig::UBig,
 };
 
@@ -12,7 +12,7 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// # use ibig::{ibig, IBig, ParseError};
+/// # use ibig::{prelude::*, ParseError};
 /// let a = ibig!(a2a123bbb127779cccc123123ccc base 32);
 /// let b = ibig!(-0x1231abcd4134);
 /// let c = IBig::from_str_radix("a2a123bbb127779cccc123123ccc", 32)?;
@@ -21,7 +21,7 @@ use crate::{
 /// assert_eq!(b, d);
 /// Ok::<(), ParseError>(())
 /// ```
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct IBig {
     sign: Sign,
     magnitude: UBig,
@@ -51,7 +51,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(-5).is_negative(), true);
     /// assert_eq!(ibig!(0).is_negative(), false);
     /// assert_eq!(ibig!(5).is_negative(), false);
@@ -64,7 +64,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::ibig;
+    /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(-5).is_positive(), false);
     /// assert_eq!(ibig!(0).is_positive(), false);
     /// assert_eq!(ibig!(5).is_positive(), true);

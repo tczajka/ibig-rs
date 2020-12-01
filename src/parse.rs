@@ -1,8 +1,9 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{Sign::*, Word, WORD_BITS},
+    primitive::{Word, WORD_BITS},
     radix::{digit_from_ascii, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
+    sign::Sign::*,
     ubig::UBig,
 };
 use core::fmt::{self, Display, Formatter};
@@ -41,7 +42,7 @@ impl UBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{ubig, UBig, ParseError};
+    /// # use ibig::{prelude::*, ParseError};
     /// assert_eq!(UBig::from_str_radix("+7ab", 32)?, ubig!(7499));
     /// # Ok::<(), ParseError>(())
     /// ```
@@ -65,7 +66,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{ubig, UBig, ParseError};
+    /// # use ibig::{prelude::*, ParseError};
     /// assert_eq!(UBig::from_str_with_radix_prefix("+0o17")?, ubig!(0o17));
     /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f")?, ubig!(0x1f));
     /// # Ok::<(), ParseError>(())
@@ -181,7 +182,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{ibig, IBig, ParseError};
+    /// # use ibig::{prelude::*, ParseError};
     /// assert_eq!(IBig::from_str_radix("-7ab", 32)?, ibig!(-7499));
     /// # Ok::<(), ParseError>(())
     /// ```
@@ -215,7 +216,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{ibig, IBig, ParseError};
+    /// # use ibig::{prelude::*, ParseError};
     /// assert_eq!(IBig::from_str_with_radix_prefix("+0o17")?, ibig!(0o17));
     /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f")?, ibig!(-0x1f));
     /// # Ok::<(), ParseError>(())
