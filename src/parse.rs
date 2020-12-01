@@ -36,7 +36,7 @@ impl UBig {
     ///
     /// Panics if `radix` not in range 2-36.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// # use ibig::{ubig, UBig, ParseError};
     /// assert_eq!(UBig::from_str_radix("+7ab", 32)?, ubig!(7499));
@@ -176,7 +176,7 @@ impl IBig {
     /// # Panics
     /// Panics if `radix` not in range 2-36.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// # use ibig::{ibig, IBig, ParseError};
     /// assert_eq!(IBig::from_str_radix("-7ab", 32)?, ibig!(-7499));

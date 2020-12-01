@@ -1,6 +1,6 @@
 use crate::{
     ibig::IBig,
-    primitive::{Sign::*, Word, WORD_BITS},
+    primitive::{Word, WORD_BITS},
     ubig::{Repr::*, UBig},
 };
 

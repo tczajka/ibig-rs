@@ -18,7 +18,7 @@ use core::{
 impl UBig {
     /// Construct from little-endian bytes.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # use ibig::{ubig, UBig};
@@ -49,7 +49,7 @@ impl UBig {
 
     /// Construct from big-endian bytes.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # use ibig::{ubig, UBig};
@@ -80,7 +80,7 @@ impl UBig {
 
     /// Return little-endian bytes.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # use ibig::ubig;
@@ -111,7 +111,7 @@ impl UBig {
 
     /// Return big-endian bytes.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # use ibig::ubig;
