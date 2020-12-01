@@ -59,6 +59,8 @@ impl UBig {
 }
 
 fn trailing_zeros_large(words: &[Word]) -> usize {
+    debug_assert!(*words.last().unwrap() != 0);
+
     for (idx, word) in words.iter().enumerate() {
         if *word != 0 {
             return idx * WORD_BITS as usize + word.trailing_zeros() as usize;
@@ -86,29 +88,5 @@ impl IBig {
     #[inline]
     pub fn trailing_zeros(&self) -> Option<usize> {
         self.magnitude().trailing_zeros()
-    }
-
-    /// Integer logarithm base 2.
-    ///
-    /// Returns the floor of the logarithm base 2 of the number.
-    /// In other words, it is the position of the highest 1 bit in the binary representation.
-    ///
-    /// For `n <= 0`, it returns `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::ibig;
-    /// assert_eq!(ibig!(17).ilog2(), Some(4));
-    /// assert_eq!(ibig!(0b101000000).ilog2(), Some(8));
-    /// assert_eq!(ibig!(0).ilog2(), None);
-    /// assert_eq!(ibig!(-17).ilog2(), None);
-    /// ```
-    #[inline]
-    pub fn ilog2(&self) -> Option<usize> {
-        match self.sign() {
-            Positive => self.magnitude().ilog2(),
-            Negative => None,
-        }
     }
 }

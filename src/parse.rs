@@ -32,11 +32,15 @@ impl UBig {
     /// `src` may contain an optional `+` prefix.
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
     ///
+    /// # Panics
+    ///
     /// Panics if `radix` not in range 2-36.
     ///
+    /// # Example
     /// ```
-    /// # use ibig::{ubig, UBig};
-    /// assert_eq!(UBig::from_str_radix("+7ab", 32).unwrap(), ubig!(7499));
+    /// # use ibig::{ubig, UBig, ParseError};
+    /// assert_eq!(UBig::from_str_radix("+7ab", 32)?, ubig!(7499));
+    /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
     pub fn from_str_radix(src: &str, radix: Digit) -> Result<UBig, ParseError> {
@@ -55,10 +59,13 @@ impl UBig {
     ///
     /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
     ///
+    /// # Examples
+    ///
     /// ```
-    /// # use ibig::{ubig, UBig};
-    /// assert_eq!(UBig::from_str_with_radix_prefix("+0o17").unwrap(), ubig!(0o17));
-    /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f").unwrap(), ubig!(0x1f));
+    /// # use ibig::{ubig, UBig, ParseError};
+    /// assert_eq!(UBig::from_str_with_radix_prefix("+0o17")?, ubig!(0o17));
+    /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f")?, ubig!(0x1f));
+    /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
     pub fn from_str_with_radix_prefix(src: &str) -> Result<UBig, ParseError> {
@@ -166,11 +173,14 @@ impl IBig {
     /// The string may contain a `+` or `-` prefix.
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
     ///
+    /// # Panics
     /// Panics if `radix` not in range 2-36.
     ///
+    /// # Example
     /// ```
-    /// # use ibig::{ibig, IBig};
-    /// assert_eq!(IBig::from_str_radix("-7ab", 32).unwrap(), ibig!(-7499));
+    /// # use ibig::{ibig, IBig, ParseError};
+    /// assert_eq!(IBig::from_str_radix("-7ab", 32)?, ibig!(-7499));
+    /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
     pub fn from_str_radix(mut src: &str, radix: Digit) -> Result<IBig, ParseError> {
@@ -200,10 +210,12 @@ impl IBig {
     ///
     /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
     ///
+    /// # Examples
     /// ```
-    /// # use ibig::{ibig, IBig};
-    /// assert_eq!(IBig::from_str_with_radix_prefix("+0o17").unwrap(), ibig!(0o17));
-    /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f").unwrap(), ibig!(-0x1f));
+    /// # use ibig::{ibig, IBig, ParseError};
+    /// assert_eq!(IBig::from_str_with_radix_prefix("+0o17")?, ibig!(0o17));
+    /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f")?, ibig!(-0x1f));
+    /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
     pub fn from_str_with_radix_prefix(mut src: &str) -> Result<IBig, ParseError> {

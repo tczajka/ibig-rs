@@ -23,8 +23,4 @@ fn test_ilog2() {
         ubig!(_0xfffffffffffffffffffff00000000000000000000000000000000000000000000000000).ilog2(),
         Some(283)
     );
-
-    assert_eq!(ibig!(-100).ilog2(), None);
-    assert_eq!(ibig!(0).ilog2(), None);
-    assert_eq!(ibig!(0xf0000).ilog2(), Some(19));
 }

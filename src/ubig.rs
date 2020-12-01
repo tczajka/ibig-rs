@@ -18,6 +18,21 @@ pub(crate) enum Repr {
 }
 
 /// Unsigned big integer.
+///
+/// Arbitrarily large unsigned integer.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig::{ubig, UBig, ParseError};
+/// let a = ubig!(a2a123bbb127779cccc123123ccc base 32);
+/// let b = ubig!(0x1231abcd4134);
+/// let c = UBig::from_str_radix("a2a123bbb127779cccc123123ccc", 32)?;
+/// let d = UBig::from_str_radix("1231abcd4134", 16)?;
+/// assert_eq!(a, c);
+/// assert_eq!(b, d);
+/// Ok::<(), ParseError>(())
+/// ```
 #[derive(Eq, PartialEq)]
 pub struct UBig(Repr);
 

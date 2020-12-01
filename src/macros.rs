@@ -1,22 +1,33 @@
 /// Create a `UBig` value.
 ///
-/// For typical numbers: `ubig!(100)`, `ubig!(0b101)`, `ubig!(0o202)`, `ubig!(0x2ff)`.
-///
-/// For an arbitrary base, add `base N`, e.g.: `ubig!(100 base 13)`, `ubig!(3fp1 base 32)`.
-///
-/// For very large numbers the above may not compile. Then put an underscore before the digits:
-/// `ubig!(_10000000000000000000000000000000000000)`,
-/// `ubig!(_3ffffffffffffffffffffffffffffffffffffppp base 36)`,
+/// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
+/// prefixes:
 /// ```
-/// # use ibig::{ubig, UBig};
-/// assert_eq!(ubig!(17).to_str_radix(16), "11");
-/// assert_eq!(ubig!(0b101).to_str_radix(2), "101");
-/// assert_eq!(ubig!(0o177).to_str_radix(8), "177");
-/// assert_eq!(ubig!(_0x1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa).to_str_radix(16),
-///            "1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-/// assert_eq!(ubig!(100 base 32).to_str_radix(16), "400");
-/// assert_eq!(ubig!(ppppppppppppppppppp base 32).to_str_radix(32),
-///            "ppppppppppppppppppp");
+/// # use ibig::ubig;
+/// let a = ubig!(100);
+/// let b = ubig!(0b101);
+/// let c = ubig!(0o202);
+/// let d = ubig!(0x2ff);
+/// ```
+///
+/// For an arbitrary base, add `base N`:
+/// ```
+/// # use ibig::ubig;
+/// let e = ubig!(a3gp1 base 32);
+/// ```
+///
+/// If the sequence of digits is not a valid Rust literal or identifier, put an underscore before
+/// the digits. This may be necessary when:
+/// * There are a lot of digits. Rust will fail to compile without an underscore if the number
+///   wouldn't fit in `u128`.
+/// * The first digit is decimal, but not all digits are decimal.
+/// ```
+/// # use ibig::ubig;
+/// let f = ubig!(_0x314159265358979323846264338327950288419716939937);
+/// let g = ubig!(_0b102 base 32);
+/// let h = ubig!(b102 base 32);
+/// assert_eq!(g, h);
+/// let i = ubig!(_100ef base 32);
 /// ```
 #[macro_export]
 macro_rules! ubig {
@@ -46,23 +57,34 @@ macro_rules! ubig {
 
 /// Create an `IBig` value.
 ///
-/// For typical numbers: `ibig!(-100)`, `ibig!(0b101)`, `ibig!(-0o202)`, `ibig!(0x2ff)`.
-///
-/// For an arbitrary base, add `base N`, e.g.: `ibig!(-100 base 13)`, `ibig!(fp base 32)`.
-///
-/// For very large numbers the above may not compile. Then put an underscore before the digits:
-/// `ibig!(-_10000000000000000000000000000000000000)`,
-/// `ibig!(-_3ffffffffffffffffffffffffffffffffffffppp base 36)`,
+/// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
+/// prefixes:
 /// ```
 /// # use ibig::ibig;
-/// assert_eq!(ibig!(17).to_str_radix(16), "11");
-/// assert_eq!(ibig!(-0b101).to_str_radix(2), "-101");
-/// assert_eq!(ibig!(-0o177).to_str_radix(8), "-177");
-/// assert_eq!(ibig!(-_0x1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa).to_str_radix(16),
-///            "-1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-/// assert_eq!(ibig!(-100 base 32).to_str_radix(16), "-400");
-/// assert_eq!(ibig!(-ppppppppppppppppppppp base 32).to_str_radix(32),
-///            "-ppppppppppppppppppppp");
+/// let a = ibig!(100);
+/// let b = ibig!(-0b101);
+/// let c = ibig!(0o202);
+/// let d = ibig!(-0x2ff);
+/// ```
+///
+/// For an arbitrary base, add `base N`:
+/// ```
+/// # use ibig::ibig;
+/// let e = ibig!(-a3gp1 base 32);
+/// ```
+///
+/// If the sequence of digits is not a valid Rust literal or identifier, put an underscore before
+/// the digits. This may be necessary when:
+/// * There are a lot of digits. Rust will fail to compile without an underscore if the number
+///   wouldn't fit in `u128`.
+/// * The first digit is decimal, but not all digits are decimal.
+/// ```
+/// # use ibig::ibig;
+/// let f = ibig!(-_0x314159265358979323846264338327950288419716939937);
+/// let g = ibig!(_0b102 base 32);
+/// let h = ibig!(b102 base 32);
+/// assert_eq!(g, h);
+/// let i = ibig!(-_100ef base 32);
 /// ```
 #[macro_export]
 macro_rules! ibig {

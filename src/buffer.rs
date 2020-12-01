@@ -40,6 +40,8 @@ impl Buffer {
 
     /// Change capacity to store `num_words` plus some extra space for future growth.
     ///
+    /// # Panics
+    ///
     /// Panics if `num_words < len()`.
     fn reallocate(&mut self, num_words: usize) {
         assert!(num_words >= self.len());
@@ -49,6 +51,8 @@ impl Buffer {
     }
 
     /// Append a Word to the buffer.
+    ///
+    /// # Panics
     ///
     /// Panics if there is not enough capacity.
     pub(crate) fn push(&mut self, word: Word) {
@@ -64,7 +68,8 @@ impl Buffer {
     /// Clone from `other` and resize if necessary.
     ///
     /// Equivalent to, but more efficient than:
-    /// ```text
+    ///
+    /// ```ignore
     /// self.ensure_capacity(source.len());
     /// self.clone_from(source);
     /// self.shrink();

@@ -6,6 +6,21 @@ use crate::{
 };
 
 /// Signed big integer.
+///
+/// Arbitrarily large signed integer.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig::{ibig, IBig, ParseError};
+/// let a = ibig!(a2a123bbb127779cccc123123ccc base 32);
+/// let b = ibig!(-0x1231abcd4134);
+/// let c = IBig::from_str_radix("a2a123bbb127779cccc123123ccc", 32)?;
+/// let d = IBig::from_str_radix("-1231abcd4134", 16)?;
+/// assert_eq!(a, c);
+/// assert_eq!(b, d);
+/// Ok::<(), ParseError>(())
+/// ```
 #[derive(Eq, PartialEq)]
 pub struct IBig {
     sign: Sign,
@@ -33,11 +48,27 @@ impl IBig {
     }
 
     /// Is the number smaller than 0?
+    ///
+    /// # Examples
+    /// ```
+    /// # use ibig::ibig;
+    /// assert_eq!(ibig!(-5).is_negative(), true);
+    /// assert_eq!(ibig!(0).is_negative(), false);
+    /// assert_eq!(ibig!(5).is_negative(), false);
+    /// ```
     pub fn is_negative(&self) -> bool {
         self.sign == Negative
     }
 
     /// Is the number greater than 0?
+    ///
+    /// # Examples
+    /// ```
+    /// # use ibig::ibig;
+    /// assert_eq!(ibig!(-5).is_positive(), false);
+    /// assert_eq!(ibig!(0).is_positive(), false);
+    /// assert_eq!(ibig!(5).is_positive(), true);
+    /// ```
     pub fn is_positive(&self) -> bool {
         self.sign == Positive && !self.magnitude.is_zero()
     }

@@ -31,6 +31,9 @@ fn write_ascii_char(writer: &mut dyn Write, ascii: u8) -> fmt::Result {
 ///
 /// The default format uses lower-case letters a-z for digits 10-35.
 /// The "alternative" format (`{:#}`) uses upper-case letters.
+///
+/// # Examples
+///
 /// ```
 /// # use ibig::{ibig, ubig};
 /// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
@@ -371,7 +374,11 @@ impl UpperHex for UBig {
 impl UBig {
     /// Representation in a given radix.
     ///
-    /// `radix` must be between 2 and 36 inclusive.
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
     ///
     /// ```
     /// # use ibig::ubig;
@@ -403,11 +410,22 @@ impl UBig {
     ///
     /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
     ///
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
+        assert!(
+            radix >= 2 && radix <= MAX_RADIX,
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX
+        );
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -423,11 +441,22 @@ impl UBig {
     ///
     /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
     ///
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
+        assert!(
+            radix >= 2 && radix <= MAX_RADIX,
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX
+        );
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -518,7 +547,11 @@ impl UpperHex for IBig {
 impl IBig {
     /// Representation in a given radix.
     ///
-    /// `radix` must be between 2 and 36 inclusive.
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
     ///
     /// ```
     /// # use ibig::ibig;
@@ -550,11 +583,22 @@ impl IBig {
     ///
     /// Equivalent to `self.to_radix(radix).to_string()` but more efficient.
     ///
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
+        assert!(
+            radix >= 2 && radix <= MAX_RADIX,
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX,
+        );
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -570,11 +614,22 @@ impl IBig {
     ///
     /// Equivalent to `format!("{:#}", self.in_radix(radix))` but more efficient.
     ///
+    /// # Panics
+    ///
+    /// Panics `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
+        assert!(
+            radix >= 2 && radix <= MAX_RADIX,
+            "radix must be between 2 and {} inclusive",
+            MAX_RADIX,
+        );
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),

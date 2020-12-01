@@ -18,6 +18,8 @@ use core::{
 impl UBig {
     /// Construct from little-endian bytes.
     ///
+    /// # Example
+    ///
     /// ```
     /// # use ibig::{ubig, UBig};
     /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
@@ -46,6 +48,8 @@ impl UBig {
     }
 
     /// Construct from big-endian bytes.
+    ///
+    /// # Example
     ///
     /// ```
     /// # use ibig::{ubig, UBig};
@@ -76,6 +80,8 @@ impl UBig {
 
     /// Return little-endian bytes.
     ///
+    /// # Example
+    ///
     /// ```
     /// # use ibig::ubig;
     /// assert!(ubig!(0).to_le_bytes().is_empty());
@@ -104,6 +110,8 @@ impl UBig {
     }
 
     /// Return big-endian bytes.
+    ///
+    /// # Example
     ///
     /// ```
     /// # use ibig::ubig;
