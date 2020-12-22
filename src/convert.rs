@@ -413,6 +413,20 @@ where
     T::try_from_sign_magnitude(num.sign(), u)
 }
 
+impl Default for UBig {
+    /// Default value: 0.
+    fn default() -> UBig {
+        UBig::from_word(0)
+    }
+}
+
+impl Default for IBig {
+    /// Default value: 0.
+    fn default() -> IBig {
+        IBig::from_sign_magnitude(Positive, UBig::from_word(0))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
