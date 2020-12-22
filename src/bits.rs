@@ -1,9 +1,10 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{Word, WORD_BITS},
+    primitive::{double_word, Word, WORD_BITS},
     ubig::{Repr::*, UBig},
 };
+use alloc::borrow::Cow;
 
 impl UBig {
     /// Returns true if the `n`-th bit is set.
@@ -217,4 +218,62 @@ impl IBig {
     pub fn trailing_zeros(&self) -> Option<usize> {
         self.magnitude().trailing_zeros()
     }
+}
+
+/// Next power of two.
+///
+/// # Examples
+/// ```
+/// # use ibig::prelude::*;
+/// assert_eq!(ubig!(5).next_power_of_two(), ubig!(8));
+/// ```
+pub trait NextPowerOfTwo {
+    type Output;
+
+    fn next_power_of_two(self) -> Self::Output;
+}
+
+impl_unary_operator!(impl NextPowerOfTwo for UBig, next_power_of_two, next_power_of_two_cow);
+
+fn next_power_of_two_cow(x: Cow<UBig>) -> UBig {
+    match x.into_owned().into_repr() {
+        Small(word) => match word.checked_next_power_of_two() {
+            Some(p) => UBig::from_word(p),
+            None => UBig::from(double_word(0, 1)),
+        },
+        Large(buffer) => next_power_of_two_large(buffer),
+    }
+}
+
+fn next_power_of_two_large(mut buffer: Buffer) -> UBig {
+    debug_assert!(*buffer.last().unwrap() != 0);
+
+    let n = buffer.len();
+    let mut iter = buffer[..n - 1].iter_mut().skip_while(|x| **x == 0);
+
+    let carry = match iter.next() {
+        None => 0,
+        Some(x) => {
+            *x = 0;
+            for x in iter {
+                *x = 0;
+            }
+            1
+        }
+    };
+
+    let last = buffer.last_mut().unwrap();
+    match last
+        .checked_add(carry)
+        .and_then(|x| x.checked_next_power_of_two())
+    {
+        Some(p) => *last = p,
+        None => {
+            *last = 0;
+            buffer.ensure_capacity(n + 1);
+            buffer.push(1);
+        }
+    }
+
+    buffer.into()
 }

@@ -8,4 +8,4 @@
 //! let a: IBig = ibig!(100).abs();
 //! ```
 
-pub use crate::{ibig, ubig, Abs, IBig, UBig, UnsignedAbs};
+pub use crate::{ibig, ubig, Abs, IBig, NextPowerOfTwo, UBig, UnsignedAbs};

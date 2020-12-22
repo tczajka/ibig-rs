@@ -28,6 +28,7 @@
 extern crate alloc;
 
 pub use crate::{
+    bits::NextPowerOfTwo,
     fmt::InRadix,
     ibig::IBig,
     parse::ParseError,

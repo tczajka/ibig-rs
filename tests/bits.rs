@@ -85,7 +85,57 @@ fn test_is_power_of_two() {
     assert_eq!(ubig!(1).is_power_of_two(), true);
     assert_eq!(ubig!(16).is_power_of_two(), true);
     assert_eq!(ubig!(17).is_power_of_two(), false);
-    assert_eq!(ubig!(_0x4000000000000000000000000000000000000000000000).is_power_of_two(), true);
-    assert_eq!(ubig!(_0x5000000000000000000000000000000000000000000000).is_power_of_two(), false);
-    assert_eq!(ubig!(_0x4000000000000000000000010000000000000000000000).is_power_of_two(), false);
+    assert_eq!(
+        ubig!(_0x4000000000000000000000000000000000000000000000).is_power_of_two(),
+        true
+    );
+    assert_eq!(
+        ubig!(_0x5000000000000000000000000000000000000000000000).is_power_of_two(),
+        false
+    );
+    assert_eq!(
+        ubig!(_0x4000000000000000000000010000000000000000000000).is_power_of_two(),
+        false
+    );
+}
+
+#[test]
+fn test_next_power_of_two() {
+    assert_eq!(ubig!(0).next_power_of_two(), ubig!(1));
+    assert_eq!((&ubig!(0)).next_power_of_two(), ubig!(1));
+    assert_eq!(ubig!(16).next_power_of_two(), ubig!(16));
+    assert_eq!(ubig!(17).next_power_of_two(), ubig!(32));
+    assert_eq!(ubig!(_0xffffffff).next_power_of_two(), ubig!(_0x100000000));
+    assert_eq!(
+        ubig!(_0xffffffffffffffff).next_power_of_two(),
+        ubig!(_0x10000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0xffffffffffffffffffffffffffffffff).next_power_of_two(),
+        ubig!(_0x100000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0xf0000000000000000000000000000000).next_power_of_two(),
+        ubig!(_0x100000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0xffffffffffffffff0000000000000000).next_power_of_two(),
+        ubig!(_0x100000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0xffffffffffffffff0000000000000000).next_power_of_two(),
+        ubig!(_0x100000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0x100000000000000000000000000000000).next_power_of_two(),
+        ubig!(_0x100000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0x100000000000000000000000000000001).next_power_of_two(),
+        ubig!(_0x200000000000000000000000000000000)
+    );
+    assert_eq!(
+        ubig!(_0x100100000000000000000000000000000).next_power_of_two(),
+        ubig!(_0x200000000000000000000000000000000)
+    );
 }

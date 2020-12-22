@@ -41,6 +41,15 @@ pub(crate) type DoubleWord = u64;
 /// Double machine word.
 pub(crate) type DoubleWord = u128;
 
+/// Create a `DoubleWord` from two `Word`s.
+pub(crate) fn double_word(low: Word, high: Word) -> DoubleWord {
+    (low as DoubleWord) | (high as DoubleWord) << WORD_BITS
+}
+
+pub(crate) fn split_double_word(dw: DoubleWord) -> (Word, Word) {
+    (dw as Word, (dw >> WORD_BITS) as Word)
+}
+
 pub(crate) trait PrimitiveUnsigned
 where
     Self: Copy,
@@ -173,6 +182,7 @@ mod tests {
     #[test]
     fn test_double_word() {
         assert_eq!(DoubleWord::BIT_SIZE, 2 * WORD_BITS);
+        assert_eq!(split_double_word(double_word(3, 4)), (3, 4));
     }
 
     #[test]
