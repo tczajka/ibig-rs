@@ -5,6 +5,27 @@ use crate::{
 };
 
 impl UBig {
+    /// Returns true if the `n`-th bit is set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ubig!(0b10010).bit(1), true);
+    /// assert_eq!(ubig!(0b10010).bit(3), false);
+    /// assert_eq!(ubig!(0b10010).bit(100), false);
+    /// ```
+    #[inline]
+    pub fn bit(&self, n: usize) -> bool {
+        match self.repr() {
+            Small(word) => n < WORD_BITS as usize && word & (1 as Word) << n != 0,
+            Large(buffer) => {
+                let idx = n / WORD_BITS as usize;
+                idx < buffer.len() && buffer[idx] & (1 as Word) << (n % WORD_BITS as usize) != 0
+            }
+        }
+    }
+
     /// Returns the number of trailing zeros in the binary representation.
     ///
     /// In other words, it is the smallest `n` such that 2 to the power of `n` divides the number.
