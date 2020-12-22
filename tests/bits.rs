@@ -78,3 +78,14 @@ fn test_ilog2() {
         Some(283)
     );
 }
+
+#[test]
+fn test_is_power_of_two() {
+    assert_eq!(ubig!(0).is_power_of_two(), false);
+    assert_eq!(ubig!(1).is_power_of_two(), true);
+    assert_eq!(ubig!(16).is_power_of_two(), true);
+    assert_eq!(ubig!(17).is_power_of_two(), false);
+    assert_eq!(ubig!(_0x4000000000000000000000000000000000000000000000).is_power_of_two(), true);
+    assert_eq!(ubig!(_0x5000000000000000000000000000000000000000000000).is_power_of_two(), false);
+    assert_eq!(ubig!(_0x4000000000000000000000010000000000000000000000).is_power_of_two(), false);
+}

@@ -129,8 +129,19 @@ impl UBig {
         match self.repr() {
             Small(0) => None,
             Small(word) => Some(word.trailing_zeros() as usize),
-            Large(buffer) => Some(trailing_zeros_large(buffer)),
+            Large(buffer) => Some(UBig::trailing_zeros_large(buffer)),
         }
+    }
+
+    fn trailing_zeros_large(words: &[Word]) -> usize {
+        debug_assert!(*words.last().unwrap() != 0);
+
+        for (idx, word) in words.iter().enumerate() {
+            if *word != 0 {
+                return idx * WORD_BITS as usize + word.trailing_zeros() as usize;
+            }
+        }
+        panic!("trailing_zeros_large(0)")
     }
 
     /// Integer logarithm base 2.
@@ -160,17 +171,30 @@ impl UBig {
             ),
         }
     }
-}
 
-fn trailing_zeros_large(words: &[Word]) -> usize {
-    debug_assert!(*words.last().unwrap() != 0);
-
-    for (idx, word) in words.iter().enumerate() {
-        if *word != 0 {
-            return idx * WORD_BITS as usize + word.trailing_zeros() as usize;
+    /// True if the number is a power of 2.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ubig!(0).is_power_of_two(), false);
+    /// assert_eq!(ubig!(8).is_power_of_two(), true);
+    /// assert_eq!(ubig!(9).is_power_of_two(), false);
+    /// ```
+    #[inline]
+    pub fn is_power_of_two(&self) -> bool {
+        match self.repr() {
+            Small(word) => word.is_power_of_two(),
+            Large(buffer) => UBig::is_power_of_two_large(buffer),
         }
     }
-    panic!("trailing_zeros_large(0)")
+
+    fn is_power_of_two_large(words: &[Word]) -> bool {
+        debug_assert!(*words.last().unwrap() != 0);
+
+        words[..words.len() - 1].iter().all(|x| *x == 0) && words.last().unwrap().is_power_of_two()
+    }
 }
 
 impl IBig {
