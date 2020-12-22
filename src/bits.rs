@@ -1,4 +1,5 @@
 use crate::{
+    buffer::Buffer,
     ibig::IBig,
     primitive::{Word, WORD_BITS},
     ubig::{Repr::*, UBig},
@@ -24,6 +25,88 @@ impl UBig {
                 idx < buffer.len() && buffer[idx] & (1 as Word) << (n % WORD_BITS as usize) != 0
             }
         }
+    }
+
+    /// Set the `n`-th bit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// let mut a = ubig!(0b100);
+    /// a.set_bit(0);
+    /// assert_eq!(a, ubig!(0b101));
+    /// a.set_bit(10);
+    /// assert_eq!(a, ubig!(0b10000000101));
+    /// ```
+    #[inline]
+    pub fn set_bit(&mut self, n: usize) {
+        match std::mem::take(self).into_repr() {
+            Small(word) => {
+                if n < WORD_BITS as usize {
+                    *self = UBig::from_word(word | 1 << n)
+                } else {
+                    *self = UBig::with_bit_word_slow(word, n)
+                }
+            }
+            Large(buffer) => *self = UBig::with_bit_large(buffer, n),
+        }
+    }
+
+    fn with_bit_word_slow(word: Word, n: usize) -> UBig {
+        debug_assert!(n >= WORD_BITS as usize);
+        let idx = n / WORD_BITS as usize;
+        let mut buffer = Buffer::allocate(idx + 1);
+        buffer.push(word);
+        for _ in 1..idx {
+            buffer.push(0);
+        }
+        buffer.push(1 << n % WORD_BITS as usize);
+        buffer.into()
+    }
+
+    fn with_bit_large(mut buffer: Buffer, n: usize) -> UBig {
+        let idx = n / WORD_BITS as usize;
+        if idx < buffer.len() {
+            buffer[idx] |= 1 << n % WORD_BITS as usize;
+        } else {
+            buffer.ensure_capacity(idx + 1);
+            for _ in buffer.len()..idx {
+                buffer.push(0);
+            }
+            buffer.push(1 << n % WORD_BITS as usize);
+        }
+        buffer.into()
+    }
+
+    /// Clear the `n`-th bit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// let mut a = ubig!(0b101);
+    /// a.clear_bit(0);
+    /// assert_eq!(a, ubig!(0b100));
+    /// ```
+    #[inline]
+    pub fn clear_bit(&mut self, n: usize) {
+        match std::mem::take(self).into_repr() {
+            Small(word) => {
+                if n < WORD_BITS as usize {
+                    *self = UBig::from_word(word & !(1 << n))
+                }
+            }
+            Large(buffer) => *self = UBig::without_bit_large(buffer, n),
+        }
+    }
+
+    fn without_bit_large(mut buffer: Buffer, n: usize) -> UBig {
+        let idx = n / WORD_BITS as usize;
+        if idx < buffer.len() {
+            buffer[idx] &= !(1 << n % WORD_BITS as usize);
+        }
+        buffer.into()
     }
 
     /// Returns the number of trailing zeros in the binary representation.

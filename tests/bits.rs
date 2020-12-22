@@ -15,6 +15,46 @@ fn test_bit() {
 }
 
 #[test]
+fn test_set_bit() {
+    let mut a = ubig!(0);
+    a.set_bit(3);
+    assert_eq!(a, ubig!(0b1000));
+    a.set_bit(129);
+    assert_eq!(a, ubig!(_0x200000000000000000000000000000008));
+    a.set_bit(1);
+    assert_eq!(a, ubig!(_0x20000000000000000000000000000000a));
+    a.set_bit(1);
+    assert_eq!(a, ubig!(_0x20000000000000000000000000000000a));
+    a.set_bit(127);
+    assert_eq!(a, ubig!(_0x28000000000000000000000000000000a));
+    a.set_bit(194);
+    assert_eq!(
+        a,
+        ubig!(_0x400000000000000028000000000000000000000000000000a)
+    );
+}
+
+#[test]
+fn test_clear_bit() {
+    let mut a = ubig!(_0x400000000000000028000000000000000000000000000000a);
+    a.clear_bit(10000);
+    assert_eq!(
+        a,
+        ubig!(_0x400000000000000028000000000000000000000000000000a)
+    );
+    a.clear_bit(194);
+    assert_eq!(a, ubig!(_0x28000000000000000000000000000000a));
+    a.clear_bit(1);
+    assert_eq!(a, ubig!(_0x280000000000000000000000000000008));
+    a.clear_bit(129);
+    assert_eq!(a, ubig!(_0x80000000000000000000000000000008));
+    a.clear_bit(127);
+    assert_eq!(a, ubig!(0b1000));
+    a.clear_bit(3);
+    assert_eq!(a, ubig!(0));
+}
+
+#[test]
 fn test_trailing_zeros() {
     assert_eq!(ubig!(0).trailing_zeros(), None);
     assert_eq!(ubig!(0xf0000).trailing_zeros(), Some(16));

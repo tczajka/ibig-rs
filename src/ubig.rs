@@ -47,6 +47,11 @@ impl UBig {
         &self.0
     }
 
+    /// Convert into representation.
+    pub(crate) fn into_repr(self) -> Repr {
+        self.0
+    }
+
     #[cfg(test)]
     /// Current capacity in Words.
     pub(crate) fn capacity(&self) -> usize {

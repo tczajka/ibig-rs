@@ -3,7 +3,10 @@
 use crate::primitive::{Word, WORD_BITS};
 
 use alloc::vec::Vec;
-use core::{cmp::min, ops::Deref};
+use core::{
+    cmp::min,
+    ops::{Deref, DerefMut},
+};
 
 /// Buffer for Words.
 ///
@@ -134,6 +137,12 @@ impl Deref for Buffer {
 
     fn deref(&self) -> &Vec<Word> {
         &self.0
+    }
+}
+
+impl DerefMut for Buffer {
+    fn deref_mut(&mut self) -> &mut Vec<Word> {
+        &mut self.0
     }
 }
 
