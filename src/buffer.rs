@@ -158,6 +158,28 @@ impl DerefMut for Buffer {
     }
 }
 
+impl Extend<Word> for Buffer {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = Word>,
+    {
+        for word in iter {
+            self.push(word);
+        }
+    }
+}
+
+impl<'a> Extend<&'a Word> for Buffer {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = &'a Word>,
+    {
+        for word in iter {
+            self.push(*word);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -196,7 +218,7 @@ mod tests {
         assert_eq!(buffer.capacity(), 4);
         buffer.ensure_capacity(5);
         assert_eq!(buffer.capacity(), 7);
-        assert_eq!(&buffer[..], &[7]);
+        assert_eq!(&buffer[..], [7]);
     }
 
     #[test]
@@ -218,6 +240,15 @@ mod tests {
         assert_eq!(buffer.pop(), Some(2));
         assert_eq!(buffer.pop(), Some(1));
         assert_eq!(buffer.pop(), None);
+    }
+
+    #[test]
+    fn test_extend() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        let list: [Word; 2] = [2, 3];
+        buffer.extend(&list);
+        assert_eq!(&buffer[..], [1, 2, 3]);
     }
 
     #[test]
