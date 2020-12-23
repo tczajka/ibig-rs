@@ -16,7 +16,7 @@
 //! ```
 //! # use ibig::{prelude::*, ParseError};
 //! let a = UBig::from_str_radix("10ff", 16)?;
-//! assert_eq!(format!("{:=^10X}", a), "===10FF===");
+//! assert_eq!(format!("{:^10X}", a), "   10FF   ");
 //! assert_eq!(format!("{}", a.in_radix(4)), "1003333");
 //! # Ok::<(), ParseError>(())
 //! ```

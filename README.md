@@ -14,7 +14,7 @@ let b = ibig!(-abcd base 32);
 Parsing and formatting in any base 2-36 is supported.
 ```rust
 let a = UBig::from_str_radix("10ff", 16)?;
-assert_eq!(format!("{:=^10X}", a), "===10FF===");
+assert_eq!(format!("{:^10X}", a), "   10FF   ");
 assert_eq!(format!("{}", a.in_radix(4)), "1003333");
 ```
 
