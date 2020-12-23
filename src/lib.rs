@@ -40,9 +40,6 @@ pub use crate::{
 #[macro_use]
 mod macros;
 
-#[macro_use]
-mod operators;
-
 mod bits;
 mod buffer;
 mod cmp;

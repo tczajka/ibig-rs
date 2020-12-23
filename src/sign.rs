@@ -2,7 +2,6 @@ use crate::{
     ibig::IBig,
     ubig::{Repr::*, UBig},
 };
-use alloc::borrow::Cow;
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -51,11 +50,23 @@ impl IBig {
     }
 }
 
-impl_unary_operator!(impl Neg for IBig, neg, neg_cow);
+impl Neg for IBig {
+    type Output = IBig;
 
-fn neg_cow(x: Cow<IBig>) -> IBig {
-    let (sign, mag) = x.into_owned().into_sign_magnitude();
-    IBig::from_sign_magnitude(-sign, mag)
+    #[inline]
+    fn neg(self) -> IBig {
+        let (sign, mag) = self.into_sign_magnitude();
+        IBig::from_sign_magnitude(-sign, mag)
+    }
+}
+
+impl Neg for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn neg(self) -> IBig {
+        self.clone().neg()
+    }
 }
 
 /// Absolute value.
@@ -71,11 +82,22 @@ pub trait Abs {
     fn abs(self) -> Self::Output;
 }
 
-impl_unary_operator!(impl Abs for IBig, abs, abs_cow);
+impl Abs for IBig {
+    type Output = IBig;
 
-fn abs_cow(x: Cow<IBig>) -> IBig {
-    let (_, mag) = x.into_owned().into_sign_magnitude();
-    IBig::from_sign_magnitude(Positive, mag)
+    #[inline]
+    fn abs(self) -> IBig {
+        IBig::from_sign_magnitude(Positive, self.unsigned_abs())
+    }
+}
+
+impl Abs for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn abs(self) -> IBig {
+        IBig::from_sign_magnitude(Positive, self.unsigned_abs())
+    }
 }
 
 /// Unsigned absolute value.
