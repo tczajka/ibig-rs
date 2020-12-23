@@ -53,6 +53,11 @@ impl Buffer {
         *self = new_buffer
     }
 
+    /// Return buffer capacity.
+    pub(crate) fn capacity(&self) -> usize {
+        self.0.capacity()
+    }
+
     /// Append a Word to the buffer.
     ///
     /// # Panics
@@ -66,6 +71,13 @@ impl Buffer {
     /// Pop the most significant `Word`.
     pub(crate) fn pop(&mut self) -> Option<Word> {
         self.0.pop()
+    }
+
+    /// Truncate length to `len`.
+    pub(crate) fn truncate(&mut self, len: usize) {
+        assert!(self.len() >= len);
+
+        self.0.truncate(len);
     }
 
     /// Clone from `other` and resize if necessary.
@@ -133,15 +145,15 @@ impl Clone for Buffer {
 }
 
 impl Deref for Buffer {
-    type Target = Vec<Word>;
+    type Target = [Word];
 
-    fn deref(&self) -> &Vec<Word> {
+    fn deref(&self) -> &[Word] {
         &self.0
     }
 }
 
 impl DerefMut for Buffer {
-    fn deref_mut(&mut self) -> &mut Vec<Word> {
+    fn deref_mut(&mut self) -> &mut [Word] {
         &mut self.0
     }
 }
@@ -198,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn test_operations() {
+    fn test_push_pop() {
         let mut buffer = Buffer::allocate(5);
         buffer.push(1);
         buffer.push(2);
@@ -206,6 +218,16 @@ mod tests {
         assert_eq!(buffer.pop(), Some(2));
         assert_eq!(buffer.pop(), Some(1));
         assert_eq!(buffer.pop(), None);
+    }
+
+    #[test]
+    fn test_truncate() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        buffer.push(2);
+        buffer.push(3);
+        buffer.truncate(1);
+        assert_eq!(&buffer[..], [1]);
     }
 
     #[test]

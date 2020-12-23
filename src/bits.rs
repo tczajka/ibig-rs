@@ -4,6 +4,7 @@ use crate::{
     primitive::{double_word, Word, WORD_BITS},
     ubig::{Repr::*, UBig},
 };
+use core::ops::{BitAnd, BitAndAssign};
 
 impl UBig {
     /// Returns true if the `n`-th bit is set.
@@ -41,7 +42,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn set_bit(&mut self, n: usize) {
-        match std::mem::take(self).into_repr() {
+        match core::mem::take(self).into_repr() {
             Small(word) => {
                 if n < WORD_BITS as usize {
                     *self = UBig::from_word(word | 1 << n)
@@ -91,7 +92,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn clear_bit(&mut self, n: usize) {
-        match std::mem::take(self).into_repr() {
+        match core::mem::take(self).into_repr() {
             Small(word) => {
                 if n < WORD_BITS as usize {
                     *self = UBig::from_word(word & !(1 << n))
@@ -287,6 +288,99 @@ impl UBig {
             }
         }
 
+        buffer.into()
+    }
+}
+
+impl BitAnd<UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitand(self, rhs: UBig) -> UBig {
+        match (self.into_repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::from_word(buffer0.first().unwrap() & word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() <= buffer1.len() {
+                    UBig::bitand_large(buffer0, &buffer1)
+                } else {
+                    UBig::bitand_large(buffer1, &buffer0)
+                }
+            }
+        }
+    }
+}
+
+impl BitAnd<&UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitand(self, rhs: &UBig) -> UBig {
+        match self.into_repr() {
+            Small(word0) => match rhs.repr() {
+                Small(word1) => UBig::from_word(word0 & word1),
+                Large(buffer1) => UBig::from_word(word0 & buffer1.first().unwrap()),
+            },
+            Large(buffer0) => match rhs.repr() {
+                Small(word1) => UBig::from_word(buffer0.first().unwrap() & word1),
+                Large(buffer1) => UBig::bitand_large(buffer0, &buffer1),
+            },
+        }
+    }
+}
+
+impl BitAnd<UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitand(self, rhs: UBig) -> UBig {
+        rhs.bitand(self)
+    }
+}
+
+impl BitAnd<&UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitand(self, rhs: &UBig) -> UBig {
+        match (self.repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::from_word(buffer0.first().unwrap() & word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() <= buffer1.len() {
+                    UBig::bitand_large(buffer0.clone(), buffer1)
+                } else {
+                    UBig::bitand_large(buffer1.clone(), buffer0)
+                }
+            }
+        }
+    }
+}
+
+impl BitAndAssign<UBig> for UBig {
+    #[inline]
+    fn bitand_assign(&mut self, rhs: UBig) {
+        *self = core::mem::take(self) & rhs;
+    }
+}
+
+impl BitAndAssign<&UBig> for UBig {
+    #[inline]
+    fn bitand_assign(&mut self, rhs: &UBig) {
+        *self = core::mem::take(self) & rhs;
+    }
+}
+
+impl UBig {
+    fn bitand_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
+        if buffer.len() > rhs.len() {
+            buffer.truncate(rhs.len());
+        }
+        for (x, y) in buffer.iter_mut().zip(rhs.iter()) {
+            *x &= *y;
+        }
         buffer.into()
     }
 }

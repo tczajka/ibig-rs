@@ -139,3 +139,43 @@ fn test_next_power_of_two() {
         ubig!(_0x200000000000000000000000000000000)
     );
 }
+
+#[test]
+fn test_ubig_and() {
+    let cases = [
+        (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xf000)),
+        (
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(0xff),
+            ubig!(0xee),
+        ),
+        (
+            ubig!(0xff),
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(0xee),
+        ),
+        (
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(_0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd),
+            ubig!(_0xcccccccccccccccccccccccccccccccc),
+        ),
+    ];
+
+    for (a, b, c) in cases.iter() {
+        assert_eq!(a & b, *c);
+        assert_eq!(a.clone() & b, *c);
+        assert_eq!(a & b.clone(), *c);
+        assert_eq!(a.clone() & b.clone(), *c);
+
+        {
+            let mut a1 = a.clone();
+            a1 &= b;
+            assert_eq!(a1, *c);
+        }
+        {
+            let mut a1 = a.clone();
+            a1 &= b.clone();
+            assert_eq!(a1, *c);
+        }
+    }
+}
