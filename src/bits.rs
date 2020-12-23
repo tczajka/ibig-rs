@@ -4,7 +4,7 @@ use crate::{
     primitive::{double_word, Word, WORD_BITS},
     ubig::{Repr::*, UBig},
 };
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign};
 
 impl UBig {
     /// Returns true if the `n`-th bit is set.
@@ -475,6 +475,107 @@ impl UBig {
     fn bitor_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
         for (x, y) in buffer.iter_mut().zip(rhs.iter()) {
             *x |= *y;
+        }
+        if rhs.len() > buffer.len() {
+            buffer.ensure_capacity(rhs.len());
+            buffer.extend(&rhs[buffer.len()..]);
+        }
+        buffer.into()
+    }
+}
+
+impl BitXor<UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitxor(self, rhs: UBig) -> UBig {
+        match (self.into_repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 ^ word1),
+            (Small(word0), Large(buffer1)) => UBig::bitxor_large_word(buffer1, word0),
+            (Large(buffer0), Small(word1)) => UBig::bitxor_large_word(buffer0, word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() >= buffer1.len() {
+                    UBig::bitxor_large(buffer0, &buffer1)
+                } else {
+                    UBig::bitxor_large(buffer1, &buffer0)
+                }
+            }
+        }
+    }
+}
+
+impl BitXor<&UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitxor(self, rhs: &UBig) -> UBig {
+        match self.into_repr() {
+            Small(word0) => match rhs.repr() {
+                Small(word1) => UBig::from_word(word0 ^ word1),
+                Large(buffer1) => UBig::bitxor_large_word(buffer1.clone(), word0),
+            },
+            Large(buffer0) => match rhs.repr() {
+                Small(word1) => UBig::bitxor_large_word(buffer0, *word1),
+                Large(buffer1) => UBig::bitxor_large(buffer0, buffer1),
+            },
+        }
+    }
+}
+
+impl BitXor<UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitxor(self, rhs: UBig) -> UBig {
+        rhs.bitxor(self)
+    }
+}
+
+impl BitXor<&UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn bitxor(self, rhs: &UBig) -> UBig {
+        match (self.repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 ^ word1),
+            (Small(word0), Large(buffer1)) => UBig::bitxor_large_word(buffer1.clone(), *word0),
+            (Large(buffer0), Small(word1)) => UBig::bitxor_large_word(buffer0.clone(), *word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() >= buffer1.len() {
+                    UBig::bitxor_large(buffer0.clone(), buffer1)
+                } else {
+                    UBig::bitxor_large(buffer1.clone(), buffer0)
+                }
+            }
+        }
+    }
+}
+
+impl BitXorAssign<UBig> for UBig {
+    #[inline]
+    fn bitxor_assign(&mut self, rhs: UBig) {
+        *self = core::mem::take(self) ^ rhs;
+    }
+}
+
+impl BitXorAssign<&UBig> for UBig {
+    #[inline]
+    fn bitxor_assign(&mut self, rhs: &UBig) {
+        *self = core::mem::take(self) ^ rhs;
+    }
+}
+
+impl UBig {
+    fn bitxor_large_word(mut buffer: Buffer, rhs: Word) -> UBig {
+        debug_assert!(buffer.len() >= 2);
+
+        *buffer.first_mut().unwrap() ^= rhs;
+        buffer.into()
+    }
+
+    fn bitxor_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
+        for (x, y) in buffer.iter_mut().zip(rhs.iter()) {
+            *x ^= *y;
         }
         if rhs.len() > buffer.len() {
             buffer.ensure_capacity(rhs.len());
