@@ -274,3 +274,37 @@ fn test_ubig_xor() {
         }
     }
 }
+
+#[test]
+fn test_ubig_and_not() {
+    let cases = [
+        (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xf0)),
+        (
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(0xff),
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00),
+        ),
+        (
+            ubig!(0xff),
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(0x11),
+        ),
+        (
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(_0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd),
+            ubig!(_0x22222222222222222222222222222222),
+        ),
+        (
+            ubig!(_0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd),
+            ubig!(_0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee),
+            ubig!(_0xdddddddddddddddddddddddddddddddd11111111111111111111111111111111),
+        ),
+    ];
+
+    for (a, b, c) in cases.iter() {
+        assert_eq!(a.and_not(b), *c);
+        assert_eq!(a.clone().and_not(b), *c);
+        assert_eq!(a.and_not(b.clone()), *c);
+        assert_eq!(a.clone().and_not(b.clone()), *c);
+    }
+}

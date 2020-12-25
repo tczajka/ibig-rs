@@ -28,7 +28,7 @@
 extern crate alloc;
 
 pub use crate::{
-    bits::NextPowerOfTwo,
+    bits::{AndNot, NextPowerOfTwo},
     fmt::InRadix,
     ibig::IBig,
     parse::ParseError,

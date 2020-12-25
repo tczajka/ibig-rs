@@ -584,3 +584,98 @@ impl UBig {
         buffer.into()
     }
 }
+
+/// `x.and_not(y)` is equivalent to `x & !y`. For `UBig` the latter is not a valid expression
+/// because the `!` operator is not defined.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig::prelude::*;
+/// assert_eq!(ubig!(0xff).and_not(ubig!(0x1111)), ubig!(0xee));
+/// ```
+pub trait AndNot<Rhs = Self> {
+    type Output;
+
+    fn and_not(self, rhs: Rhs) -> Self::Output;
+}
+
+impl AndNot<UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn and_not(self, rhs: UBig) -> UBig {
+        match (self.into_repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::and_not_large_word(buffer0, word1),
+            (Large(buffer0), Large(buffer1)) => UBig::and_not_large(buffer0, &buffer1),
+        }
+    }
+}
+
+impl AndNot<&UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn and_not(self, rhs: &UBig) -> UBig {
+        match self.into_repr() {
+            Small(word0) => match rhs.repr() {
+                Small(word1) => UBig::from_word(word0 & !word1),
+                Large(buffer1) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            },
+            Large(buffer0) => match rhs.repr() {
+                Small(word1) => UBig::and_not_large_word(buffer0, *word1),
+                Large(buffer1) => UBig::and_not_large(buffer0, buffer1),
+            },
+        }
+    }
+}
+
+impl AndNot<UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn and_not(self, rhs: UBig) -> UBig {
+        match self.repr() {
+            Small(word0) => match rhs.into_repr() {
+                Small(word1) => UBig::from_word(word0 & !word1),
+                Large(buffer1) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            },
+            Large(buffer0) => match rhs.into_repr() {
+                Small(word1) => UBig::and_not_large_word(buffer0.clone(), word1),
+                Large(buffer1) => UBig::and_not_large(buffer0.clone(), &buffer1),
+            },
+        }
+    }
+}
+
+impl AndNot<&UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn and_not(self, rhs: &UBig) -> UBig {
+        match (self.repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::and_not_large_word(buffer0.clone(), *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::and_not_large(buffer0.clone(), buffer1),
+        }
+    }
+}
+
+impl UBig {
+    fn and_not_large_word(mut buffer: Buffer, rhs: Word) -> UBig {
+        debug_assert!(buffer.len() >= 2);
+
+        *buffer.first_mut().unwrap() &= !rhs;
+        buffer.into()
+    }
+
+    fn and_not_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
+        for (x, y) in buffer.iter_mut().zip(rhs.iter()) {
+            *x &= !*y;
+        }
+        buffer.into()
+    }
+}
