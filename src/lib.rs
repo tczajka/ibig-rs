@@ -50,5 +50,6 @@ mod parse;
 pub mod prelude;
 mod primitive;
 mod radix;
+mod shift;
 mod sign;
 mod ubig;

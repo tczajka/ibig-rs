@@ -70,9 +70,7 @@ impl UBig {
             buffer[idx] |= 1 << n % WORD_BITS as usize;
         } else {
             buffer.ensure_capacity(idx + 1);
-            for _ in buffer.len()..idx {
-                buffer.push(0);
-            }
+            buffer.push_zeros(idx - buffer.len());
             buffer.push(1 << n % WORD_BITS as usize);
         }
         buffer.into()

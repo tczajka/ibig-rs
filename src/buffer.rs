@@ -22,8 +22,17 @@ impl Buffer {
     ///
     /// It leaves some extra space for future growth.
     pub(crate) fn allocate(num_words: usize) -> Buffer {
-        assert!(num_words <= Buffer::MAX_CAPACITY, "number too large");
+        if num_words > Buffer::MAX_CAPACITY {
+            Buffer::too_large();
+        }
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
+    }
+
+    pub(crate) fn too_large() -> ! {
+        panic!(
+            "number too large, maximum is {} bits",
+            Buffer::MAX_CAPACITY * (WORD_BITS as usize)
+        )
     }
 
     /// Ensure there is enough capacity in the buffer for `num_words`. Will reallocate if there is
@@ -66,6 +75,16 @@ impl Buffer {
     pub(crate) fn push(&mut self, word: Word) {
         assert!(self.len() < self.capacity());
         self.0.push(word)
+    }
+
+    /// Append `n` zeros.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is not enough capacity.
+    pub(crate) fn push_zeros(&mut self, n: usize) {
+        assert!(n <= self.capacity() - self.len());
+        self.0.extend(core::iter::repeat(0).take(n));
     }
 
     /// Pop the most significant `Word`.
@@ -249,6 +268,14 @@ mod tests {
         let list: [Word; 2] = [2, 3];
         buffer.extend(&list);
         assert_eq!(&buffer[..], [1, 2, 3]);
+    }
+
+    #[test]
+    fn test_push_zeros() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        buffer.push_zeros(2);
+        assert_eq!(&buffer[..], [1, 0, 0]);
     }
 
     #[test]

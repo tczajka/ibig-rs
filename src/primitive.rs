@@ -10,7 +10,7 @@ compile_error!("Machine architecture must be 16-bit, 32-bit or 64-bit.");
 use crate::sign::Sign::{self, *};
 use core::{
     convert::{TryFrom, TryInto},
-    fmt::{self, Display, Formatter},
+    fmt::{self, Debug, Display, Formatter},
     mem::size_of,
 };
 
@@ -53,6 +53,7 @@ pub(crate) fn split_double_word(dw: DoubleWord) -> (Word, Word) {
 pub(crate) trait PrimitiveUnsigned
 where
     Self: Copy,
+    Self: Debug,
     Self: Default,
     Self: TryFrom<Word>,
     Self: TryInto<Word>,
