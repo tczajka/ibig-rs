@@ -583,6 +583,8 @@ impl UBig {
     }
 }
 
+/// Bitwise AND NOT operation.
+///
 /// `x.and_not(y)` is equivalent to `x & !y`. For `UBig` the latter is not a valid expression
 /// because the `!` operator is not defined.
 ///

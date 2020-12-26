@@ -31,7 +31,7 @@ pub(crate) enum Repr {
 /// let d = UBig::from_str_radix("1231abcd4134", 16)?;
 /// assert_eq!(a, c);
 /// assert_eq!(b, d);
-/// Ok::<(), ParseError>(())
+/// # Ok::<(), ParseError>(())
 /// ```
 #[derive(Eq, PartialEq)]
 pub struct UBig(Repr);

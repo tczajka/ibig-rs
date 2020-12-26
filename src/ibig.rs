@@ -19,7 +19,7 @@ use crate::{
 /// let d = IBig::from_str_radix("-1231abcd4134", 16)?;
 /// assert_eq!(a, c);
 /// assert_eq!(b, d);
-/// Ok::<(), ParseError>(())
+/// # Ok::<(), ParseError>(())
 /// ```
 #[derive(Clone, Eq, PartialEq)]
 pub struct IBig {
