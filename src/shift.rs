@@ -195,7 +195,7 @@ impl UBig {
 
     /// Shift left `buffer` by full words.
     fn shl_large_words(mut buffer: Buffer, shift_words: usize) -> UBig {
-        if buffer.len() + shift_words > buffer.capacity() {
+        if buffer.will_reallocate(buffer.len() + shift_words) {
             UBig::shl_large_ref_words(&buffer, shift_words)
         } else {
             buffer.push_zeros(shift_words);
@@ -216,7 +216,7 @@ impl UBig {
 
         let old_len = buffer.len();
         let new_len = old_len + shift_words + 1;
-        if new_len > buffer.capacity() {
+        if buffer.will_reallocate(new_len) {
             UBig::shl_large_ref_words_bits(&buffer, shift_words, shift_bits)
         } else {
             buffer.push_zeros(shift_words + 1);
