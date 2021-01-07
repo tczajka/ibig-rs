@@ -101,7 +101,7 @@ impl UBig {
         } else {
             match TryInto::<usize>::try_into(rhs) {
                 Ok(rhs_usize) => self.shl_usize(rhs_usize),
-                Err(_) => Buffer::too_large(),
+                Err(_) => Buffer::panic_too_large(),
             }
         }
     }
@@ -116,7 +116,7 @@ impl UBig {
         } else {
             match TryInto::<usize>::try_into(rhs) {
                 Ok(rhs_usize) => self.shl_ref_usize(rhs_usize),
-                Err(_) => Buffer::too_large(),
+                Err(_) => Buffer::panic_too_large(),
             }
         }
     }

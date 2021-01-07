@@ -23,12 +23,12 @@ impl Buffer {
     /// It leaves some extra space for future growth.
     pub(crate) fn allocate(num_words: usize) -> Buffer {
         if num_words > Buffer::MAX_CAPACITY {
-            Buffer::too_large();
+            Buffer::panic_too_large();
         }
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
     }
 
-    pub(crate) fn too_large() -> ! {
+    pub(crate) fn panic_too_large() -> ! {
         panic!(
             "number too large, maximum is {} bits",
             Buffer::MAX_CAPACITY * (WORD_BITS as usize)
@@ -48,6 +48,11 @@ impl Buffer {
         if self.capacity() > Buffer::max_compact_capacity(self.len()) {
             self.reallocate(self.len());
         }
+    }
+
+    /// Will reallocate after resizing to `new_len` and `shrink`?
+    pub(crate) fn will_reallocate(&self, new_len: usize) -> bool {
+        new_len > self.capacity() || self.capacity() > Buffer::max_compact_capacity(new_len)
     }
 
     /// Change capacity to store `num_words` plus some extra space for future growth.
