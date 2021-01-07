@@ -49,6 +49,11 @@ fn test_ubig_shl() {
     assert_eq!(&ubig!(0xef) << 4i32, ubig!(0xef0));
     assert_eq!(ubig!(0xef) << &4i32, ubig!(0xef0));
     assert_eq!(&ubig!(0xef) << &4i32, ubig!(0xef0));
+
+    assert_eq!(ubig!(0xef) << ibig!(4), ubig!(0xef0));
+    assert_eq!(&ubig!(0xef) << ibig!(4), ubig!(0xef0));
+    assert_eq!(ubig!(0xef) << &ibig!(4), ubig!(0xef0));
+    assert_eq!(&ubig!(0xef) << &ibig!(4), ubig!(0xef0));
 }
 
 #[test]
@@ -61,4 +66,22 @@ fn test_ubig_shl_too_large() {
 #[should_panic]
 fn test_ubig_shl_negative() {
     let _ = ubig!(1) << (-3i32);
+}
+
+#[test]
+fn test_ibig_shl() {
+    assert_eq!(ibig!(0xef) << 4u32, ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << 4u32, ibig!(0xef0));
+    assert_eq!(ibig!(0xef) << &4u32, ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << &4u32, ibig!(0xef0));
+
+    assert_eq!(ibig!(0xef) << ubig!(4), ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << ubig!(4), ibig!(0xef0));
+    assert_eq!(ibig!(0xef) << &ubig!(4), ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << &ubig!(4), ibig!(0xef0));
+
+    assert_eq!(ibig!(0xef) << ibig!(4), ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << ibig!(4), ibig!(0xef0));
+    assert_eq!(ibig!(0xef) << &ibig!(4), ibig!(0xef0));
+    assert_eq!(&ibig!(0xef) << &ibig!(4), ibig!(0xef0));
 }

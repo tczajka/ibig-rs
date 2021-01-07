@@ -381,3 +381,77 @@ impl UBig {
         }
     }
 }
+
+macro_rules! impl_ibig_shl {
+    ($a:ty) => {
+        impl Shl<$a> for IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shl(self, rhs: $a) -> IBig {
+                self.shl_impl(rhs)
+            }
+        }
+
+        impl Shl<&$a> for IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shl(self, rhs: &$a) -> IBig {
+                self.shl_impl(rhs)
+            }
+        }
+
+        impl Shl<$a> for &IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shl(self, rhs: $a) -> IBig {
+                self.shl_ref_impl(rhs)
+            }
+        }
+
+        impl Shl<&$a> for &IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shl(self, rhs: &$a) -> IBig {
+                self.shl_ref_impl(rhs)
+            }
+        }
+    };
+}
+
+impl_ibig_shl!(u8);
+impl_ibig_shl!(u16);
+impl_ibig_shl!(u32);
+impl_ibig_shl!(u64);
+impl_ibig_shl!(u128);
+impl_ibig_shl!(usize);
+impl_ibig_shl!(UBig);
+impl_ibig_shl!(i8);
+impl_ibig_shl!(i16);
+impl_ibig_shl!(i32);
+impl_ibig_shl!(i64);
+impl_ibig_shl!(i128);
+impl_ibig_shl!(isize);
+impl_ibig_shl!(IBig);
+
+impl IBig {
+    /// Shift left.
+    fn shl_impl<T>(self, rhs: T) -> IBig
+    where
+        UBig: Shl<T, Output = UBig>,
+    {
+        let (sign, mag) = self.into_sign_magnitude();
+        IBig::from_sign_magnitude(sign, mag.shl(rhs))
+    }
+
+    /// Shift reference left.
+    fn shl_ref_impl<'a, T>(&'a self, rhs: T) -> IBig
+    where
+        &'a UBig: Shl<T, Output = UBig>,
+    {
+        IBig::from_sign_magnitude(self.sign(), self.magnitude().shl(rhs))
+    }
+}
