@@ -41,5 +41,5 @@ fn test_ubig_shl() {
 #[test]
 #[should_panic]
 fn test_ubig_shl_too_large() {
-    ubig!(1) << (1u128 << 127);
+    let _ = ubig!(1) << (1u128 << 127);
 }
