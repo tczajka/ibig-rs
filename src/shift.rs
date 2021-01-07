@@ -5,7 +5,10 @@ use crate::{
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
-use core::{convert::TryInto, ops::Shl};
+use core::{
+    convert::TryInto,
+    ops::{Shl, ShlAssign},
+};
 
 macro_rules! impl_ubig_shl_primitive_unsigned {
     ($a:ty) => {
@@ -455,3 +458,50 @@ impl IBig {
         IBig::from_sign_magnitude(self.sign(), self.magnitude().shl(rhs))
     }
 }
+
+macro_rules! impl_shl_assign {
+    ($a:ty, $b:ty) => {
+        impl ShlAssign<$b> for $a {
+            #[inline]
+            fn shl_assign(&mut self, rhs: $b) {
+                *self = core::mem::take(self) << rhs;
+            }
+        }
+
+        impl ShlAssign<&$b> for $a {
+            #[inline]
+            fn shl_assign(&mut self, rhs: &$b) {
+                *self = core::mem::take(self) << rhs;
+            }
+        }
+    };
+}
+
+impl_shl_assign!(UBig, u8);
+impl_shl_assign!(UBig, u16);
+impl_shl_assign!(UBig, u32);
+impl_shl_assign!(UBig, u64);
+impl_shl_assign!(UBig, u128);
+impl_shl_assign!(UBig, usize);
+impl_shl_assign!(UBig, UBig);
+impl_shl_assign!(UBig, i8);
+impl_shl_assign!(UBig, i16);
+impl_shl_assign!(UBig, i32);
+impl_shl_assign!(UBig, i64);
+impl_shl_assign!(UBig, i128);
+impl_shl_assign!(UBig, isize);
+impl_shl_assign!(UBig, IBig);
+impl_shl_assign!(IBig, u8);
+impl_shl_assign!(IBig, u16);
+impl_shl_assign!(IBig, u32);
+impl_shl_assign!(IBig, u64);
+impl_shl_assign!(IBig, u128);
+impl_shl_assign!(IBig, usize);
+impl_shl_assign!(IBig, UBig);
+impl_shl_assign!(IBig, i8);
+impl_shl_assign!(IBig, i16);
+impl_shl_assign!(IBig, i32);
+impl_shl_assign!(IBig, i64);
+impl_shl_assign!(IBig, i128);
+impl_shl_assign!(IBig, isize);
+impl_shl_assign!(IBig, IBig);

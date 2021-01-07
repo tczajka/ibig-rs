@@ -85,3 +85,10 @@ fn test_ibig_shl() {
     assert_eq!(ibig!(0xef) << &ibig!(4), ibig!(0xef0));
     assert_eq!(&ibig!(0xef) << &ibig!(4), ibig!(0xef0));
 }
+
+#[test]
+fn test_shl_assign() {
+    let mut a = ubig!(0xef);
+    a <<= 4;
+    assert_eq!(a, ubig!(0xef0));
+}
