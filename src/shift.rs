@@ -1,56 +1,58 @@
 use crate::{
     buffer::Buffer,
-    primitive::{Word, WORD_BITS},
+    ibig::IBig,
+    primitive::{PrimitiveSigned, Word, WORD_BITS},
+    sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 use core::{convert::TryInto, ops::Shl};
 
-macro_rules! impl_shl_primitive_unsigned {
-    (impl Shl<$a:ty> for $b:ty) => {
-        impl Shl<$a> for $b {
-            type Output = $b;
+macro_rules! impl_ubig_shl_primitive_unsigned {
+    ($a:ty) => {
+        impl Shl<$a> for UBig {
+            type Output = UBig;
 
             #[inline]
-            fn shl(self, rhs: $a) -> $b {
+            fn shl(self, rhs: $a) -> UBig {
                 self.shl_unsigned(rhs)
             }
         }
 
-        impl Shl<&$a> for $b {
-            type Output = $b;
+        impl Shl<&$a> for UBig {
+            type Output = UBig;
 
             #[inline]
-            fn shl(self, rhs: &$a) -> $b {
+            fn shl(self, rhs: &$a) -> UBig {
                 self.shl_unsigned(*rhs)
             }
         }
 
-        impl Shl<$a> for &$b {
-            type Output = $b;
+        impl Shl<$a> for &UBig {
+            type Output = UBig;
 
             #[inline]
-            fn shl(self, rhs: $a) -> $b {
+            fn shl(self, rhs: $a) -> UBig {
                 self.shl_ref_unsigned(rhs)
             }
         }
 
-        impl Shl<&$a> for &$b {
-            type Output = $b;
+        impl Shl<&$a> for &UBig {
+            type Output = UBig;
 
             #[inline]
-            fn shl(self, rhs: &$a) -> $b {
+            fn shl(self, rhs: &$a) -> UBig {
                 self.shl_ref_unsigned(*rhs)
             }
         }
     };
 }
 
-impl_shl_primitive_unsigned!(impl Shl<u8> for UBig);
-impl_shl_primitive_unsigned!(impl Shl<u16> for UBig);
-impl_shl_primitive_unsigned!(impl Shl<u32> for UBig);
-impl_shl_primitive_unsigned!(impl Shl<u64> for UBig);
-impl_shl_primitive_unsigned!(impl Shl<u128> for UBig);
-impl_shl_primitive_unsigned!(impl Shl<usize> for UBig);
+impl_ubig_shl_primitive_unsigned!(u8);
+impl_ubig_shl_primitive_unsigned!(u16);
+impl_ubig_shl_primitive_unsigned!(u32);
+impl_ubig_shl_primitive_unsigned!(u64);
+impl_ubig_shl_primitive_unsigned!(u128);
+impl_ubig_shl_primitive_unsigned!(usize);
 
 impl Shl<UBig> for UBig {
     type Output = UBig;
@@ -260,5 +262,122 @@ impl UBig {
             buffer[i + shift_words + 1] = word >> (WORD_BITS - shift_bits);
         }
         buffer.into()
+    }
+}
+
+fn panic_shift_negative() -> ! {
+    panic!("Shift by negative amount")
+}
+
+macro_rules! impl_ubig_shl_primitive_signed {
+    ($a:ty) => {
+        impl Shl<$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shl(self, rhs: $a) -> UBig {
+                self.shl_signed(rhs)
+            }
+        }
+
+        impl Shl<&$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shl(self, rhs: &$a) -> UBig {
+                self.shl_signed(*rhs)
+            }
+        }
+
+        impl Shl<$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shl(self, rhs: $a) -> UBig {
+                self.shl_ref_signed(rhs)
+            }
+        }
+
+        impl Shl<&$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shl(self, rhs: &$a) -> UBig {
+                self.shl_ref_signed(*rhs)
+            }
+        }
+    };
+}
+
+impl_ubig_shl_primitive_signed!(i8);
+impl_ubig_shl_primitive_signed!(i16);
+impl_ubig_shl_primitive_signed!(i32);
+impl_ubig_shl_primitive_signed!(i64);
+impl_ubig_shl_primitive_signed!(i128);
+impl_ubig_shl_primitive_signed!(isize);
+
+impl Shl<IBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shl(self, rhs: IBig) -> UBig {
+        self.shl(&rhs)
+    }
+}
+
+impl Shl<&IBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shl(self, rhs: &IBig) -> UBig {
+        match rhs.sign() {
+            Positive => self.shl(rhs.magnitude()),
+            Negative => panic_shift_negative(),
+        }
+    }
+}
+
+impl Shl<IBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shl(self, rhs: IBig) -> UBig {
+        self.shl(&rhs)
+    }
+}
+
+impl Shl<&IBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shl(self, rhs: &IBig) -> UBig {
+        match rhs.sign() {
+            Positive => self.shl(rhs.magnitude()),
+            Negative => panic_shift_negative(),
+        }
+    }
+}
+
+impl UBig {
+    /// Shift left by a signed type.
+    fn shl_signed<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        match rhs.to_sign_magnitude() {
+            (Positive, mag) => self.shl_unsigned(mag),
+            (Negative, _) => panic_shift_negative(),
+        }
+    }
+
+    /// Shift left reference by a signed type.
+    fn shl_ref_signed<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        match rhs.to_sign_magnitude() {
+            (Positive, mag) => self.shl_ref_unsigned(mag),
+            (Negative, _) => panic_shift_negative(),
+        }
     }
 }
