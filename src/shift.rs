@@ -7,6 +7,7 @@ use crate::{
 };
 use core::{
     convert::TryInto,
+    mem,
     ops::{Shl, ShlAssign},
 };
 
@@ -464,14 +465,14 @@ macro_rules! impl_shl_assign {
         impl ShlAssign<$b> for $a {
             #[inline]
             fn shl_assign(&mut self, rhs: $b) {
-                *self = core::mem::take(self) << rhs;
+                *self = mem::take(self) << rhs;
             }
         }
 
         impl ShlAssign<&$b> for $a {
             #[inline]
             fn shl_assign(&mut self, rhs: &$b) {
-                *self = core::mem::take(self) << rhs;
+                *self = mem::take(self) << rhs;
             }
         }
     };

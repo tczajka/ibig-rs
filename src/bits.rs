@@ -4,7 +4,10 @@ use crate::{
     primitive::{double_word, Word, WORD_BITS},
     ubig::{Repr::*, UBig},
 };
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign};
+use core::{
+    mem,
+    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign},
+};
 
 impl UBig {
     /// Returns true if the `n`-th bit is set.
@@ -42,7 +45,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn set_bit(&mut self, n: usize) {
-        match core::mem::take(self).into_repr() {
+        match mem::take(self).into_repr() {
             Small(word) => {
                 if n < WORD_BITS as usize {
                     *self = UBig::from_word(word | 1 << n)
@@ -88,7 +91,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn clear_bit(&mut self, n: usize) {
-        match core::mem::take(self).into_repr() {
+        match mem::take(self).into_repr() {
             Small(word) => {
                 if n < WORD_BITS as usize {
                     *self = UBig::from_word(word & !(1 << n))
@@ -358,14 +361,14 @@ impl BitAnd<&UBig> for &UBig {
 impl BitAndAssign<UBig> for UBig {
     #[inline]
     fn bitand_assign(&mut self, rhs: UBig) {
-        *self = core::mem::take(self) & rhs;
+        *self = mem::take(self) & rhs;
     }
 }
 
 impl BitAndAssign<&UBig> for UBig {
     #[inline]
     fn bitand_assign(&mut self, rhs: &UBig) {
-        *self = core::mem::take(self) & rhs;
+        *self = mem::take(self) & rhs;
     }
 }
 
@@ -451,14 +454,14 @@ impl BitOr<&UBig> for &UBig {
 impl BitOrAssign<UBig> for UBig {
     #[inline]
     fn bitor_assign(&mut self, rhs: UBig) {
-        *self = core::mem::take(self) | rhs;
+        *self = mem::take(self) | rhs;
     }
 }
 
 impl BitOrAssign<&UBig> for UBig {
     #[inline]
     fn bitor_assign(&mut self, rhs: &UBig) {
-        *self = core::mem::take(self) | rhs;
+        *self = mem::take(self) | rhs;
     }
 }
 
@@ -552,14 +555,14 @@ impl BitXor<&UBig> for &UBig {
 impl BitXorAssign<UBig> for UBig {
     #[inline]
     fn bitxor_assign(&mut self, rhs: UBig) {
-        *self = core::mem::take(self) ^ rhs;
+        *self = mem::take(self) ^ rhs;
     }
 }
 
 impl BitXorAssign<&UBig> for UBig {
     #[inline]
     fn bitxor_assign(&mut self, rhs: &UBig) {
-        *self = core::mem::take(self) ^ rhs;
+        *self = mem::take(self) ^ rhs;
     }
 }
 

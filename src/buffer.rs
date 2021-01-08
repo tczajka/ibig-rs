@@ -5,6 +5,7 @@ use crate::primitive::{Word, WORD_BITS};
 use alloc::vec::Vec;
 use core::{
     cmp::min,
+    iter,
     ops::{Deref, DerefMut},
 };
 
@@ -89,7 +90,7 @@ impl Buffer {
     /// Panics if there is not enough capacity.
     pub(crate) fn push_zeros(&mut self, n: usize) {
         assert!(n <= self.capacity() - self.len());
-        self.0.extend(core::iter::repeat(0).take(n));
+        self.0.extend(iter::repeat(0).take(n));
     }
 
     /// Pop the most significant `Word`.
