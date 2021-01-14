@@ -160,3 +160,10 @@ fn test_ubig_shr() {
 fn test_ubig_shr_negative() {
     let _ = ubig!(1) >> (-3i32);
 }
+
+#[test]
+fn test_shr_assign() {
+    let mut a = ubig!(0xef);
+    a >>= 4;
+    assert_eq!(a, ubig!(0xe));
+}

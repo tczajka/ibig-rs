@@ -8,7 +8,7 @@ use crate::{
 use core::{
     convert::TryInto,
     mem,
-    ops::{Shl, ShlAssign, Shr},
+    ops::{Shl, ShlAssign, Shr, ShrAssign},
 };
 
 macro_rules! impl_ubig_shl_primitive_unsigned {
@@ -864,3 +864,36 @@ impl UBig {
         }
     }
 }
+
+macro_rules! impl_shr_assign {
+    ($a:ty, $b:ty) => {
+        impl ShrAssign<$b> for $a {
+            #[inline]
+            fn shr_assign(&mut self, rhs: $b) {
+                *self = mem::take(self) >> rhs;
+            }
+        }
+
+        impl ShrAssign<&$b> for $a {
+            #[inline]
+            fn shr_assign(&mut self, rhs: &$b) {
+                *self = mem::take(self) >> rhs;
+            }
+        }
+    };
+}
+
+impl_shr_assign!(UBig, u8);
+impl_shr_assign!(UBig, u16);
+impl_shr_assign!(UBig, u32);
+impl_shr_assign!(UBig, u64);
+impl_shr_assign!(UBig, u128);
+impl_shr_assign!(UBig, usize);
+impl_shr_assign!(UBig, UBig);
+impl_shr_assign!(UBig, i8);
+impl_shr_assign!(UBig, i16);
+impl_shr_assign!(UBig, i32);
+impl_shr_assign!(UBig, i64);
+impl_shr_assign!(UBig, i128);
+impl_shr_assign!(UBig, isize);
+impl_shr_assign!(UBig, IBig);
