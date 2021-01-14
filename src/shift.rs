@@ -751,3 +751,116 @@ impl UBig {
         }
     }
 }
+
+macro_rules! impl_ubig_shr_primitive_signed {
+    ($a:ty) => {
+        impl Shr<$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> UBig {
+                self.shr_signed(rhs)
+            }
+        }
+
+        impl Shr<&$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> UBig {
+                self.shr_signed(*rhs)
+            }
+        }
+
+        impl Shr<$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> UBig {
+                self.shr_ref_signed(rhs)
+            }
+        }
+
+        impl Shr<&$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> UBig {
+                self.shr_ref_signed(*rhs)
+            }
+        }
+    };
+}
+
+impl_ubig_shr_primitive_signed!(i8);
+impl_ubig_shr_primitive_signed!(i16);
+impl_ubig_shr_primitive_signed!(i32);
+impl_ubig_shr_primitive_signed!(i64);
+impl_ubig_shr_primitive_signed!(i128);
+impl_ubig_shr_primitive_signed!(isize);
+
+impl Shr<IBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: IBig) -> UBig {
+        self.shr(&rhs)
+    }
+}
+
+impl Shr<&IBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: &IBig) -> UBig {
+        match rhs.sign() {
+            Positive => self.shr(rhs.magnitude()),
+            Negative => panic_shift_negative(),
+        }
+    }
+}
+
+impl Shr<IBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: IBig) -> UBig {
+        self.shr(&rhs)
+    }
+}
+
+impl Shr<&IBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: &IBig) -> UBig {
+        match rhs.sign() {
+            Positive => self.shr(rhs.magnitude()),
+            Negative => panic_shift_negative(),
+        }
+    }
+}
+
+impl UBig {
+    /// Shift right by a signed type.
+    fn shr_signed<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        match rhs.to_sign_magnitude() {
+            (Positive, mag) => self.shr_unsigned(mag),
+            (Negative, _) => panic_shift_negative(),
+        }
+    }
+
+    /// Shift right reference by a signed type.
+    fn shr_ref_signed<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        match rhs.to_sign_magnitude() {
+            (Positive, mag) => self.shr_ref_unsigned(mag),
+            (Negative, _) => panic_shift_negative(),
+        }
+    }
+}

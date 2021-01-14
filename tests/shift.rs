@@ -143,4 +143,20 @@ fn test_ubig_shr() {
         &ubig!(_0x0123456789abcdef0123456789abcdef0123456789abcdef) >> 4u32,
         ubig!(_0x0123456789abcdef0123456789abcdef0123456789abcde)
     );
+
+    assert_eq!(ubig!(0xef) >> 4i32, ubig!(0xe));
+    assert_eq!(ubig!(0xef) >> &4i32, ubig!(0xe));
+    assert_eq!(&ubig!(0xef) >> 4i32, ubig!(0xe));
+    assert_eq!(&ubig!(0xef) >> &4i32, ubig!(0xe));
+
+    assert_eq!(ubig!(0xef) >> ibig!(4), ubig!(0xe));
+    assert_eq!(ubig!(0xef) >> &ibig!(4), ubig!(0xe));
+    assert_eq!(&ubig!(0xef) >> ibig!(4), ubig!(0xe));
+    assert_eq!(&ubig!(0xef) >> &ibig!(4), ubig!(0xe));
+}
+
+#[test]
+#[should_panic]
+fn test_ubig_shr_negative() {
+    let _ = ubig!(1) >> (-3i32);
 }
