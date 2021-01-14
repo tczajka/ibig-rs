@@ -8,7 +8,7 @@ use crate::{
 use core::{
     convert::TryInto,
     mem,
-    ops::{Shl, ShlAssign},
+    ops::{Shl, ShlAssign, Shr},
 };
 
 macro_rules! impl_ubig_shl_primitive_unsigned {
@@ -196,7 +196,9 @@ impl UBig {
 
     /// Shift left `buffer` by full words.
     fn shl_large_words(mut buffer: Buffer, shift_words: usize) -> UBig {
-        if buffer.will_reallocate(buffer.len() + shift_words) {
+        if shift_words == 0 {
+            buffer.into()
+        } else if buffer.will_reallocate(buffer.len() + shift_words) {
             UBig::shl_large_ref_words(&buffer, shift_words)
         } else {
             buffer.push_zeros(shift_words);
@@ -248,8 +250,8 @@ impl UBig {
     fn shl_large_ref_words(words: &[Word], shift_words: usize) -> UBig {
         let new_len = words.len() + shift_words;
         let mut buffer = Buffer::allocate(new_len);
-        buffer.push_zeros(new_len);
-        buffer[shift_words..].copy_from_slice(words);
+        buffer.push_zeros(shift_words);
+        buffer.extend(words);
         buffer.into()
     }
 
@@ -506,3 +508,246 @@ impl_shl_assign!(IBig, i64);
 impl_shl_assign!(IBig, i128);
 impl_shl_assign!(IBig, isize);
 impl_shl_assign!(IBig, IBig);
+
+macro_rules! impl_ubig_shr_primitive_unsigned {
+    ($a:ty) => {
+        impl Shr<$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> UBig {
+                self.shr_unsigned(rhs)
+            }
+        }
+
+        impl Shr<&$a> for UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> UBig {
+                self.shr_unsigned(*rhs)
+            }
+        }
+
+        impl Shr<$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> UBig {
+                self.shr_ref_unsigned(rhs)
+            }
+        }
+
+        impl Shr<&$a> for &UBig {
+            type Output = UBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> UBig {
+                self.shr_ref_unsigned(*rhs)
+            }
+        }
+    };
+}
+
+impl_ubig_shr_primitive_unsigned!(u8);
+impl_ubig_shr_primitive_unsigned!(u16);
+impl_ubig_shr_primitive_unsigned!(u32);
+impl_ubig_shr_primitive_unsigned!(u64);
+impl_ubig_shr_primitive_unsigned!(u128);
+impl_ubig_shr_primitive_unsigned!(usize);
+
+impl Shr<UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: UBig) -> UBig {
+        self.shr_unsigned(rhs)
+    }
+}
+
+impl Shr<&UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: &UBig) -> UBig {
+        self.shr_unsigned(rhs)
+    }
+}
+
+impl Shr<UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: UBig) -> UBig {
+        self.shr_ref_unsigned(rhs)
+    }
+}
+
+impl Shr<&UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn shr(self, rhs: &UBig) -> UBig {
+        self.shr_ref_unsigned(rhs)
+    }
+}
+
+impl UBig {
+    /// Shift right by an unsigned type.
+    fn shr_unsigned<T>(self, rhs: T) -> UBig
+    where
+        T: TryInto<usize>,
+    {
+        match TryInto::<usize>::try_into(rhs) {
+            Ok(rhs_usize) => self.shr_usize(rhs_usize),
+            Err(_) => UBig::from_word(0),
+        }
+    }
+
+    /// Shift right reference by an unsigned type.
+    fn shr_ref_unsigned<T>(&self, rhs: T) -> UBig
+    where
+        T: TryInto<usize>,
+    {
+        match TryInto::<usize>::try_into(rhs) {
+            Ok(rhs_usize) => self.shr_ref_usize(rhs_usize),
+            Err(_) => UBig::from_word(0),
+        }
+    }
+
+    /// Shift right by `usize` bits.
+    fn shr_usize(self, rhs: usize) -> UBig {
+        match self.into_repr() {
+            Small(word) => UBig::shr_small_usize(word, rhs),
+            Large(buffer) => UBig::shr_large_usize(buffer, rhs),
+        }
+    }
+
+    /// Shift right reference by `usize` bits.
+    fn shr_ref_usize(&self, rhs: usize) -> UBig {
+        match self.repr() {
+            Small(word) => UBig::shr_small_usize(*word, rhs),
+            Large(buffer) => UBig::shr_large_ref_usize(buffer, rhs),
+        }
+    }
+
+    /// Shift right one `Word` by `usize` bits.
+    fn shr_small_usize(word: Word, rhs: usize) -> UBig {
+        UBig::from_word(if rhs < (WORD_BITS as usize) {
+            word >> rhs
+        } else {
+            0
+        })
+    }
+
+    /// Shift right `buffer` by `rhs` bits.
+    fn shr_large_usize(buffer: Buffer, rhs: usize) -> UBig {
+        let shift_words = rhs / WORD_BITS as usize;
+        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        if shift_bits == 0 {
+            UBig::shr_large_words(buffer, shift_words)
+        } else {
+            UBig::shr_large_words_bits(buffer, shift_words, shift_bits)
+        }
+    }
+
+    /// Shift right `buffer` by full words.
+    fn shr_large_words(mut buffer: Buffer, shift_words: usize) -> UBig {
+        if shift_words == 0 {
+            buffer.into()
+        } else if shift_words >= buffer.len() {
+            UBig::from_word(0)
+        } else {
+            let n = buffer.len() - shift_words;
+            // if n == 1 the result will be Small.
+            if n > 1 && buffer.will_reallocate(n) {
+                UBig::shr_large_ref_words(&buffer, shift_words)
+            } else {
+                for i in 0..n {
+                    buffer[i] = buffer[i + shift_words];
+                }
+                buffer.truncate(n);
+                buffer.into()
+            }
+        }
+    }
+
+    /// Shift right `buffer` by a number of bits non-divisible by `WORD_BITS`.
+    fn shr_large_words_bits(mut buffer: Buffer, shift_words: usize, shift_bits: u32) -> UBig {
+        debug_assert!(shift_bits > 0 && shift_bits < WORD_BITS);
+
+        if shift_words >= buffer.len() {
+            UBig::from_word(0)
+        } else {
+            let n = buffer.len() - shift_words;
+            // if n <= 2 the result may be Small.
+            if n > 2 && buffer.will_reallocate(n) {
+                UBig::shr_large_ref_words_bits(&buffer, shift_words, shift_bits)
+            } else {
+                for i in 0..n - 1 {
+                    buffer[i] = buffer[i + shift_words] >> shift_bits
+                        | buffer[i + shift_words + 1] << (WORD_BITS - shift_bits);
+                }
+                buffer[n - 1] = buffer[n - 1 + shift_words] >> shift_bits;
+                buffer.truncate(n);
+                buffer.into()
+            }
+        }
+    }
+
+    /// Shift right large number of words by `rhs` bits.
+    fn shr_large_ref_usize(words: &[Word], rhs: usize) -> UBig {
+        let shift_words = rhs / WORD_BITS as usize;
+        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        if shift_bits == 0 {
+            UBig::shr_large_ref_words(words, shift_words)
+        } else {
+            UBig::shr_large_ref_words_bits(words, shift_words, shift_bits)
+        }
+    }
+
+    /// Shift right `words` by full words.
+    fn shr_large_ref_words(words: &[Word], shift_words: usize) -> UBig {
+        if shift_words >= words.len() {
+            UBig::from_word(0)
+        } else {
+            let n = words.len() - shift_words;
+            if n == 1 {
+                UBig::from_word(words[shift_words])
+            } else {
+                let mut buffer = Buffer::allocate(n);
+                buffer.extend(&words[shift_words..]);
+                buffer.into()
+            }
+        }
+    }
+
+    /// Shift right `words` by a number of bits non-divisible by `WORD_BITS`.
+    fn shr_large_ref_words_bits(words: &[Word], shift_words: usize, shift_bits: u32) -> UBig {
+        debug_assert!(shift_bits > 0 && shift_bits < WORD_BITS);
+
+        if shift_words >= words.len() {
+            UBig::from_word(0)
+        } else {
+            let n = words.len() - shift_words;
+            if n == 1 {
+                UBig::from_word(words[shift_words] >> shift_bits)
+            } else if n == 2 && words[shift_words + 1] >> shift_bits == 0 {
+                UBig::from_word(
+                    words[shift_words] >> shift_bits
+                        | words[shift_words + 1] << (WORD_BITS - shift_bits),
+                )
+            } else {
+                let mut buffer = Buffer::allocate(n);
+                for i in 0..n - 1 {
+                    buffer.push(
+                        words[i + shift_words] >> shift_bits
+                            | words[i + shift_words + 1] << (WORD_BITS - shift_bits),
+                    );
+                }
+                buffer.push(words[n - 1 + shift_words] >> shift_bits);
+                buffer.into()
+            }
+        }
+    }
+}
