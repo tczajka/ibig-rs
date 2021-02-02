@@ -41,9 +41,14 @@ pub(crate) type DoubleWord = u64;
 /// Double machine word.
 pub(crate) type DoubleWord = u128;
 
+/// Cast `Word` to `DoubleWord`.
+pub(crate) fn extend_word(word: Word) -> DoubleWord {
+    word as DoubleWord
+}
+
 /// Create a `DoubleWord` from two `Word`s.
 pub(crate) fn double_word(low: Word, high: Word) -> DoubleWord {
-    (low as DoubleWord) | (high as DoubleWord) << WORD_BITS
+    extend_word(low) | extend_word(high) << WORD_BITS
 }
 
 pub(crate) fn split_double_word(dw: DoubleWord) -> (Word, Word) {

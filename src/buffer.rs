@@ -80,7 +80,13 @@ impl Buffer {
     /// Panics if there is not enough capacity.
     pub(crate) fn push(&mut self, word: Word) {
         assert!(self.len() < self.capacity());
-        self.0.push(word)
+        self.0.push(word);
+    }
+
+    /// Append a Word and reallocate if necessary.
+    pub(crate) fn push_may_reallocate(&mut self, word: Word) {
+        self.ensure_capacity(self.len() + 1);
+        self.push(word);
     }
 
     /// Append `n` zeros.
@@ -301,6 +307,15 @@ mod tests {
         for _ in 0..10 {
             buffer.push(7);
         }
+    }
+
+    #[test]
+    fn test_push_may_reallocate() {
+        let mut buffer = Buffer::allocate(2);
+        for _ in 0..10 {
+            buffer.push_may_reallocate(7);
+        }
+        assert_eq!(buffer.len(), 10);
     }
 
     #[test]
