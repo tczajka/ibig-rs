@@ -50,5 +50,21 @@ fn test_add_ubig() {
         assert_eq!(b.clone() + a, *c);
         assert_eq!(b + a.clone(), *c);
         assert_eq!(b.clone() + a.clone(), *c);
+
+        let mut x = a.clone();
+        x += b;
+        assert_eq!(x, *c);
+
+        let mut x = a.clone();
+        x += b.clone();
+        assert_eq!(x, *c);
+
+        let mut x = b.clone();
+        x += a;
+        assert_eq!(x, *c);
+
+        let mut x = b.clone();
+        x += a.clone();
+        assert_eq!(x, *c);
     }
 }
