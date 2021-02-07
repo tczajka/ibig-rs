@@ -1,4 +1,4 @@
-use ibig::prelude::*;
+use ibig::{prelude::*, OutOfBoundsError};
 use std::convert::TryFrom;
 
 #[test]
@@ -160,17 +160,28 @@ fn test_ibig_to_signed() {
 fn test_ubig_to_ibig() {
     assert_eq!(IBig::from(UBig::from(0u32)), IBig::from(0i32));
     assert_eq!(IBig::from(UBig::from(100u32)), IBig::from(100i32));
+    assert_eq!(IBig::from(&UBig::from(100u32)), IBig::from(100i32));
 }
 
 #[test]
 fn test_ibig_to_ubig() {
     assert_eq!(UBig::try_from(IBig::from(0i32)), Ok(UBig::from(0u32)));
     assert_eq!(UBig::try_from(IBig::from(1000i32)), Ok(UBig::from(1000u32)));
+    assert_eq!(
+        UBig::try_from(&IBig::from(1000i32)),
+        Ok(UBig::from(1000u32))
+    );
     assert!(UBig::try_from(IBig::from(-1000i32)).is_err());
+    assert!(UBig::try_from(&IBig::from(-1000i32)).is_err());
 }
 
 #[test]
 fn test_default() {
     assert_eq!(UBig::default(), ubig!(0));
     assert_eq!(IBig::default(), ibig!(0));
+}
+
+#[test]
+fn test_display_out_of_bounds_error() {
+    assert_eq!(OutOfBoundsError.to_string(), "number out of bounds");
 }

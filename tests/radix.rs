@@ -164,6 +164,10 @@ fn test_ubig_from_str_radix() {
         ParseError::InvalidDigit
     );
     assert_eq!(
+        UBig::from_str_radix("ffffffffffffffffffffffffffffffffffffffffffffffg", 16).unwrap_err(),
+        ParseError::InvalidDigit
+    );
+    assert_eq!(
         UBig::from_str_radix("-0", 2).unwrap_err(),
         ParseError::InvalidDigit
     );
@@ -335,6 +339,12 @@ fn test_from_str_radix_with_radix_prefix() {
         IBig::from_str_with_radix_prefix("0x1fg").unwrap_err(),
         ParseError::InvalidDigit
     );
+}
+
+#[test]
+fn test_display_errors() {
+    assert_eq!(ParseError::NoDigits.to_string(), "no digits");
+    assert_eq!(ParseError::InvalidDigit.to_string(), "invalid digit");
 }
 
 #[test]
