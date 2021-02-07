@@ -41,15 +41,11 @@ fn test_add_ubig() {
         ),
     ];
 
-    for (a, b, c) in &test_cases {
+    let test = |a: &UBig, b: &UBig, c: &UBig| {
         assert_eq!(a + b, *c);
         assert_eq!(a.clone() + b, *c);
         assert_eq!(a + b.clone(), *c);
         assert_eq!(a.clone() + b.clone(), *c);
-        assert_eq!(b + a, *c);
-        assert_eq!(b.clone() + a, *c);
-        assert_eq!(b + a.clone(), *c);
-        assert_eq!(b.clone() + a.clone(), *c);
 
         let mut x = a.clone();
         x += b;
@@ -58,13 +54,10 @@ fn test_add_ubig() {
         let mut x = a.clone();
         x += b.clone();
         assert_eq!(x, *c);
+    };
 
-        let mut x = b.clone();
-        x += a;
-        assert_eq!(x, *c);
-
-        let mut x = b.clone();
-        x += a.clone();
-        assert_eq!(x, *c);
+    for (a, b, c) in &test_cases {
+        test(a, b, c);
+        test(b, a, c);
     }
 }
