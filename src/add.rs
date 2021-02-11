@@ -2,6 +2,7 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{extend_word, split_double_word, Word},
+    sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 use core::{
@@ -401,5 +402,133 @@ impl IBig {
                 IBig::from(0u8)
             }
         }
+    }
+}
+
+impl Add<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn add(self, rhs: IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = rhs.into_sign_magnitude();
+        match (sign0, sign1) {
+            (Positive, Positive) => IBig::from(mag0 + mag1),
+            (Positive, Negative) => IBig::sub_ubig_val_val(mag0, mag1),
+            (Negative, Positive) => IBig::sub_ubig_val_val(mag1, mag0),
+            (Negative, Negative) => -IBig::from(mag0 + mag1),
+        }
+    }
+}
+
+impl Add<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn add(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        match (sign0, sign1) {
+            (Positive, Positive) => IBig::from(mag0 + mag1),
+            (Positive, Negative) => IBig::sub_ubig_val_ref(mag0, mag1),
+            (Negative, Positive) => -IBig::sub_ubig_val_ref(mag0, mag1),
+            (Negative, Negative) => -IBig::from(mag0 + mag1),
+        }
+    }
+}
+
+impl Add<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn add(self, rhs: IBig) -> IBig {
+        rhs.add(self)
+    }
+}
+
+impl Add<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn add(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = (self.sign(), self.magnitude());
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        match (sign0, sign1) {
+            (Positive, Positive) => IBig::from(mag0 + mag1),
+            (Positive, Negative) => IBig::sub_ubig_ref_ref(mag0, mag1),
+            (Negative, Positive) => IBig::sub_ubig_ref_ref(mag1, mag0),
+            (Negative, Negative) => -IBig::from(mag0 + mag1),
+        }
+    }
+}
+
+impl AddAssign<IBig> for IBig {
+    #[inline]
+    fn add_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) + rhs;
+    }
+}
+
+impl AddAssign<&IBig> for IBig {
+    #[inline]
+    fn add_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) + rhs;
+    }
+}
+
+impl Sub<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn sub(self, rhs: IBig) -> IBig {
+        self + -rhs
+    }
+}
+
+impl Sub<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn sub(self, rhs: &IBig) -> IBig {
+        -(-self + rhs)
+    }
+}
+
+impl Sub<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn sub(self, rhs: IBig) -> IBig {
+        self + -rhs
+    }
+}
+
+impl Sub<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn sub(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = (self.sign(), self.magnitude());
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        match (sign0, sign1) {
+            (Positive, Positive) => IBig::sub_ubig_ref_ref(mag0, mag1),
+            (Positive, Negative) => IBig::from(mag0 + mag1),
+            (Negative, Positive) => -IBig::from(mag0 + mag1),
+            (Negative, Negative) => IBig::sub_ubig_ref_ref(mag1, mag0),
+        }
+    }
+}
+
+impl SubAssign<IBig> for IBig {
+    #[inline]
+    fn sub_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) - rhs;
+    }
+}
+
+impl SubAssign<&IBig> for IBig {
+    #[inline]
+    fn sub_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) - rhs;
     }
 }

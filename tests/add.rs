@@ -1,4 +1,54 @@
+use core::{
+    fmt::Debug,
+    ops::{Add, AddAssign, Sub, SubAssign},
+};
 use ibig::prelude::*;
+
+/// Test a + b = c in various ways.
+fn test_add_sub<'a, T>(a: &'a T, b: &'a T, c: &'a T)
+where
+    T: Add<T, Output = T>,
+    T: Add<&'a T, Output = T>,
+    &'a T: Add<T, Output = T>,
+    &'a T: Add<&'a T, Output = T>,
+    T: AddAssign<T>,
+    T: AddAssign<&'a T>,
+    T: Sub<T, Output = T>,
+    T: Sub<&'a T, Output = T>,
+    &'a T: Sub<T, Output = T>,
+    &'a T: Sub<&'a T, Output = T>,
+    T: SubAssign<T>,
+    T: SubAssign<&'a T>,
+    T: Clone,
+    T: Debug,
+    T: Eq,
+{
+    assert_eq!(a + b, *c);
+    assert_eq!(a.clone() + b, *c);
+    assert_eq!(a + b.clone(), *c);
+    assert_eq!(a.clone() + b.clone(), *c);
+
+    let mut x = a.clone();
+    x += b;
+    assert_eq!(x, *c);
+
+    let mut x = a.clone();
+    x += b.clone();
+    assert_eq!(x, *c);
+
+    assert_eq!(c - a, *b);
+    assert_eq!(c.clone() - a, *b);
+    assert_eq!(c - a.clone(), *b);
+    assert_eq!(c.clone() - a.clone(), *b);
+
+    let mut x = c.clone();
+    x -= a;
+    assert_eq!(x, *b);
+
+    let mut x = c.clone();
+    x -= a.clone();
+    assert_eq!(x, *b);
+}
 
 #[test]
 fn test_add_sub_ubig() {
@@ -46,37 +96,9 @@ fn test_add_sub_ubig() {
         ),
     ];
 
-    let test = |a: &UBig, b: &UBig, c: &UBig| {
-        assert_eq!(a + b, *c);
-        assert_eq!(a.clone() + b, *c);
-        assert_eq!(a + b.clone(), *c);
-        assert_eq!(a.clone() + b.clone(), *c);
-
-        let mut x = a.clone();
-        x += b;
-        assert_eq!(x, *c);
-
-        let mut x = a.clone();
-        x += b.clone();
-        assert_eq!(x, *c);
-
-        assert_eq!(c - a, *b);
-        assert_eq!(c.clone() - a, *b);
-        assert_eq!(c - a.clone(), *b);
-        assert_eq!(c.clone() - a.clone(), *b);
-
-        let mut x = c.clone();
-        x -= a;
-        assert_eq!(x, *b);
-
-        let mut x = c.clone();
-        x -= a.clone();
-        assert_eq!(x, *b);
-    };
-
     for (a, b, c) in &test_cases {
-        test(a, b, c);
-        test(b, a, c);
+        test_add_sub(a, b, c);
+        test_add_sub(b, a, c);
     }
 }
 
@@ -84,4 +106,39 @@ fn test_add_sub_ubig() {
 #[should_panic]
 fn test_sub_ubig_overflow() {
     let _ = ubig!(3) - ubig!(4);
+}
+
+#[test]
+fn test_add_sub_ibig() {
+    let test_cases = [
+        (ibig!(3), ibig!(4), ibig!(7)),
+        (ibig!(3), ibig!(-4), ibig!(-1)),
+        (ibig!(-3), ibig!(4), ibig!(1)),
+        (ibig!(-3), ibig!(-4), ibig!(-7)),
+        (
+            ibig!(0x10000000000000000),
+            ibig!(-4),
+            ibig!(0xfffffffffffffffc),
+        ),
+        (
+            ibig!(0x10000000000000000),
+            ibig!(_0x200000000000000000000000000000000),
+            ibig!(_0x200000000000000010000000000000000),
+        ),
+        (
+            ibig!(-_0x200000000000000010000000000000000),
+            ibig!(_0x200000000000000000000000000000000),
+            ibig!(-0x10000000000000000),
+        ),
+        (
+            ibig!(_0x200000000000000010000000000000000),
+            ibig!(-_0x200000000000000000000000000000000),
+            ibig!(0x10000000000000000),
+        ),
+    ];
+
+    for (a, b, c) in &test_cases {
+        test_add_sub(a, b, c);
+        test_add_sub(b, a, c);
+    }
 }
