@@ -1,11 +1,14 @@
 use crate::{
     buffer::Buffer,
+    ibig::IBig,
     primitive::{extend_word, split_double_word, Word},
     ubig::{Repr::*, UBig},
 };
 use core::{
-    cmp, mem,
-    ops::{Add, AddAssign},
+    cmp::{min, Ordering},
+    convert::TryFrom,
+    mem,
+    ops::{Add, AddAssign, Sub, SubAssign},
 };
 
 impl Add<UBig> for UBig {
@@ -114,7 +117,7 @@ impl UBig {
 
     /// Add two large numbers.
     fn add_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
-        let n = cmp::min(buffer.len(), rhs.len());
+        let n = min(buffer.len(), rhs.len());
         let overflow = add_words_same_len_in_place(&mut buffer[..n], &rhs[..n]);
         if rhs.len() > n {
             buffer.ensure_capacity(rhs.len());
@@ -127,7 +130,7 @@ impl UBig {
     }
 }
 
-/// Add one to a non-empty word sequence.
+/// Add one to a word sequence.
 ///
 /// Returns overflow.
 fn add_one_in_place(words: &mut [Word]) -> bool {
@@ -164,4 +167,239 @@ fn add_words_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
         carry = c;
     }
     carry != 0
+}
+
+impl Sub<UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn sub(self, rhs: UBig) -> UBig {
+        UBig::from_ibig_after_sub(IBig::sub_ubig_val_val(self, rhs))
+    }
+}
+
+impl Sub<&UBig> for UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn sub(self, rhs: &UBig) -> UBig {
+        UBig::from_ibig_after_sub(IBig::sub_ubig_val_ref(self, rhs))
+    }
+}
+
+impl Sub<UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn sub(self, rhs: UBig) -> UBig {
+        UBig::from_ibig_after_sub(-IBig::sub_ubig_val_ref(rhs, self))
+    }
+}
+
+impl Sub<&UBig> for &UBig {
+    type Output = UBig;
+
+    #[inline]
+    fn sub(self, rhs: &UBig) -> UBig {
+        UBig::from_ibig_after_sub(IBig::sub_ubig_ref_ref(self, rhs))
+    }
+}
+
+impl SubAssign<UBig> for UBig {
+    #[inline]
+    fn sub_assign(&mut self, rhs: UBig) {
+        *self = mem::take(self) - rhs;
+    }
+}
+
+impl SubAssign<&UBig> for UBig {
+    #[inline]
+    fn sub_assign(&mut self, rhs: &UBig) {
+        *self = mem::take(self) - rhs;
+    }
+}
+
+impl UBig {
+    fn from_ibig_after_sub(x: IBig) -> UBig {
+        match UBig::try_from(x) {
+            Ok(v) => v,
+            Err(_) => panic!("UBig subtraction overflow"),
+        }
+    }
+
+    fn sub_large_word(mut lhs: Buffer, rhs: Word) -> UBig {
+        let borrow = sub_word_in_place(&mut lhs, rhs);
+        assert!(!borrow);
+        lhs.into()
+    }
+
+    /// Subtract lhs - rhs.
+    ///
+    /// Panics if lhs < rhs.
+    fn sub_large_val_ref_no_overflow(mut lhs: Buffer, rhs: &[Word]) -> UBig {
+        let n = rhs.len();
+        let borrow = sub_words_same_len_in_place(&mut lhs[..n], rhs);
+        if borrow {
+            let borrow2 = sub_one_in_place(&mut lhs[n..]);
+            assert!(!borrow2);
+        }
+        lhs.into()
+    }
+
+    /// Subtract lhs - rhs.
+    ///
+    /// Panics if lhs < rhs.
+    fn sub_large_ref_val_no_overflow(lhs: &[Word], mut rhs: Buffer) -> UBig {
+        let n = rhs.len();
+        let borrow = sub_words_same_len_in_place_swap(&lhs[..n], &mut rhs);
+        rhs.extend(&lhs[n..]);
+        if borrow {
+            let borrow2 = sub_one_in_place(&mut rhs[n..]);
+            assert!(!borrow2);
+        }
+        rhs.into()
+    }
+}
+
+/// Subtract one from a word sequence.
+///
+/// Returns borrow.
+fn sub_one_in_place(words: &mut [Word]) -> bool {
+    for word in words {
+        let (a, borrow) = word.overflowing_sub(1);
+        *word = a;
+        if !borrow {
+            return false;
+        }
+    }
+    true
+}
+
+/// Subtract a word from a non-empty word sequence.
+///
+/// Returns borrow.
+fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
+    debug_assert!(!words.is_empty());
+    let (a, borrow) = words[0].overflowing_sub(rhs);
+    words[0] = a;
+    borrow && sub_one_in_place(&mut words[1..])
+}
+
+/// lhs -= rhs
+///
+/// Returns borrow.
+fn sub_words_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
+    // carry_plus_1 is 0 or 1
+    let mut carry_plus_1: Word = 1;
+    for (a, b) in lhs.iter_mut().zip(rhs.iter()) {
+        // (diff, c) = a - b + carry_plus_1 + (1 << WORD_BITS - 1)
+        let (diff, c) = split_double_word(
+            extend_word(*a) + extend_word(Word::MAX) + extend_word(carry_plus_1) - extend_word(*b),
+        );
+        *a = diff;
+        carry_plus_1 = c;
+    }
+    carry_plus_1 == 0
+}
+
+/// rhs = lhs - rhs
+///
+/// Returns borrow.
+fn sub_words_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
+    // carry_plus_1 is 0 or 1
+    let mut carry_plus_1: Word = 1;
+    for (a, b) in lhs.iter().zip(rhs.iter_mut()) {
+        // (diff, c) = a - b + carry_plus_1 + (1 << WORD_BITS - 1)
+        let (diff, c) = split_double_word(
+            extend_word(*a) + extend_word(Word::MAX) + extend_word(carry_plus_1) - extend_word(*b),
+        );
+        *b = diff;
+        carry_plus_1 = c;
+    }
+    carry_plus_1 == 0
+}
+
+impl IBig {
+    fn sub_ubig_val_val(lhs: UBig, rhs: UBig) -> IBig {
+        match (lhs.into_repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => IBig::sub_word_word(word0, word1),
+            (Small(word0), Large(buffer1)) => -IBig::sub_large_word(buffer1, word0),
+            (Large(buffer0), Small(word1)) => IBig::sub_large_word(buffer0, word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() >= buffer1.len() {
+                    IBig::sub_large(buffer0, &buffer1)
+                } else {
+                    -IBig::sub_large(buffer1, &buffer0)
+                }
+            }
+        }
+    }
+
+    fn sub_ubig_val_ref(lhs: UBig, rhs: &UBig) -> IBig {
+        match lhs.into_repr() {
+            Small(word0) => match rhs.repr() {
+                Small(word1) => IBig::sub_word_word(word0, *word1),
+                Large(buffer1) => -IBig::sub_large_word(buffer1.clone(), word0),
+            },
+            Large(buffer0) => match rhs.repr() {
+                Small(word1) => IBig::sub_large_word(buffer0, *word1),
+                Large(buffer1) => IBig::sub_large(buffer0, buffer1),
+            },
+        }
+    }
+
+    fn sub_ubig_ref_ref(lhs: &UBig, rhs: &UBig) -> IBig {
+        match (lhs.repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => IBig::sub_word_word(*word0, *word1),
+            (Small(word0), Large(buffer1)) => -IBig::sub_large_word(buffer1.clone(), *word0),
+            (Large(buffer0), Small(word1)) => IBig::sub_large_word(buffer0.clone(), *word1),
+            (Large(buffer0), Large(buffer1)) => {
+                if buffer0.len() >= buffer1.len() {
+                    IBig::sub_large(buffer0.clone(), buffer1)
+                } else {
+                    -IBig::sub_large(buffer1.clone(), buffer0)
+                }
+            }
+        }
+    }
+
+    fn sub_word_word(lhs: Word, rhs: Word) -> IBig {
+        if lhs >= rhs {
+            IBig::from(lhs - rhs)
+        } else {
+            -IBig::from(rhs - lhs)
+        }
+    }
+
+    fn sub_large_word(lhs: Buffer, rhs: Word) -> IBig {
+        UBig::sub_large_word(lhs, rhs).into()
+    }
+
+    fn sub_large(mut lhs: Buffer, rhs: &[Word]) -> IBig {
+        match lhs.len().cmp(&rhs.len()) {
+            Ordering::Greater => IBig::from(UBig::sub_large_val_ref_no_overflow(lhs, rhs)),
+            Ordering::Less => -IBig::from(UBig::sub_large_ref_val_no_overflow(rhs, lhs)),
+            Ordering::Equal => {
+                let mut n = lhs.len();
+                while n > 0 {
+                    match lhs[n - 1].cmp(&rhs[n - 1]) {
+                        Ordering::Greater => {
+                            lhs.truncate(n);
+                            return IBig::from(UBig::sub_large_val_ref_no_overflow(lhs, &rhs[..n]));
+                        }
+                        Ordering::Less => {
+                            lhs.truncate(n);
+                            return -IBig::from(UBig::sub_large_ref_val_no_overflow(
+                                &rhs[..n],
+                                lhs,
+                            ));
+                        }
+                        Ordering::Equal => {}
+                    }
+                    n -= 1;
+                }
+                IBig::from(0u8)
+            }
+        }
+    }
 }

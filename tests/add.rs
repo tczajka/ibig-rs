@@ -1,7 +1,7 @@
 use ibig::prelude::*;
 
 #[test]
-fn test_add_ubig() {
+fn test_add_sub_ubig() {
     let test_cases = [
         (ubig!(3), ubig!(4), ubig!(7)),
         (
@@ -39,6 +39,11 @@ fn test_add_ubig() {
             ubig!(0x88888888888888888888888888888888),
             ubig!(_0x888888888888888911111111111111111111111111111110),
         ),
+        (
+            ubig!(_0x888888888888888888888888888888888888888888888888),
+            ubig!(0),
+            ubig!(_0x888888888888888888888888888888888888888888888888),
+        ),
     ];
 
     let test = |a: &UBig, b: &UBig, c: &UBig| {
@@ -54,10 +59,29 @@ fn test_add_ubig() {
         let mut x = a.clone();
         x += b.clone();
         assert_eq!(x, *c);
+
+        assert_eq!(c - a, *b);
+        assert_eq!(c.clone() - a, *b);
+        assert_eq!(c - a.clone(), *b);
+        assert_eq!(c.clone() - a.clone(), *b);
+
+        let mut x = c.clone();
+        x -= a;
+        assert_eq!(x, *b);
+
+        let mut x = c.clone();
+        x -= a.clone();
+        assert_eq!(x, *b);
     };
 
     for (a, b, c) in &test_cases {
         test(a, b, c);
         test(b, a, c);
     }
+}
+
+#[test]
+#[should_panic]
+fn test_sub_ubig_overflow() {
+    let _ = ubig!(3) - ubig!(4);
 }
