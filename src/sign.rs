@@ -40,12 +40,12 @@ impl IBig {
         match self.sign() {
             Positive => {
                 if let Small(0) = self.magnitude().repr() {
-                    IBig::from_sign_magnitude(Positive, UBig::from_word(0))
+                    IBig::from(0u8)
                 } else {
-                    IBig::from_sign_magnitude(Positive, UBig::from_word(1))
+                    IBig::from(1u8)
                 }
             }
-            Negative => IBig::from_sign_magnitude(Negative, UBig::from_word(1)),
+            Negative => IBig::from(-1i8),
         }
     }
 }
@@ -87,7 +87,7 @@ impl Abs for IBig {
 
     #[inline]
     fn abs(self) -> IBig {
-        IBig::from_sign_magnitude(Positive, self.unsigned_abs())
+        IBig::from(self.unsigned_abs())
     }
 }
 
@@ -96,7 +96,7 @@ impl Abs for &IBig {
 
     #[inline]
     fn abs(self) -> IBig {
-        IBig::from_sign_magnitude(Positive, self.unsigned_abs())
+        IBig::from(self.unsigned_abs())
     }
 }
 

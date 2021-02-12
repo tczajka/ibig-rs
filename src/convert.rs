@@ -423,7 +423,7 @@ impl Default for UBig {
 impl Default for IBig {
     /// Default value: 0.
     fn default() -> IBig {
-        IBig::from_sign_magnitude(Positive, UBig::from_word(0))
+        IBig::from(0u8)
     }
 }
 
