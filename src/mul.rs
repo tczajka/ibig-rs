@@ -1,6 +1,8 @@
 use crate::{
     buffer::Buffer,
+    ibig::IBig,
     primitive::{extend_word, split_double_word, Word},
+    sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
 use core::{
@@ -154,4 +156,73 @@ fn add_mul_word_in_place_same_len(words: &mut [Word], mult: Word, rhs: &[Word]) 
         carry = v1;
     }
     carry
+}
+
+impl Mul<Sign> for Sign {
+    type Output = Sign;
+
+    fn mul(self, rhs: Sign) -> Sign {
+        match (self, rhs) {
+            (Positive, Positive) => Positive,
+            (Positive, Negative) => Negative,
+            (Negative, Positive) => Negative,
+            (Negative, Negative) => Positive,
+        }
+    }
+}
+
+impl Mul<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn mul(self, rhs: IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = rhs.into_sign_magnitude();
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl Mul<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn mul(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl Mul<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn mul(self, rhs: IBig) -> IBig {
+        rhs.mul(self)
+    }
+}
+
+impl Mul<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn mul(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = (self.sign(), self.magnitude());
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl MulAssign<IBig> for IBig {
+    #[inline]
+    fn mul_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) * rhs;
+    }
+}
+
+impl MulAssign<&IBig> for IBig {
+    #[inline]
+    fn mul_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) * rhs;
+    }
 }

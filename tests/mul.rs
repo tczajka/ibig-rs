@@ -64,3 +64,17 @@ fn test_mul_ubig() {
         test_mul(b, a, c);
     }
 }
+
+#[test]
+fn test_mul_ibig() {
+    let test_cases = [
+        (ibig!(3), ibig!(4), ibig!(12)),
+        (ibig!(-3), ibig!(4), ibig!(-12)),
+        (ibig!(-3), ibig!(-4), ibig!(12)),
+    ];
+
+    for (a, b, c) in &test_cases {
+        test_mul(a, b, c);
+        test_mul(b, a, c);
+    }
+}
