@@ -47,6 +47,7 @@ mod cmp;
 mod convert;
 mod fmt;
 mod ibig;
+mod mul;
 mod parse;
 pub mod prelude;
 mod primitive;
