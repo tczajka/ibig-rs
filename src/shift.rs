@@ -2,7 +2,7 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{PrimitiveSigned, Word, WORD_BITS},
-    sign::Sign::*,
+    sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
 };
 use core::{
@@ -865,6 +865,86 @@ impl UBig {
     }
 }
 
+macro_rules! impl_ibig_shr {
+    ($a:ty) => {
+        impl Shr<$a> for IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> IBig {
+                self.shr_impl(rhs)
+            }
+        }
+
+        impl Shr<&$a> for IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> IBig {
+                self.shr_impl(rhs)
+            }
+        }
+
+        impl Shr<$a> for &IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shr(self, rhs: $a) -> IBig {
+                self.shr_ref_impl(rhs)
+            }
+        }
+
+        impl Shr<&$a> for &IBig {
+            type Output = IBig;
+
+            #[inline]
+            fn shr(self, rhs: &$a) -> IBig {
+                self.shr_ref_impl(rhs)
+            }
+        }
+    };
+}
+
+impl_ibig_shr!(u8);
+impl_ibig_shr!(u16);
+impl_ibig_shr!(u32);
+impl_ibig_shr!(u64);
+impl_ibig_shr!(u128);
+impl_ibig_shr!(usize);
+impl_ibig_shr!(UBig);
+impl_ibig_shr!(i8);
+impl_ibig_shr!(i16);
+impl_ibig_shr!(i32);
+impl_ibig_shr!(i64);
+impl_ibig_shr!(i128);
+impl_ibig_shr!(isize);
+impl_ibig_shr!(IBig);
+
+impl IBig {
+    /// Shift right.
+    fn shr_impl<T>(self, rhs: T) -> IBig
+    where
+        UBig: Shr<T, Output = UBig>,
+    {
+        match self.sign() {
+            Positive => IBig::from(self.unsigned_abs() >> rhs),
+            Negative => !IBig::from((!self).unsigned_abs() >> rhs),
+        }
+    }
+
+    /// Shift reference right.
+    fn shr_ref_impl<'a, T>(&'a self, rhs: T) -> IBig
+    where
+        UBig: Shr<T, Output = UBig>,
+        &'a UBig: Shr<T, Output = UBig>,
+    {
+        match self.sign() {
+            Positive => IBig::from(self.magnitude() >> rhs),
+            Negative => !IBig::from((!self).unsigned_abs() >> rhs),
+        }
+    }
+}
+
 macro_rules! impl_shr_assign {
     ($a:ty, $b:ty) => {
         impl ShrAssign<$b> for $a {
@@ -897,3 +977,17 @@ impl_shr_assign!(UBig, i64);
 impl_shr_assign!(UBig, i128);
 impl_shr_assign!(UBig, isize);
 impl_shr_assign!(UBig, IBig);
+impl_shr_assign!(IBig, u8);
+impl_shr_assign!(IBig, u16);
+impl_shr_assign!(IBig, u32);
+impl_shr_assign!(IBig, u64);
+impl_shr_assign!(IBig, u128);
+impl_shr_assign!(IBig, usize);
+impl_shr_assign!(IBig, UBig);
+impl_shr_assign!(IBig, i8);
+impl_shr_assign!(IBig, i16);
+impl_shr_assign!(IBig, i32);
+impl_shr_assign!(IBig, i64);
+impl_shr_assign!(IBig, i128);
+impl_shr_assign!(IBig, isize);
+impl_shr_assign!(IBig, IBig);

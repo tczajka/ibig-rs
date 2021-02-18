@@ -228,10 +228,36 @@ fn test_ubig_shr_negative() {
 }
 
 #[test]
-fn test_shr_assign() {
+fn test_ubig_shr_assign() {
     let mut a = ubig!(0xeff);
     a >>= 4;
     assert_eq!(a, ubig!(0xef));
     a >>= &4;
     assert_eq!(a, ubig!(0xe));
+}
+
+#[test]
+fn test_ibig_shr() {
+    let test_cases = [
+        (ibig!(0xe0), 4, ibig!(0xe)),
+        (ibig!(0xef), 4, ibig!(0xe)),
+        (ibig!(0xef), 100, ibig!(0)),
+        (ibig!(-0xe0), 4, ibig!(-0xe)),
+        (ibig!(-0xef), 4, ibig!(-0xf)),
+        (ibig!(-0xef), 100, ibig!(-1)),
+    ];
+    for (a, b, c) in &test_cases {
+        assert_eq!(a >> b, *c);
+        assert_eq!(a >> *b, *c);
+        assert_eq!(a.clone() >> b, *c);
+        assert_eq!(a.clone() >> *b, *c);
+
+        let mut x = a.clone();
+        x >>= b;
+        assert_eq!(x, *c);
+
+        let mut x = a.clone();
+        x >>= *b;
+        assert_eq!(x, *c);
+    }
 }
