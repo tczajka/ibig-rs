@@ -1,7 +1,7 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{extend_word, split_double_word, Word},
+    primitive::{double_word, extend_word, split_double_word, Word},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -120,7 +120,7 @@ impl UBig {
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
         buffer.push_zeros(rhs.len());
         for (i, m) in lhs.iter().enumerate() {
-            let carry = add_mul_word_in_place_same_len(&mut buffer[i..], *m, rhs);
+            let carry = add_mul_word_same_len_in_place(&mut buffer[i..], *m, rhs);
             buffer.push(carry);
         }
         buffer.into()
@@ -134,9 +134,10 @@ fn mul_word_in_place(words: &mut [Word], rhs: Word) -> Word {
     let mut carry: Word = 0;
     for a in words {
         // a * b + carry <= MAX * MAX + MAX < DoubleWord::MAX
-        let (v0, v1) = split_double_word(extend_word(*a) * extend_word(rhs) + extend_word(carry));
-        *a = v0;
-        carry = v1;
+        let (v_lo, v_hi) =
+            split_double_word(extend_word(*a) * extend_word(rhs) + extend_word(carry));
+        *a = v_lo;
+        carry = v_hi;
     }
     carry
 }
@@ -144,18 +145,43 @@ fn mul_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 /// words += mult * rhs
 ///
 /// Returns carry.
-fn add_mul_word_in_place_same_len(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
+fn add_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     debug_assert!(words.len() == rhs.len());
     let mut carry: Word = 0;
     for (a, b) in words.iter_mut().zip(rhs.iter()) {
         // a + mult * b + carry <= MAX * MAX + 2 * MAX <= DoubleWord::MAX
-        let (v0, v1) = split_double_word(
+        let (v_lo, v_hi) = split_double_word(
             extend_word(*a) + extend_word(carry) + extend_word(mult) * extend_word(*b),
         );
-        *a = v0;
-        carry = v1;
+        *a = v_lo;
+        carry = v_hi;
     }
     carry
+}
+
+/// words -= mult * rhs
+///
+/// Returns borrow.
+pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
+    debug_assert!(words.len() == rhs.len());
+    // carry is in -Word::MAX..0
+    // carry_plus_max = carry + Word::MAX
+    let mut carry_plus_max = Word::MAX;
+    for (a, b) in words.iter_mut().zip(rhs.iter()) {
+        // Compute val = a - mult * b + carry_plus_max - MAX + (MAX << BITS)
+        // val >= 0 - MAX * MAX - MAX + MAX*(MAX+1) = 0
+        // val <= MAX - 0 + MAX - MAX + (MAX<<BITS) = DoubleWord::MAX
+        // This fits exactly in DoubleWord!
+        // We have to be careful to calculate in the correct order to avoid overflow.
+        let v = extend_word(*a)
+            + extend_word(carry_plus_max)
+            + (double_word(0, Word::MAX) - extend_word(Word::MAX))
+            - extend_word(mult) * extend_word(*b);
+        let (v_lo, v_hi) = split_double_word(v);
+        *a = v_lo;
+        carry_plus_max = v_hi;
+    }
+    Word::MAX - carry_plus_max
 }
 
 impl Mul<Sign> for Sign {

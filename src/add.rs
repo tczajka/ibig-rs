@@ -119,7 +119,7 @@ impl UBig {
     /// Add two large numbers.
     fn add_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
         let n = min(buffer.len(), rhs.len());
-        let overflow = add_words_same_len_in_place(&mut buffer[..n], &rhs[..n]);
+        let overflow = add_same_len_in_place(&mut buffer[..n], &rhs[..n]);
         if rhs.len() > n {
             buffer.ensure_capacity(rhs.len());
             buffer.extend(&rhs[n..]);
@@ -158,7 +158,7 @@ fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
 /// Add a word to a non-empty word sequence.
 ///
 /// Returns overflow.
-fn add_words_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(words.len() == rhs.len());
 
     let mut carry = 0;

@@ -29,6 +29,7 @@ extern crate alloc;
 
 pub use crate::{
     bits::{AndNot, NextPowerOfTwo},
+    div::{DivEuclid, DivRem, DivRemEuclid, RemEuclid},
     fmt::InRadix,
     ibig::IBig,
     parse::ParseError,
@@ -45,6 +46,7 @@ mod bits;
 mod buffer;
 mod cmp;
 mod convert;
+mod div;
 mod fmt;
 mod ibig;
 mod mul;
