@@ -96,6 +96,92 @@ fn test_div_rem_ubig() {
 
 #[test]
 #[should_panic]
-fn test_divide_by_0() {
+fn test_divide_by_0_ubig() {
     let _ = ubig!(5) / ubig!(0);
+}
+
+#[test]
+fn test_div_rem_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            if b == 0 {
+                continue;
+            }
+
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let q: IBig = (a / b).into();
+            let r: IBig = (a % b).into();
+            let qr = (q.clone(), r.clone());
+
+            assert_eq!(a_big.clone() / b_big.clone(), q);
+            assert_eq!(&a_big / b_big.clone(), q);
+            assert_eq!(a_big.clone() / &b_big, q);
+            assert_eq!(&a_big / &b_big, q);
+
+            let mut x = a_big.clone();
+            x /= b_big.clone();
+            assert_eq!(x, q);
+
+            let mut x = a_big.clone();
+            x /= &b_big;
+            assert_eq!(x, q);
+
+            assert_eq!(a_big.clone() % b_big.clone(), r);
+            assert_eq!(&a_big % b_big.clone(), r);
+            assert_eq!(a_big.clone() % &b_big, r);
+            assert_eq!(&a_big % &b_big, r);
+
+            let mut x = a_big.clone();
+            x %= b_big.clone();
+            assert_eq!(x, r);
+
+            let mut x = a_big.clone();
+            x %= &b_big;
+            assert_eq!(x, r);
+
+            assert_eq!(a_big.clone().div_rem(b_big.clone()), qr);
+            assert_eq!((&a_big).div_rem(b_big.clone()), qr);
+            assert_eq!(a_big.clone().div_rem(&b_big), qr);
+            assert_eq!((&a_big).div_rem(&b_big), qr);
+        }
+    }
+}
+
+#[test]
+fn test_div_rem_euclid_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            if b == 0 {
+                continue;
+            }
+
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let q: IBig = a.div_euclid(b).into();
+            let r: IBig = a.rem_euclid(b).into();
+            let qr = (q.clone(), r.clone());
+
+            assert_eq!(a_big.clone().div_euclid(b_big.clone()), q);
+            assert_eq!((&a_big).div_euclid(b_big.clone()), q);
+            assert_eq!(a_big.clone().div_euclid(&b_big), q);
+            assert_eq!((&a_big).div_euclid(&b_big), q);
+
+            assert_eq!(a_big.clone().rem_euclid(b_big.clone()), r);
+            assert_eq!((&a_big).rem_euclid(b_big.clone()), r);
+            assert_eq!(a_big.clone().rem_euclid(&b_big), r);
+            assert_eq!((&a_big).rem_euclid(&b_big), r);
+
+            assert_eq!(a_big.clone().div_rem_euclid(b_big.clone()), qr);
+            assert_eq!((&a_big).div_rem_euclid(b_big.clone()), qr);
+            assert_eq!(a_big.clone().div_rem_euclid(&b_big), qr);
+            assert_eq!((&a_big).div_rem_euclid(&b_big), qr);
+        }
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_divide_by_0_ibig() {
+    let _ = ibig!(5) / ibig!(0);
 }
