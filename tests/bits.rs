@@ -141,7 +141,7 @@ fn test_next_power_of_two() {
 }
 
 #[test]
-fn test_ubig_and() {
+fn test_and_ubig() {
     let cases = [
         (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xf000)),
         (
@@ -186,7 +186,7 @@ fn test_ubig_and() {
 }
 
 #[test]
-fn test_ubig_or() {
+fn test_or_ubig() {
     let cases = [
         (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xfff0)),
         (
@@ -231,7 +231,7 @@ fn test_ubig_or() {
 }
 
 #[test]
-fn test_ubig_xor() {
+fn test_xor_ubig() {
     let cases = [
         (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xff0)),
         (
@@ -276,7 +276,7 @@ fn test_ubig_xor() {
 }
 
 #[test]
-fn test_ubig_and_not() {
+fn test_and_not_ubig() {
     let cases = [
         (ubig!(0xf0f0), ubig!(0xff00), ubig!(0xf0)),
         (
@@ -306,5 +306,104 @@ fn test_ubig_and_not() {
         assert_eq!(a.clone().and_not(b), *c);
         assert_eq!(a.and_not(b.clone()), *c);
         assert_eq!(a.clone().and_not(b.clone()), *c);
+    }
+}
+
+#[test]
+fn test_not_ibig() {
+    for a in -20i8..=20i8 {
+        let a_big: IBig = a.into();
+        let res: IBig = (!a).into();
+
+        assert_eq!(!&a_big, res);
+        assert_eq!(!a_big, res);
+    }
+}
+
+#[test]
+fn test_and_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let res: IBig = (a & b).into();
+
+            assert_eq!(&a_big & &b_big, res);
+            assert_eq!(&a_big & b_big.clone(), res);
+            assert_eq!(a_big.clone() & &b_big, res);
+            assert_eq!(a_big.clone() & b_big.clone(), res);
+
+            let mut x = a_big.clone();
+            x &= &b_big;
+            assert_eq!(x, res);
+
+            let mut x = a_big.clone();
+            x &= b_big.clone();
+            assert_eq!(x, res);
+        }
+    }
+}
+
+#[test]
+fn test_or_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let res: IBig = (a | b).into();
+
+            assert_eq!(&a_big | &b_big, res);
+            assert_eq!(&a_big | b_big.clone(), res);
+            assert_eq!(a_big.clone() | &b_big, res);
+            assert_eq!(a_big.clone() | b_big.clone(), res);
+
+            let mut x = a_big.clone();
+            x |= &b_big;
+            assert_eq!(x, res);
+
+            let mut x = a_big.clone();
+            x |= b_big.clone();
+            assert_eq!(x, res);
+        }
+    }
+}
+
+#[test]
+fn test_xor_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let res: IBig = (a ^ b).into();
+
+            assert_eq!(&a_big ^ &b_big, res);
+            assert_eq!(&a_big ^ b_big.clone(), res);
+            assert_eq!(a_big.clone() ^ &b_big, res);
+            assert_eq!(a_big.clone() ^ b_big.clone(), res);
+
+            let mut x = a_big.clone();
+            x ^= &b_big;
+            assert_eq!(x, res);
+
+            let mut x = a_big.clone();
+            x ^= b_big.clone();
+            assert_eq!(x, res);
+        }
+    }
+}
+
+#[test]
+fn test_and_not_ibig() {
+    for a in -20i8..=20i8 {
+        for b in -20i8..=20i8 {
+            let a_big: IBig = a.into();
+            let b_big: IBig = b.into();
+            let res: IBig = (a & !b).into();
+
+            assert_eq!((&a_big).and_not(&b_big), res);
+            assert_eq!((&a_big).and_not(b_big.clone()), res);
+            assert_eq!(a_big.clone().and_not(&b_big), res);
+            assert_eq!(a_big.clone().and_not(b_big.clone()), res);
+        }
     }
 }

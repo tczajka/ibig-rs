@@ -2,11 +2,12 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{double_word, Word, WORD_BITS},
+    sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
 };
 use core::{
     mem,
-    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign},
+    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not},
 };
 
 impl UBig {
@@ -680,5 +681,282 @@ impl UBig {
             *x &= !*y;
         }
         buffer.into()
+    }
+}
+
+impl Not for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn not(self) -> IBig {
+        -(self + IBig::from(1u8))
+    }
+}
+
+impl Not for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn not(self) -> IBig {
+        -(self + IBig::from(1u8))
+    }
+}
+
+impl BitAnd<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitand(self, rhs: IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() & rhs.unsigned_abs()),
+            (Positive, Negative) => IBig::from(self.unsigned_abs().and_not((!rhs).unsigned_abs())),
+            (Negative, Positive) => IBig::from(rhs.unsigned_abs().and_not((!self).unsigned_abs())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() | (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitAnd<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitand(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() & rhs.magnitude()),
+            (Positive, Negative) => IBig::from(self.unsigned_abs().and_not((!rhs).unsigned_abs())),
+            (Negative, Positive) => IBig::from(rhs.magnitude().and_not((!self).unsigned_abs())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() | (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitAnd<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitand(self, rhs: IBig) -> IBig {
+        rhs.bitand(self)
+    }
+}
+
+impl BitAnd<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitand(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.magnitude() & rhs.magnitude()),
+            (Positive, Negative) => IBig::from(self.magnitude().and_not((!rhs).unsigned_abs())),
+            (Negative, Positive) => IBig::from(rhs.magnitude().and_not((!self).unsigned_abs())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() | (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitAndAssign<IBig> for IBig {
+    #[inline]
+    fn bitand_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) & rhs;
+    }
+}
+
+impl BitAndAssign<&IBig> for IBig {
+    #[inline]
+    fn bitand_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) & rhs;
+    }
+}
+
+impl BitOr<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitor(self, rhs: IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() | rhs.unsigned_abs()),
+            (Positive, Negative) => !IBig::from((!rhs).unsigned_abs().and_not(self.unsigned_abs())),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs().and_not(rhs.unsigned_abs())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() & (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitOr<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitor(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() | rhs.magnitude()),
+            (Positive, Negative) => !IBig::from((!rhs).unsigned_abs().and_not(self.unsigned_abs())),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs().and_not(rhs.magnitude())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() & (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitOr<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitor(self, rhs: IBig) -> IBig {
+        rhs.bitor(self)
+    }
+}
+
+impl BitOr<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitor(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.magnitude() | rhs.magnitude()),
+            (Positive, Negative) => !IBig::from((!rhs).unsigned_abs().and_not(self.magnitude())),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs().and_not(rhs.magnitude())),
+            (Negative, Negative) => !IBig::from((!self).unsigned_abs() & (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitOrAssign<IBig> for IBig {
+    #[inline]
+    fn bitor_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) | rhs;
+    }
+}
+
+impl BitOrAssign<&IBig> for IBig {
+    #[inline]
+    fn bitor_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) | rhs;
+    }
+}
+
+impl BitXor<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitxor(self, rhs: IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() ^ rhs.unsigned_abs()),
+            (Positive, Negative) => !IBig::from(self.unsigned_abs() ^ (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() ^ rhs.unsigned_abs()),
+            (Negative, Negative) => IBig::from((!self).unsigned_abs() ^ (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitXor<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitxor(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs() ^ rhs.magnitude()),
+            (Positive, Negative) => !IBig::from(self.unsigned_abs() ^ (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() ^ rhs.magnitude()),
+            (Negative, Negative) => IBig::from((!self).unsigned_abs() ^ (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitXor<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitxor(self, rhs: IBig) -> IBig {
+        rhs.bitxor(self)
+    }
+}
+
+impl BitXor<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn bitxor(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.magnitude() ^ rhs.magnitude()),
+            (Positive, Negative) => !IBig::from(self.magnitude() ^ (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() ^ rhs.magnitude()),
+            (Negative, Negative) => IBig::from((!self).unsigned_abs() ^ (!rhs).unsigned_abs()),
+        }
+    }
+}
+
+impl BitXorAssign<IBig> for IBig {
+    #[inline]
+    fn bitxor_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) ^ rhs;
+    }
+}
+
+impl BitXorAssign<&IBig> for IBig {
+    #[inline]
+    fn bitxor_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) ^ rhs;
+    }
+}
+
+impl AndNot<IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn and_not(self, rhs: IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs().and_not(rhs.unsigned_abs())),
+            (Positive, Negative) => IBig::from(self.unsigned_abs() & (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() | rhs.unsigned_abs()),
+            (Negative, Negative) => {
+                IBig::from((!rhs).unsigned_abs().and_not((!self).unsigned_abs()))
+            }
+        }
+    }
+}
+
+impl AndNot<&IBig> for IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn and_not(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.unsigned_abs().and_not(rhs.magnitude())),
+            (Positive, Negative) => IBig::from(self.unsigned_abs() & (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() | rhs.magnitude()),
+            (Negative, Negative) => {
+                IBig::from((!rhs).unsigned_abs().and_not((!self).unsigned_abs()))
+            }
+        }
+    }
+}
+
+impl AndNot<IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn and_not(self, rhs: IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.magnitude().and_not(rhs.unsigned_abs())),
+            (Positive, Negative) => IBig::from(self.magnitude() & (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() | rhs.unsigned_abs()),
+            (Negative, Negative) => {
+                IBig::from((!rhs).unsigned_abs().and_not((!self).unsigned_abs()))
+            }
+        }
+    }
+}
+
+impl AndNot<&IBig> for &IBig {
+    type Output = IBig;
+
+    #[inline]
+    fn and_not(self, rhs: &IBig) -> IBig {
+        match (self.sign(), rhs.sign()) {
+            (Positive, Positive) => IBig::from(self.magnitude().and_not(rhs.magnitude())),
+            (Positive, Negative) => IBig::from(self.magnitude() & (!rhs).unsigned_abs()),
+            (Negative, Positive) => !IBig::from((!self).unsigned_abs() | rhs.magnitude()),
+            (Negative, Negative) => {
+                IBig::from((!rhs).unsigned_abs().and_not((!self).unsigned_abs()))
+            }
+        }
     }
 }
