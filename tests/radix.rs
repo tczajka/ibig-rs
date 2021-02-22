@@ -23,6 +23,10 @@ fn test_ubig_format() {
     assert_eq!(format!("{:#X}", ubig!(3000)), "0xBB8");
     assert_eq!(format!("{:#10X}", ubig!(3000)), "     0xBB8");
 
+    assert_eq!(format!("{}", ubig!(123)), "123");
+    assert_eq!(format!("{:?}", ubig!(123)), "123");
+    assert_eq!(format!("{:=>5}", ubig!(123)), "==123");
+
     let a = UBig::from_be_bytes(&[
         0x05, 0xee, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89,
         0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67,
@@ -60,6 +64,8 @@ fn test_ubig_in_radix() {
     assert_eq!(format!("{}", ubig!(3000).in_radix(16)), "bb8");
     assert_eq!(format!("{:+010}", ubig!(3000).in_radix(16)), "+000000bb8");
     assert_eq!(format!("{:+#010}", ubig!(3000).in_radix(16)), "+000000BB8");
+    assert_eq!(format!("{}", ubig!(1294).in_radix(36)), "zy");
+    assert_eq!(format!("{:#010}", ubig!(1294).in_radix(36)), "00000000ZY");
 }
 
 #[test]
@@ -119,6 +125,10 @@ fn test_ibig_format() {
     assert_eq!(format!("{:#X}", ibig!(-3000)), "-0xBB8");
     assert_eq!(format!("{:#10X}", ibig!(3000)), "     0xBB8");
     assert_eq!(format!("{:#10X}", ibig!(-3000)), "    -0xBB8");
+
+    assert_eq!(format!("{}", ibig!(-123)), "-123");
+    assert_eq!(format!("{:?}", ibig!(-123)), "-123");
+    assert_eq!(format!("{:=>10}", ibig!(-123)), "======-123");
 }
 
 #[test]
@@ -132,6 +142,7 @@ fn test_ibig_in_radix() {
     assert_eq!(format!("{:+010}", ibig!(-3000).in_radix(16)), "-000000bb8");
     assert_eq!(format!("{:#010}", ibig!(3000).in_radix(16)), "0000000BB8");
     assert_eq!(format!("{:#010}", ibig!(-3000).in_radix(16)), "-000000BB8");
+    assert_eq!(format!("{:#010}", ibig!(-3000).in_radix(10)), "-000003000");
 }
 
 #[test]

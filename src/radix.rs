@@ -60,7 +60,7 @@ pub(crate) struct RadixInWord {
 }
 
 impl RadixInWord {
-    const fn for_radix(radix: Digit) -> RadixInWord {
+    pub(crate) const fn for_radix(radix: Digit) -> RadixInWord {
         if radix.is_power_of_two() {
             RadixInWord {
                 max_digits: (WORD_BITS / radix.trailing_zeros()) as usize,

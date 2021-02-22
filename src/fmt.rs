@@ -3,7 +3,7 @@
 use crate::{
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, MAX_RADIX},
+    radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -63,7 +63,8 @@ impl InRadix<'_> {
                     let mut prepared = PreparedWordInPow2::new(*word, self.radix);
                     continuation(&mut prepared)
                 } else {
-                    panic!("Non-power-of-2 radix not implemented")
+                    let mut prepared = PreparedWordInNonPow2::new(*word, self.radix);
+                    continuation(&mut prepared)
                 }
             }
             Large(buffer) => {
@@ -236,7 +237,7 @@ struct PreparedLargeInPow2<'a> {
 impl PreparedLargeInPow2<'_> {
     /// Prepare a large number for formatting in a power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInPow2 {
-        debug_assert!(radix >= 2 && radix.is_power_of_two());
+        debug_assert!(radix >= 2 && radix <= MAX_RADIX && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
         // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
@@ -292,7 +293,49 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
     }
 }
 
-/*
+const MAX_DIGITS_IN_WORD_NON_POW_2: usize = RadixInWord::for_radix(3).max_digits;
+
+/// A `Word` prepared for formatting in a non-power-of-2 radix.
+struct PreparedWordInNonPow2 {
+    // Little-endian digits.
+    digits: [u8; MAX_DIGITS_IN_WORD_NON_POW_2],
+    width: usize,
+}
+
+impl PreparedWordInNonPow2 {
+    /// Prepare a `Word` for formatting in a non-power-of-2 radix.
+    fn new(mut word: Word, radix: Digit) -> PreparedWordInNonPow2 {
+        debug_assert!(radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two());
+
+        let mut prepared = PreparedWordInNonPow2 {
+            digits: [0; MAX_DIGITS_IN_WORD_NON_POW_2],
+            width: 0,
+        };
+
+        while word != 0 || prepared.width == 0 {
+            prepared.digits[prepared.width] = (word % (radix as Word)) as u8;
+            prepared.width += 1;
+            word /= radix as Word;
+        }
+
+        prepared
+    }
+}
+
+impl PreparedForFormatting for PreparedWordInNonPow2 {
+    fn width(&self) -> usize {
+        self.width
+    }
+
+    fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
+        let ascii10 = digit_case_to_ascii10(digit_case);
+        for digit in self.digits[..self.width].iter().rev() {
+            write_ascii_char(writer, digit_to_ascii(*digit as Digit, ascii10))?;
+        }
+        Ok(())
+    }
+}
+
 impl Display for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         InRadix {
@@ -305,13 +348,10 @@ impl Display for UBig {
         .fmt(f)
     }
 }
-*/
 
 impl Debug for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // TODO: Show in decimal.
-        // Display::fmt(self, f)
-        LowerHex::fmt(self, f)
+        Display::fmt(self, f)
     }
 }
 
@@ -473,7 +513,6 @@ impl UBig {
     }
 }
 
-/*
 impl Display for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         InRadix {
@@ -486,13 +525,10 @@ impl Display for IBig {
         .fmt(f)
     }
 }
-*/
 
 impl Debug for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // TODO: Show in decimal.
-        // Display::fmt(self, f)
-        LowerHex::fmt(self, f)
+        Display::fmt(self, f)
     }
 }
 
