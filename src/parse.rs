@@ -165,12 +165,8 @@ impl UBig {
         );
 
         let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
-        let chunks = src.as_bytes().rchunks_exact(radix_in_word.max_digits);
-        let mut buffer = Buffer::allocate(chunks.len() + 1);
-        let first = word_from_str_radix_non_pow2(chunks.remainder(), radix)?;
-        if first != 0 {
-            buffer.push(first);
-        }
+        let chunks = src.as_bytes().rchunks(radix_in_word.max_digits);
+        let mut buffer = Buffer::allocate(chunks.len());
         for chunk in chunks.rev() {
             let next = word_from_str_radix_non_pow2(chunk, radix)?;
             let carry =
