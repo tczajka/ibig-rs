@@ -11,16 +11,14 @@ use alloc::string::String;
 use core::{
     cmp::max,
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
-    str::from_utf8_unchecked,
 };
 
 /// Writes an ASCII character into a `Write`.
 ///
-/// Must be valid ASCII, otherwise results in unsafe behavior.
+/// Panics if `ascii` is not valid ascii.
 fn write_ascii_char(writer: &mut dyn Write, ascii: u8) -> fmt::Result {
-    let utf8 = [ascii];
-    let s = unsafe { from_utf8_unchecked(&utf8) };
-    writer.write_str(s)
+    assert!(ascii < 128);
+    writer.write_char(ascii.into())
 }
 
 /// Representation of a `UBig` or `IBig` in any radix between 2 and 36 inclusive.
