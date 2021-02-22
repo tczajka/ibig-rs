@@ -35,12 +35,17 @@ pub(crate) fn digit_to_ascii(digit: Digit, ascii10: u8) -> u8 {
 }
 
 /// Converts an ASCII representation of a digit to its value.
-pub(crate) fn digit_from_ascii(ascii: u8) -> Option<Digit> {
-    match ascii {
-        b'0'..=b'9' => Some((ascii - b'0') as Digit),
-        b'a'..=b'z' => Some((ascii - b'a') as Digit + 10),
-        b'A'..=b'Z' => Some((ascii - b'A') as Digit + 10),
-        _ => None,
+pub(crate) fn digit_from_ascii(ascii: u8, radix: Digit) -> Option<Digit> {
+    let res = match ascii {
+        b'0'..=b'9' => (ascii - b'0') as Digit,
+        b'a'..=b'z' => (ascii - b'a') as Digit + 10,
+        b'A'..=b'Z' => (ascii - b'A') as Digit + 10,
+        _ => return None,
+    };
+    if res < radix {
+        Some(res)
+    } else {
+        None
     }
 }
 
@@ -50,7 +55,7 @@ pub(crate) struct RadixInWord {
     /// Maximum number of digits that fit in a `Word`.
     pub(crate) max_digits: usize,
     /// Radix to the power of `max_digits`.
-    /// Only for non-power-of-2 radi.
+    /// Only for non-power-of-2 radixes.
     pub(crate) max_digits_range: Word,
 }
 
@@ -143,10 +148,12 @@ mod tests {
 
     #[test]
     fn test_digit_from_ascii() {
-        assert_eq!(digit_from_ascii(b'7'), Some(7));
-        assert_eq!(digit_from_ascii(b'a'), Some(10));
-        assert_eq!(digit_from_ascii(b'z'), Some(35));
-        assert_eq!(digit_from_ascii(b'Z'), Some(35));
-        assert_eq!(digit_from_ascii(b'?'), None);
+        assert_eq!(digit_from_ascii(b'7', 10), Some(7));
+        assert_eq!(digit_from_ascii(b'a', 16), Some(10));
+        assert_eq!(digit_from_ascii(b'z', 36), Some(35));
+        assert_eq!(digit_from_ascii(b'Z', 36), Some(35));
+        assert_eq!(digit_from_ascii(b'?', 10), None);
+        assert_eq!(digit_from_ascii(b'a', 10), None);
+        assert_eq!(digit_from_ascii(b'z', 35), None);
     }
 }

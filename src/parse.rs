@@ -1,6 +1,7 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
+    mul::mul_word_in_place_with_carry,
     primitive::{Word, WORD_BITS},
     radix::{digit_from_ascii, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
     sign::Sign::*,
@@ -47,7 +48,7 @@ impl UBig {
     /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
-    pub fn from_str_radix(src: &str, radix: Digit) -> Result<UBig, ParseError> {
+    pub fn from_str_radix(src: &str, radix: u32) -> Result<UBig, ParseError> {
         assert!(
             radix >= 2 && radix <= MAX_RADIX,
             "radix must be between 2 and {} inclusive",
@@ -96,7 +97,7 @@ impl UBig {
         } else if radix.is_power_of_two() {
             UBig::from_str_radix_pow2(src, radix)
         } else {
-            panic!("Non-power-of-2 radix parsing not implemented!")
+            UBig::from_str_radix_non_pow2(src, radix)
         }
     }
 
@@ -113,7 +114,7 @@ impl UBig {
         }
     }
 
-    fn slow_from_str_radix_pow2(src: &str, radix: u32) -> Result<UBig, ParseError> {
+    fn slow_from_str_radix_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(
             !src.is_empty() && radix >= 2 && radix <= MAX_RADIX && radix.is_power_of_two()
         );
@@ -127,10 +128,7 @@ impl UBig {
         let mut bits = 0;
         let mut word = 0;
         for ascii in src.as_bytes().iter().rev() {
-            let digit = digit_from_ascii(*ascii).ok_or(ParseError::InvalidDigit)?;
-            if digit >= radix {
-                return Err(ParseError::InvalidDigit);
-            }
+            let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
             word |= (digit as Word) << bits;
             let new_bits = bits + log_radix;
             if new_bits >= WORD_BITS {
@@ -146,12 +144,48 @@ impl UBig {
         }
         Ok(buffer.into())
     }
+
+    fn from_str_radix_non_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
+        debug_assert!(
+            !src.is_empty() && radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two()
+        );
+
+        if src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits {
+            let word = word_from_str_radix_non_pow2(src.as_bytes(), radix)?;
+            Ok(UBig::from_word(word))
+        } else {
+            // TODO: Recursive.
+            UBig::slow_from_str_radix_non_pow2(src, radix)
+        }
+    }
+
+    fn slow_from_str_radix_non_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
+        debug_assert!(
+            !src.is_empty() && radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two()
+        );
+
+        let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
+        let chunks = src.as_bytes().rchunks_exact(radix_in_word.max_digits);
+        let mut buffer = Buffer::allocate(chunks.len() + 1);
+        let first = word_from_str_radix_non_pow2(chunks.remainder(), radix)?;
+        if first != 0 {
+            buffer.push(first);
+        }
+        for chunk in chunks.rev() {
+            let next = word_from_str_radix_non_pow2(chunk, radix)?;
+            let carry =
+                mul_word_in_place_with_carry(&mut buffer, radix_in_word.max_digits_range, next);
+            if carry != 0 {
+                buffer.push(carry);
+            }
+        }
+        Ok(buffer.into())
+    }
 }
 
-fn word_from_str_radix_pow2(src: &str, radix: u32) -> Result<Word, ParseError> {
+fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError> {
     debug_assert!(
-        !src.is_empty()
-            && radix >= 2
+        radix >= 2
             && radix <= MAX_RADIX
             && radix.is_power_of_two()
             && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
@@ -161,12 +195,25 @@ fn word_from_str_radix_pow2(src: &str, radix: u32) -> Result<Word, ParseError> {
     let mut word = 0;
     let mut bits = 0;
     for ascii in src.as_bytes().iter().rev() {
-        let digit = digit_from_ascii(*ascii).ok_or(ParseError::InvalidDigit)?;
-        if digit >= radix {
-            return Err(ParseError::InvalidDigit);
-        }
+        let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
         word |= (digit as Word) << bits;
         bits += log_radix;
+    }
+    Ok(word)
+}
+
+fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
+    debug_assert!(
+        radix >= 2
+            && radix <= MAX_RADIX
+            && !radix.is_power_of_two()
+            && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
+    );
+
+    let mut word: Word = 0;
+    for ascii in src.iter() {
+        let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
+        word = word * (radix as Word) + (digit as Word);
     }
     Ok(word)
 }
@@ -188,7 +235,7 @@ impl IBig {
     /// # Ok::<(), ParseError>(())
     /// ```
     #[inline]
-    pub fn from_str_radix(mut src: &str, radix: Digit) -> Result<IBig, ParseError> {
+    pub fn from_str_radix(mut src: &str, radix: u32) -> Result<IBig, ParseError> {
         assert!(
             radix >= 2 && radix <= MAX_RADIX,
             "radix must be between 2 and {} inclusive",

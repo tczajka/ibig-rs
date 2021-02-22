@@ -131,7 +131,13 @@ impl UBig {
 ///
 /// Returns carry.
 fn mul_word_in_place(words: &mut [Word], rhs: Word) -> Word {
-    let mut carry: Word = 0;
+    mul_word_in_place_with_carry(words, rhs, 0)
+}
+
+/// Multiply a word sequence by a `Word` in place with carry in.
+///
+/// Returns carry.
+pub(crate) fn mul_word_in_place_with_carry(words: &mut [Word], rhs: Word, mut carry: Word) -> Word {
     for a in words {
         // a * b + carry <= MAX * MAX + MAX < DoubleWord::MAX
         let (v_lo, v_hi) =

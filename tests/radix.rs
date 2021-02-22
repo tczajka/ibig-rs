@@ -194,6 +194,17 @@ fn test_ubig_from_str_radix() {
         .to_str_radix(16),
         "a70a75394a70b95dde5ce5cee77397bb9dcecd2e72e72e"
     );
+
+    assert_eq!(UBig::from_str_radix("12345", 10), Ok(ubig!(12345)));
+    assert_eq!(UBig::from_str_radix("abzz", 36), Ok(ubig!(482111)));
+    assert_eq!(
+        UBig::from_str_radix(
+            "1538958592398779500320098585338768070858734861441260196946465951498852935601537907018559511",
+            10
+        ),
+        UBig::from_str_radix(
+            "c167bcc5802bf76f345a9f2a738d9d3b75ea4560a9be33c330216cbd15efc15d872a781f017",
+            16));
 }
 
 #[test]
@@ -239,10 +250,8 @@ fn test_ibig_from_str_radix() {
 
 #[test]
 fn test_from_str_radix_with_radix_prefix() {
-    /*
     assert_eq!(UBig::from_str_with_radix_prefix("17").unwrap(), ubig!(17));
     assert_eq!(UBig::from_str_with_radix_prefix("+17").unwrap(), ubig!(17));
-    */
     assert_eq!(
         UBig::from_str_with_radix_prefix("0b101").unwrap(),
         ubig!(0b101)
@@ -268,11 +277,9 @@ fn test_from_str_radix_with_radix_prefix() {
         ubig!(0x1ee)
     );
 
-    /*
-    assert_eq!(IBig::from_str_with_radix_prefix("17").unwrap(),  ibig!(17));
+    assert_eq!(IBig::from_str_with_radix_prefix("17").unwrap(), ibig!(17));
     assert_eq!(IBig::from_str_with_radix_prefix("+17").unwrap(), ibig!(17));
     assert_eq!(IBig::from_str_with_radix_prefix("-17").unwrap(), ibig!(-17));
-    */
     assert_eq!(
         IBig::from_str_with_radix_prefix("0b101").unwrap(),
         ibig!(0b101)
