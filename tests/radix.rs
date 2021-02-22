@@ -205,6 +205,11 @@ fn test_ubig_from_str_radix() {
         UBig::from_str_radix(
             "c167bcc5802bf76f345a9f2a738d9d3b75ea4560a9be33c330216cbd15efc15d872a781f017",
             16));
+
+    {
+        let x: UBig = "1234".parse().unwrap();
+        assert_eq!(x, ubig!(1234));
+    }
 }
 
 #[test]
@@ -246,6 +251,11 @@ fn test_ibig_from_str_radix() {
             .to_str_radix(16),
         "-abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
     );
+
+    {
+        let x: IBig = "-1234".parse().unwrap();
+        assert_eq!(x, ibig!(-1234));
+    }
 }
 
 #[test]

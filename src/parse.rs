@@ -7,7 +7,10 @@ use crate::{
     sign::Sign::*,
     ubig::UBig,
 };
-use core::fmt::{self, Display, Formatter};
+use core::{
+    fmt::{self, Display, Formatter},
+    str::FromStr,
+};
 
 /// Parse error when parsing `UBig` or `IBig`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -214,6 +217,14 @@ fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseE
     Ok(word)
 }
 
+impl FromStr for UBig {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<UBig, ParseError> {
+        UBig::from_str_radix(s, 10)
+    }
+}
+
 impl IBig {
     /// Convert a string in a given base to `IBig`.
     ///
@@ -280,5 +291,13 @@ impl IBig {
         }
         let mag = UBig::from_str_with_radix_prefix_no_sign(src)?;
         Ok(IBig::from_sign_magnitude(sign, mag))
+    }
+}
+
+impl FromStr for IBig {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<IBig, ParseError> {
+        IBig::from_str_radix(s, 10)
     }
 }
