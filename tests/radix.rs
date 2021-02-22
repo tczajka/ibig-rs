@@ -184,6 +184,7 @@ fn test_ubig_from_str_radix() {
     );
     assert_eq!(UBig::from_str_radix("+0", 2).unwrap(), ubig!(0));
     assert_eq!(UBig::from_str_radix("0", 2).unwrap(), ubig!(0));
+    assert_eq!(UBig::from_str_radix("0000000000000", 2).unwrap(), ubig!(0));
     assert_eq!(
         UBig::from_str_radix("1010110", 2).unwrap(),
         ubig!(0b1010110)
@@ -219,6 +220,10 @@ fn test_ubig_from_str_radix() {
 
     {
         let x: UBig = "1234".parse().unwrap();
+        assert_eq!(x, ubig!(1234));
+    }
+    {
+        let x: UBig = "0000000000000000001234".parse().unwrap();
         assert_eq!(x, ubig!(1234));
     }
 }
