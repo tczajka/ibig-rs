@@ -3,8 +3,9 @@ use std::convert::TryFrom;
 
 #[test]
 fn test_from_to_le_bytes() {
-    assert_eq!(UBig::from_le_bytes(&[]).to_le_bytes(), []);
-    assert_eq!(UBig::from_le_bytes(&[0; 100]).to_le_bytes(), []);
+    let empty: [u8; 0] = [];
+    assert_eq!(UBig::from_le_bytes(&[]).to_le_bytes(), empty);
+    assert_eq!(UBig::from_le_bytes(&[0; 100]).to_le_bytes(), empty);
     assert_eq!(UBig::from_le_bytes(&[1, 2, 3, 0]).to_le_bytes(), [1, 2, 3]);
     let bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
     assert_eq!(UBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
@@ -12,8 +13,9 @@ fn test_from_to_le_bytes() {
 
 #[test]
 fn test_from_to_be_bytes() {
-    assert_eq!(UBig::from_be_bytes(&[]).to_be_bytes(), []);
-    assert_eq!(UBig::from_be_bytes(&[0; 100]).to_be_bytes(), []);
+    let empty: [u8; 0] = [];
+    assert_eq!(UBig::from_be_bytes(&[]).to_be_bytes(), empty);
+    assert_eq!(UBig::from_be_bytes(&[0; 100]).to_be_bytes(), empty);
     assert_eq!(UBig::from_be_bytes(&[0, 1, 2, 3]).to_be_bytes(), [1, 2, 3]);
     let bytes = [
         100, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,

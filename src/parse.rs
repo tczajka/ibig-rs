@@ -3,7 +3,7 @@ use crate::{
     ibig::IBig,
     mul::mul_word_in_place_with_carry,
     primitive::{Word, WORD_BITS},
-    radix::{digit_from_ascii, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
+    radix::{digit_from_utf8_byte, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
     sign::Sign::*,
     ubig::UBig,
 };
@@ -132,8 +132,8 @@ impl UBig {
         let mut buffer = Buffer::allocate((num_bits - 1) / WORD_BITS as usize + 1);
         let mut bits = 0;
         let mut word = 0;
-        for ascii in src.as_bytes().iter().rev() {
-            let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
+        for byte in src.as_bytes().iter().rev() {
+            let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
             word |= (digit as Word) << bits;
             let new_bits = bits + log_radix;
             if new_bits >= WORD_BITS {
@@ -191,8 +191,8 @@ fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError>
     let log_radix = radix.trailing_zeros();
     let mut word = 0;
     let mut bits = 0;
-    for ascii in src.as_bytes().iter().rev() {
-        let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
+    for byte in src.as_bytes().iter().rev() {
+        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
         word |= (digit as Word) << bits;
         bits += log_radix;
     }
@@ -208,8 +208,8 @@ fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseE
     );
 
     let mut word: Word = 0;
-    for ascii in src.iter() {
-        let digit = digit_from_ascii(*ascii, radix).ok_or(ParseError::InvalidDigit)?;
+    for byte in src.iter() {
+        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
         word = word * (radix as Word) + (digit as Word);
     }
     Ok(word)

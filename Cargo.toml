@@ -12,6 +12,7 @@ homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
 
 [dependencies]
+ascii = "1.0.0"
 
 [features]
 default = ["std"]

@@ -1,4 +1,5 @@
 use crate::primitive::{Word, WORD_BITS};
+use ascii::AsciiChar;
 
 /// Digit and radix type.
 pub(crate) type Digit = u32;
@@ -8,38 +9,30 @@ pub(crate) const MAX_RADIX: Digit = 36;
 
 /// Lower-case or upper-case digits: a-z or A-Z.
 #[derive(Clone, Copy)]
+#[repr(u8)]
 pub(crate) enum DigitCase {
-    Lower,
-    Upper,
-}
-
-/// Convert DigitCase to ASCII representation of 10.
-pub(crate) fn digit_case_to_ascii10(digit_case: DigitCase) -> u8 {
-    match digit_case {
-        DigitCase::Lower => b'a',
-        DigitCase::Upper => b'A',
-    }
+    Lower = b'a',
+    Upper = b'A',
 }
 
 /// Converts a `Digit` to its ASCII representation.
 ///
-/// `ascii10` is the ASCII representation of 10. Should be `b'a'` or `b'A'`.
-pub(crate) fn digit_to_ascii(digit: Digit, ascii10: u8) -> u8 {
-    debug_assert!(digit < MAX_RADIX);
-    let digit = digit as u8;
-    if digit < 10 {
-        digit + b'0'
-    } else {
-        digit - 10 + ascii10
-    }
+/// Panics if `digit` is out of range.
+pub(crate) fn digit_to_ascii(digit: Digit, digit_case: DigitCase) -> AsciiChar {
+    let ascii = match digit {
+        0..=9 => b'0' + (digit as u8),
+        10..=35 => (digit_case as u8) + (digit - 10) as u8,
+        _ => panic!("Invalid digit"),
+    };
+    AsciiChar::from_ascii(ascii).unwrap()
 }
 
-/// Converts an ASCII representation of a digit to its value.
-pub(crate) fn digit_from_ascii(ascii: u8, radix: Digit) -> Option<Digit> {
-    let res = match ascii {
-        b'0'..=b'9' => (ascii - b'0') as Digit,
-        b'a'..=b'z' => (ascii - b'a') as Digit + 10,
-        b'A'..=b'Z' => (ascii - b'A') as Digit + 10,
+/// Converts a byte (ASCII) representation of a digit to its value.
+pub(crate) fn digit_from_utf8_byte(byte: u8, radix: Digit) -> Option<Digit> {
+    let res = match byte {
+        b'0'..=b'9' => (byte - b'0') as Digit,
+        b'a'..=b'z' => (byte - b'a') as Digit + 10,
+        b'A'..=b'Z' => (byte - b'A') as Digit + 10,
         _ => return None,
     };
     if res < radix {
@@ -137,23 +130,22 @@ mod tests {
 
     #[test]
     fn test_digit_to_ascii() {
-        let ascii10 = digit_case_to_ascii10(DigitCase::Lower);
-        assert_eq!(digit_to_ascii(7, ascii10), b'7');
-        assert_eq!(digit_to_ascii(10, ascii10), b'a');
-        assert_eq!(digit_to_ascii(35, ascii10), b'z');
-        let ascii10 = digit_case_to_ascii10(DigitCase::Upper);
-        assert_eq!(digit_to_ascii(7, ascii10), b'7');
-        assert_eq!(digit_to_ascii(35, ascii10), b'Z');
+        assert_eq!(digit_to_ascii(7, DigitCase::Lower), AsciiChar::_7);
+        assert_eq!(digit_to_ascii(10, DigitCase::Lower), AsciiChar::a);
+        assert_eq!(digit_to_ascii(35, DigitCase::Lower), AsciiChar::z);
+        assert_eq!(digit_to_ascii(7, DigitCase::Upper), AsciiChar::_7);
+        assert_eq!(digit_to_ascii(35, DigitCase::Upper), AsciiChar::Z);
     }
 
     #[test]
-    fn test_digit_from_ascii() {
-        assert_eq!(digit_from_ascii(b'7', 10), Some(7));
-        assert_eq!(digit_from_ascii(b'a', 16), Some(10));
-        assert_eq!(digit_from_ascii(b'z', 36), Some(35));
-        assert_eq!(digit_from_ascii(b'Z', 36), Some(35));
-        assert_eq!(digit_from_ascii(b'?', 10), None);
-        assert_eq!(digit_from_ascii(b'a', 10), None);
-        assert_eq!(digit_from_ascii(b'z', 35), None);
+    fn test_digit_from_utf8_byte() {
+        assert_eq!(digit_from_utf8_byte(b'7', 10), Some(7));
+        assert_eq!(digit_from_utf8_byte(b'a', 16), Some(10));
+        assert_eq!(digit_from_utf8_byte(b'z', 36), Some(35));
+        assert_eq!(digit_from_utf8_byte(b'Z', 36), Some(35));
+        assert_eq!(digit_from_utf8_byte(b'?', 10), None);
+        assert_eq!(digit_from_utf8_byte(b'a', 10), None);
+        assert_eq!(digit_from_utf8_byte(b'z', 35), None);
+        assert_eq!(digit_from_utf8_byte(255, 35), None);
     }
 }

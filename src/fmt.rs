@@ -3,7 +3,7 @@
 use crate::{
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{digit_case_to_ascii10, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
+    radix::{digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -12,14 +12,6 @@ use core::{
     cmp::max,
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
 };
-
-/// Writes an ASCII character into a `Write`.
-///
-/// Panics if `ascii` is not valid ascii.
-fn write_ascii_char(writer: &mut dyn Write, ascii: u8) -> fmt::Result {
-    assert!(ascii < 128);
-    writer.write_char(ascii.into())
-}
 
 /// Representation of a `UBig` or `IBig` in any radix between 2 and 36 inclusive.
 ///
@@ -121,7 +113,7 @@ impl InRadix<'_> {
                     f.write_str(sign)?;
                     f.write_str(self.prefix)?;
                     for _ in 0..min_width - width {
-                        write_ascii_char(f, b'0')?;
+                        f.write_char('0')?;
                     }
                     prepared.write(f, digit_case)?;
                 } else {
@@ -217,11 +209,10 @@ impl PreparedForFormatting for PreparedWordInPow2 {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let ascii10 = digit_case_to_ascii10(digit_case);
         let mask: Digit = (1 << self.log_radix) - 1;
         for idx in (0..self.width as u32).rev() {
             let digit = (self.word >> (idx * self.log_radix)) as Digit & mask;
-            write_ascii_char(writer, digit_to_ascii(digit, ascii10))?;
+            writer.write_char(digit_to_ascii(digit, digit_case).as_char())?;
         }
         Ok(())
     }
@@ -262,7 +253,6 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let ascii10 = digit_case_to_ascii10(digit_case);
         let mask: Digit = (1 << self.log_radix) - 1;
 
         let mut it = self.words.iter().rev();
@@ -286,7 +276,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
                 bits -= self.log_radix;
                 digit = (word >> bits) as Digit & mask;
             }
-            write_ascii_char(writer, digit_to_ascii(digit, ascii10))?;
+            writer.write_char(digit_to_ascii(digit, digit_case).as_char())?;
         }
         debug_assert!(bits == 0);
         Ok(())
@@ -328,9 +318,8 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let ascii10 = digit_case_to_ascii10(digit_case);
         for digit in self.digits[..self.width].iter().rev() {
-            write_ascii_char(writer, digit_to_ascii(*digit as Digit, ascii10))?;
+            writer.write_char(digit_to_ascii(*digit as Digit, digit_case).as_char())?;
         }
         Ok(())
     }
