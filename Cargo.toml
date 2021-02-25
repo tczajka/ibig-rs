@@ -11,8 +11,9 @@ repository = "https://github.com/tczajka/ibig-rs"
 homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
 
-[dependencies]
-ascii = "1.0.0"
+[dependencies.ascii]
+version = "1.0.0"
+default-features = false
 
 [features]
 default = ["std"]

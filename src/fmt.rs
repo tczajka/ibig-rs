@@ -1,13 +1,19 @@
 //! Printing and parsing in any radix.
 
 use crate::{
+    buffer::Buffer,
+    div::div_rem_by_word_in_place,
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{check_radix_valid, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
+    radix::{
+        check_radix_valid, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX,
+        RADIX_IN_WORD_TABLE,
+    },
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
 use alloc::string::String;
+use ascii::{AsciiChar, AsciiStr};
 use core::{
     cmp::max,
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
@@ -64,7 +70,8 @@ impl InRadix<'_> {
                     let mut prepared = PreparedLargeInPow2::new(buffer, self.radix);
                     continuation(&mut prepared)
                 } else {
-                    panic!("Non-power-of-2 radix not implemented")
+                    let mut prepared = PreparedLargeInNonPow2::new(buffer, self.radix);
+                    continuation(&mut prepared)
                 }
             }
         }
@@ -283,7 +290,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
     }
 }
 
-const MAX_DIGITS_IN_WORD_NON_POW_2: usize = RadixInWord::for_radix(3).max_digits;
+const MAX_DIGITS_IN_WORD_NON_POW_2: usize = RadixInWord::for_radix(3).max_digits + 1;
 
 /// A `Word` prepared for formatting in a non-power-of-2 radix.
 struct PreparedWordInNonPow2 {
@@ -320,6 +327,73 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
         for digit in self.digits[..self.width].iter().rev() {
             writer.write_char(digit_to_ascii(*digit as Digit, digit_case).as_char())?;
+        }
+        Ok(())
+    }
+}
+
+/// A large number prepared for formatting in a non-power-of-2 radix.
+struct PreparedLargeInNonPow2 {
+    top_group: PreparedWordInNonPow2,
+    // Little endian in groups of max digits per word.
+    // TODO: Change to static array when recursive implemented.
+    low_groups: Vec<Word>,
+    radix: Digit,
+}
+
+impl PreparedLargeInNonPow2 {
+    /// Prepare a large number for formatting in a non-power-of-2 radix.
+    fn new(words: &[Word], radix: Digit) -> PreparedLargeInNonPow2 {
+        debug_assert!(
+            words.len() >= 2 && radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two()
+        );
+
+        let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
+        // There is at most 1 extra digit per word beyond max_digits.
+        // Max total extra words: ceil(words.len() / max_digits).
+        // One of them is top_group.
+        let mut low_groups =
+            Vec::with_capacity(words.len() + words.len() / radix_in_word.max_digits);
+        let mut buffer = Buffer::allocate(words.len());
+        buffer.extend(words);
+        while buffer.len() > 1 {
+            let rem = div_rem_by_word_in_place(&mut buffer, radix_in_word.max_digits_range);
+            low_groups.push(rem);
+            buffer.pop_leading_zeros();
+        }
+        assert!(buffer.len() == 1);
+        PreparedLargeInNonPow2 {
+            top_group: PreparedWordInNonPow2::new(buffer[0], radix),
+            low_groups,
+            radix,
+        }
+    }
+}
+
+impl PreparedForFormatting for PreparedLargeInNonPow2 {
+    fn width(&self) -> usize {
+        let radix_in_word = RADIX_IN_WORD_TABLE[self.radix as usize];
+        self.top_group.width() + self.low_groups.len() * radix_in_word.max_digits
+    }
+
+    fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
+        let radix_in_word = RADIX_IN_WORD_TABLE[self.radix as usize];
+        self.top_group.write(writer, digit_case)?;
+
+        let mut digits: [AsciiChar; MAX_DIGITS_IN_WORD_NON_POW_2] =
+            [AsciiChar::Null; MAX_DIGITS_IN_WORD_NON_POW_2];
+        let n = radix_in_word.max_digits;
+
+        for group_word in self.low_groups.iter().rev() {
+            let mut x = *group_word;
+            for i in (0..n).rev() {
+                let d = (x % (self.radix as Word)) as Digit;
+                digits[i] = digit_to_ascii(d, digit_case);
+                x /= self.radix as Word;
+            }
+            debug_assert!(x == 0);
+            let s: &AsciiStr = digits[..n].into();
+            writer.write_str(s.as_str())?;
         }
         Ok(())
     }

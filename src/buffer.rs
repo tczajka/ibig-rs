@@ -104,6 +104,13 @@ impl Buffer {
         self.0.pop()
     }
 
+    /// Pop leading zero words.
+    pub(crate) fn pop_leading_zeros(&mut self) {
+        while let Some(0) = self.last() {
+            self.pop();
+        }
+    }
+
     /// Truncate length to `len`.
     pub(crate) fn truncate(&mut self, len: usize) {
         assert!(self.len() >= len);
@@ -271,6 +278,17 @@ mod tests {
         assert_eq!(buffer.pop(), Some(2));
         assert_eq!(buffer.pop(), Some(1));
         assert_eq!(buffer.pop(), None);
+    }
+
+    #[test]
+    fn test_pop_leading_zeros() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        buffer.push(2);
+        buffer.push(0);
+        buffer.push(0);
+        buffer.pop_leading_zeros();
+        assert_eq!(&buffer[..], [1, 2]);
     }
 
     #[test]

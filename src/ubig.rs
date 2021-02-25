@@ -97,9 +97,7 @@ impl From<Buffer> for UBig {
     /// (or even approximately between `0.9 * n` and `1.125 * n`),
     /// there will be no reallocation here.
     fn from(mut buffer: Buffer) -> UBig {
-        while let Some(0) = buffer.last() {
-            buffer.pop();
-        }
+        buffer.pop_leading_zeros();
         match buffer.len() {
             0 => UBig::from_word(0),
             1 => UBig::from_word(buffer[0]),

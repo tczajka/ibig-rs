@@ -536,16 +536,7 @@ impl UBig {
         if rhs == 0 {
             panic_divide_by_0();
         }
-        let mut rem: Word = 0;
-        for word in buffer.iter_mut().rev() {
-            let a = double_word(*word, rem);
-            let (q0, q1) = split_double_word(a / extend_word(rhs));
-            debug_assert!(q1 == 0);
-            let (r0, r1) = split_double_word(a % extend_word(rhs));
-            debug_assert!(r1 == 0);
-            *word = q0;
-            rem = r0;
-        }
+        let rem = div_rem_by_word_in_place(&mut buffer, rhs);
         (buffer.into(), UBig::from_word(rem))
     }
 
@@ -672,6 +663,25 @@ impl UBig {
         lhs.push(lhs0);
         (quotient.into(), lhs.into())
     }
+}
+
+/// words = words / rhs
+///
+/// rhs must be non-zero
+///
+/// Returns words % rhs.
+pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
+    let mut rem: Word = 0;
+    for word in words.iter_mut().rev() {
+        let a = double_word(*word, rem);
+        let (q0, q1) = split_double_word(a / extend_word(rhs));
+        debug_assert!(q1 == 0);
+        let (r0, r1) = split_double_word(a % extend_word(rhs));
+        debug_assert!(r1 == 0);
+        *word = q0;
+        rem = r0;
+    }
+    rem
 }
 
 impl Div<IBig> for IBig {
