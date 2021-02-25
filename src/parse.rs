@@ -3,7 +3,7 @@ use crate::{
     ibig::IBig,
     mul::mul_word_in_place_with_carry,
     primitive::{Word, WORD_BITS},
-    radix::{digit_from_utf8_byte, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
+    radix::{check_radix_valid, digit_from_utf8_byte, Digit, MAX_RADIX, RADIX_IN_WORD_TABLE},
     sign::Sign::*,
     ubig::UBig,
 };
@@ -52,11 +52,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn from_str_radix(src: &str, radix: u32) -> Result<UBig, ParseError> {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX
-        );
+        check_radix_valid(radix);
         let src = src.strip_prefix("+").unwrap_or(src);
         UBig::from_str_radix_no_sign(src, radix)
     }
@@ -241,11 +237,7 @@ impl IBig {
     /// ```
     #[inline]
     pub fn from_str_radix(mut src: &str, radix: u32) -> Result<IBig, ParseError> {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX
-        );
+        check_radix_valid(radix);
         let sign;
         match src.strip_prefix("-") {
             Some(s) => {

@@ -7,6 +7,13 @@ pub(crate) type Digit = u32;
 /// Maximum supported radix.
 pub(crate) const MAX_RADIX: Digit = 36;
 
+/// Panics if `radix` is not in valid range.
+pub(crate) fn check_radix_valid(radix: u32) {
+    if radix < 2 || radix > MAX_RADIX {
+        panic!("Invalid radix: {}", radix);
+    }
+}
+
 /// Lower-case or upper-case digits: a-z or A-Z.
 #[derive(Clone, Copy)]
 #[repr(u8)]

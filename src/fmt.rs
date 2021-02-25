@@ -3,7 +3,7 @@
 use crate::{
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
+    radix::{check_radix_valid, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -423,11 +423,7 @@ impl UBig {
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX
-        );
+        check_radix_valid(radix);
         InRadix {
             sign: Positive,
             magnitude: self,
@@ -453,11 +449,7 @@ impl UBig {
     /// assert_eq!(ubig!(0x123f).in_radix(16).to_string(), "123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX
-        );
+        check_radix_valid(radix);
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -485,11 +477,7 @@ impl UBig {
     /// assert_eq!(format!("{:#}", ubig!(0x123f).in_radix(16)), "123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX
-        );
+        check_radix_valid(radix);
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -600,11 +588,7 @@ impl IBig {
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX,
-        );
+        check_radix_valid(radix);
         InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -630,11 +614,7 @@ impl IBig {
     /// assert_eq!(ibig!(-0x123f).in_radix(16).to_string(), "-123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX,
-        );
+        check_radix_valid(radix);
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -662,11 +642,7 @@ impl IBig {
     /// assert_eq!(format!("{:#}", ibig!(-0x123f).in_radix(16)), "-123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        assert!(
-            radix >= 2 && radix <= MAX_RADIX,
-            "radix must be between 2 and {} inclusive",
-            MAX_RADIX,
-        );
+        check_radix_valid(radix);
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
