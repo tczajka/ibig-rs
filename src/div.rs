@@ -31,8 +31,7 @@ pub trait DivRem<Rhs = Self> {
 /// # Example
 /// ```
 /// # use ibig::prelude::*;
-/// // TODO: Make this work.
-/// // assert_eq!(ibig!(-23).div_euclid(ibig!(10)), ibig!(-3));
+/// assert_eq!(ibig!(-23).div_euclid(ibig!(10)), ibig!(-3));
 /// ```
 pub trait DivEuclid<Rhs = Self> {
     type Output;
@@ -45,8 +44,7 @@ pub trait DivEuclid<Rhs = Self> {
 /// # Example
 /// ```
 /// # use ibig::prelude::*;
-/// // TODO: Make this work.
-/// // assert_eq!(ibig!(-23).rem_euclid(ibig!(10)), ibig!(7));
+/// assert_eq!(ibig!(-23).rem_euclid(ibig!(10)), ibig!(7));
 /// ```
 pub trait RemEuclid<Rhs = Self> {
     type Output;
@@ -59,8 +57,7 @@ pub trait RemEuclid<Rhs = Self> {
 /// # Example
 /// ```
 /// # use ibig::prelude::*;
-/// // TODO: Make this work.
-/// // assert_eq!(ibig!(-23).div_rem_euclid(ibig!(10)), (ibig!(-3), ibig!(7)));
+/// assert_eq!(ibig!(-23).div_rem_euclid(ibig!(10)), (ibig!(-3), ibig!(7)));
 /// ```
 pub trait DivRemEuclid<Rhs = Self> {
     type OutputDiv;

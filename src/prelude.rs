@@ -1,4 +1,4 @@
-//! Export the most useful names.
+//! Reexports the most useful names.
 //!
 //! Import all names from this module for convenience.
 //!

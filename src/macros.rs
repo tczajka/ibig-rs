@@ -23,7 +23,7 @@
 /// * The first digit is decimal, but not all digits are decimal.
 /// ```
 /// # use ibig::prelude::*;
-/// let f = ubig!(_0x314159265358979323846264338327950288419716939937);
+/// let f = ubig!(_314159265358979323846264338327950288419716939937);
 /// let g = ubig!(_0b102 base 32);
 /// let h = ubig!(b102 base 32);
 /// assert_eq!(g, h);
@@ -80,7 +80,7 @@ macro_rules! ubig {
 /// * The first digit is decimal, but not all digits are decimal.
 /// ```
 /// # use ibig::prelude::*;
-/// let f = ibig!(-_0x314159265358979323846264338327950288419716939937);
+/// let f = ibig!(-_314159265358979323846264338327950288419716939937);
 /// let g = ibig!(_0b102 base 32);
 /// let h = ibig!(b102 base 32);
 /// assert_eq!(g, h);

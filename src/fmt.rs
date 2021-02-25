@@ -30,11 +30,8 @@ use core::{
 ///
 /// ```
 /// # use ibig::prelude::*;
-/// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
-/// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
-/// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
-/// assert_eq!(format!("{:+010}", ubig!(100).in_radix(2)), "+001100100");
-/// assert_eq!(format!("{:=^10}", ubig!(100).in_radix(2)), "=1100100==");
+/// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
+/// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
 /// // For bases 2, 8, 10, 16 we don't have to use `InRadix`:
 /// assert_eq!(format!("{:x}", ubig!(3000)), "bb8");
 /// assert_eq!(format!("{:x}", ibig!(-3000)), "-bb8");
@@ -473,8 +470,8 @@ impl UpperHex for UBig {
 impl UBig {
     /// Representation in a given radix.
     ///
-    /// Using `in_radix` is a bit more efficient for formatting than converting to a string and then
-    /// formatting.
+    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
+    /// than converting to a string and then formatting.
     ///
     /// # Panics
     ///
@@ -484,16 +481,8 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::prelude::*;
-    /// assert_eq!(format!("{}", ubig!(100).in_radix(2)), "1100100");
-    /// assert_eq!(format!("{}", ubig!(3000).in_radix(16)), "bb8");
-    /// assert_eq!(format!("{:#}", ubig!(3000).in_radix(16)), "BB8");
-    /// assert_eq!(format!("{:+010}", ubig!(100).in_radix(2)), "+001100100");
-    /// assert_eq!(format!("{:=^10}", ubig!(100).in_radix(2)), "=1100100==");
-    /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
-    /// assert_eq!(format!("{:x}", ubig!(3000)), "bb8");
-    ///
-    /// // This performs an extra String allocation and is less efficient:
-    /// assert_eq!(format!("{:=^10}", ubig!(100).to_str_radix(2)), "=1100100==");
+    /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
+    /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
@@ -638,8 +627,8 @@ impl UpperHex for IBig {
 impl IBig {
     /// Representation in a given radix.
     ///
-    /// Using `in_radix` is a bit more efficient for formatting than converting to a string and then
-    /// formatting.
+    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
+    /// than converting to a string and then formatting.
     ///
     /// # Panics
     ///
@@ -649,16 +638,8 @@ impl IBig {
     ///
     /// ```
     /// # use ibig::prelude::*;
-    /// assert_eq!(format!("{}", ibig!(100).in_radix(2)), "1100100");
-    /// assert_eq!(format!("{}", ibig!(-3000).in_radix(16)), "-bb8");
-    /// assert_eq!(format!("{:#}", ibig!(3000).in_radix(16)), "BB8");
-    /// assert_eq!(format!("{:+010}", ibig!(100).in_radix(2)), "+001100100");
-    /// assert_eq!(format!("{:=^10}", ibig!(-100).in_radix(2)), "=-1100100=");
-    /// // For bases 2, 8, 10, 16 we don't have to use `in_radix`:
-    /// assert_eq!(format!("{:x}", ibig!(-3000)), "-bb8");
-    ///
-    /// // This performs an extra String allocation and is less efficient:
-    /// assert_eq!(format!("{:=^10}", ibig!(-100).to_str_radix(2)), "=-1100100=");
+    /// assert_eq!(format!("{}", ibig!(-83).in_radix(3)), "-10002");
+    /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
     /// ```
     #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
