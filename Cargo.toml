@@ -28,3 +28,7 @@ default = ["std", "rand"]
 
 # Interface with the std library.
 std = []
+
+[[test]]
+name = "random"
+required-features = ["rand"]
