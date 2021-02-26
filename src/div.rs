@@ -69,7 +69,6 @@ pub trait DivRemEuclid<Rhs = Self> {
 impl Div<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn div(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::div_word(word0, word1),
@@ -89,7 +88,6 @@ impl Div<UBig> for UBig {
 impl Div<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn div(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -113,7 +111,6 @@ impl Div<&UBig> for UBig {
 impl Div<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn div(self, rhs: UBig) -> UBig {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -137,7 +134,6 @@ impl Div<UBig> for &UBig {
 impl Div<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn div(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::div_word(*word0, *word1),
@@ -155,14 +151,12 @@ impl Div<&UBig> for &UBig {
 }
 
 impl DivAssign<UBig> for UBig {
-    #[inline]
     fn div_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) / rhs;
     }
 }
 
 impl DivAssign<&UBig> for UBig {
-    #[inline]
     fn div_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) / rhs;
     }
@@ -171,7 +165,6 @@ impl DivAssign<&UBig> for UBig {
 impl Rem<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::rem_word(word0, word1),
@@ -191,7 +184,6 @@ impl Rem<UBig> for UBig {
 impl Rem<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -215,7 +207,6 @@ impl Rem<&UBig> for UBig {
 impl Rem<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem(self, rhs: UBig) -> UBig {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -241,7 +232,6 @@ impl Rem<UBig> for &UBig {
 impl Rem<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::rem_word(*word0, *word1),
@@ -259,14 +249,12 @@ impl Rem<&UBig> for &UBig {
 }
 
 impl RemAssign<UBig> for UBig {
-    #[inline]
     fn rem_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) % rhs;
     }
 }
 
 impl RemAssign<&UBig> for UBig {
-    #[inline]
     fn rem_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) % rhs;
     }
@@ -276,7 +264,6 @@ impl DivRem<UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem(self, rhs: UBig) -> (UBig, UBig) {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::div_rem_word(word0, word1),
@@ -297,7 +284,6 @@ impl DivRem<&UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem(self, rhs: &UBig) -> (UBig, UBig) {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -322,7 +308,6 @@ impl DivRem<UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem(self, rhs: UBig) -> (UBig, UBig) {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -349,7 +334,6 @@ impl DivRem<&UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem(self, rhs: &UBig) -> (UBig, UBig) {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::div_rem_word(*word0, *word1),
@@ -369,7 +353,6 @@ impl DivRem<&UBig> for &UBig {
 impl DivEuclid<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn div_euclid(self, rhs: UBig) -> UBig {
         self / rhs
     }
@@ -378,7 +361,6 @@ impl DivEuclid<UBig> for UBig {
 impl DivEuclid<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn div_euclid(self, rhs: &UBig) -> UBig {
         self / rhs
     }
@@ -387,7 +369,6 @@ impl DivEuclid<&UBig> for UBig {
 impl DivEuclid<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn div_euclid(self, rhs: UBig) -> UBig {
         self / rhs
     }
@@ -396,7 +377,6 @@ impl DivEuclid<UBig> for &UBig {
 impl DivEuclid<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn div_euclid(self, rhs: &UBig) -> UBig {
         self / rhs
     }
@@ -405,7 +385,6 @@ impl DivEuclid<&UBig> for &UBig {
 impl RemEuclid<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: UBig) -> UBig {
         self % rhs
     }
@@ -414,7 +393,6 @@ impl RemEuclid<UBig> for UBig {
 impl RemEuclid<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: &UBig) -> UBig {
         self % rhs
     }
@@ -423,7 +401,6 @@ impl RemEuclid<&UBig> for UBig {
 impl RemEuclid<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: UBig) -> UBig {
         self % rhs
     }
@@ -432,7 +409,6 @@ impl RemEuclid<UBig> for &UBig {
 impl RemEuclid<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: &UBig) -> UBig {
         self % rhs
     }
@@ -442,7 +418,6 @@ impl DivRemEuclid<UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -452,7 +427,6 @@ impl DivRemEuclid<&UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: &UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -462,7 +436,6 @@ impl DivRemEuclid<UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -472,7 +445,6 @@ impl DivRemEuclid<&UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: &UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -684,7 +656,6 @@ pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 impl Div<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn div(self, rhs: IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -696,7 +667,6 @@ impl Div<IBig> for IBig {
 impl Div<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn div(self, rhs: &IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -708,7 +678,6 @@ impl Div<&IBig> for IBig {
 impl Div<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn div(self, rhs: IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -720,7 +689,6 @@ impl Div<IBig> for &IBig {
 impl Div<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn div(self, rhs: &IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -730,14 +698,12 @@ impl Div<&IBig> for &IBig {
 }
 
 impl DivAssign<IBig> for IBig {
-    #[inline]
     fn div_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) / rhs;
     }
 }
 
 impl DivAssign<&IBig> for IBig {
-    #[inline]
     fn div_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) / rhs;
     }
@@ -746,7 +712,6 @@ impl DivAssign<&IBig> for IBig {
 impl Rem<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem(self, rhs: IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -758,7 +723,6 @@ impl Rem<IBig> for IBig {
 impl Rem<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem(self, rhs: &IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -770,7 +734,6 @@ impl Rem<&IBig> for IBig {
 impl Rem<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem(self, rhs: IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -782,7 +745,6 @@ impl Rem<IBig> for &IBig {
 impl Rem<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem(self, rhs: &IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -792,14 +754,12 @@ impl Rem<&IBig> for &IBig {
 }
 
 impl RemAssign<IBig> for IBig {
-    #[inline]
     fn rem_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) % rhs;
     }
 }
 
 impl RemAssign<&IBig> for IBig {
-    #[inline]
     fn rem_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) % rhs;
     }
@@ -809,7 +769,6 @@ impl DivRem<IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem(self, rhs: IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -826,7 +785,6 @@ impl DivRem<&IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem(self, rhs: &IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -843,7 +801,6 @@ impl DivRem<IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem(self, rhs: IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -860,7 +817,6 @@ impl DivRem<&IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem(self, rhs: &IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -876,7 +832,6 @@ impl DivRem<&IBig> for &IBig {
 impl DivEuclid<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
@@ -891,7 +846,6 @@ impl DivEuclid<IBig> for IBig {
 impl DivEuclid<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
         if r.is_negative() {
@@ -905,7 +859,6 @@ impl DivEuclid<&IBig> for IBig {
 impl DivEuclid<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
@@ -920,7 +873,6 @@ impl DivEuclid<IBig> for &IBig {
 impl DivEuclid<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
         if r.is_negative() {
@@ -934,7 +886,6 @@ impl DivEuclid<&IBig> for &IBig {
 impl RemEuclid<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
         if r.is_negative() {
@@ -948,7 +899,6 @@ impl RemEuclid<IBig> for IBig {
 impl RemEuclid<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
         if r.is_negative() {
@@ -962,7 +912,6 @@ impl RemEuclid<&IBig> for IBig {
 impl RemEuclid<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
         if r.is_negative() {
@@ -976,7 +925,6 @@ impl RemEuclid<IBig> for &IBig {
 impl RemEuclid<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
         if r.is_negative() {
@@ -991,7 +939,6 @@ impl DivRemEuclid<IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
         if r.is_negative() {
@@ -1006,7 +953,6 @@ impl DivRemEuclid<&IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
         if r.is_negative() {
@@ -1021,7 +967,6 @@ impl DivRemEuclid<IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
         if r.is_negative() {
@@ -1036,7 +981,6 @@ impl DivRemEuclid<&IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
-    #[inline]
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
         if r.is_negative() {

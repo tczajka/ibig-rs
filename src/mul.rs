@@ -13,7 +13,6 @@ use core::{
 impl Mul<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn mul(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::mul_word(word0, word1),
@@ -27,7 +26,6 @@ impl Mul<UBig> for UBig {
 impl Mul<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn mul(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -45,7 +43,6 @@ impl Mul<&UBig> for UBig {
 impl Mul<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn mul(self, rhs: UBig) -> UBig {
         rhs.mul(self)
     }
@@ -54,7 +51,6 @@ impl Mul<UBig> for &UBig {
 impl Mul<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn mul(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::mul_word(*word0, *word1),
@@ -66,14 +62,12 @@ impl Mul<&UBig> for &UBig {
 }
 
 impl MulAssign<UBig> for UBig {
-    #[inline]
     fn mul_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) * rhs;
     }
 }
 
 impl MulAssign<&UBig> for UBig {
-    #[inline]
     fn mul_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) * rhs;
     }
@@ -206,7 +200,6 @@ impl Mul<Sign> for Sign {
 impl Mul<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn mul(self, rhs: IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = rhs.into_sign_magnitude();
@@ -217,7 +210,6 @@ impl Mul<IBig> for IBig {
 impl Mul<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn mul(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -228,7 +220,6 @@ impl Mul<&IBig> for IBig {
 impl Mul<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn mul(self, rhs: IBig) -> IBig {
         rhs.mul(self)
     }
@@ -237,7 +228,6 @@ impl Mul<IBig> for &IBig {
 impl Mul<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn mul(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -246,14 +236,12 @@ impl Mul<&IBig> for &IBig {
 }
 
 impl MulAssign<IBig> for IBig {
-    #[inline]
     fn mul_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) * rhs;
     }
 }
 
 impl MulAssign<&IBig> for IBig {
-    #[inline]
     fn mul_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) * rhs;
     }

@@ -88,7 +88,6 @@ pub struct UniformUBig {
 impl UniformSampler for UniformUBig {
     type X = UBig;
 
-    #[inline]
     fn new<B1, B2>(low: B1, high: B2) -> UniformUBig
     where
         B1: SampleBorrow<UBig>,
@@ -104,7 +103,6 @@ impl UniformSampler for UniformUBig {
         }
     }
 
-    #[inline]
     fn new_inclusive<B1, B2>(low: B1, high: B2) -> UniformUBig
     where
         B1: SampleBorrow<UBig>,
@@ -117,7 +115,6 @@ impl UniformSampler for UniformUBig {
         }
     }
 
-    #[inline]
     fn sample<R>(&self, rng: &mut R) -> UBig
     where
         R: Rng + ?Sized,
@@ -151,7 +148,6 @@ pub struct UniformIBig {
 impl UniformSampler for UniformIBig {
     type X = IBig;
 
-    #[inline]
     fn new<B1, B2>(low: B1, high: B2) -> UniformIBig
     where
         B1: SampleBorrow<IBig>,
@@ -167,7 +163,6 @@ impl UniformSampler for UniformIBig {
         }
     }
 
-    #[inline]
     fn new_inclusive<B1, B2>(low: B1, high: B2) -> UniformIBig
     where
         B1: SampleBorrow<IBig>,
@@ -183,7 +178,6 @@ impl UniformSampler for UniformIBig {
         }
     }
 
-    #[inline]
     fn sample<R>(&self, rng: &mut R) -> IBig
     where
         R: Rng + ?Sized,

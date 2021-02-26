@@ -19,7 +19,6 @@ use core::{
 pub struct OutOfBoundsError;
 
 impl Display for OutOfBoundsError {
-    #[inline]
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.write_str("number out of bounds")
     }

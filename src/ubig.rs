@@ -71,7 +71,6 @@ impl UBig {
 }
 
 impl Clone for UBig {
-    #[inline]
     fn clone(&self) -> UBig {
         match self.0 {
             Small(x) => UBig(Small(x)),
@@ -79,7 +78,6 @@ impl Clone for UBig {
         }
     }
 
-    #[inline]
     fn clone_from(&mut self, source: &UBig) {
         if let Large(ref mut buffer) = self.0 {
             if let Large(ref source_buffer) = source.0 {

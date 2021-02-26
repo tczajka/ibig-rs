@@ -15,7 +15,6 @@ use core::{
 impl Add<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn add(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::add_word(word0, word1),
@@ -35,7 +34,6 @@ impl Add<UBig> for UBig {
 impl Add<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn add(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -53,7 +51,6 @@ impl Add<&UBig> for UBig {
 impl Add<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn add(self, rhs: UBig) -> UBig {
         rhs.add(self)
     }
@@ -62,7 +59,6 @@ impl Add<UBig> for &UBig {
 impl Add<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn add(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::add_word(*word0, *word1),
@@ -80,14 +76,12 @@ impl Add<&UBig> for &UBig {
 }
 
 impl AddAssign<UBig> for UBig {
-    #[inline]
     fn add_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) + rhs;
     }
 }
 
 impl AddAssign<&UBig> for UBig {
-    #[inline]
     fn add_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) + rhs;
     }
@@ -173,7 +167,6 @@ pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
 impl Sub<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn sub(self, rhs: UBig) -> UBig {
         UBig::from_ibig_after_sub(IBig::sub_ubig_val_val(self, rhs))
     }
@@ -182,7 +175,6 @@ impl Sub<UBig> for UBig {
 impl Sub<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
         UBig::from_ibig_after_sub(IBig::sub_ubig_val_ref(self, rhs))
     }
@@ -191,7 +183,6 @@ impl Sub<&UBig> for UBig {
 impl Sub<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn sub(self, rhs: UBig) -> UBig {
         UBig::from_ibig_after_sub(-IBig::sub_ubig_val_ref(rhs, self))
     }
@@ -200,21 +191,18 @@ impl Sub<UBig> for &UBig {
 impl Sub<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
         UBig::from_ibig_after_sub(IBig::sub_ubig_ref_ref(self, rhs))
     }
 }
 
 impl SubAssign<UBig> for UBig {
-    #[inline]
     fn sub_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) - rhs;
     }
 }
 
 impl SubAssign<&UBig> for UBig {
-    #[inline]
     fn sub_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) - rhs;
     }
@@ -408,7 +396,6 @@ impl IBig {
 impl Add<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn add(self, rhs: IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = rhs.into_sign_magnitude();
@@ -424,7 +411,6 @@ impl Add<IBig> for IBig {
 impl Add<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn add(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -440,7 +426,6 @@ impl Add<&IBig> for IBig {
 impl Add<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn add(self, rhs: IBig) -> IBig {
         rhs.add(self)
     }
@@ -449,7 +434,6 @@ impl Add<IBig> for &IBig {
 impl Add<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn add(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -463,14 +447,12 @@ impl Add<&IBig> for &IBig {
 }
 
 impl AddAssign<IBig> for IBig {
-    #[inline]
     fn add_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) + rhs;
     }
 }
 
 impl AddAssign<&IBig> for IBig {
-    #[inline]
     fn add_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) + rhs;
     }
@@ -479,7 +461,6 @@ impl AddAssign<&IBig> for IBig {
 impl Sub<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn sub(self, rhs: IBig) -> IBig {
         self + -rhs
     }
@@ -488,7 +469,6 @@ impl Sub<IBig> for IBig {
 impl Sub<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn sub(self, rhs: &IBig) -> IBig {
         -(-self + rhs)
     }
@@ -497,7 +477,6 @@ impl Sub<&IBig> for IBig {
 impl Sub<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn sub(self, rhs: IBig) -> IBig {
         self + -rhs
     }
@@ -506,7 +485,6 @@ impl Sub<IBig> for &IBig {
 impl Sub<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn sub(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -520,14 +498,12 @@ impl Sub<&IBig> for &IBig {
 }
 
 impl SubAssign<IBig> for IBig {
-    #[inline]
     fn sub_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) - rhs;
     }
 }
 
 impl SubAssign<&IBig> for IBig {
-    #[inline]
     fn sub_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) - rhs;
     }

@@ -6,7 +6,6 @@ use crate::{
 use core::cmp::Ordering;
 
 impl Ord for UBig {
-    #[inline]
     fn cmp(&self, other: &UBig) -> Ordering {
         match (self.repr(), other.repr()) {
             (Small(word), Small(other_word)) => word.cmp(other_word),
@@ -21,14 +20,12 @@ impl Ord for UBig {
 }
 
 impl PartialOrd for UBig {
-    #[inline]
     fn partial_cmp(&self, other: &UBig) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for IBig {
-    #[inline]
     fn cmp(&self, other: &IBig) -> Ordering {
         match (self.sign(), other.sign()) {
             (Positive, Positive) => self.magnitude().cmp(other.magnitude()),
@@ -40,7 +37,6 @@ impl Ord for IBig {
 }
 
 impl PartialOrd for IBig {
-    #[inline]
     fn partial_cmp(&self, other: &IBig) -> Option<Ordering> {
         Some(self.cmp(other))
     }

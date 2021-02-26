@@ -22,7 +22,6 @@ pub enum ParseError {
 }
 
 impl Display for ParseError {
-    #[inline]
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             ParseError::NoDigits => f.write_str("no digits"),
@@ -50,7 +49,6 @@ impl UBig {
     /// assert_eq!(UBig::from_str_radix("+7ab", 32)?, ubig!(7499));
     /// # Ok::<(), ParseError>(())
     /// ```
-    #[inline]
     pub fn from_str_radix(src: &str, radix: u32) -> Result<UBig, ParseError> {
         check_radix_valid(radix);
         let src = src.strip_prefix("+").unwrap_or(src);
@@ -71,7 +69,6 @@ impl UBig {
     /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f")?, ubig!(0x1f));
     /// # Ok::<(), ParseError>(())
     /// ```
-    #[inline]
     pub fn from_str_with_radix_prefix(src: &str) -> Result<UBig, ParseError> {
         let src = src.strip_prefix("+").unwrap_or(src);
         UBig::from_str_with_radix_prefix_no_sign(src)
@@ -235,7 +232,6 @@ impl IBig {
     /// assert_eq!(IBig::from_str_radix("-7ab", 32)?, ibig!(-7499));
     /// # Ok::<(), ParseError>(())
     /// ```
-    #[inline]
     pub fn from_str_radix(mut src: &str, radix: u32) -> Result<IBig, ParseError> {
         check_radix_valid(radix);
         let sign;
@@ -266,7 +262,6 @@ impl IBig {
     /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f")?, ibig!(-0x1f));
     /// # Ok::<(), ParseError>(())
     /// ```
-    #[inline]
     pub fn from_str_with_radix_prefix(mut src: &str) -> Result<IBig, ParseError> {
         let sign;
         match src.strip_prefix("-") {

@@ -25,7 +25,6 @@ impl UBig {
     /// # use ibig::prelude::*;
     /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
     /// ```
-    #[inline]
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
@@ -56,7 +55,6 @@ impl UBig {
     /// # use ibig::prelude::*;
     /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), ubig!(0x010203));
     /// ```
-    #[inline]
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
@@ -146,7 +144,6 @@ impl UBig {
 macro_rules! impl_from {
     (impl From<$a:ty> for $b:ty as $f:ident) => {
         impl From<$a> for $b {
-            #[inline]
             fn from(value: $a) -> $b {
                 $f(value)
             }
@@ -160,7 +157,6 @@ macro_rules! impl_try_from {
         impl TryFrom<$a> for $b {
             type Error = OutOfBoundsError;
 
-            #[inline]
             fn try_from(value: $a) -> Result<$b, OutOfBoundsError> {
                 $f(value)
             }
@@ -209,7 +205,6 @@ impl_try_from!(impl TryFrom<&UBig> for i128 as signed_from_ubig);
 impl_try_from!(impl TryFrom<&UBig> for isize as signed_from_ubig);
 
 impl From<bool> for UBig {
-    #[inline]
     fn from(b: bool) -> UBig {
         u8::from(b).into()
     }
@@ -256,14 +251,12 @@ impl_try_from!(impl TryFrom<&IBig> for i128 as signed_from_ibig);
 impl_try_from!(impl TryFrom<&IBig> for isize as signed_from_ibig);
 
 impl From<UBig> for IBig {
-    #[inline]
     fn from(x: UBig) -> IBig {
         IBig::from_sign_magnitude(Positive, x)
     }
 }
 
 impl From<&UBig> for IBig {
-    #[inline]
     fn from(x: &UBig) -> IBig {
         IBig::from(x.clone())
     }
@@ -272,7 +265,6 @@ impl From<&UBig> for IBig {
 impl TryFrom<IBig> for UBig {
     type Error = OutOfBoundsError;
 
-    #[inline]
     fn try_from(x: IBig) -> Result<UBig, OutOfBoundsError> {
         match x.into_sign_magnitude() {
             (Positive, mag) => Ok(mag),
@@ -284,7 +276,6 @@ impl TryFrom<IBig> for UBig {
 impl TryFrom<&IBig> for UBig {
     type Error = OutOfBoundsError;
 
-    #[inline]
     fn try_from(x: &IBig) -> Result<UBig, OutOfBoundsError> {
         match x.sign() {
             Positive => Ok(x.magnitude().clone()),

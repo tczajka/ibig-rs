@@ -16,7 +16,6 @@ macro_rules! impl_ubig_shl_primitive_unsigned {
         impl Shl<$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> UBig {
                 self.shl_unsigned(rhs)
             }
@@ -25,7 +24,6 @@ macro_rules! impl_ubig_shl_primitive_unsigned {
         impl Shl<&$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> UBig {
                 self.shl_unsigned(*rhs)
             }
@@ -34,7 +32,6 @@ macro_rules! impl_ubig_shl_primitive_unsigned {
         impl Shl<$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> UBig {
                 self.shl_ref_unsigned(rhs)
             }
@@ -43,7 +40,6 @@ macro_rules! impl_ubig_shl_primitive_unsigned {
         impl Shl<&$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> UBig {
                 self.shl_ref_unsigned(*rhs)
             }
@@ -61,7 +57,6 @@ impl_ubig_shl_primitive_unsigned!(usize);
 impl Shl<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: UBig) -> UBig {
         self.shl_unsigned(rhs)
     }
@@ -70,7 +65,6 @@ impl Shl<UBig> for UBig {
 impl Shl<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: &UBig) -> UBig {
         self.shl_unsigned(rhs)
     }
@@ -79,7 +73,6 @@ impl Shl<&UBig> for UBig {
 impl Shl<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: UBig) -> UBig {
         self.shl_ref_unsigned(rhs)
     }
@@ -88,7 +81,6 @@ impl Shl<UBig> for &UBig {
 impl Shl<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: &UBig) -> UBig {
         self.shl_ref_unsigned(rhs)
     }
@@ -280,7 +272,6 @@ macro_rules! impl_ubig_shl_primitive_signed {
         impl Shl<$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> UBig {
                 self.shl_signed(rhs)
             }
@@ -289,7 +280,6 @@ macro_rules! impl_ubig_shl_primitive_signed {
         impl Shl<&$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> UBig {
                 self.shl_signed(*rhs)
             }
@@ -298,7 +288,6 @@ macro_rules! impl_ubig_shl_primitive_signed {
         impl Shl<$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> UBig {
                 self.shl_ref_signed(rhs)
             }
@@ -307,7 +296,6 @@ macro_rules! impl_ubig_shl_primitive_signed {
         impl Shl<&$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> UBig {
                 self.shl_ref_signed(*rhs)
             }
@@ -325,7 +313,6 @@ impl_ubig_shl_primitive_signed!(isize);
 impl Shl<IBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: IBig) -> UBig {
         self.shl(&rhs)
     }
@@ -334,7 +321,6 @@ impl Shl<IBig> for UBig {
 impl Shl<&IBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: &IBig) -> UBig {
         match rhs.sign() {
             Positive => self.shl(rhs.magnitude()),
@@ -346,7 +332,6 @@ impl Shl<&IBig> for UBig {
 impl Shl<IBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: IBig) -> UBig {
         self.shl(&rhs)
     }
@@ -355,7 +340,6 @@ impl Shl<IBig> for &UBig {
 impl Shl<&IBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shl(self, rhs: &IBig) -> UBig {
         match rhs.sign() {
             Positive => self.shl(rhs.magnitude()),
@@ -393,7 +377,6 @@ macro_rules! impl_ibig_shl {
         impl Shl<$a> for IBig {
             type Output = IBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> IBig {
                 self.shl_impl(rhs)
             }
@@ -402,7 +385,6 @@ macro_rules! impl_ibig_shl {
         impl Shl<&$a> for IBig {
             type Output = IBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> IBig {
                 self.shl_impl(rhs)
             }
@@ -411,7 +393,6 @@ macro_rules! impl_ibig_shl {
         impl Shl<$a> for &IBig {
             type Output = IBig;
 
-            #[inline]
             fn shl(self, rhs: $a) -> IBig {
                 self.shl_ref_impl(rhs)
             }
@@ -420,7 +401,6 @@ macro_rules! impl_ibig_shl {
         impl Shl<&$a> for &IBig {
             type Output = IBig;
 
-            #[inline]
             fn shl(self, rhs: &$a) -> IBig {
                 self.shl_ref_impl(rhs)
             }
@@ -465,14 +445,12 @@ impl IBig {
 macro_rules! impl_shl_assign {
     ($a:ty, $b:ty) => {
         impl ShlAssign<$b> for $a {
-            #[inline]
             fn shl_assign(&mut self, rhs: $b) {
                 *self = mem::take(self) << rhs;
             }
         }
 
         impl ShlAssign<&$b> for $a {
-            #[inline]
             fn shl_assign(&mut self, rhs: &$b) {
                 *self = mem::take(self) << rhs;
             }
@@ -514,7 +492,6 @@ macro_rules! impl_ubig_shr_primitive_unsigned {
         impl Shr<$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> UBig {
                 self.shr_unsigned(rhs)
             }
@@ -523,7 +500,6 @@ macro_rules! impl_ubig_shr_primitive_unsigned {
         impl Shr<&$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> UBig {
                 self.shr_unsigned(*rhs)
             }
@@ -532,7 +508,6 @@ macro_rules! impl_ubig_shr_primitive_unsigned {
         impl Shr<$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> UBig {
                 self.shr_ref_unsigned(rhs)
             }
@@ -541,7 +516,6 @@ macro_rules! impl_ubig_shr_primitive_unsigned {
         impl Shr<&$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> UBig {
                 self.shr_ref_unsigned(*rhs)
             }
@@ -559,7 +533,6 @@ impl_ubig_shr_primitive_unsigned!(usize);
 impl Shr<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: UBig) -> UBig {
         self.shr_unsigned(rhs)
     }
@@ -568,7 +541,6 @@ impl Shr<UBig> for UBig {
 impl Shr<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: &UBig) -> UBig {
         self.shr_unsigned(rhs)
     }
@@ -577,7 +549,6 @@ impl Shr<&UBig> for UBig {
 impl Shr<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: UBig) -> UBig {
         self.shr_ref_unsigned(rhs)
     }
@@ -586,7 +557,6 @@ impl Shr<UBig> for &UBig {
 impl Shr<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: &UBig) -> UBig {
         self.shr_ref_unsigned(rhs)
     }
@@ -757,7 +727,6 @@ macro_rules! impl_ubig_shr_primitive_signed {
         impl Shr<$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> UBig {
                 self.shr_signed(rhs)
             }
@@ -766,7 +735,6 @@ macro_rules! impl_ubig_shr_primitive_signed {
         impl Shr<&$a> for UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> UBig {
                 self.shr_signed(*rhs)
             }
@@ -775,7 +743,6 @@ macro_rules! impl_ubig_shr_primitive_signed {
         impl Shr<$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> UBig {
                 self.shr_ref_signed(rhs)
             }
@@ -784,7 +751,6 @@ macro_rules! impl_ubig_shr_primitive_signed {
         impl Shr<&$a> for &UBig {
             type Output = UBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> UBig {
                 self.shr_ref_signed(*rhs)
             }
@@ -802,7 +768,6 @@ impl_ubig_shr_primitive_signed!(isize);
 impl Shr<IBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: IBig) -> UBig {
         self.shr(&rhs)
     }
@@ -811,7 +776,6 @@ impl Shr<IBig> for UBig {
 impl Shr<&IBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: &IBig) -> UBig {
         match rhs.sign() {
             Positive => self.shr(rhs.magnitude()),
@@ -823,7 +787,6 @@ impl Shr<&IBig> for UBig {
 impl Shr<IBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: IBig) -> UBig {
         self.shr(&rhs)
     }
@@ -832,7 +795,6 @@ impl Shr<IBig> for &UBig {
 impl Shr<&IBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn shr(self, rhs: &IBig) -> UBig {
         match rhs.sign() {
             Positive => self.shr(rhs.magnitude()),
@@ -870,7 +832,6 @@ macro_rules! impl_ibig_shr {
         impl Shr<$a> for IBig {
             type Output = IBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> IBig {
                 self.shr_impl(rhs)
             }
@@ -879,7 +840,6 @@ macro_rules! impl_ibig_shr {
         impl Shr<&$a> for IBig {
             type Output = IBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> IBig {
                 self.shr_impl(rhs)
             }
@@ -888,7 +848,6 @@ macro_rules! impl_ibig_shr {
         impl Shr<$a> for &IBig {
             type Output = IBig;
 
-            #[inline]
             fn shr(self, rhs: $a) -> IBig {
                 self.shr_ref_impl(rhs)
             }
@@ -897,7 +856,6 @@ macro_rules! impl_ibig_shr {
         impl Shr<&$a> for &IBig {
             type Output = IBig;
 
-            #[inline]
             fn shr(self, rhs: &$a) -> IBig {
                 self.shr_ref_impl(rhs)
             }
@@ -948,14 +906,12 @@ impl IBig {
 macro_rules! impl_shr_assign {
     ($a:ty, $b:ty) => {
         impl ShrAssign<$b> for $a {
-            #[inline]
             fn shr_assign(&mut self, rhs: $b) {
                 *self = mem::take(self) >> rhs;
             }
         }
 
         impl ShrAssign<&$b> for $a {
-            #[inline]
             fn shr_assign(&mut self, rhs: &$b) {
                 *self = mem::take(self) >> rhs;
             }

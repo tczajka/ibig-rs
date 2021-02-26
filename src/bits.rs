@@ -21,7 +21,6 @@ impl UBig {
     /// assert_eq!(ubig!(0b10010).bit(3), false);
     /// assert_eq!(ubig!(0b10010).bit(100), false);
     /// ```
-    #[inline]
     pub fn bit(&self, n: usize) -> bool {
         match self.repr() {
             Small(word) => n < WORD_BITS as usize && word & (1 as Word) << n != 0,
@@ -44,7 +43,6 @@ impl UBig {
     /// a.set_bit(10);
     /// assert_eq!(a, ubig!(0b10000000101));
     /// ```
-    #[inline]
     pub fn set_bit(&mut self, n: usize) {
         match mem::take(self).into_repr() {
             Small(word) => {
@@ -90,7 +88,6 @@ impl UBig {
     /// a.clear_bit(0);
     /// assert_eq!(a, ubig!(0b100));
     /// ```
-    #[inline]
     pub fn clear_bit(&mut self, n: usize) {
         match mem::take(self).into_repr() {
             Small(word) => {
@@ -125,7 +122,6 @@ impl UBig {
     /// assert_eq!(ubig!(0b101000000).trailing_zeros(), Some(6));
     /// assert_eq!(ubig!(0).trailing_zeros(), None);
     /// ```
-    #[inline]
     pub fn trailing_zeros(&self) -> Option<usize> {
         match self.repr() {
             Small(0) => None,
@@ -160,7 +156,6 @@ impl UBig {
     /// assert_eq!(ubig!(0b101000000).ilog2(), Some(8));
     /// assert_eq!(ubig!(0).ilog2(), None);
     /// ```
-    #[inline]
     pub fn ilog2(&self) -> Option<usize> {
         match self.repr() {
             Small(0) => None,
@@ -183,7 +178,6 @@ impl UBig {
     /// assert_eq!(ubig!(8).is_power_of_two(), true);
     /// assert_eq!(ubig!(9).is_power_of_two(), false);
     /// ```
-    #[inline]
     pub fn is_power_of_two(&self) -> bool {
         match self.repr() {
             Small(word) => word.is_power_of_two(),
@@ -214,7 +208,6 @@ impl IBig {
     /// assert_eq!(ibig!(-0b101000000).trailing_zeros(), Some(6));
     /// assert_eq!(ibig!(0).trailing_zeros(), None);
     /// ```
-    #[inline]
     pub fn trailing_zeros(&self) -> Option<usize> {
         self.magnitude().trailing_zeros()
     }
@@ -236,7 +229,6 @@ pub trait NextPowerOfTwo {
 impl NextPowerOfTwo for UBig {
     type Output = UBig;
 
-    #[inline]
     fn next_power_of_two(self) -> UBig {
         match self.into_repr() {
             Small(word) => match word.checked_next_power_of_two() {
@@ -251,7 +243,6 @@ impl NextPowerOfTwo for UBig {
 impl NextPowerOfTwo for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn next_power_of_two(self) -> UBig {
         self.clone().next_power_of_two()
     }
@@ -295,7 +286,6 @@ impl UBig {
 impl BitAnd<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitand(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 & word1),
@@ -315,7 +305,6 @@ impl BitAnd<UBig> for UBig {
 impl BitAnd<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitand(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -333,7 +322,6 @@ impl BitAnd<&UBig> for UBig {
 impl BitAnd<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitand(self, rhs: UBig) -> UBig {
         rhs.bitand(self)
     }
@@ -342,7 +330,6 @@ impl BitAnd<UBig> for &UBig {
 impl BitAnd<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitand(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 & word1),
@@ -360,14 +347,12 @@ impl BitAnd<&UBig> for &UBig {
 }
 
 impl BitAndAssign<UBig> for UBig {
-    #[inline]
     fn bitand_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) & rhs;
     }
 }
 
 impl BitAndAssign<&UBig> for UBig {
-    #[inline]
     fn bitand_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) & rhs;
     }
@@ -388,7 +373,6 @@ impl UBig {
 impl BitOr<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitor(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 | word1),
@@ -408,7 +392,6 @@ impl BitOr<UBig> for UBig {
 impl BitOr<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitor(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -426,7 +409,6 @@ impl BitOr<&UBig> for UBig {
 impl BitOr<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitor(self, rhs: UBig) -> UBig {
         rhs.bitor(self)
     }
@@ -435,7 +417,6 @@ impl BitOr<UBig> for &UBig {
 impl BitOr<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitor(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 | word1),
@@ -453,14 +434,12 @@ impl BitOr<&UBig> for &UBig {
 }
 
 impl BitOrAssign<UBig> for UBig {
-    #[inline]
     fn bitor_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) | rhs;
     }
 }
 
 impl BitOrAssign<&UBig> for UBig {
-    #[inline]
     fn bitor_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) | rhs;
     }
@@ -489,7 +468,6 @@ impl UBig {
 impl BitXor<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitxor(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 ^ word1),
@@ -509,7 +487,6 @@ impl BitXor<UBig> for UBig {
 impl BitXor<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitxor(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -527,7 +504,6 @@ impl BitXor<&UBig> for UBig {
 impl BitXor<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitxor(self, rhs: UBig) -> UBig {
         rhs.bitxor(self)
     }
@@ -536,7 +512,6 @@ impl BitXor<UBig> for &UBig {
 impl BitXor<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn bitxor(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 ^ word1),
@@ -554,14 +529,12 @@ impl BitXor<&UBig> for &UBig {
 }
 
 impl BitXorAssign<UBig> for UBig {
-    #[inline]
     fn bitxor_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) ^ rhs;
     }
 }
 
 impl BitXorAssign<&UBig> for UBig {
-    #[inline]
     fn bitxor_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) ^ rhs;
     }
@@ -607,7 +580,6 @@ pub trait AndNot<Rhs = Self> {
 impl AndNot<UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn and_not(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
@@ -621,7 +593,6 @@ impl AndNot<UBig> for UBig {
 impl AndNot<&UBig> for UBig {
     type Output = UBig;
 
-    #[inline]
     fn and_not(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -639,7 +610,6 @@ impl AndNot<&UBig> for UBig {
 impl AndNot<UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn and_not(self, rhs: UBig) -> UBig {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -657,7 +627,6 @@ impl AndNot<UBig> for &UBig {
 impl AndNot<&UBig> for &UBig {
     type Output = UBig;
 
-    #[inline]
     fn and_not(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
@@ -687,7 +656,6 @@ impl UBig {
 impl Not for IBig {
     type Output = IBig;
 
-    #[inline]
     fn not(self) -> IBig {
         -(self + IBig::from(1u8))
     }
@@ -696,7 +664,6 @@ impl Not for IBig {
 impl Not for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn not(self) -> IBig {
         -(self + IBig::from(1u8))
     }
@@ -705,7 +672,6 @@ impl Not for &IBig {
 impl BitAnd<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitand(self, rhs: IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() & rhs.unsigned_abs()),
@@ -719,7 +685,6 @@ impl BitAnd<IBig> for IBig {
 impl BitAnd<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitand(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() & rhs.magnitude()),
@@ -733,7 +698,6 @@ impl BitAnd<&IBig> for IBig {
 impl BitAnd<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitand(self, rhs: IBig) -> IBig {
         rhs.bitand(self)
     }
@@ -742,7 +706,6 @@ impl BitAnd<IBig> for &IBig {
 impl BitAnd<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitand(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.magnitude() & rhs.magnitude()),
@@ -754,14 +717,12 @@ impl BitAnd<&IBig> for &IBig {
 }
 
 impl BitAndAssign<IBig> for IBig {
-    #[inline]
     fn bitand_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) & rhs;
     }
 }
 
 impl BitAndAssign<&IBig> for IBig {
-    #[inline]
     fn bitand_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) & rhs;
     }
@@ -770,7 +731,6 @@ impl BitAndAssign<&IBig> for IBig {
 impl BitOr<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitor(self, rhs: IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() | rhs.unsigned_abs()),
@@ -784,7 +744,6 @@ impl BitOr<IBig> for IBig {
 impl BitOr<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitor(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() | rhs.magnitude()),
@@ -798,7 +757,6 @@ impl BitOr<&IBig> for IBig {
 impl BitOr<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitor(self, rhs: IBig) -> IBig {
         rhs.bitor(self)
     }
@@ -807,7 +765,6 @@ impl BitOr<IBig> for &IBig {
 impl BitOr<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitor(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.magnitude() | rhs.magnitude()),
@@ -819,14 +776,12 @@ impl BitOr<&IBig> for &IBig {
 }
 
 impl BitOrAssign<IBig> for IBig {
-    #[inline]
     fn bitor_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) | rhs;
     }
 }
 
 impl BitOrAssign<&IBig> for IBig {
-    #[inline]
     fn bitor_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) | rhs;
     }
@@ -835,7 +790,6 @@ impl BitOrAssign<&IBig> for IBig {
 impl BitXor<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitxor(self, rhs: IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() ^ rhs.unsigned_abs()),
@@ -849,7 +803,6 @@ impl BitXor<IBig> for IBig {
 impl BitXor<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitxor(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs() ^ rhs.magnitude()),
@@ -863,7 +816,6 @@ impl BitXor<&IBig> for IBig {
 impl BitXor<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitxor(self, rhs: IBig) -> IBig {
         rhs.bitxor(self)
     }
@@ -872,7 +824,6 @@ impl BitXor<IBig> for &IBig {
 impl BitXor<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn bitxor(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.magnitude() ^ rhs.magnitude()),
@@ -884,14 +835,12 @@ impl BitXor<&IBig> for &IBig {
 }
 
 impl BitXorAssign<IBig> for IBig {
-    #[inline]
     fn bitxor_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) ^ rhs;
     }
 }
 
 impl BitXorAssign<&IBig> for IBig {
-    #[inline]
     fn bitxor_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) ^ rhs;
     }
@@ -900,7 +849,6 @@ impl BitXorAssign<&IBig> for IBig {
 impl AndNot<IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn and_not(self, rhs: IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs().and_not(rhs.unsigned_abs())),
@@ -916,7 +864,6 @@ impl AndNot<IBig> for IBig {
 impl AndNot<&IBig> for IBig {
     type Output = IBig;
 
-    #[inline]
     fn and_not(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.unsigned_abs().and_not(rhs.magnitude())),
@@ -932,7 +879,6 @@ impl AndNot<&IBig> for IBig {
 impl AndNot<IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn and_not(self, rhs: IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.magnitude().and_not(rhs.unsigned_abs())),
@@ -948,7 +894,6 @@ impl AndNot<IBig> for &IBig {
 impl AndNot<&IBig> for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn and_not(self, rhs: &IBig) -> IBig {
         match (self.sign(), rhs.sign()) {
             (Positive, Positive) => IBig::from(self.magnitude().and_not(rhs.magnitude())),

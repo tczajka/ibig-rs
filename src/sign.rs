@@ -1,6 +1,6 @@
 use crate::{
     ibig::IBig,
-    ubig::{Repr::*, UBig},
+    ubig::UBig,
 };
 use core::ops::Neg;
 
@@ -35,11 +35,10 @@ impl IBig {
     /// # use ibig::prelude::*;
     /// assert_eq!(ibig!(-500).signum(), ibig!(-1));
     /// ```
-    #[inline]
     pub fn signum(&self) -> IBig {
         match self.sign() {
             Positive => {
-                if let Small(0) = self.magnitude().repr() {
+                if self.magnitude().is_zero() {
                     IBig::from(0u8)
                 } else {
                     IBig::from(1u8)
@@ -53,7 +52,6 @@ impl IBig {
 impl Neg for IBig {
     type Output = IBig;
 
-    #[inline]
     fn neg(self) -> IBig {
         let (sign, mag) = self.into_sign_magnitude();
         IBig::from_sign_magnitude(-sign, mag)
@@ -63,7 +61,6 @@ impl Neg for IBig {
 impl Neg for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn neg(self) -> IBig {
         self.clone().neg()
     }
@@ -85,7 +82,6 @@ pub trait Abs {
 impl Abs for IBig {
     type Output = IBig;
 
-    #[inline]
     fn abs(self) -> IBig {
         IBig::from(self.unsigned_abs())
     }
@@ -94,7 +90,6 @@ impl Abs for IBig {
 impl Abs for &IBig {
     type Output = IBig;
 
-    #[inline]
     fn abs(self) -> IBig {
         IBig::from(self.unsigned_abs())
     }
@@ -116,7 +111,6 @@ pub trait UnsignedAbs {
 impl UnsignedAbs for IBig {
     type Output = UBig;
 
-    #[inline]
     fn unsigned_abs(self) -> UBig {
         let (_, mag) = self.into_sign_magnitude();
         mag
@@ -126,7 +120,6 @@ impl UnsignedAbs for IBig {
 impl UnsignedAbs for &IBig {
     type Output = UBig;
 
-    #[inline]
     fn unsigned_abs(self) -> UBig {
         self.magnitude().clone()
     }
