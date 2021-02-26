@@ -40,3 +40,21 @@ fn test_uniform_ibig() {
     let x = (&mut rng).sample_iter(&distr).take(1000).max().unwrap();
     assert_eq!(x, ibig!(3));
 }
+
+#[test]
+fn test_random_arithmetic() {
+    let mut rng = StdRng::seed_from_u64(3);
+    let p = ubig!(1000000007);
+
+    for _ in 0..100 {
+        let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << 10000);
+        let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << 10000);
+        let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
+
+        assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
+        assert_eq!(&a + &b - &a, b);
+        assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
+        assert_eq!((&a * &b + &c) / &a, b);
+        assert_eq!((&a * &b + &c) % &a, c);
+    }
+}

@@ -72,10 +72,13 @@ where
 /// # Example
 ///
 /// ```
-/// # use ibig::prelude::*;
-/// # use rand::prelude::*;
+/// use ibig::prelude::*;
+/// use rand::prelude::*;
+/// use rand::distributions::uniform::Uniform;
 /// let a = thread_rng().gen_range(ubig!(3)..ubig!(10));
+/// let b = thread_rng().sample(Uniform::new(ubig!(0), &a));
 /// assert!(a >= ubig!(3) && a < ubig!(10));
+/// assert!(b >= ubig!(0) && b < a);
 /// ```
 pub struct UniformUBig {
     range: UBig,
@@ -132,10 +135,13 @@ impl SampleUniform for UBig {
 /// # Example
 ///
 /// ```
-/// # use ibig::prelude::*;
-/// # use rand::prelude::*;
-/// let a = thread_rng().gen_range(ibig!(-7)..ibig!(0));
-/// assert!(a >= ibig!(-7) && a < ibig!(0));
+/// use ibig::prelude::*;
+/// use rand::prelude::*;
+/// use rand::distributions::uniform::Uniform;
+/// let a = thread_rng().gen_range(ibig!(3)..ibig!(10));
+/// let b = thread_rng().sample(Uniform::new(ibig!(-5), &a));
+/// assert!(a >= ibig!(3) && a < ibig!(10));
+/// assert!(b >= ibig!(-5) && b < a);
 /// ```
 pub struct UniformIBig {
     range: UBig,
