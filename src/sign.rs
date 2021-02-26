@@ -1,7 +1,4 @@
-use crate::{
-    ibig::IBig,
-    ubig::UBig,
-};
+use crate::{ibig::IBig, ubig::UBig};
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
