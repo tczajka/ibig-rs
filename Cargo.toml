@@ -12,11 +12,19 @@ homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
 
 [dependencies.ascii]
-version = "1.0.0"
+version = "1.0"
 default-features = false
 
+[dependencies.rand]
+version = "0.8"
+default-features = false
+optional = true
+
+[dev-dependencies]
+rand = "0.8"
+
 [features]
-default = ["std"]
+default = ["std", "rand"]
 
 # Interface with the std library.
 std = []

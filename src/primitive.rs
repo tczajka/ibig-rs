@@ -200,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn try_from_sign_magnitude() {
+    fn test_try_from_sign_magnitude() {
         assert_eq!(i32::try_from_sign_magnitude(Positive, 0), Ok(0));
         assert_eq!(i32::try_from_sign_magnitude(Positive, 5), Ok(5));
         assert_eq!(

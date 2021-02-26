@@ -48,9 +48,6 @@ pub use crate::{
     ubig::UBig,
 };
 
-#[macro_use]
-mod macros;
-
 mod add;
 mod bits;
 mod buffer;
@@ -67,3 +64,11 @@ mod radix;
 mod shift;
 mod sign;
 mod ubig;
+
+#[macro_use]
+mod macros;
+
+#[cfg(feature = "rand")]
+mod random;
+#[cfg(feature = "rand")]
+pub use crate::random::{UniformIBig, UniformUBig};
