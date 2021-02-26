@@ -58,6 +58,7 @@ mod fmt;
 mod ibig;
 mod mul;
 mod parse;
+mod pow;
 pub mod prelude;
 mod primitive;
 mod radix;

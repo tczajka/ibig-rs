@@ -323,3 +323,32 @@ fn bench_from_dec_10000(bencher: &mut Bencher) {
 fn bench_from_dec_100000(bencher: &mut Bencher) {
     bench_from_str_radix(100000, 10, bencher);
 }
+
+fn bench_pow(a: UBig, b: usize, bencher: &mut Bencher) {
+    bencher.iter(|| black_box(&a).pow(black_box(b)));
+}
+
+#[bench]
+fn bench_pow_3_10(bencher: &mut Bencher) {
+    bench_pow(ubig!(3), 10, bencher);
+}
+
+#[bench]
+fn bench_pow_3_100(bencher: &mut Bencher) {
+    bench_pow(ubig!(3), 100, bencher);
+}
+
+#[bench]
+fn bench_pow_3_1000(bencher: &mut Bencher) {
+    bench_pow(ubig!(3), 1000, bencher);
+}
+
+#[bench]
+fn bench_pow_3_10000(bencher: &mut Bencher) {
+    bench_pow(ubig!(3), 10000, bencher);
+}
+
+#[bench]
+fn bench_pow_3_100000(bencher: &mut Bencher) {
+    bench_pow(ubig!(3), 100000, bencher);
+}
