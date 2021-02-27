@@ -117,7 +117,7 @@ impl InRadix<'_> {
                     f.write_str(sign)?;
                     f.write_str(self.prefix)?;
                     for _ in 0..min_width - width {
-                        f.write_char('0')?;
+                        f.write_str("0")?;
                     }
                     prepared.write(f, digit_case)?;
                 } else {
@@ -213,10 +213,13 @@ impl PreparedForFormatting for PreparedWordInPow2 {
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
         let mask: Digit = (1 << self.log_radix) - 1;
-        for idx in (0..self.width as u32).rev() {
-            let digit = (self.word >> (idx * self.log_radix)) as Digit & mask;
-            writer.write_char(digit_to_ascii(digit, digit_case).as_char())?;
+        let mut digits = [AsciiChar::Null; WORD_BITS as usize];
+        for idx in 0..self.width {
+            let digit = (self.word >> (idx as u32 * self.log_radix)) as Digit & mask;
+            digits[self.width - 1 - idx] = digit_to_ascii(digit, digit_case);
         }
+        let s: &AsciiStr = digits[..self.width].into();
+        writer.write_str(s.as_str())?;
         Ok(())
     }
 }
@@ -263,6 +266,10 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
         let mut bits = (self.width * self.log_radix as usize
             - (self.words.len() - 1) * WORD_BITS as usize) as u32;
 
+        const MAX_BUFFER_LEN: usize = 32;
+        let mut buffer = [AsciiChar::Null; MAX_BUFFER_LEN];
+        let mut buffer_len = 0;
+
         loop {
             let digit;
             if bits < self.log_radix {
@@ -279,9 +286,17 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
                 bits -= self.log_radix;
                 digit = (word >> bits) as Digit & mask;
             }
-            writer.write_char(digit_to_ascii(digit, digit_case).as_char())?;
+            buffer[buffer_len] = digit_to_ascii(digit, digit_case);
+            buffer_len += 1;
+            if buffer_len == MAX_BUFFER_LEN {
+                let s: &AsciiStr = (&buffer[..]).into();
+                writer.write_str(s.as_str())?;
+                buffer_len = 0;
+            }
         }
         debug_assert!(bits == 0);
+        let s: &AsciiStr = (&buffer[..buffer_len]).into();
+        writer.write_str(s.as_str())?;
         Ok(())
     }
 }
@@ -321,9 +336,12 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        for digit in self.digits[..self.width].iter().rev() {
-            writer.write_char(digit_to_ascii(*digit as Digit, digit_case).as_char())?;
+        let mut digits = [AsciiChar::Null; MAX_DIGITS_IN_WORD_NON_POW_2];
+        for (idx, digit) in self.digits[..self.width].iter().enumerate() {
+            digits[self.width - 1 - idx] = digit_to_ascii(*digit as Digit, digit_case);
         }
+        let s: &AsciiStr = digits[..self.width].into();
+        writer.write_str(s.as_str())?;
         Ok(())
     }
 }
