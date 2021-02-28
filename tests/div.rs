@@ -14,6 +14,11 @@ fn test_div_rem_ubig() {
          ubig!(_0x86054c502f0a4e43e2d0de91f1029d251ce67bbdb88dc3edbb40),
          ubig!(_0xfcc)
         ),
+        (ubig!(_0x987987123984798abbcc213789723948792138479837492837498ce),
+         ubig!(_0x987987123984798abbcc213789723948792138479837492837498cc),
+         ubig!(1),
+         ubig!(2),
+        ),
         // Random 500-bit by random 250-bit.
         (
          ubig!(_0x2b8f1bb75f1ca5bf3400549a663d503d298da7f53942cd3c5c6a1bc50598d091e8ca30896413783e9b001572e28808c4dc9598bdd17ef3ce35b40e0368b60),

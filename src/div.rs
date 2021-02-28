@@ -554,9 +554,13 @@ impl UBig {
         let rhs1 = rhs[n - 2];
 
         // lhs0 is an extra word of `lhs` not stored in the buffer.
-        let mut lhs0: Word = 0;
-        let mut quotient = Buffer::allocate(lhs.len() - n + 1);
-        quotient.push_zeros(lhs.len() - n + 1);
+        let mut lhs0 = if *lhs.last().unwrap() < rhs0 {
+            lhs.pop().unwrap()
+        } else {
+            0
+        };
+        let mut quotient = Buffer::allocate(lhs.len() + 1 - n);
+        quotient.push_zeros(lhs.len() + 1 - n);
 
         while lhs.len() >= n {
             let m = lhs.len();
