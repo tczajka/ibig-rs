@@ -3,7 +3,8 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     mul::sub_mul_word_same_len_in_place,
-    primitive::{double_word, extend_word, split_double_word, Word},
+    primitive::{double_word, extend_word, split_double_word, DoubleWord, Word},
+    shift::shl_in_place,
     sign::Abs,
     ubig::{Repr::*, UBig},
 };
@@ -524,18 +525,19 @@ impl UBig {
     }
 
     /// `(lhs / rhs, lhs % rhs)`
-    fn div_rem_large(lhs: Buffer, rhs: Buffer) -> (UBig, UBig) {
+    fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
         debug_assert!(lhs.len() >= rhs.len() && rhs.len() >= 2 && *rhs.last().unwrap() != 0);
         // Normalize the divisor: leading bit must be 1.
         let shift = rhs.last().unwrap().leading_zeros();
-        if let Large(buffer0) = (UBig::from(lhs) << shift).into_repr() {
-            if let Large(buffer1) = (UBig::from(rhs) << shift).into_repr() {
-                // Always use the simple algorithm for now.
-                let (q, r) = UBig::div_rem_simple(buffer0, &buffer1);
-                return (q, r >> shift);
-            }
+        let rhs_carry = shl_in_place(&mut rhs, shift);
+        debug_assert!(rhs_carry == 0);
+        let lhs_carry = shl_in_place(&mut lhs, shift);
+        if lhs_carry != 0 {
+            lhs.push_may_reallocate(lhs_carry);
         }
-        unreachable!()
+        // Always use the simple algorithm for now.
+        let (q, r) = UBig::div_rem_simple(lhs, &rhs);
+        (q, r >> shift)
     }
 
     /// Simple division algorithm.
@@ -553,6 +555,8 @@ impl UBig {
         debug_assert!(rhs0.leading_zeros() == 0);
         let rhs1 = rhs[n - 2];
 
+        let fast_division_rhs0 = FastDivision::by(rhs0);
+
         // lhs0 is an extra word of `lhs` not stored in the buffer.
         let mut lhs0 = if *lhs.last().unwrap() < rhs0 {
             lhs.pop().unwrap()
@@ -566,13 +570,20 @@ impl UBig {
             let m = lhs.len();
             let lhs1 = lhs[m - 1];
             let lhs2 = lhs[m - 2];
+            let lhs01 = double_word(lhs1, lhs0);
 
             // Approximate the next word of quotient by
             // q = floor([lhs0, lhs1] / rhs0)
-            let lhs10 = double_word(lhs1, lhs0);
-            let rhs0_extended = extend_word(rhs0);
-            let mut q = lhs10 / rhs0_extended;
-            let mut r = lhs10 % rhs0_extended;
+            let mut q: Word;
+            let mut r: DoubleWord;
+            if lhs0 < rhs0 {
+                let (qq, rr) = fast_division_rhs0.div_rem(lhs01);
+                q = qq;
+                r = extend_word(rr);
+            } else {
+                q = Word::MAX;
+                r = lhs01 - extend_word(q) * extend_word(rhs0);
+            };
 
             // exact_q = floor([lhs0, lhs1, ...] / [rhs0, ...])
             // [lhs0, lhs1, ...] / [rhs0, ...] < ([lhs0, lhs1] + [0..1)) / rhs0
@@ -597,40 +608,34 @@ impl UBig {
             // We must decrease q at most twice.
             // [lhs0, lhs1] = q * rhs0 + r
             //
-            // q must be decreased if q > Word::MAX or:
+            // q must be decreased if:
             // q-1 >= floor([lhs0, lhs1, lhs2] / [rhs0, rhs1])
             // q > [lhs0, lhs1, lhs2] / [rhs0, rhs1]
             // q * [rhs0, rhs1] > [lhs0, lhs1, lhs2]
             // q * rhs1 > [r, lhs2]
             loop {
-                let (q_lo, q_hi) = split_double_word(q);
                 let (r_lo, r_hi) = split_double_word(r);
-                if q_hi != 0
-                    || (r_hi == 0
-                        && extend_word(q_lo) * extend_word(rhs1) > double_word(lhs2, r_lo))
-                {
+                if r_hi == 0 && extend_word(q) * extend_word(rhs1) > double_word(lhs2, r_lo) {
                     q -= 1;
-                    r += rhs0_extended;
+                    r += extend_word(rhs0);
                 } else {
                     break;
                 }
             }
-            let (mut q_lo, q_hi) = split_double_word(q);
-            debug_assert!(q_hi == 0);
 
             // Subtract a multiple of rhs.
             let offset = lhs.len() - n;
-            let borrow = sub_mul_word_same_len_in_place(&mut lhs[offset..], q_lo, &rhs);
+            let borrow = sub_mul_word_same_len_in_place(&mut lhs[offset..], q, &rhs);
 
             if borrow > lhs0 {
                 // Rare case: q is too large (by 1).
                 // Add a correction.
-                q_lo -= 1;
+                q -= 1;
                 let carry = add_same_len_in_place(&mut lhs[offset..], &rhs);
                 debug_assert!(carry && borrow - 1 == lhs0);
             }
             // lhs0 is now logically zeroed out
-            quotient[m - n] = q_lo;
+            quotient[m - n] = q;
             lhs0 = lhs.pop().unwrap();
         }
         lhs.push(lhs0);
@@ -644,17 +649,17 @@ impl UBig {
 ///
 /// Returns words % rhs.
 pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
-    let mut rem: Word = 0;
+    let shift = rhs.leading_zeros();
+    let mut rem = shl_in_place(words, shift);
+    let fast_division = FastDivision::by(rhs << shift);
+
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
-        let (q0, q1) = split_double_word(a / extend_word(rhs));
-        debug_assert!(q1 == 0);
-        let (r0, r1) = split_double_word(a % extend_word(rhs));
-        debug_assert!(r1 == 0);
-        *word = q0;
-        rem = r0;
+        let (q, r) = fast_division.div_rem(a);
+        *word = q;
+        rem = r;
     }
-    rem
+    rem >> shift
 }
 
 impl Div<IBig> for IBig {
@@ -992,5 +997,44 @@ impl DivRemEuclid<&IBig> for &IBig {
         } else {
             (q, r)
         }
+    }
+}
+
+/// Fast repeated division by a given value.
+struct FastDivision {
+    divisor: Word,
+    reciprocical: Word,
+}
+
+impl FastDivision {
+    /// Initialize from a given normalized divisor.
+    fn by(divisor: Word) -> FastDivision {
+        debug_assert!(divisor.leading_zeros() == 0);
+
+        let (recip_lo, recip_hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
+        debug_assert!(recip_hi == 1);
+
+        FastDivision {
+            divisor,
+            reciprocical: recip_lo,
+        }
+    }
+
+    /// Divide a value.
+    /// The result must fit in a single word.
+    fn div_rem(&self, dividend: DoubleWord) -> (Word, Word) {
+        let (_, dividend_hi) = split_double_word(dividend);
+        // Approximate quotient: it may be too small by at most 3.
+        // self.reciprocical + (1<<BITS) is approximately the actual reciprocical.
+        let (_, mul_hi) =
+            split_double_word(extend_word(self.reciprocical) * extend_word(dividend_hi));
+        let mut quotient = mul_hi + dividend_hi;
+        let mut remainder = dividend - extend_word(self.divisor) * extend_word(quotient);
+        while remainder >= extend_word(self.divisor) {
+            quotient += 1;
+            remainder -= extend_word(self.divisor);
+        }
+        let (rem_lo, _) = split_double_word(remainder);
+        (quotient, rem_lo)
     }
 }

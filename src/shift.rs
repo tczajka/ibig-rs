@@ -947,3 +947,19 @@ impl_shr_assign!(IBig, i64);
 impl_shr_assign!(IBig, i128);
 impl_shr_assign!(IBig, isize);
 impl_shr_assign!(IBig, IBig);
+
+/// Shift left by less than WORD_BITS in place.
+/// Returns carry.
+pub(crate) fn shl_in_place(words: &mut [Word], shift: u32) -> Word {
+    debug_assert!(shift < WORD_BITS);
+    if shift == 0 {
+        return 0;
+    }
+    let mut carry = 0;
+    for word in words {
+        let new_carry = *word >> (WORD_BITS - shift);
+        *word = (*word << shift) | carry;
+        carry = new_carry;
+    }
+    carry
+}

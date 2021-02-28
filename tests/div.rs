@@ -19,6 +19,13 @@ fn test_div_rem_ubig() {
          ubig!(1),
          ubig!(2),
         ),
+        // Special case for division (64-bit words): top 2 / top 1 overflows.
+        (
+         ubig!(_0xffffffffffffffffffffffffffffffff00000000000000000000000000000000),
+         ubig!(_0xffffffffffffffffffffffffffffffff0000000000000001),
+         ubig!(_0xffffffffffffffff),
+         ubig!(_0xfffffffffffffffffffffffffffffffe0000000000000001),
+        ),
         // Random 500-bit by random 250-bit.
         (
          ubig!(_0x2b8f1bb75f1ca5bf3400549a663d503d298da7f53942cd3c5c6a1bc50598d091e8ca30896413783e9b001572e28808c4dc9598bdd17ef3ce35b40e0368b60),
