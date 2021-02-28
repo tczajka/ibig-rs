@@ -368,7 +368,7 @@ impl PreparedLargeInNonPow2 {
         // One of them is top_group.
         let mut low_groups =
             Vec::with_capacity(words.len() + words.len() / radix_in_word.max_digits);
-        let mut buffer = Buffer::allocate(words.len());
+        let mut buffer = Buffer::allocate_no_extra(words.len());
         buffer.extend(words);
         while buffer.len() > 1 {
             let rem = div_rem_by_word_in_place(&mut buffer, radix_in_word.max_digits_range);
