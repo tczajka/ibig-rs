@@ -574,15 +574,12 @@ impl UBig {
 
             // Approximate the next word of quotient by
             // q = floor([lhs0, lhs1] / rhs0)
-            let mut q: Word;
-            let mut r: DoubleWord;
-            if lhs0 < rhs0 {
-                let (qq, rr) = fast_division_rhs0.div_rem(lhs01);
-                q = qq;
-                r = extend_word(rr);
+            // r = remainder (or None if overflow)
+            let (mut q, mut r_opt) = if lhs0 < rhs0 {
+                let (q, r) = fast_division_rhs0.div_rem(lhs01);
+                (q, Some(r))
             } else {
-                q = Word::MAX;
-                r = lhs01 - extend_word(q) * extend_word(rhs0);
+                (Word::MAX, None)
             };
 
             // exact_q = floor([lhs0, lhs1, ...] / [rhs0, ...])
@@ -614,12 +611,16 @@ impl UBig {
             // q * [rhs0, rhs1] > [lhs0, lhs1, lhs2]
             // q * rhs1 > [r, lhs2]
             loop {
-                let (r_lo, r_hi) = split_double_word(r);
-                if r_hi == 0 && extend_word(q) * extend_word(rhs1) > double_word(lhs2, r_lo) {
-                    q -= 1;
-                    r += extend_word(rhs0);
-                } else {
-                    break;
+                match r_opt {
+                    None => break,
+                    Some(r) => {
+                        if extend_word(q) * extend_word(rhs1) > double_word(lhs2, r) {
+                            q -= 1;
+                            r_opt = r.checked_add(rhs0);
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -1003,7 +1004,7 @@ impl DivRemEuclid<&IBig> for &IBig {
 /// Fast repeated division by a given value.
 struct FastDivision {
     divisor: Word,
-    reciprocical: Word,
+    reciprocal: Word,
 }
 
 impl FastDivision {
@@ -1016,7 +1017,7 @@ impl FastDivision {
 
         FastDivision {
             divisor,
-            reciprocical: recip_lo,
+            reciprocal: recip_lo,
         }
     }
 
@@ -1025,9 +1026,9 @@ impl FastDivision {
     fn div_rem(&self, dividend: DoubleWord) -> (Word, Word) {
         let (_, dividend_hi) = split_double_word(dividend);
         // Approximate quotient: it may be too small by at most 3.
-        // self.reciprocical + (1<<BITS) is approximately the actual reciprocical.
+        // self.reciprocal + (1<<BITS) is approximately (1<<(2*BITS)) / self.divisor.
         let (_, mul_hi) =
-            split_double_word(extend_word(self.reciprocical) * extend_word(dividend_hi));
+            split_double_word(extend_word(self.reciprocal) * extend_word(dividend_hi));
         let mut quotient = mul_hi + dividend_hi;
         let mut remainder = dividend - extend_word(self.divisor) * extend_word(quotient);
         while remainder >= extend_word(self.divisor) {
