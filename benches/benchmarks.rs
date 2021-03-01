@@ -95,53 +95,88 @@ fn bench_mul(bits_a: usize, bits_b: usize, bencher: &mut Bencher) {
 }
 
 #[bench]
-fn bench_mul_10(bencher: &mut Bencher) {
+fn bench_mul_same_10(bencher: &mut Bencher) {
     bench_mul(10, 10, bencher);
 }
 
 #[bench]
-fn bench_mul_100(bencher: &mut Bencher) {
+fn bench_mul_same_100(bencher: &mut Bencher) {
     bench_mul(100, 100, bencher);
 }
 
 #[bench]
-fn bench_mul_1000(bencher: &mut Bencher) {
+fn bench_mul_same_1000(bencher: &mut Bencher) {
     bench_mul(1000, 1000, bencher);
 }
 
 #[bench]
-fn bench_mul_10000(bencher: &mut Bencher) {
+fn bench_mul_same_10000(bencher: &mut Bencher) {
     bench_mul(10000, 10000, bencher);
 }
 
 #[bench]
-fn bench_mul_100000(bencher: &mut Bencher) {
+fn bench_mul_same_100000(bencher: &mut Bencher) {
     bench_mul(100000, 100000, bencher);
 }
 
 #[bench]
-fn bench_mul_small_100(bencher: &mut Bencher) {
-    bench_mul(100, 10, bencher);
+fn bench_mul_10_100(bencher: &mut Bencher) {
+    bench_mul(10, 100, bencher);
 }
 
 #[bench]
-fn bench_mul_small_1000(bencher: &mut Bencher) {
-    bench_mul(1000, 10, bencher);
+fn bench_mul_10_1000(bencher: &mut Bencher) {
+    bench_mul(10, 1000, bencher);
 }
 
 #[bench]
-fn bench_mul_small_10000(bencher: &mut Bencher) {
-    bench_mul(10000, 10, bencher);
+fn bench_mul_10_10000(bencher: &mut Bencher) {
+    bench_mul(10, 10000, bencher);
 }
 
 #[bench]
-fn bench_mul_small_100000(bencher: &mut Bencher) {
-    bench_mul(100000, 10, bencher);
+fn bench_mul_10_100000(bencher: &mut Bencher) {
+    bench_mul(10, 100000, bencher);
 }
 
 #[bench]
-fn bench_mul_small_1000000(bencher: &mut Bencher) {
-    bench_mul(1000000, 10, bencher);
+fn bench_mul_10_1000000(bencher: &mut Bencher) {
+    bench_mul(10, 1000000, bencher);
+}
+
+#[bench]
+fn bench_mul_100_1000(bencher: &mut Bencher) {
+    bench_mul(100, 1000, bencher);
+}
+
+#[bench]
+fn bench_mul_100_10000(bencher: &mut Bencher) {
+    bench_mul(100, 10000, bencher);
+}
+
+#[bench]
+fn bench_mul_100_100000(bencher: &mut Bencher) {
+    bench_mul(100, 100000, bencher);
+}
+
+#[bench]
+fn bench_mul_100_1000000(bencher: &mut Bencher) {
+    bench_mul(100, 1000000, bencher);
+}
+
+#[bench]
+fn bench_mul_1000_10000(bencher: &mut Bencher) {
+    bench_mul(1000, 10000, bencher);
+}
+
+#[bench]
+fn bench_mul_1000_100000(bencher: &mut Bencher) {
+    bench_mul(1000, 100000, bencher);
+}
+
+#[bench]
+fn bench_mul_1000_1000000(bencher: &mut Bencher) {
+    bench_mul(1000, 1000000, bencher);
 }
 
 fn bench_div(bits_a: usize, bits_b: usize, bencher: &mut Bencher) {
