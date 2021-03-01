@@ -112,9 +112,9 @@ impl UBig {
     fn mul_simple(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
-        buffer.push_zeros(rhs.len());
-        for (i, m) in lhs.iter().enumerate() {
-            let carry = add_mul_word_same_len_in_place(&mut buffer[i..], *m, rhs);
+        buffer.push_zeros(lhs.len());
+        for (i, m) in rhs.iter().enumerate() {
+            let carry = add_mul_word_same_len_in_place(&mut buffer[i..], *m, lhs);
             buffer.push(carry);
         }
         buffer.into()
