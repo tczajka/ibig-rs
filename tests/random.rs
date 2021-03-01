@@ -47,8 +47,10 @@ fn test_random_arithmetic() {
     let p = ubig!(1000000007);
 
     for _ in 0..100 {
-        let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << 10000);
-        let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << 10000);
+        let len_a: u32 = (&mut rng).gen_range(1000..10000);
+        let len_b: u32 = (&mut rng).gen_range(1000..10000);
+        let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
+        let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
         let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
 
         assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
