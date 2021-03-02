@@ -1,10 +1,17 @@
 use ibig::prelude::*;
 
-fn main() {
-    let n: u32 = 10000;
-    let mut factorial = ubig!(1);
-    for i in 1..=n {
-        factorial *= UBig::from(i);
+// a * (a+1) * ... * (b-1)
+fn product(a: u32, b: u32) -> UBig {
+    if b == a + 1 {
+        UBig::from(a)
+    } else {
+        let mid = a + (b-a)/2;
+        product(a, mid) * product(mid, b)
     }
-    println!("{}! = {}", n, factorial);
+}
+
+fn main() {
+    let n: u32 = 1000000;
+    let factorial = product(1, n + 1);
+    println!("{}! = {:#x}", n, factorial);
 }
