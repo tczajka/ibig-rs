@@ -120,6 +120,16 @@ fn bench_mul_same_100000(bencher: &mut Bencher) {
 }
 
 #[bench]
+fn bench_mul_same_1000000(bencher: &mut Bencher) {
+    bench_mul(1000000, 1000000, bencher);
+}
+
+#[bench]
+fn bench_mul_million_decimal(bencher: &mut Bencher) {
+    bench_mul(3321928, 3321928, bencher);
+}
+
+#[bench]
 fn bench_mul_10_100(bencher: &mut Bencher) {
     bench_mul(10, 100, bencher);
 }
@@ -177,6 +187,21 @@ fn bench_mul_1000_100000(bencher: &mut Bencher) {
 #[bench]
 fn bench_mul_1000_1000000(bencher: &mut Bencher) {
     bench_mul(1000, 1000000, bencher);
+}
+
+#[bench]
+fn bench_mul_10000_100000(bencher: &mut Bencher) {
+    bench_mul(10000, 100000, bencher);
+}
+
+#[bench]
+fn bench_mul_10000_1000000(bencher: &mut Bencher) {
+    bench_mul(10000, 1000000, bencher);
+}
+
+#[bench]
+fn bench_mul_100000_1000000(bencher: &mut Bencher) {
+    bench_mul(100000, 1000000, bencher);
 }
 
 fn bench_div(bits_a: usize, bits_b: usize, bencher: &mut Bencher) {

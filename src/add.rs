@@ -2,11 +2,11 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{extend_word, split_double_word, Word},
-    sign::Sign::*,
+    sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
 use core::{
-    cmp::{min, Ordering},
+    cmp::Ordering::*,
     convert::TryFrom,
     mem,
     ops::{Add, AddAssign, Sub, SubAssign},
@@ -112,7 +112,7 @@ impl UBig {
 
     /// Add two large numbers.
     fn add_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
-        let n = min(buffer.len(), rhs.len());
+        let n = buffer.len().min(rhs.len());
         let overflow = add_same_len_in_place(&mut buffer[..n], &rhs[..n]);
         if rhs.len() > n {
             buffer.ensure_capacity(rhs.len());
@@ -128,7 +128,7 @@ impl UBig {
 /// Add one to a word sequence.
 ///
 /// Returns overflow.
-fn add_one_in_place(words: &mut [Word]) -> bool {
+pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
     for word in words {
         let (a, overflow) = word.overflowing_add(1);
         *word = a;
@@ -142,14 +142,14 @@ fn add_one_in_place(words: &mut [Word]) -> bool {
 /// Add a word to a non-empty word sequence.
 ///
 /// Returns overflow.
-fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
+pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
     debug_assert!(!words.is_empty());
     let (a, overflow) = words[0].overflowing_add(rhs);
     words[0] = a;
     overflow && add_one_in_place(&mut words[1..])
 }
 
-/// Add a word to a non-empty word sequence.
+/// Add a word sequence of same length in place.
 ///
 /// Returns overflow.
 pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
@@ -162,6 +162,19 @@ pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
         carry = c;
     }
     carry != 0
+}
+
+/// Add a word sequence in place.
+///
+/// Returns overflow.
+pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(words.len() >= rhs.len());
+
+    let mut overflow = add_same_len_in_place(&mut words[..rhs.len()], rhs);
+    if overflow {
+        overflow = add_one_in_place(&mut words[rhs.len()..]);
+    }
+    overflow
 }
 
 impl Sub<UBig> for UBig {
@@ -217,43 +230,16 @@ impl UBig {
     }
 
     fn sub_large_word(mut lhs: Buffer, rhs: Word) -> UBig {
-        let borrow = sub_word_in_place(&mut lhs, rhs);
-        assert!(!borrow);
+        let overflow = sub_word_in_place(&mut lhs, rhs);
+        assert!(!overflow);
         lhs.into()
-    }
-
-    /// Subtract lhs - rhs.
-    ///
-    /// Panics if lhs < rhs.
-    fn sub_large_val_ref_no_overflow(mut lhs: Buffer, rhs: &[Word]) -> UBig {
-        let n = rhs.len();
-        let borrow = sub_words_same_len_in_place(&mut lhs[..n], rhs);
-        if borrow {
-            let borrow2 = sub_one_in_place(&mut lhs[n..]);
-            assert!(!borrow2);
-        }
-        lhs.into()
-    }
-
-    /// Subtract lhs - rhs.
-    ///
-    /// Panics if lhs < rhs.
-    fn sub_large_ref_val_no_overflow(lhs: &[Word], mut rhs: Buffer) -> UBig {
-        let n = rhs.len();
-        let borrow = sub_words_same_len_in_place_swap(&lhs[..n], &mut rhs);
-        rhs.extend(&lhs[n..]);
-        if borrow {
-            let borrow2 = sub_one_in_place(&mut rhs[n..]);
-            assert!(!borrow2);
-        }
-        rhs.into()
     }
 }
 
 /// Subtract one from a word sequence.
 ///
 /// Returns borrow.
-fn sub_one_in_place(words: &mut [Word]) -> bool {
+pub(crate) fn sub_one_in_place(words: &mut [Word]) -> bool {
     for word in words {
         let (a, borrow) = word.overflowing_sub(1);
         *word = a;
@@ -267,7 +253,7 @@ fn sub_one_in_place(words: &mut [Word]) -> bool {
 /// Subtract a word from a non-empty word sequence.
 ///
 /// Returns borrow.
-fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
+pub(crate) fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
     debug_assert!(!words.is_empty());
     let (a, borrow) = words[0].overflowing_sub(rhs);
     words[0] = a;
@@ -277,7 +263,8 @@ fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
 /// lhs -= rhs
 ///
 /// Returns borrow.
-fn sub_words_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
+pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(lhs.len() == rhs.len());
     // carry_plus_1 is 0 or 1
     let mut carry_plus_1: Word = 1;
     for (a, b) in lhs.iter_mut().zip(rhs.iter()) {
@@ -291,10 +278,23 @@ fn sub_words_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     carry_plus_1 == 0
 }
 
+/// lhs -= rhs
+///
+/// Returns borrow.
+pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(lhs.len() >= rhs.len());
+    let mut borrow = sub_same_len_in_place(&mut lhs[..rhs.len()], rhs);
+    if borrow {
+        borrow = sub_one_in_place(&mut lhs[rhs.len()..]);
+    }
+    borrow
+}
+
 /// rhs = lhs - rhs
 ///
 /// Returns borrow.
-fn sub_words_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
+fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
+    debug_assert!(lhs.len() == rhs.len());
     // carry_plus_1 is 0 or 1
     let mut carry_plus_1: Word = 1;
     for (a, b) in lhs.iter().zip(rhs.iter_mut()) {
@@ -306,6 +306,58 @@ fn sub_words_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
         carry_plus_1 = c;
     }
     carry_plus_1 == 0
+}
+
+/// (sign, lhs) = lhs - rhs
+pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
+    assert!(lhs.len() >= rhs.len());
+    let mut lhs_len = lhs.len();
+    while lhs_len != 0 && lhs[lhs_len - 1] == 0 {
+        lhs_len -= 1;
+    }
+    let mut rhs_len = rhs.len();
+    while rhs_len != 0 && rhs[rhs_len - 1] == 0 {
+        rhs_len -= 1;
+    }
+    match lhs_len.cmp(&rhs_len) {
+        Greater => {
+            let overflow = sub_in_place(&mut lhs[..lhs_len], &rhs[..rhs_len]);
+            assert!(!overflow);
+            Positive
+        }
+        Less => {
+            let borrow = sub_same_len_in_place_swap(&rhs[..lhs_len], &mut lhs[..lhs_len]);
+            (&mut lhs[lhs_len..rhs_len]).copy_from_slice(&rhs[lhs_len..rhs_len]);
+            if borrow {
+                let overflow = sub_one_in_place(&mut lhs[lhs_len..rhs_len]);
+                assert!(!overflow);
+            }
+            Negative
+        }
+        Equal => {
+            let mut n = lhs_len;
+            while n != 0 {
+                match lhs[n - 1].cmp(&rhs[n - 1]) {
+                    Greater => {
+                        let overflow = sub_same_len_in_place(&mut lhs[..n], &rhs[..n]);
+                        assert!(!overflow);
+                        return Positive;
+                    }
+                    Less => {
+                        let overflow = sub_same_len_in_place_swap(&rhs[..n], &mut lhs[..n]);
+                        assert!(!overflow);
+                        return Negative;
+                    }
+                    Equal => {
+                        n -= 1;
+                        lhs[n] = 0;
+                    }
+                }
+            }
+            // Zero.
+            Positive
+        }
+    }
 }
 
 impl IBig {
@@ -365,30 +417,19 @@ impl IBig {
     }
 
     fn sub_large(mut lhs: Buffer, rhs: &[Word]) -> IBig {
-        match lhs.len().cmp(&rhs.len()) {
-            Ordering::Greater => IBig::from(UBig::sub_large_val_ref_no_overflow(lhs, rhs)),
-            Ordering::Less => -IBig::from(UBig::sub_large_ref_val_no_overflow(rhs, lhs)),
-            Ordering::Equal => {
-                let mut n = lhs.len();
-                while n > 0 {
-                    match lhs[n - 1].cmp(&rhs[n - 1]) {
-                        Ordering::Greater => {
-                            lhs.truncate(n);
-                            return IBig::from(UBig::sub_large_val_ref_no_overflow(lhs, &rhs[..n]));
-                        }
-                        Ordering::Less => {
-                            lhs.truncate(n);
-                            return -IBig::from(UBig::sub_large_ref_val_no_overflow(
-                                &rhs[..n],
-                                lhs,
-                            ));
-                        }
-                        Ordering::Equal => {}
-                    }
-                    n -= 1;
-                }
-                IBig::from(0u8)
+        if lhs.len() >= rhs.len() {
+            let sign = sub_in_place_with_sign(&mut lhs, rhs);
+            IBig::from_sign_magnitude(sign, lhs.into())
+        } else {
+            let n = lhs.len();
+            let borrow = sub_same_len_in_place_swap(&rhs[..n], &mut lhs);
+            lhs.ensure_capacity(rhs.len());
+            lhs.extend(&rhs[n..]);
+            if borrow {
+                let overflow = sub_one_in_place(&mut lhs[n..]);
+                assert!(!overflow);
             }
+            IBig::from_sign_magnitude(Negative, lhs.into())
         }
     }
 }
@@ -506,5 +547,139 @@ impl SubAssign<IBig> for IBig {
 impl SubAssign<&IBig> for IBig {
     fn sub_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) - rhs;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_one_in_place() {
+        let mut a = [1, 2, 3];
+        let overflow = add_one_in_place(&mut a);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [2, 2, 3]);
+
+        let mut a = [Word::MAX, Word::MAX, 3];
+        let overflow = add_one_in_place(&mut a);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [0, 0, 4]);
+
+        let mut a = [Word::MAX, Word::MAX, Word::MAX];
+        let overflow = add_one_in_place(&mut a);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [0, 0, 0]);
+
+        let mut a = [];
+        let overflow = add_one_in_place(&mut a);
+        assert_eq!(overflow, true);
+    }
+
+    #[test]
+    fn test_add_word_in_place() {
+        let mut a = [1, 2, 3];
+        let overflow = add_word_in_place(&mut a, 7);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [8, 2, 3]);
+
+        let mut a = [Word::MAX / 2, Word::MAX, 3];
+        let overflow = add_word_in_place(&mut a, Word::MAX / 2 + 3);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [1, 0, 4]);
+
+        let mut a = [Word::MAX / 2, Word::MAX, Word::MAX];
+        let overflow = add_word_in_place(&mut a, Word::MAX / 2 + 3);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [1, 0, 0]);
+    }
+
+    #[test]
+    fn test_add_in_place() {
+        let mut a = [1, 2, 3];
+        let overflow = add_in_place(&mut a, &[3, 7]);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [4, 9, 3]);
+
+        let mut a = [Word::MAX / 2, 1, Word::MAX];
+        let overflow = add_in_place(&mut a, &[Word::MAX / 2 + 3, Word::MAX]);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [1, 1, 0]);
+    }
+
+    #[test]
+    fn test_sub_one_in_place() {
+        let mut a = [2, 2, 3];
+        let overflow = sub_one_in_place(&mut a);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [1, 2, 3]);
+
+        let mut a = [0, 0, 4];
+        let overflow = sub_one_in_place(&mut a);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [Word::MAX, Word::MAX, 3]);
+
+        let mut a = [0, 0, 0];
+        let overflow = sub_one_in_place(&mut a);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [Word::MAX, Word::MAX, Word::MAX]);
+
+        let mut a = [];
+        let overflow = sub_one_in_place(&mut a);
+        assert_eq!(overflow, true);
+    }
+
+    #[test]
+    fn test_sub_word_in_place() {
+        let mut a = [8, 2, 3];
+        let overflow = sub_word_in_place(&mut a, 7);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [1, 2, 3]);
+
+        let mut a = [1, 0, 4];
+        let overflow = sub_word_in_place(&mut a, Word::MAX / 2 + 3);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [Word::MAX / 2, Word::MAX, 3]);
+
+        let mut a = [1, 0, 0];
+        let overflow = sub_word_in_place(&mut a, Word::MAX / 2 + 3);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [Word::MAX / 2, Word::MAX, Word::MAX]);
+    }
+
+    #[test]
+    fn test_sub_in_place() {
+        let mut a = [4, 9, 3];
+        let overflow = sub_in_place(&mut a, &[3, 7]);
+        assert_eq!(overflow, false);
+        assert_eq!(a, [1, 2, 3]);
+
+        let mut a = [1, 1, 0];
+        let overflow = sub_in_place(&mut a, &[Word::MAX / 2 + 3, Word::MAX]);
+        assert_eq!(overflow, true);
+        assert_eq!(a, [Word::MAX / 2, 1, Word::MAX]);
+    }
+
+    #[test]
+    fn test_sub_in_place_with_sign() {
+        let mut a = [4, 9, 3];
+        let sign = sub_in_place_with_sign(&mut a, &[3, 7]);
+        assert_eq!(sign, Positive);
+        assert_eq!(a, [1, 2, 3]);
+
+        let mut a = [4, 0, 0, 0];
+        let sign = sub_in_place_with_sign(&mut a, &[1, 2, 0]);
+        assert_eq!(sign, Negative);
+        assert_eq!(a, [Word::MAX - 2, 1, 0, 0]);
+
+        let mut a = [4, 9, 3];
+        let sign = sub_in_place_with_sign(&mut a, &[3, 9, 3]);
+        assert_eq!(sign, Positive);
+        assert_eq!(a, [1, 0, 0]);
+
+        let mut a = [4, 9, 3];
+        let sign = sub_in_place_with_sign(&mut a, &[5, 9, 3]);
+        assert_eq!(sign, Negative);
+        assert_eq!(a, [1, 0, 0]);
     }
 }

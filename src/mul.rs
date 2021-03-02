@@ -1,4 +1,8 @@
 use crate::{
+    add::{
+        add_in_place, add_one_in_place, add_same_len_in_place, add_word_in_place, sub_in_place,
+        sub_in_place_with_sign, sub_one_in_place, sub_same_len_in_place, sub_word_in_place,
+    },
     buffer::Buffer,
     ibig::IBig,
     primitive::{double_word, extend_word, split_double_word, Word},
@@ -9,6 +13,9 @@ use core::{
     mem,
     ops::{Mul, MulAssign},
 };
+
+/// If both lengths >= this, use Karatsuba algorithm.
+const THRESHOLD_KARATSUBA: usize = 24;
 
 impl Mul<UBig> for UBig {
     type Output = UBig;
@@ -100,23 +107,15 @@ impl UBig {
     /// Multiply two large numbers.
     fn mul_large(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= 2 && rhs.len() >= 2);
-        let (a, b) = if lhs.len() >= rhs.len() {
+        let (lhs, rhs) = if lhs.len() >= rhs.len() {
             (lhs, rhs)
         } else {
             (rhs, lhs)
         };
-        UBig::mul_simple(a, b)
-    }
-
-    /// Simple multiplication algorithm.
-    fn mul_simple(lhs: &[Word], rhs: &[Word]) -> UBig {
-        debug_assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
-        buffer.push_zeros(lhs.len());
-        for (i, m) in rhs.iter().enumerate() {
-            let carry = add_mul_word_same_len_in_place(&mut buffer[i..], *m, lhs);
-            buffer.push(carry);
-        }
+        buffer.push_zeros(lhs.len() + rhs.len());
+        let overflow = add_mul(&mut buffer, lhs, rhs);
+        debug_assert!(!overflow);
         buffer.into()
     }
 }
@@ -184,6 +183,219 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
     Word::MAX - carry_plus_max
 }
 
+/// c += a * b
+///
+/// Returns carry.
+fn add_mul(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
+    debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+    if b.len() < THRESHOLD_KARATSUBA {
+        add_mul_simple(c, a, b)
+    } else {
+        add_mul_karatsuba_different_len(c, a, b)
+    }
+}
+
+/// c += a * b
+///
+/// Returns carry.
+fn add_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
+    debug_assert!(
+        a.len() >= b.len() && b.len() < THRESHOLD_KARATSUBA && c.len() == a.len() + b.len()
+    );
+    let mut carry: u32 = 0;
+    for (i, m) in b.iter().enumerate() {
+        let carry1 = add_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
+        carry += u32::from(add_word_in_place(&mut c[i + a.len()..], carry1));
+    }
+    debug_assert!(carry <= 1);
+    carry != 0
+}
+
+/// c -= a * b
+///
+/// Returns borrow.
+fn sub_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
+    debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+    let mut borrow: u32 = 0;
+    for (i, m) in b.iter().enumerate() {
+        let borrow1 = sub_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
+        borrow += u32::from(sub_word_in_place(&mut c[i + a.len()..], borrow1));
+    }
+    debug_assert!(borrow <= 1);
+    borrow != 0
+}
+
+/// c += a * b
+///
+/// Returns carry.
+fn add_mul_karatsuba_different_len<'a>(
+    mut c: &mut [Word],
+    mut a: &'a [Word],
+    mut b: &'a [Word],
+) -> bool {
+    debug_assert!(
+        a.len() >= b.len() && b.len() >= THRESHOLD_KARATSUBA && c.len() == a.len() + b.len()
+    );
+    let temp_len = karatsuba_temp_buffer_len(b.len());
+    let mut temp = Buffer::allocate_no_extra(temp_len);
+    temp.push_zeros(temp_len);
+
+    let mut carry: u32 = 0;
+    while b.len() >= THRESHOLD_KARATSUBA {
+        let n = b.len();
+        while a.len() >= b.len() {
+            let (a_lo, a_hi) = a.split_at(n);
+            let carry1 = add_mul_karatsuba(&mut c[..2 * n], a_lo, b, &mut temp);
+            if carry1 {
+                carry += u32::from(add_one_in_place(&mut c[2 * n..]));
+            }
+            a = a_hi;
+            c = &mut c[n..];
+        }
+        mem::swap(&mut a, &mut b);
+    }
+    if !b.is_empty() {
+        carry += u32::from(add_mul_simple(c, a, b));
+    }
+    debug_assert!(carry <= 1);
+    carry != 0
+}
+
+/// Minimum temporary buffer required for Karatsuba multiplication.
+fn karatsuba_temp_buffer_len(n: usize) -> usize {
+    // We prove by induction that f(n) <= 2n + 2ceil(log_2 n).
+    //
+    // f(n) = 2ceil(n/2) + f(ceil(n/2)) <= n+1 + n+1 + 2ceil(log ceil n/2)
+    //      <= 2n+2 + 2(ceil(log n)-1) = 2n + 2ceil(log n)
+    2 * n + 2 * (n.next_power_of_two().trailing_zeros() as usize)
+}
+
+/// c += a * b
+///
+/// Returns carry.
+fn add_mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> bool {
+    let n = a.len();
+    debug_assert!(b.len() == n && c.len() == 2 * n);
+    debug_assert!(temp.len() >= karatsuba_temp_buffer_len(n));
+
+    if n < THRESHOLD_KARATSUBA {
+        return add_mul_simple(c, a, b);
+    }
+
+    let mid = (n + 1) / 2;
+    let (a_lo, a_hi) = a.split_at(mid);
+    let (b_lo, b_hi) = b.split_at(mid);
+    let (my_temp, recursive_temp) = temp.split_at_mut(2 * mid);
+    // Result = a_lo * b_lo + a_hi * b_hi * Word^(2mid)
+    //        + (a_lo * b_lo + a_hi * b_hi - (a_lo-a_hi)*(b_lo-b_hi)) * Word^mid
+    let mut carry: i32 = 0;
+    {
+        // a_lo * b_lo
+        let c_lo = &mut my_temp[..];
+        c_lo.fill(0);
+        let overflow = add_mul_karatsuba(c_lo, a_lo, b_lo, recursive_temp);
+        debug_assert!(!overflow);
+        carry += i32::from(add_in_place(c, c_lo));
+        carry += i32::from(add_in_place(&mut c[mid..], c_lo));
+    }
+    {
+        let c_hi = &mut my_temp[..2 * (n - mid)];
+        c_hi.fill(0);
+        let overflow = add_mul_karatsuba(c_hi, a_hi, b_hi, recursive_temp);
+        debug_assert!(!overflow);
+        carry += i32::from(add_same_len_in_place(&mut c[2 * mid..], c_hi));
+        carry += i32::from(add_in_place(&mut c[mid..], c_hi));
+    }
+    {
+        let (a_diff, b_diff) = my_temp.split_at_mut(mid);
+        a_diff.copy_from_slice(a_lo);
+        let mut sign = sub_in_place_with_sign(a_diff, a_hi);
+        b_diff.copy_from_slice(b_lo);
+        sign *= sub_in_place_with_sign(b_diff, b_hi);
+        match sign {
+            Positive => {
+                let borrow1 =
+                    sub_mul_karatsuba(&mut c[mid..3 * mid], a_diff, b_diff, recursive_temp);
+                if borrow1 {
+                    carry -= i32::from(sub_one_in_place(&mut c[3 * mid..]));
+                }
+            }
+            Negative => {
+                let carry1 =
+                    add_mul_karatsuba(&mut c[mid..3 * mid], a_diff, b_diff, recursive_temp);
+                if carry1 {
+                    carry += i32::from(add_one_in_place(&mut c[3 * mid..]));
+                }
+            }
+        }
+    }
+    assert!(carry >= 0 && carry <= 1);
+    carry != 0
+}
+
+/// c -= a * b
+///
+/// Returns borrow.
+fn sub_mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> bool {
+    let n = a.len();
+    debug_assert!(b.len() == n && c.len() == 2 * n);
+    debug_assert!(temp.len() >= karatsuba_temp_buffer_len(n));
+
+    if n < THRESHOLD_KARATSUBA {
+        return sub_mul_simple(c, a, b);
+    }
+
+    let mid = (n + 1) / 2;
+    let (a_lo, a_hi) = a.split_at(mid);
+    let (b_lo, b_hi) = b.split_at(mid);
+    let (my_temp, recursive_temp) = temp.split_at_mut(2 * mid);
+    // Result = a_lo * b_lo + a_hi * b_hi * Word^(2mid)
+    //        + (a_lo * b_lo + a_hi * b_hi - (a_lo-a_hi)*(b_lo-b_hi)) * Word^mid
+    let mut borrow: i32 = 0;
+    {
+        // a_lo * b_lo
+        let c_lo = &mut my_temp[..];
+        c_lo.fill(0);
+        let overflow = add_mul_karatsuba(c_lo, a_lo, b_lo, recursive_temp);
+        debug_assert!(!overflow);
+        borrow += i32::from(sub_in_place(c, c_lo));
+        borrow += i32::from(sub_in_place(&mut c[mid..], c_lo));
+    }
+    {
+        let c_hi = &mut my_temp[..2 * (n - mid)];
+        c_hi.fill(0);
+        let overflow = add_mul_karatsuba(c_hi, a_hi, b_hi, recursive_temp);
+        debug_assert!(!overflow);
+        borrow += i32::from(sub_same_len_in_place(&mut c[2 * mid..], c_hi));
+        borrow += i32::from(sub_in_place(&mut c[mid..], c_hi));
+    }
+    {
+        let (a_diff, b_diff) = my_temp.split_at_mut(mid);
+        a_diff.copy_from_slice(a_lo);
+        let mut sign = sub_in_place_with_sign(a_diff, a_hi);
+        b_diff.copy_from_slice(b_lo);
+        sign *= sub_in_place_with_sign(b_diff, b_hi);
+        match sign {
+            Positive => {
+                let carry1 =
+                    add_mul_karatsuba(&mut c[mid..3 * mid], a_diff, b_diff, recursive_temp);
+                if carry1 {
+                    borrow -= i32::from(add_one_in_place(&mut c[3 * mid..]));
+                }
+            }
+            Negative => {
+                let borrow1 =
+                    sub_mul_karatsuba(&mut c[mid..3 * mid], a_diff, b_diff, recursive_temp);
+                if borrow1 {
+                    borrow += i32::from(sub_one_in_place(&mut c[3 * mid..]));
+                }
+            }
+        }
+    }
+    assert!(borrow >= 0 && borrow <= 1);
+    borrow != 0
+}
+
 impl Mul<Sign> for Sign {
     type Output = Sign;
 
@@ -194,6 +406,12 @@ impl Mul<Sign> for Sign {
             (Negative, Positive) => Negative,
             (Negative, Negative) => Positive,
         }
+    }
+}
+
+impl MulAssign<Sign> for Sign {
+    fn mul_assign(&mut self, rhs: Sign) {
+        *self = *self * rhs;
     }
 }
 
