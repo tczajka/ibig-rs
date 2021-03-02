@@ -5,7 +5,7 @@ fn product(a: u32, b: u32) -> UBig {
     if b == a + 1 {
         UBig::from(a)
     } else {
-        let mid = a + (b-a)/2;
+        let mid = a + (b - a) / 2;
         product(a, mid) * product(mid, b)
     }
 }
