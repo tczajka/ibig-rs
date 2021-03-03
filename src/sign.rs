@@ -1,4 +1,7 @@
-use crate::{ibig::IBig, ubig::UBig};
+use crate::{
+    ibig::IBig,
+    ubig::{Repr::*, UBig},
+};
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -16,6 +19,16 @@ impl Neg for Sign {
         match self {
             Positive => Negative,
             Negative => Positive,
+        }
+    }
+}
+
+impl UBig {
+    /// Is it zero?
+    pub(crate) fn is_zero(&self) -> bool {
+        match self.repr() {
+            Small(0) => true,
+            _ => false,
         }
     }
 }
@@ -43,6 +56,32 @@ impl IBig {
             }
             Negative => IBig::from(-1i8),
         }
+    }
+
+    /// Is the number smaller than 0?
+    ///
+    /// # Examples
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ibig!(-5).is_negative(), true);
+    /// assert_eq!(ibig!(0).is_negative(), false);
+    /// assert_eq!(ibig!(5).is_negative(), false);
+    /// ```
+    pub fn is_negative(&self) -> bool {
+        self.sign() == Negative
+    }
+
+    /// Is the number greater than 0?
+    ///
+    /// # Examples
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ibig!(-5).is_positive(), false);
+    /// assert_eq!(ibig!(0).is_positive(), false);
+    /// assert_eq!(ibig!(5).is_positive(), true);
+    /// ```
+    pub fn is_positive(&self) -> bool {
+        self.sign() == Positive && !self.magnitude().is_zero()
     }
 }
 

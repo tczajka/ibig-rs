@@ -46,30 +46,4 @@ impl IBig {
     pub(crate) fn into_sign_magnitude(self) -> (Sign, UBig) {
         (self.sign, self.magnitude)
     }
-
-    /// Is the number smaller than 0?
-    ///
-    /// # Examples
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-5).is_negative(), true);
-    /// assert_eq!(ibig!(0).is_negative(), false);
-    /// assert_eq!(ibig!(5).is_negative(), false);
-    /// ```
-    pub fn is_negative(&self) -> bool {
-        self.sign == Negative
-    }
-
-    /// Is the number greater than 0?
-    ///
-    /// # Examples
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-5).is_positive(), false);
-    /// assert_eq!(ibig!(0).is_positive(), false);
-    /// assert_eq!(ibig!(5).is_positive(), true);
-    /// ```
-    pub fn is_positive(&self) -> bool {
-        self.sign == Positive && !self.magnitude.is_zero()
-    }
 }

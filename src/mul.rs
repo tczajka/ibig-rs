@@ -1,8 +1,8 @@
 use crate::{
     add::{
         add_in_place, add_one_in_place, add_same_len_in_place, add_signed_word_in_place,
-        add_word_in_place, sub_in_place,
-        sub_in_place_with_sign, sub_same_len_in_place, sub_word_in_place,
+        add_word_in_place, sub_in_place, sub_in_place_with_sign, sub_same_len_in_place,
+        sub_word_in_place,
     },
     buffer::Buffer,
     div::div_rem_by_word_in_place,
