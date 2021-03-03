@@ -55,15 +55,15 @@ impl UBig {
 
 impl Clone for UBig {
     fn clone(&self) -> UBig {
-        match self.0 {
-            Small(x) => UBig(Small(x)),
-            Large(ref buffer) => UBig(Large(buffer.clone())),
+        match self.repr() {
+            Small(x) => UBig(Small(*x)),
+            Large(buffer) => UBig(Large(buffer.clone())),
         }
     }
 
     fn clone_from(&mut self, source: &UBig) {
-        if let Large(ref mut buffer) = self.0 {
-            if let Large(ref source_buffer) = source.0 {
+        if let Large(buffer) = &mut self.0 {
+            if let Large(source_buffer) = source.repr() {
                 buffer.resizing_clone_from(source_buffer);
                 return;
             }

@@ -93,7 +93,7 @@ impl UBig {
                 let skip_bytes = x.leading_zeros() as usize / 8;
                 bytes[..WORD_BYTES - skip_bytes].to_vec()
             }
-            Large(ref buffer) => {
+            Large(buffer) => {
                 let n = buffer.len();
                 let last = buffer[n - 1];
                 let skip_last_bytes = last.leading_zeros() as usize / 8;
@@ -124,7 +124,7 @@ impl UBig {
                 let skip_bytes = x.leading_zeros() as usize / 8;
                 bytes[skip_bytes..].to_vec()
             }
-            Large(ref buffer) => {
+            Large(buffer) => {
                 let n = buffer.len();
                 let last = buffer[n - 1];
                 let skip_last_bytes = last.leading_zeros() as usize / 8;
