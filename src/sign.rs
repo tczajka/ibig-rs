@@ -26,10 +26,7 @@ impl Neg for Sign {
 impl UBig {
     /// Is it zero?
     pub(crate) fn is_zero(&self) -> bool {
-        match self.repr() {
-            Small(0) => true,
-            _ => false,
-        }
+        *self.repr() == Small(0)
     }
 }
 
