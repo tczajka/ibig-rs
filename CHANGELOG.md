@@ -2,7 +2,7 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.1.1 - 2021-03-03
 
 ### New features:
 * Hashing.
@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Random sampling (optional dependency on `rand 0.8`).
 
 ### Performance:
-* Multiplication much faster, now uses Karatsuba and Toom-Cook-3 algorithms.
+* Multiplication improved, now uses Karatsuba and Toom-Cook-3 algorithms.
 
 ### Examples:
 * `factorial` prints 1000000! in hexadecimal.
