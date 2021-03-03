@@ -622,7 +622,7 @@ impl UBig {
     }
 
     /// Shift right `buffer` by full words.
-    fn shr_large_words(mut buffer: Buffer, shift_words: usize) -> UBig {
+    pub(crate) fn shr_large_words(mut buffer: Buffer, shift_words: usize) -> UBig {
         if shift_words == 0 {
             buffer.into()
         } else if shift_words >= buffer.len() {
@@ -677,7 +677,7 @@ impl UBig {
     }
 
     /// Shift right `words` by full words.
-    fn shr_large_ref_words(words: &[Word], shift_words: usize) -> UBig {
+    pub(crate) fn shr_large_ref_words(words: &[Word], shift_words: usize) -> UBig {
         if shift_words >= words.len() {
             UBig::from_word(0)
         } else {
