@@ -4,7 +4,7 @@ use self::Repr::*;
 use crate::{buffer::Buffer, primitive::Word};
 
 /// Internal representation of UBig.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq)]
 pub(crate) enum Repr {
     /// A number that fits in a single Word.
     Small(Word),
@@ -33,7 +33,7 @@ pub(crate) enum Repr {
 /// assert_eq!(b, d);
 /// # Ok::<(), ParseError>(())
 /// ```
-#[derive(Eq, PartialEq)]
+#[derive(Eq, Hash, PartialEq)]
 pub struct UBig(Repr);
 
 impl UBig {

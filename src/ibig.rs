@@ -21,7 +21,7 @@ use crate::{
 /// assert_eq!(b, d);
 /// # Ok::<(), ParseError>(())
 /// ```
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq)]
 pub struct IBig {
     sign: Sign,
     magnitude: UBig,

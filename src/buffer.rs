@@ -15,8 +15,8 @@ use core::{
 /// in with Words, and then converting to UBig.
 ///
 /// If its capacity is exceeded, the `Buffer` will panic.
-#[derive(Debug, Eq, PartialEq)]
-pub(super) struct Buffer(Vec<Word>);
+#[derive(Debug, Eq, Hash, PartialEq)]
+pub(crate) struct Buffer(Vec<Word>);
 
 impl Buffer {
     /// Creates a `Buffer` with at least specified capacity.
