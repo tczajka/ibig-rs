@@ -87,107 +87,6 @@ impl AddAssign<&UBig> for UBig {
     }
 }
 
-impl UBig {
-    /// Add two `Word`s.
-    fn add_word(a: Word, b: Word) -> UBig {
-        let (res, overflow) = a.overflowing_add(b);
-        if overflow {
-            let mut buffer = Buffer::allocate(2);
-            buffer.push(res);
-            buffer.push(1);
-            buffer.into()
-        } else {
-            UBig::from_word(res)
-        }
-    }
-
-    /// Add a large number to a `Word`.
-    fn add_large_word(mut buffer: Buffer, rhs: Word) -> UBig {
-        debug_assert!(buffer.len() >= 2);
-        if add_word_in_place(&mut buffer, rhs) {
-            buffer.push_may_reallocate(1);
-        }
-        buffer.into()
-    }
-
-    /// Add two large numbers.
-    fn add_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
-        let n = buffer.len().min(rhs.len());
-        let overflow = add_same_len_in_place(&mut buffer[..n], &rhs[..n]);
-        if rhs.len() > n {
-            buffer.ensure_capacity(rhs.len());
-            buffer.extend(&rhs[n..]);
-        }
-        if overflow && add_one_in_place(&mut buffer[n..]) {
-            buffer.push_may_reallocate(1);
-        }
-        buffer.into()
-    }
-}
-
-/// Add one to a word sequence.
-///
-/// Returns overflow.
-pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
-    for word in words {
-        let (a, overflow) = word.overflowing_add(1);
-        *word = a;
-        if !overflow {
-            return false;
-        }
-    }
-    true
-}
-
-/// Add a word to a non-empty word sequence.
-///
-/// Returns overflow.
-pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
-    assert!(!words.is_empty());
-    let (a, overflow) = words[0].overflowing_add(rhs);
-    words[0] = a;
-    overflow && add_one_in_place(&mut words[1..])
-}
-
-/// Add a signed word to a non-empty word sequence.
-///
-/// Returns overflow.
-pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> SignedWord {
-    assert!(!words.is_empty());
-    match rhs.to_sign_magnitude() {
-        (Positive, u) => SignedWord::from(add_word_in_place(words, u)),
-        (Negative, u) => -SignedWord::from(sub_word_in_place(words, u)),
-    }
-}
-
-/// Add a word sequence of same length in place.
-///
-/// Returns overflow.
-pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(words.len() == rhs.len());
-
-    let mut carry = 0;
-    for (a, b) in words.iter_mut().zip(rhs.iter()) {
-        let (sum, c) = split_double_word(extend_word(*a) + extend_word(*b) + extend_word(carry));
-        *a = sum;
-        carry = c;
-    }
-    carry != 0
-}
-
-/// Add a word sequence in place.
-///
-/// Returns overflow.
-pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(words.len() >= rhs.len());
-
-    let mut overflow = add_same_len_in_place(&mut words[..rhs.len()], rhs);
-    if overflow {
-        overflow = add_one_in_place(&mut words[rhs.len()..]);
-    }
-    overflow
-}
-
 impl Sub<UBig> for UBig {
     type Output = UBig;
 
@@ -233,6 +132,42 @@ impl SubAssign<&UBig> for UBig {
 }
 
 impl UBig {
+    /// Add two `Word`s.
+    fn add_word(a: Word, b: Word) -> UBig {
+        let (res, overflow) = a.overflowing_add(b);
+        if overflow {
+            let mut buffer = Buffer::allocate(2);
+            buffer.push(res);
+            buffer.push(1);
+            buffer.into()
+        } else {
+            UBig::from_word(res)
+        }
+    }
+
+    /// Add a large number to a `Word`.
+    fn add_large_word(mut buffer: Buffer, rhs: Word) -> UBig {
+        debug_assert!(buffer.len() >= 2);
+        if add_word_in_place(&mut buffer, rhs) {
+            buffer.push_may_reallocate(1);
+        }
+        buffer.into()
+    }
+
+    /// Add two large numbers.
+    fn add_large(mut buffer: Buffer, rhs: &[Word]) -> UBig {
+        let n = buffer.len().min(rhs.len());
+        let overflow = add_same_len_in_place(&mut buffer[..n], &rhs[..n]);
+        if rhs.len() > n {
+            buffer.ensure_capacity(rhs.len());
+            buffer.extend(&rhs[n..]);
+        }
+        if overflow && add_one_in_place(&mut buffer[n..]) {
+            buffer.push_may_reallocate(1);
+        }
+        buffer.into()
+    }
+
     fn from_ibig_after_sub(x: IBig) -> UBig {
         match UBig::try_from(x) {
             Ok(v) => v,
@@ -245,6 +180,58 @@ impl UBig {
         assert!(!overflow);
         lhs.into()
     }
+}
+
+/// Add one to a word sequence.
+///
+/// Returns overflow.
+pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
+    for word in words {
+        let (a, overflow) = word.overflowing_add(1);
+        *word = a;
+        if !overflow {
+            return false;
+        }
+    }
+    true
+}
+
+/// Add a word to a non-empty word sequence.
+///
+/// Returns overflow.
+pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
+    assert!(!words.is_empty());
+    let (a, overflow) = words[0].overflowing_add(rhs);
+    words[0] = a;
+    overflow && add_one_in_place(&mut words[1..])
+}
+
+/// Add a word sequence of same length in place.
+///
+/// Returns overflow.
+pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(words.len() == rhs.len());
+
+    let mut carry = 0;
+    for (a, b) in words.iter_mut().zip(rhs.iter()) {
+        let (sum, c) = split_double_word(extend_word(*a) + extend_word(*b) + extend_word(carry));
+        *a = sum;
+        carry = c;
+    }
+    carry != 0
+}
+
+/// Add a word sequence in place.
+///
+/// Returns overflow.
+pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(words.len() >= rhs.len());
+
+    let mut overflow = add_same_len_in_place(&mut words[..rhs.len()], rhs);
+    if overflow {
+        overflow = add_one_in_place(&mut words[rhs.len()..]);
+    }
+    overflow
 }
 
 /// Subtract one from a word sequence.
@@ -368,6 +355,45 @@ pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
             // Zero.
             Positive
         }
+    }
+}
+
+/// Add a signed word to a non-empty word sequence.
+///
+/// Returns overflow.
+pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> SignedWord {
+    if words.is_empty() {
+        return rhs;
+    }
+    match rhs.to_sign_magnitude() {
+        (Positive, u) => SignedWord::from(add_word_in_place(words, u)),
+        (Negative, u) => -SignedWord::from(sub_word_in_place(words, u)),
+    }
+}
+
+/// words += sign * rhs
+///
+/// Returns overflow.
+pub(crate) fn add_signed_same_len_in_place(
+    words: &mut [Word],
+    sign: Sign,
+    rhs: &[Word],
+) -> SignedWord {
+    debug_assert!(words.len() == rhs.len());
+    match sign {
+        Positive => SignedWord::from(add_same_len_in_place(words, rhs)),
+        Negative => -SignedWord::from(sub_same_len_in_place(words, rhs)),
+    }
+}
+
+/// words += sign * rhs
+///
+/// Returns overflow.
+pub(crate) fn add_signed_in_place(words: &mut [Word], sign: Sign, rhs: &[Word]) -> SignedWord {
+    debug_assert!(words.len() >= rhs.len());
+    match sign {
+        Positive => SignedWord::from(add_in_place(words, rhs)),
+        Negative => -SignedWord::from(sub_in_place(words, rhs)),
     }
 }
 
@@ -607,6 +633,10 @@ mod tests {
 
     #[test]
     fn test_add_signed_word_in_place() {
+        let mut a = [];
+        let overflow = add_signed_word_in_place(&mut a, -5);
+        assert_eq!(overflow, -5);
+
         let mut a = [1, 2, 3];
         let overflow = add_signed_word_in_place(&mut a, 4);
         assert_eq!(overflow, 0);

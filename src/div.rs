@@ -1,10 +1,10 @@
 use crate::{
-    add::add_same_len_in_place,
+    add,
     buffer::Buffer,
     ibig::IBig,
-    mul::sub_mul_word_same_len_in_place,
+    mul,
     primitive::{double_word, extend_word, split_double_word, DoubleWord, Word},
-    shift::shl_in_place,
+    shift,
     sign::Abs,
     ubig::{Repr::*, UBig},
 };
@@ -523,9 +523,9 @@ impl UBig {
         debug_assert!(lhs.len() >= rhs.len() && rhs.len() >= 2 && *rhs.last().unwrap() != 0);
         // Normalize the divisor: leading bit must be 1.
         let shift = rhs.last().unwrap().leading_zeros();
-        let rhs_carry = shl_in_place(&mut rhs, shift);
+        let rhs_carry = shift::shl_in_place(&mut rhs, shift);
         debug_assert!(rhs_carry == 0);
-        let lhs_carry = shl_in_place(&mut lhs, shift);
+        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
         if lhs_carry != 0 {
             lhs.push_may_reallocate(lhs_carry);
         }
@@ -620,13 +620,13 @@ impl UBig {
 
             // Subtract a multiple of rhs.
             let offset = lhs.len() - n;
-            let borrow = sub_mul_word_same_len_in_place(&mut lhs[offset..], q, &rhs);
+            let borrow = mul::sub_mul_word_same_len_in_place(&mut lhs[offset..], q, &rhs);
 
             if borrow > lhs0 {
                 // Rare case: q is too large (by 1).
                 // Add a correction.
                 q -= 1;
-                let carry = add_same_len_in_place(&mut lhs[offset..], &rhs);
+                let carry = add::add_same_len_in_place(&mut lhs[offset..], &rhs);
                 debug_assert!(carry && borrow - 1 == lhs0);
             }
             // lhs0 is now logically zeroed out
@@ -645,7 +645,7 @@ impl UBig {
 /// Returns words % rhs.
 pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
     let shift = rhs.leading_zeros();
-    let mut rem = shl_in_place(words, shift);
+    let mut rem = shift::shl_in_place(words, shift);
     let fast_division = FastDivision::by(rhs << shift);
 
     for word in words.iter_mut().rev() {

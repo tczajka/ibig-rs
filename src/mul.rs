@@ -1,14 +1,10 @@
 use crate::{
-    add::{
-        add_in_place, add_one_in_place, add_same_len_in_place, add_signed_word_in_place,
-        add_word_in_place, sub_in_place, sub_in_place_with_sign, sub_same_len_in_place,
-        sub_word_in_place,
-    },
+    add,
     buffer::Buffer,
-    div::div_rem_by_word_in_place,
+    div,
     ibig::IBig,
     primitive::{double_word, extend_word, split_double_word, SignedWord, Word},
-    shift::shr_in_place,
+    shift,
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -112,15 +108,15 @@ impl UBig {
     /// Multiply two large numbers.
     fn mul_large(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= 2 && rhs.len() >= 2);
-        let (lhs, rhs) = if lhs.len() >= rhs.len() {
-            (lhs, rhs)
-        } else {
-            (rhs, lhs)
-        };
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
         buffer.push_zeros(lhs.len() + rhs.len());
-        let overflow = add_mul(&mut buffer, lhs, rhs);
-        assert!(!overflow);
+
+        let temp_len = mul_temp_buffer_len(lhs.len(), rhs.len());
+        let mut temp = Buffer::allocate_no_extra(temp_len);
+        temp.push_zeros(temp_len);
+
+        let overflow = add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut temp);
+        assert!(overflow == 0);
         buffer.into()
     }
 }
@@ -171,7 +167,7 @@ fn add_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     let n = rhs.len();
     let mut carry = add_mul_word_same_len_in_place(&mut words[..n], mult, rhs);
     if words.len() > n {
-        carry = Word::from(add_word_in_place(&mut words[n..], carry));
+        carry = Word::from(add::add_word_in_place(&mut words[n..], carry));
     }
     carry
 }
@@ -209,31 +205,80 @@ fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     let n = rhs.len();
     let mut borrow = sub_mul_word_same_len_in_place(&mut words[..n], mult, rhs);
     if words.len() > n {
-        borrow = Word::from(sub_word_in_place(&mut words[n..], borrow));
+        borrow = Word::from(add::sub_word_in_place(&mut words[n..], borrow));
     }
     borrow
 }
 
-/// c += a * b
+/// Minimum temporary buffer required for multiplication.
+fn mul_temp_buffer_len(a_len: usize, b_len: usize) -> usize {
+    let n = a_len.min(b_len);
+
+    if n < THRESHOLD_KARATSUBA {
+        0
+    } else if n < THRESHOLD_TOOM_3 {
+        // Karatsuba multiplication.
+        //
+        // We prove by induction that f(n) <= 2n + 2 log_2 (n-1).
+        //
+        // Base case: f(2) = 0.
+        // For n > 2:
+        // f(n) = 2ceil(n/2) + f(ceil(n/2))
+        //      <= n+1 + n+1 + 2log ((n+1)/2-1)
+        //       = 2n + 2log (n-1)
+        //
+        // Use 2n + ceil log_2 n.
+        2 * n + 2 * (n.next_power_of_two().trailing_zeros() as usize)
+    } else {
+        // We prove by induction that f(n) <= 4n + 20(log_3 (n-2.5)).
+        // Base case, f(3)=0, OK.
+        // For n > 3:
+        // f(n)  = 8(ceil(n/3)+1) + f(ceil(n/3)+1)
+        //      <= 8*(n+5)/3 + 4*(n+5)/3 + 20 log_3 ((n+5)/3-2.5)
+        //       = 4n + 20 + 20 log_3 ((n+5)/3-2.5)
+        //       = 4n + 20 log_3 (n-2.5)
+        //
+        // 20 log_3 (n-2.5) <= 20 log_3 n = 20 log_2 n / log_2 3 < 13 log_2 n
+        // So we use 4n + 13 ceil log_2 n.
+        //
+        // Note: this has to be at least as much as Karatsuba (for recursive calls).
+        4 * n + 13 * (n.next_power_of_two().trailing_zeros() as usize)
+    }
+}
+
+/// c += sign * a * b
+///
+/// temp must have space of at least mul_temp_buffer_len(a.len(), b.len())
 ///
 /// Returns carry.
-fn add_mul(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
-    debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+fn add_signed_mul<'a>(
+    c: &mut [Word],
+    sign: Sign,
+    mut a: &'a [Word],
+    mut b: &'a [Word],
+    temp: &mut [Word],
+) -> SignedWord {
+    debug_assert!(c.len() == a.len() + b.len());
+    if a.len() < b.len() {
+        mem::swap(&mut a, &mut b);
+    }
     if b.len() < THRESHOLD_KARATSUBA {
-        // Simple O(n^2) method.
-        add_mul_simple(c, a, b)
+        add_signed_mul_simple(c, sign, a, b)
     } else if b.len() < THRESHOLD_TOOM_3 {
-        // Karatsuba method: O(n^(log_2 3)) = O(n^1.59)
-        let temp_len = karatsuba_temp_buffer_len(b.len());
-        let mut temp = Buffer::allocate_no_extra(temp_len);
-        temp.push_zeros(temp_len);
-        add_mul_karatsuba_different_len(c, a, b, &mut temp)
+        add_signed_mul_karatsuba(c, sign, a, b, temp)
     } else {
-        // Toom-Cook-3 method: O(n^(log_3 5)) = O(n^1.47)
-        let temp_len = toom_3_temp_buffer_len(b.len());
-        let mut temp = Buffer::allocate_no_extra(temp_len);
-        temp.push_zeros(temp_len);
-        add_mul_toom_3_different_len(c, a, b, &mut temp)
+        add_signed_mul_toom_3(c, sign, a, b, temp)
+    }
+}
+
+/// c += sign * a * b
+/// Simple method: O(a.len() * b.len()).
+///
+/// Returns carry.
+fn add_signed_mul_simple(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> SignedWord {
+    match sign {
+        Positive => SignedWord::from(add_mul_simple(c, a, b)),
+        Negative => -SignedWord::from(sub_mul_simple(c, a, b)),
     }
 }
 
@@ -267,71 +312,65 @@ fn sub_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     borrow != 0
 }
 
-/// Minimum temporary buffer required for Karatsuba multiplication.
-fn karatsuba_temp_buffer_len(n: usize) -> usize {
-    // We prove by induction that f(n) <= 2n + 2 log_2 (n-1).
-    //
-    // Base case: f(2) = 0.
-    // For n > 2:
-    // f(n) = 2ceil(n/2) + f(ceil(n/2))
-    //      <= n+1 + n+1 + 2log ((n+1)/2-1)
-    //       = 2n + 2log (n-1)
-    //
-    // Use 2n + ceil log_2 n.
-    2 * n + 2 * (n.next_power_of_two().trailing_zeros() as usize)
-}
-
-/// c += a * b
+/// c += sign * a * b
 /// Karatsuba method: O(a.len() * b.len()^0.59).
 ///
 /// Returns carry.
-fn add_mul_karatsuba_different_len<'a>(
+fn add_signed_mul_karatsuba<'a>(
     mut c: &mut [Word],
+    sign: Sign,
     mut a: &'a [Word],
     mut b: &'a [Word],
     temp: &mut [Word],
-) -> bool {
+) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() < THRESHOLD_TOOM_3);
 
-    let mut carry: Word = 0;
+    let mut carry: SignedWord = 0;
     while b.len() >= THRESHOLD_KARATSUBA {
         let n = b.len();
+        let mut carry_n: SignedWord = 0; // at c[n]
         while a.len() >= n {
+            // Propagate carry.
+            carry_n = add::add_signed_word_in_place(&mut c[n..2 * n], carry_n);
             let (a_lo, a_hi) = a.split_at(n);
-            let carry1 = add_mul_karatsuba(&mut c[..2 * n], a_lo, b, temp);
-            if carry1 {
-                carry += Word::from(add_one_in_place(&mut c[2 * n..]));
-            }
+            carry_n += add_signed_mul_karatsuba_same_len(&mut c[..2 * n], sign, a_lo, b, temp);
             a = a_hi;
             c = &mut c[n..];
         }
+        carry += add::add_signed_word_in_place(&mut c[n..], carry_n);
         mem::swap(&mut a, &mut b);
     }
-    carry += Word::from(add_mul_simple(c, a, b));
-    debug_assert!(carry <= 1);
-    carry != 0
+    carry += add_signed_mul_simple(c, sign, a, b);
+    debug_assert!(carry.abs() <= 1);
+    carry
 }
 
 /// c = a * b
 /// Karatsuba method: O(n^1.59).
 fn mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) {
     c.fill(0);
-    let overflow = add_mul_karatsuba(c, a, b, temp);
-    assert!(!overflow);
+    let overflow = add_signed_mul_karatsuba(c, Positive, a, b, temp);
+    assert!(overflow == 0);
 }
 
-/// c += a * b
+/// c += sign * a * b
 /// Karatsuba method: O(n^1.59).
 ///
 /// Returns carry.
-fn add_mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> bool {
+fn add_signed_mul_karatsuba_same_len(
+    c: &mut [Word],
+    sign: Sign,
+    a: &[Word],
+    b: &[Word],
+    temp: &mut [Word],
+) -> SignedWord {
     let n = a.len();
     debug_assert!(b.len() == n && c.len() == 2 * n);
     debug_assert!(n < THRESHOLD_TOOM_3);
 
     if n < THRESHOLD_KARATSUBA {
-        return add_mul_simple(c, a, b);
+        return add_signed_mul_simple(c, sign, a, b);
     }
 
     let mid = (n + 1) / 2;
@@ -345,182 +384,98 @@ fn add_mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) 
     let mut carry_c1: SignedWord = 0; // 3*mid
 
     {
-        // a_lo * b_lo
+        // c_0 += a_lo * b_lo
+        // c_1 += a_lo * b_lo
         let c_lo = &mut my_temp[..];
         mul_karatsuba(c_lo, a_lo, b_lo, temp);
-        carry_c0 += SignedWord::from(add_same_len_in_place(&mut c[..2 * mid], c_lo));
-        carry_c1 += SignedWord::from(add_same_len_in_place(&mut c[mid..3 * mid], c_lo));
+        carry_c0 += add::add_signed_same_len_in_place(&mut c[..2 * mid], sign, c_lo);
+        carry_c1 += add::add_signed_same_len_in_place(&mut c[mid..3 * mid], sign, c_lo);
     }
     {
+        // c_2 += a_hi * b_hi
+        // c_1 += a_hi * b_hi
         let c_hi = &mut my_temp[..2 * (n - mid)];
         mul_karatsuba(c_hi, a_hi, b_hi, temp);
-        carry += SignedWord::from(add_same_len_in_place(&mut c[2 * mid..], c_hi));
-        carry_c1 += SignedWord::from(add_in_place(&mut c[mid..3 * mid], c_hi));
+        carry += add::add_signed_same_len_in_place(&mut c[2 * mid..], sign, c_hi);
+        carry_c1 += add::add_signed_in_place(&mut c[mid..3 * mid], sign, c_hi);
     }
     {
+        // c1 -= (a_lo - a_hi) * (b_lo - b_hi)
         let (a_diff, b_diff) = my_temp.split_at_mut(mid);
         a_diff.copy_from_slice(a_lo);
-        let mut sign = sub_in_place_with_sign(a_diff, a_hi);
+        let mut diff_sign = add::sub_in_place_with_sign(a_diff, a_hi);
         b_diff.copy_from_slice(b_lo);
-        sign *= sub_in_place_with_sign(b_diff, b_hi);
-        match sign {
-            Positive => {
-                carry_c1 -= SignedWord::from(sub_mul_karatsuba(
-                    &mut c[mid..3 * mid],
-                    a_diff,
-                    b_diff,
-                    temp,
-                ));
-            }
-            Negative => {
-                carry_c1 += SignedWord::from(add_mul_karatsuba(
-                    &mut c[mid..3 * mid],
-                    a_diff,
-                    b_diff,
-                    temp,
-                ));
-            }
-        }
+        diff_sign *= add::sub_in_place_with_sign(b_diff, b_hi);
+
+        carry_c1 += add_signed_mul_karatsuba(
+            &mut c[mid..3 * mid],
+            -sign * diff_sign,
+            a_diff,
+            b_diff,
+            temp,
+        );
     }
 
-    // Apply carries.
-    carry_c1 += add_signed_word_in_place(&mut c[2 * mid..3 * mid], carry_c0);
-    carry += add_signed_word_in_place(&mut c[3 * mid..], carry_c1);
+    // Propagate carries.
+    carry_c1 += add::add_signed_word_in_place(&mut c[2 * mid..3 * mid], carry_c0);
+    carry += add::add_signed_word_in_place(&mut c[3 * mid..], carry_c1);
 
-    assert!(carry >= 0 && carry <= 1);
-    carry != 0
+    assert!(carry.abs() <= 1);
+    carry
 }
 
-/// c -= a * b
-/// Karatsuba method: O(n^1.59).
-///
-/// Returns borrow.
-fn sub_mul_karatsuba(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> bool {
-    let n = a.len();
-    debug_assert!(b.len() == n && c.len() == 2 * n);
-    debug_assert!(n < THRESHOLD_TOOM_3);
-
-    if n < THRESHOLD_KARATSUBA {
-        return sub_mul_simple(c, a, b);
-    }
-
-    let mid = (n + 1) / 2;
-    let (a_lo, a_hi) = a.split_at(mid);
-    let (b_lo, b_hi) = b.split_at(mid);
-    let (my_temp, temp) = temp.split_at_mut(2 * mid);
-    // Result = a_lo * b_lo + a_hi * b_hi * Word^(2mid)
-    //        + (a_lo * b_lo + a_hi * b_hi - (a_lo-a_hi)*(b_lo-b_hi)) * Word^mid
-    let mut carry: SignedWord = 0;
-    let mut carry_c0: SignedWord = 0; // 2*mid
-    let mut carry_c1: SignedWord = 0; // 3*mid
-    {
-        // a_lo * b_lo
-        let c_lo = &mut my_temp[..];
-        mul_karatsuba(c_lo, a_lo, b_lo, temp);
-        carry_c0 -= SignedWord::from(sub_same_len_in_place(&mut c[..2 * mid], c_lo));
-        carry_c1 -= SignedWord::from(sub_same_len_in_place(&mut c[mid..3 * mid], c_lo));
-    }
-    {
-        let c_hi = &mut my_temp[..2 * (n - mid)];
-        mul_karatsuba(c_hi, a_hi, b_hi, temp);
-        carry -= SignedWord::from(sub_same_len_in_place(&mut c[2 * mid..], c_hi));
-        carry_c1 -= SignedWord::from(sub_in_place(&mut c[mid..3 * mid], c_hi));
-    }
-    {
-        let (a_diff, b_diff) = my_temp.split_at_mut(mid);
-        a_diff.copy_from_slice(a_lo);
-        let mut sign = sub_in_place_with_sign(a_diff, a_hi);
-        b_diff.copy_from_slice(b_lo);
-        sign *= sub_in_place_with_sign(b_diff, b_hi);
-        match sign {
-            Positive => {
-                carry_c1 += SignedWord::from(add_mul_karatsuba(
-                    &mut c[mid..3 * mid],
-                    a_diff,
-                    b_diff,
-                    temp,
-                ));
-            }
-            Negative => {
-                carry_c1 -= SignedWord::from(sub_mul_karatsuba(
-                    &mut c[mid..3 * mid],
-                    a_diff,
-                    b_diff,
-                    temp,
-                ));
-            }
-        }
-    }
-
-    // Apply carries.
-    carry_c1 += add_signed_word_in_place(&mut c[2 * mid..3 * mid], carry_c0);
-    carry += add_signed_word_in_place(&mut c[3 * mid..], carry_c1);
-
-    assert!(carry >= -1 && carry <= 0);
-    carry != 0
-}
-
-/// Minimum temporary buffer required for Toom-3 multiplication.
-/// Note: toom_3_temp_buffer_len(n) >= karatsuba_temp_buffer_len(n).
-fn toom_3_temp_buffer_len(n: usize) -> usize {
-    // We prove by induction that f(n) <= 4n + 20(log_3 (n-2.5)).
-    // Base case, f(3)=0, OK.
-    // For n > 3:
-    // f(n)  = 8(ceil(n/3)+1) + f(ceil(n/3)+1)
-    //      <= 8*(n+5)/3 + 4*(n+5)/3 + 20 log_3 ((n+5)/3-2.5)
-    //       = 4n + 20 + 20 log_3 ((n+5)/3-2.5)
-    //       = 4n + 20 log_3 (n-2.5)
-    //
-    // 20 log_3 (n-2.5) <= 20 log_3 n = 20 log_2 n / log_2 3 < 13 log_2 n
-    // So we use 4n + 13 ceil log_2 n.
-    // This is more than Karatsuba.
-    4 * n + 13 * (n.next_power_of_two().trailing_zeros() as usize)
-}
-
-/// c += a * b
+/// c += sign * a * b
 /// Toom-Cook-3 method. O(a.len() * b.len()^0.47).
 ///
 /// Returns carry.
-fn add_mul_toom_3_different_len<'a>(
+fn add_signed_mul_toom_3<'a>(
     mut c: &mut [Word],
+    sign: Sign,
     mut a: &'a [Word],
     mut b: &'a [Word],
     temp: &mut [Word],
-) -> bool {
+) -> SignedWord {
     assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
 
-    let mut carry: Word = 0;
+    let mut carry: SignedWord = 0;
     while b.len() >= THRESHOLD_TOOM_3 {
         let n = b.len();
+        let mut carry_n: SignedWord = 0; // at c[n]
         while a.len() >= n {
+            // Propagate carry to 2n.
+            carry_n = add::add_signed_word_in_place(&mut c[n..2 * n], carry_n);
             let (a_lo, a_hi) = a.split_at(n);
-            let carry1 = add_mul_toom_3(&mut c[..2 * n], a_lo, b, temp);
-            if carry1 {
-                carry += Word::from(add_one_in_place(&mut c[2 * n..]));
-            }
+            carry_n += add_signed_mul_toom_3_same_len(&mut c[..2 * n], sign, a_lo, b, temp);
             a = a_hi;
             c = &mut c[n..];
         }
+        carry += add::add_signed_word_in_place(&mut c[n..], carry_n);
         mem::swap(&mut a, &mut b);
     }
-    carry += Word::from(add_mul_karatsuba_different_len(c, a, b, temp));
-    assert!(carry <= 1);
-    carry != 0
+    carry += add_signed_mul_karatsuba(c, sign, a, b, temp);
+    debug_assert!(carry.abs() <= 1);
+    carry
 }
 
 /// c = a * b
 /// Toom-Cook-3 method: O(n^1.47).
-fn mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) {
+fn mul_toom_3_same_len(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) {
     c.fill(0);
-    let overflow = add_mul_toom_3(c, a, b, temp);
-    assert!(!overflow);
+    let overflow = add_signed_mul_toom_3_same_len(c, Positive, a, b, temp);
+    assert!(overflow == 0);
 }
 
-/// c += a * b
+/// c += sign * a * b
 /// Toom-Cook-3 method: O(n^1.47).
 ///
 /// Returns carry.
-fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> bool {
+fn add_signed_mul_toom_3_same_len(
+    c: &mut [Word],
+    sign: Sign,
+    a: &[Word],
+    b: &[Word],
+    temp: &mut [Word],
+) -> SignedWord {
     let n = a.len();
     debug_assert!(b.len() == n && c.len() == 2 * n);
 
@@ -542,7 +497,7 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
     // t2 = (V(1) + V(-1))/2
 
     if n < THRESHOLD_TOOM_3 {
-        return add_mul_karatsuba(c, a, b, temp);
+        return add_signed_mul_karatsuba(c, sign, a, b, temp);
     }
 
     // Split into 3 parts. Note: a2, b2 may be shorter.
@@ -573,9 +528,9 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
     // t1 = 3*V(0)
     {
         let t1_short = &mut t1[..2 * n3];
-        mul_toom_3(t1_short, a0, b0, temp);
-        carry_c0 += SignedWord::from(add_same_len_in_place(&mut c[..2 * n3], t1_short));
-        carry_c2 -= SignedWord::from(sub_in_place(&mut c[2 * n3..4 * n3 + 2], t1_short));
+        mul_toom_3_same_len(t1_short, a0, b0, temp);
+        carry_c0 += add::add_signed_same_len_in_place(&mut c[..2 * n3], sign, t1_short);
+        carry_c2 += add::add_signed_in_place(&mut c[2 * n3..4 * n3 + 2], -sign, t1_short);
         t1[2 * n3] = mul_word_in_place(t1_short, 3);
         t1[2 * n3 + 1] = 0;
     }
@@ -591,8 +546,8 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
     b_eval[..n3].copy_from_slice(b0);
     b_eval[n3] = add_mul_word_same_len_in_place(&mut b_eval[..n3], 2, b1);
     b_eval[n3] += add_mul_word_in_place(&mut b_eval[..n3], 4, b2);
-    let overflow = add_mul_toom_3(t1, a_eval, b_eval, temp);
-    assert!(!overflow);
+    let overflow = add_signed_mul_toom_3_same_len(t1, Positive, a_eval, b_eval, temp);
+    assert!(overflow == 0);
 
     // Evaluate at inf.
     // V(inf) = a4 * b4
@@ -602,12 +557,12 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
     // Now t1 = 3V(0) + V(2) - 12V(inf)
     {
         let c_eval_short = &mut c_eval[..2 * n3_short];
-        mul_toom_3(c_eval_short, a2, b2, temp);
-        carry_c2 -= SignedWord::from(sub_in_place(&mut c[2 * n3..4 * n3 + 2], c_eval_short));
-        carry += SignedWord::from(add_same_len_in_place(&mut c[4 * n3..], c_eval_short));
+        mul_toom_3_same_len(c_eval_short, a2, b2, temp);
+        carry_c2 += add::add_signed_in_place(&mut c[2 * n3..4 * n3 + 2], -sign, c_eval_short);
+        carry += add::add_signed_same_len_in_place(&mut c[4 * n3..], sign, c_eval_short);
         c_eval[2 * n3_short] = mul_word_in_place(c_eval_short, 12);
     }
-    let overflow = sub_in_place(t1, &c_eval[..2 * n3_short + 1]);
+    let overflow = add::sub_in_place(t1, &c_eval[..2 * n3_short + 1]);
     // 3V(0) + V(2) - 12V(inf) is never negative
     assert!(!overflow);
 
@@ -624,17 +579,17 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
         let (a02, b02) = c_eval.split_at_mut(n3 + 1);
 
         a02[..n3].copy_from_slice(a0);
-        a02[n3] = Word::from(add_in_place(&mut a02[..n3], a2));
+        a02[n3] = Word::from(add::add_in_place(&mut a02[..n3], a2));
         a_eval.copy_from_slice(a02);
-        a_eval[n3] += Word::from(add_same_len_in_place(&mut a_eval[..n3], a1));
+        a_eval[n3] += Word::from(add::add_same_len_in_place(&mut a_eval[..n3], a1));
 
         b02[..n3].copy_from_slice(b0);
-        b02[n3] = Word::from(add_in_place(&mut b02[..n3], b2));
+        b02[n3] = Word::from(add::add_in_place(&mut b02[..n3], b2));
         b_eval.copy_from_slice(b02);
-        b_eval[n3] += Word::from(add_same_len_in_place(&mut b_eval[..n3], b1));
+        b_eval[n3] += Word::from(add::add_same_len_in_place(&mut b_eval[..n3], b1));
 
-        mul_toom_3(t2, a_eval, b_eval, temp);
-        carry_c1 += SignedWord::from(add_in_place(&mut c[n3..3 * n3 + 2], t2));
+        mul_toom_3_same_len(t2, a_eval, b_eval, temp);
+        carry_c1 += add::add_signed_in_place(&mut c[n3..3 * n3 + 2], sign, t2);
 
         // Evaluate at -1.
         // a_eval = a02 - a1
@@ -645,25 +600,21 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
         // Now t1 = 3V(0) + 2V(-1) + V(2) - 12V(inf),
         //     t2 = V(1) + V(-1).
         a_eval.copy_from_slice(a02);
-        value_neg1_sign = sub_in_place_with_sign(a_eval, a1);
+        value_neg1_sign = add::sub_in_place_with_sign(a_eval, a1);
         b_eval.copy_from_slice(b02);
-        value_neg1_sign *= sub_in_place_with_sign(b_eval, b1);
+        value_neg1_sign *= add::sub_in_place_with_sign(b_eval, b1);
         // We don't need a02, b02 any more, exit the block so that we can use c_eval again.
     }
-    mul_toom_3(c_eval, a_eval, b_eval, temp);
+    mul_toom_3_same_len(c_eval, a_eval, b_eval, temp);
+    let overflow = add::add_signed_same_len_in_place(t2, value_neg1_sign, c_eval);
+    assert!(overflow == 0);
     match value_neg1_sign {
         Positive => {
-            let overflow = add_same_len_in_place(t2, c_eval);
-            assert!(!overflow);
             let overflow = add_mul_word_same_len_in_place(t1, 2, c_eval);
             assert!(overflow == 0);
         }
         Negative => {
-            let overflow = sub_same_len_in_place(t2, c_eval);
-            // t2 is never negative.
-            assert!(!overflow);
             let overflow = sub_mul_word_same_len_in_place(t1, 2, c_eval);
-            // t1 is never negative.
             assert!(overflow == 0);
         }
     }
@@ -672,28 +623,28 @@ fn add_mul_toom_3(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) -> 
     // t2 /= 2
     // Now t1 = (3V(0) + 2V(-1) + V(2))/6 - 2V(inf)
     //     t2 = (V(1) + V(-1))/2
-    let t1_rem = div_rem_by_word_in_place(t1, 6);
+    let t1_rem = div::div_rem_by_word_in_place(t1, 6);
     assert_eq!(t1_rem, 0);
     assert_eq!(t2[0] & 1, 0);
-    shr_in_place(t2, 1);
+    shift::shr_in_place(t2, 1);
 
     // c1 -= t1
     // c3 += t1
     // c2 += t2
     // c3 -= t2
-    carry_c1 -= SignedWord::from(sub_same_len_in_place(&mut c[n3..3 * n3 + 2], t1));
-    carry_c3 += SignedWord::from(add_same_len_in_place(&mut c[3 * n3..5 * n3 + 2], t1));
-    carry_c2 += SignedWord::from(add_same_len_in_place(&mut c[2 * n3..4 * n3 + 2], t2));
-    carry_c3 -= SignedWord::from(sub_same_len_in_place(&mut c[3 * n3..5 * n3 + 2], t2));
+    carry_c1 += add::add_signed_same_len_in_place(&mut c[n3..3 * n3 + 2], -sign, t1);
+    carry_c3 += add::add_signed_same_len_in_place(&mut c[3 * n3..5 * n3 + 2], sign, t1);
+    carry_c2 += add::add_signed_same_len_in_place(&mut c[2 * n3..4 * n3 + 2], sign, t2);
+    carry_c3 += add::add_signed_same_len_in_place(&mut c[3 * n3..5 * n3 + 2], -sign, t2);
 
     // Apply carries.
-    carry_c1 += add_signed_word_in_place(&mut c[2 * n3..3 * n3 + 2], carry_c0);
-    carry_c2 += add_signed_word_in_place(&mut c[3 * n3 + 2..4 * n3 + 2], carry_c1);
-    carry_c3 += add_signed_word_in_place(&mut c[4 * n3 + 2..5 * n3 + 2], carry_c2);
-    carry += add_signed_word_in_place(&mut c[5 * n3 + 2..], carry_c3);
+    carry_c1 += add::add_signed_word_in_place(&mut c[2 * n3..3 * n3 + 2], carry_c0);
+    carry_c2 += add::add_signed_word_in_place(&mut c[3 * n3 + 2..4 * n3 + 2], carry_c1);
+    carry_c3 += add::add_signed_word_in_place(&mut c[4 * n3 + 2..5 * n3 + 2], carry_c2);
+    carry += add::add_signed_word_in_place(&mut c[5 * n3 + 2..], carry_c3);
 
-    assert!(carry >= 0 && carry <= 1);
-    carry != 0
+    assert!(carry.abs() <= 1);
+    carry
 }
 
 impl Mul<Sign> for Sign {
