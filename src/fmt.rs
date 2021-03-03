@@ -19,6 +19,318 @@ use core::{
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
 };
 
+impl Display for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix: 10,
+            prefix: "",
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl Debug for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        Display::fmt(self, f)
+    }
+}
+
+impl Binary for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix: 2,
+            prefix: if f.alternate() { "0b" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl Octal for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix: 8,
+            prefix: if f.alternate() { "0o" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl LowerHex for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix: 16,
+            prefix: if f.alternate() { "0x" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl UpperHex for UBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix: 16,
+            prefix: if f.alternate() { "0x" } else { "" },
+            digit_case: Some(DigitCase::Upper),
+        }
+        .fmt(f)
+    }
+}
+
+impl Display for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix: 10,
+            prefix: "",
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl Debug for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        Display::fmt(self, f)
+    }
+}
+
+impl Binary for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix: 2,
+            prefix: if f.alternate() { "0b" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl Octal for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix: 8,
+            prefix: if f.alternate() { "0o" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl LowerHex for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix: 16,
+            prefix: if f.alternate() { "0x" } else { "" },
+            digit_case: Some(DigitCase::Lower),
+        }
+        .fmt(f)
+    }
+}
+
+impl UpperHex for IBig {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix: 16,
+            prefix: if f.alternate() { "0x" } else { "" },
+            digit_case: Some(DigitCase::Upper),
+        }
+        .fmt(f)
+    }
+}
+
+impl UBig {
+    /// Representation in a given radix.
+    ///
+    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
+    /// than converting to a string and then formatting.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
+    /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
+    /// ```
+    pub fn in_radix(&self, radix: u32) -> InRadix {
+        check_radix_valid(radix);
+        InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix,
+            prefix: "",
+            digit_case: None,
+        }
+    }
+
+    /// String representation in an arbitrary radix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(ubig!(0x123f).in_radix(16).to_string(), "123f");
+    /// ```
+    pub fn to_str_radix(&self, radix: u32) -> String {
+        check_radix_valid(radix);
+        let in_radix = InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix,
+            prefix: "",
+            digit_case: Some(DigitCase::Lower),
+        };
+
+        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+    }
+
+    /// Upper-case string representation in an arbitrary radix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(format!("{:#}", ubig!(0x123f).in_radix(16)), "123F");
+    /// ```
+    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
+        check_radix_valid(radix);
+        let in_radix = InRadix {
+            sign: Positive,
+            magnitude: self,
+            radix,
+            prefix: "",
+            digit_case: Some(DigitCase::Upper),
+        };
+
+        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+    }
+}
+
+impl IBig {
+    /// Representation in a given radix.
+    ///
+    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
+    /// than converting to a string and then formatting.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(format!("{}", ibig!(-83).in_radix(3)), "-10002");
+    /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
+    /// ```
+    pub fn in_radix(&self, radix: u32) -> InRadix {
+        check_radix_valid(radix);
+        InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix,
+            prefix: "",
+            digit_case: None,
+        }
+    }
+
+    /// String representation in an arbitrary radix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(ibig!(-0x123f).in_radix(16).to_string(), "-123f");
+    /// ```
+    pub fn to_str_radix(&self, radix: u32) -> String {
+        check_radix_valid(radix);
+        let in_radix = InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix,
+            prefix: "",
+            digit_case: Some(DigitCase::Lower),
+        };
+
+        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+    }
+
+    /// Upper-case string representation in an arbitrary radix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `radix` is not between 2 and 36 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::prelude::*;
+    /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
+    ///
+    /// // Equivalent but slightly less efficient:
+    /// assert_eq!(format!("{:#}", ibig!(-0x123f).in_radix(16)), "-123F");
+    /// ```
+    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
+        check_radix_valid(radix);
+        let in_radix = InRadix {
+            sign: self.sign(),
+            magnitude: self.magnitude(),
+            radix,
+            prefix: "",
+            digit_case: Some(DigitCase::Upper),
+        };
+
+        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+    }
+}
+
 /// Representation of a `UBig` or `IBig` in any radix between 2 and 36 inclusive.
 ///
 /// This can be used to format a number in a non-standard radix.
@@ -410,317 +722,5 @@ impl PreparedForFormatting for PreparedLargeInNonPow2 {
             writer.write_str(s.as_str())?;
         }
         Ok(())
-    }
-}
-
-impl Display for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix: 10,
-            prefix: "",
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl Debug for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(self, f)
-    }
-}
-
-impl Binary for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix: 2,
-            prefix: if f.alternate() { "0b" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl Octal for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix: 8,
-            prefix: if f.alternate() { "0o" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl LowerHex for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix: 16,
-            prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl UpperHex for UBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix: 16,
-            prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Upper),
-        }
-        .fmt(f)
-    }
-}
-
-impl UBig {
-    /// Representation in a given radix.
-    ///
-    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
-    /// than converting to a string and then formatting.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
-    /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
-    /// ```
-    pub fn in_radix(&self, radix: u32) -> InRadix {
-        check_radix_valid(radix);
-        InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix,
-            prefix: "",
-            digit_case: None,
-        }
-    }
-
-    /// String representation in an arbitrary radix.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ubig!(0x123f).to_str_radix(16), "123f");
-    ///
-    /// // Equivalent but slightly less efficient:
-    /// assert_eq!(ubig!(0x123f).in_radix(16).to_string(), "123f");
-    /// ```
-    pub fn to_str_radix(&self, radix: u32) -> String {
-        check_radix_valid(radix);
-        let in_radix = InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix,
-            prefix: "",
-            digit_case: Some(DigitCase::Lower),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
-    }
-
-    /// Upper-case string representation in an arbitrary radix.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ubig!(0x123f).to_str_radix_uppercase(16), "123F");
-    ///
-    /// // Equivalent but slightly less efficient:
-    /// assert_eq!(format!("{:#}", ubig!(0x123f).in_radix(16)), "123F");
-    /// ```
-    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        check_radix_valid(radix);
-        let in_radix = InRadix {
-            sign: Positive,
-            magnitude: self,
-            radix,
-            prefix: "",
-            digit_case: Some(DigitCase::Upper),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
-    }
-}
-
-impl Display for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix: 10,
-            prefix: "",
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl Debug for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(self, f)
-    }
-}
-
-impl Binary for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix: 2,
-            prefix: if f.alternate() { "0b" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl Octal for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix: 8,
-            prefix: if f.alternate() { "0o" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl LowerHex for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix: 16,
-            prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Lower),
-        }
-        .fmt(f)
-    }
-}
-
-impl UpperHex for IBig {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix: 16,
-            prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Upper),
-        }
-        .fmt(f)
-    }
-}
-
-impl IBig {
-    /// Representation in a given radix.
-    ///
-    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
-    /// than converting to a string and then formatting.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(format!("{}", ibig!(-83).in_radix(3)), "-10002");
-    /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
-    /// ```
-    pub fn in_radix(&self, radix: u32) -> InRadix {
-        check_radix_valid(radix);
-        InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix,
-            prefix: "",
-            digit_case: None,
-        }
-    }
-
-    /// String representation in an arbitrary radix.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-0x123f).to_str_radix(16), "-123f");
-    ///
-    /// // Equivalent but slightly less efficient:
-    /// assert_eq!(ibig!(-0x123f).in_radix(16).to_string(), "-123f");
-    /// ```
-    pub fn to_str_radix(&self, radix: u32) -> String {
-        check_radix_valid(radix);
-        let in_radix = InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix,
-            prefix: "",
-            digit_case: Some(DigitCase::Lower),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
-    }
-
-    /// Upper-case string representation in an arbitrary radix.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `radix` is not between 2 and 36 inclusive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-0x123f).to_str_radix_uppercase(16), "-123F");
-    ///
-    /// // Equivalent but slightly less efficient:
-    /// assert_eq!(format!("{:#}", ibig!(-0x123f).in_radix(16)), "-123F");
-    /// ```
-    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        check_radix_valid(radix);
-        let in_radix = InRadix {
-            sign: self.sign(),
-            magnitude: self.magnitude(),
-            radix,
-            prefix: "",
-            digit_case: Some(DigitCase::Upper),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
     }
 }

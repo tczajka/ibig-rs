@@ -11,6 +11,14 @@ use rand::{
     Rng,
 };
 
+impl SampleUniform for UBig {
+    type Sampler = UniformUBig;
+}
+
+impl SampleUniform for IBig {
+    type Sampler = UniformIBig;
+}
+
 impl UBig {
     /// Random UBig in range [0..range)
     fn uniform<R>(range: &UBig, rng: &mut R) -> UBig
@@ -123,10 +131,6 @@ impl UniformSampler for UniformUBig {
     }
 }
 
-impl SampleUniform for UBig {
-    type Sampler = UniformUBig;
-}
-
 /// Uniform `IBig` distribution.
 ///
 /// # Example
@@ -184,8 +188,4 @@ impl UniformSampler for UniformIBig {
     {
         IBig::from(UBig::uniform(&self.range, rng)) + &self.offset
     }
-}
-
-impl SampleUniform for IBig {
-    type Sampler = UniformIBig;
 }

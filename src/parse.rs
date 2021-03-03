@@ -12,26 +12,21 @@ use core::{
     str::FromStr,
 };
 
-/// Parse error when parsing `UBig` or `IBig`.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ParseError {
-    /// There were no digits in the string.
-    NoDigits,
-    /// Invalid digit for a given radix.
-    InvalidDigit,
-}
+impl FromStr for UBig {
+    type Err = ParseError;
 
-impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            ParseError::NoDigits => f.write_str("no digits"),
-            ParseError::InvalidDigit => f.write_str("invalid digit"),
-        }
+    fn from_str(s: &str) -> Result<UBig, ParseError> {
+        UBig::from_str_radix(s, 10)
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for ParseError {}
+impl FromStr for IBig {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<IBig, ParseError> {
+        IBig::from_str_radix(s, 10)
+    }
+}
 
 impl UBig {
     /// Convert a string in a given base to `UBig`.
@@ -173,49 +168,6 @@ impl UBig {
     }
 }
 
-fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError> {
-    debug_assert!(
-        radix >= 2
-            && radix <= MAX_RADIX
-            && radix.is_power_of_two()
-            && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
-    );
-
-    let log_radix = radix.trailing_zeros();
-    let mut word = 0;
-    let mut bits = 0;
-    for byte in src.as_bytes().iter().rev() {
-        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
-        word |= (digit as Word) << bits;
-        bits += log_radix;
-    }
-    Ok(word)
-}
-
-fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
-    debug_assert!(
-        radix >= 2
-            && radix <= MAX_RADIX
-            && !radix.is_power_of_two()
-            && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
-    );
-
-    let mut word: Word = 0;
-    for byte in src.iter() {
-        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
-        word = word * (radix as Word) + (digit as Word);
-    }
-    Ok(word)
-}
-
-impl FromStr for UBig {
-    type Err = ParseError;
-
-    fn from_str(s: &str) -> Result<UBig, ParseError> {
-        UBig::from_str_radix(s, 10)
-    }
-}
-
 impl IBig {
     /// Convert a string in a given base to `IBig`.
     ///
@@ -279,10 +231,58 @@ impl IBig {
     }
 }
 
-impl FromStr for IBig {
-    type Err = ParseError;
+/// Parse error when parsing `UBig` or `IBig`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ParseError {
+    /// There were no digits in the string.
+    NoDigits,
+    /// Invalid digit for a given radix.
+    InvalidDigit,
+}
 
-    fn from_str(s: &str) -> Result<IBig, ParseError> {
-        IBig::from_str_radix(s, 10)
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            ParseError::NoDigits => f.write_str("no digits"),
+            ParseError::InvalidDigit => f.write_str("invalid digit"),
+        }
     }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseError {}
+
+fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError> {
+    debug_assert!(
+        radix >= 2
+            && radix <= MAX_RADIX
+            && radix.is_power_of_two()
+            && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
+    );
+
+    let log_radix = radix.trailing_zeros();
+    let mut word = 0;
+    let mut bits = 0;
+    for byte in src.as_bytes().iter().rev() {
+        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
+        word |= (digit as Word) << bits;
+        bits += log_radix;
+    }
+    Ok(word)
+}
+
+fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
+    debug_assert!(
+        radix >= 2
+            && radix <= MAX_RADIX
+            && !radix.is_power_of_two()
+            && src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits
+    );
+
+    let mut word: Word = 0;
+    for byte in src.iter() {
+        let digit = digit_from_utf8_byte(*byte, radix).ok_or(ParseError::InvalidDigit)?;
+        word = word * (radix as Word) + (digit as Word);
+    }
+    Ok(word)
 }

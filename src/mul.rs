@@ -81,6 +81,75 @@ impl MulAssign<&UBig> for UBig {
     }
 }
 
+impl Mul<IBig> for IBig {
+    type Output = IBig;
+
+    fn mul(self, rhs: IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = rhs.into_sign_magnitude();
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl Mul<&IBig> for IBig {
+    type Output = IBig;
+
+    fn mul(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = self.into_sign_magnitude();
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl Mul<IBig> for &IBig {
+    type Output = IBig;
+
+    fn mul(self, rhs: IBig) -> IBig {
+        rhs.mul(self)
+    }
+}
+
+impl Mul<&IBig> for &IBig {
+    type Output = IBig;
+
+    fn mul(self, rhs: &IBig) -> IBig {
+        let (sign0, mag0) = (self.sign(), self.magnitude());
+        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
+        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
+    }
+}
+
+impl MulAssign<IBig> for IBig {
+    fn mul_assign(&mut self, rhs: IBig) {
+        *self = mem::take(self) * rhs;
+    }
+}
+
+impl MulAssign<&IBig> for IBig {
+    fn mul_assign(&mut self, rhs: &IBig) {
+        *self = mem::take(self) * rhs;
+    }
+}
+
+impl Mul<Sign> for Sign {
+    type Output = Sign;
+
+    fn mul(self, rhs: Sign) -> Sign {
+        match (self, rhs) {
+            (Positive, Positive) => Positive,
+            (Positive, Negative) => Negative,
+            (Negative, Positive) => Negative,
+            (Negative, Negative) => Positive,
+        }
+    }
+}
+
+impl MulAssign<Sign> for Sign {
+    fn mul_assign(&mut self, rhs: Sign) {
+        *self = *self * rhs;
+    }
+}
+
 impl UBig {
     /// Multiply two `Word`s.
     fn mul_word(a: Word, b: Word) -> UBig {
@@ -645,73 +714,4 @@ fn add_signed_mul_toom_3_same_len(
 
     assert!(carry.abs() <= 1);
     carry
-}
-
-impl Mul<Sign> for Sign {
-    type Output = Sign;
-
-    fn mul(self, rhs: Sign) -> Sign {
-        match (self, rhs) {
-            (Positive, Positive) => Positive,
-            (Positive, Negative) => Negative,
-            (Negative, Positive) => Negative,
-            (Negative, Negative) => Positive,
-        }
-    }
-}
-
-impl MulAssign<Sign> for Sign {
-    fn mul_assign(&mut self, rhs: Sign) {
-        *self = *self * rhs;
-    }
-}
-
-impl Mul<IBig> for IBig {
-    type Output = IBig;
-
-    fn mul(self, rhs: IBig) -> IBig {
-        let (sign0, mag0) = self.into_sign_magnitude();
-        let (sign1, mag1) = rhs.into_sign_magnitude();
-        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
-    }
-}
-
-impl Mul<&IBig> for IBig {
-    type Output = IBig;
-
-    fn mul(self, rhs: &IBig) -> IBig {
-        let (sign0, mag0) = self.into_sign_magnitude();
-        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
-        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
-    }
-}
-
-impl Mul<IBig> for &IBig {
-    type Output = IBig;
-
-    fn mul(self, rhs: IBig) -> IBig {
-        rhs.mul(self)
-    }
-}
-
-impl Mul<&IBig> for &IBig {
-    type Output = IBig;
-
-    fn mul(self, rhs: &IBig) -> IBig {
-        let (sign0, mag0) = (self.sign(), self.magnitude());
-        let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
-        IBig::from_sign_magnitude(sign0 * sign1, mag0 * mag1)
-    }
-}
-
-impl MulAssign<IBig> for IBig {
-    fn mul_assign(&mut self, rhs: IBig) {
-        *self = mem::take(self) * rhs;
-    }
-}
-
-impl MulAssign<&IBig> for IBig {
-    fn mul_assign(&mut self, rhs: &IBig) {
-        *self = mem::take(self) * rhs;
-    }
 }

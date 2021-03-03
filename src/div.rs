@@ -451,245 +451,6 @@ impl DivRemEuclid<&UBig> for &UBig {
     }
 }
 
-fn panic_divide_by_0() -> ! {
-    panic!("divide by 0")
-}
-
-impl UBig {
-    /// `lhs / rhs`
-    fn div_word(lhs: Word, rhs: Word) -> UBig {
-        match lhs.checked_div(rhs) {
-            Some(res) => UBig::from_word(res),
-            None => panic_divide_by_0(),
-        }
-    }
-
-    /// `lhs % rhs`
-    fn rem_word(lhs: Word, rhs: Word) -> UBig {
-        match lhs.checked_rem(rhs) {
-            Some(res) => UBig::from_word(res),
-            None => panic_divide_by_0(),
-        }
-    }
-
-    /// (lhs / rhs, lhs % rhs)
-    fn div_rem_word(lhs: Word, rhs: Word) -> (UBig, UBig) {
-        // If division works, remainder also works.
-        match lhs.checked_div(rhs) {
-            Some(res) => (UBig::from_word(res), UBig::from_word(lhs % rhs)),
-            None => panic_divide_by_0(),
-        }
-    }
-
-    /// `lhs / rhs`
-    fn div_large_word(lhs: Buffer, rhs: Word) -> UBig {
-        let (q, _) = UBig::div_rem_large_word(lhs, rhs);
-        q
-    }
-
-    /// `lhs % rhs`
-    fn rem_large_word(lhs: &[Word], rhs: Word) -> UBig {
-        if rhs == 0 {
-            panic_divide_by_0();
-        }
-        UBig::from_word(rem_by_word(lhs, rhs))
-    }
-
-    /// (buffer / rhs, buffer % rhs)
-    fn div_rem_large_word(mut buffer: Buffer, rhs: Word) -> (UBig, UBig) {
-        if rhs == 0 {
-            panic_divide_by_0();
-        }
-        let rem = div_rem_by_word_in_place(&mut buffer, rhs);
-        (buffer.into(), UBig::from_word(rem))
-    }
-
-    /// `lhs / rhs`
-    fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let _ = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
-        UBig::shr_large_words(lhs, rhs.len())
-    }
-
-    /// `lhs % rhs`
-    fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
-        lhs.truncate(rhs.len());
-        shift::shr_in_place(&mut lhs, sh);
-        lhs.into()
-    }
-
-    /// `(lhs / rhs, lhs % rhs)`
-    fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
-        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
-        let q = UBig::shr_large_ref_words(&lhs, rhs.len());
-        lhs.truncate(rhs.len());
-        shift::shr_in_place(&mut lhs, sh);
-        (q, lhs.into())
-    }
-
-    /// Normalizes large arguments for division by shifting them left:
-    /// * lhs as least as long as rhs
-    /// * top words of lhs smaller than rhs.
-    /// * top bit of rhs is 1
-    ///
-    /// Returns shift size.
-    fn div_normalize(lhs: &mut Buffer, rhs: &mut Buffer) -> u32 {
-        assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
-        let sh = rhs.last().unwrap().leading_zeros();
-        assert!(sh != WORD_BITS);
-        let rhs_carry = shift::shl_in_place(rhs, sh);
-        assert!(rhs_carry == 0);
-        let lhs_carry = shift::shl_in_place(lhs, sh);
-        if lhs_carry != 0 || lhs.last().unwrap() >= rhs.last().unwrap() {
-            lhs.push_may_reallocate(lhs_carry);
-        }
-        sh
-    }
-}
-
-/// words = words / rhs
-///
-/// rhs must be non-zero
-///
-/// Returns words % rhs.
-pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
-    let shift = rhs.leading_zeros();
-    let mut rem = shift::shl_in_place(words, shift);
-    let fast_division = FastDivision::by(rhs << shift);
-
-    for word in words.iter_mut().rev() {
-        let a = double_word(*word, rem);
-        let (q, r) = fast_division.div_rem(a);
-        *word = q;
-        rem = r;
-    }
-    rem >> shift
-}
-
-/// words % rhs
-pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
-    let mut rem: Word = 0;
-    for word in words.iter().rev() {
-        let (v0, v1) = split_double_word(double_word(*word, rem) % extend_word(rhs));
-        debug_assert!(v1 == 0);
-        rem = v0;
-    }
-    rem
-}
-
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// rhs must have top bit of 1.
-/// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) {
-    assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
-    debug_assert!(rhs.last().unwrap().leading_zeros() == 0);
-    div_rem_in_place_simple(lhs, rhs);
-}
-
-/// Simple division algorithm in place.
-///
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// rhs must have top bit of 1.
-/// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
-    // The Art of Computer Programming, algorithm 4.3.1D.
-
-    let n = rhs.len();
-    assert!(n >= 2);
-    let rhs0 = rhs[n - 1];
-    let rhs1 = rhs[n - 2];
-    debug_assert!(rhs0.leading_zeros() == 0);
-
-    let fast_division_rhs0 = FastDivision::by(rhs0);
-
-    let mut lhs_len = lhs.len();
-    assert!(lhs_len >= n);
-
-    while lhs_len > n {
-        let lhs0 = lhs[lhs_len - 1];
-        let lhs1 = lhs[lhs_len - 2];
-        let lhs2 = lhs[lhs_len - 3];
-        let lhs01 = double_word(lhs1, lhs0);
-
-        // Approximate the next word of quotient by
-        // q = floor([lhs0, lhs1] / rhs0)
-        // r = remainder (or None if overflow)
-
-        // exact_q = floor([lhs0, lhs1, ...] / [rhs0, ...])
-        // [lhs0, lhs1, ...] / [rhs0, ...] < ([lhs0, lhs1] + [0..1)) / rhs0
-        // exact_q <= floor(([lhs0, lhs1] + [0..1)) / rhs0) = q
-        //
-        // B = WORD_BITS, rhs0 >= 2^(B-1)
-        //
-        // [lhs0, lhs1, ...] / [rhs0, ...] > [lhs0, lhs1] / (rhs0 + 1)
-        //   = [lhs0, lhs1] / rhs0 * (1 - 1 / (rhs0+1))
-        //   >= q * (1 - 1/(rhs0+1)) = q - (q / (rhs0+1))
-        //   >= q - (2^B+1) / 2^(B-1) > q-2
-        // exact_q >= q-2
-        //
-        // Therefore q is never too small and at most 2 too large.
-
-        // Then improve the approximation:
-        // q' = min(floor([lhs0, lhs1, lhs2] / [rhs0, rhs1]), Word::MAX)
-        // q'-1 <= exact_q <= q' <= q
-        // Most of the time exact_q = q'.
-        // (by the same reasoning as above, except with 2B instead of B).
-
-        // We must decrease q at most twice.
-        // [lhs0, lhs1] = q * rhs0 + r
-        //
-        // q must be decreased if:
-        // q-1 >= floor([lhs0, lhs1, lhs2] / [rhs0, rhs1])
-        // q > [lhs0, lhs1, lhs2] / [rhs0, rhs1]
-        // q * [rhs0, rhs1] > [lhs0, lhs1, lhs2]
-        // q * rhs1 > [r, lhs2]
-        let mut q = if lhs0 < rhs0 {
-            let (mut q, mut r) = fast_division_rhs0.div_rem(lhs01);
-            while extend_word(q) * extend_word(rhs1) > double_word(lhs2, r) {
-                q -= 1;
-                match r.checked_add(rhs0) {
-                    None => break,
-                    Some(r2) => r = r2,
-                }
-            }
-            q
-        } else {
-            // In this case MAX is accurate (r is already overflown).
-            Word::MAX
-        };
-
-        // Subtract a multiple of rhs.
-        let mut borrow =
-            mul::sub_mul_word_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], q, &rhs);
-
-        if borrow > lhs0 {
-            // Rare case: q is too large (by 1).
-            // Add a correction.
-            q -= 1;
-            let carry = add::add_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], &rhs);
-            debug_assert!(carry);
-            borrow -= 1;
-        }
-        debug_assert!(borrow == lhs0);
-        // lhs0 is now logically zeroed out
-        lhs_len -= 1;
-        // Store next digit of quotient.
-        lhs[lhs_len] = q;
-    }
-    // Quotient is now in lhs[n..] and remainder in lhs[..n].
-}
-
 impl Div<IBig> for IBig {
     type Output = IBig;
 
@@ -1026,6 +787,245 @@ impl DivRemEuclid<&IBig> for &IBig {
             (q, r)
         }
     }
+}
+
+impl UBig {
+    /// `lhs / rhs`
+    fn div_word(lhs: Word, rhs: Word) -> UBig {
+        match lhs.checked_div(rhs) {
+            Some(res) => UBig::from_word(res),
+            None => panic_divide_by_0(),
+        }
+    }
+
+    /// `lhs % rhs`
+    fn rem_word(lhs: Word, rhs: Word) -> UBig {
+        match lhs.checked_rem(rhs) {
+            Some(res) => UBig::from_word(res),
+            None => panic_divide_by_0(),
+        }
+    }
+
+    /// (lhs / rhs, lhs % rhs)
+    fn div_rem_word(lhs: Word, rhs: Word) -> (UBig, UBig) {
+        // If division works, remainder also works.
+        match lhs.checked_div(rhs) {
+            Some(res) => (UBig::from_word(res), UBig::from_word(lhs % rhs)),
+            None => panic_divide_by_0(),
+        }
+    }
+
+    /// `lhs / rhs`
+    fn div_large_word(lhs: Buffer, rhs: Word) -> UBig {
+        let (q, _) = UBig::div_rem_large_word(lhs, rhs);
+        q
+    }
+
+    /// `lhs % rhs`
+    fn rem_large_word(lhs: &[Word], rhs: Word) -> UBig {
+        if rhs == 0 {
+            panic_divide_by_0();
+        }
+        UBig::from_word(rem_by_word(lhs, rhs))
+    }
+
+    /// (buffer / rhs, buffer % rhs)
+    fn div_rem_large_word(mut buffer: Buffer, rhs: Word) -> (UBig, UBig) {
+        if rhs == 0 {
+            panic_divide_by_0();
+        }
+        let rem = div_rem_by_word_in_place(&mut buffer, rhs);
+        (buffer.into(), UBig::from_word(rem))
+    }
+
+    /// `lhs / rhs`
+    fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
+        let _ = UBig::div_normalize(&mut lhs, &mut rhs);
+        div_rem_in_place(&mut lhs, &rhs);
+        UBig::shr_large_words(lhs, rhs.len())
+    }
+
+    /// `lhs % rhs`
+    fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
+        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
+        div_rem_in_place(&mut lhs, &rhs);
+        lhs.truncate(rhs.len());
+        shift::shr_in_place(&mut lhs, sh);
+        lhs.into()
+    }
+
+    /// `(lhs / rhs, lhs % rhs)`
+    fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
+        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
+        div_rem_in_place(&mut lhs, &rhs);
+        let q = UBig::shr_large_ref_words(&lhs, rhs.len());
+        lhs.truncate(rhs.len());
+        shift::shr_in_place(&mut lhs, sh);
+        (q, lhs.into())
+    }
+
+    /// Normalizes large arguments for division by shifting them left:
+    /// * lhs as least as long as rhs
+    /// * top words of lhs smaller than rhs.
+    /// * top bit of rhs is 1
+    ///
+    /// Returns shift size.
+    fn div_normalize(lhs: &mut Buffer, rhs: &mut Buffer) -> u32 {
+        assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
+        let sh = rhs.last().unwrap().leading_zeros();
+        assert!(sh != WORD_BITS);
+        let rhs_carry = shift::shl_in_place(rhs, sh);
+        assert!(rhs_carry == 0);
+        let lhs_carry = shift::shl_in_place(lhs, sh);
+        if lhs_carry != 0 || lhs.last().unwrap() >= rhs.last().unwrap() {
+            lhs.push_may_reallocate(lhs_carry);
+        }
+        sh
+    }
+}
+
+fn panic_divide_by_0() -> ! {
+    panic!("divide by 0")
+}
+
+/// words = words / rhs
+///
+/// rhs must be non-zero
+///
+/// Returns words % rhs.
+pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
+    let shift = rhs.leading_zeros();
+    let mut rem = shift::shl_in_place(words, shift);
+    let fast_division = FastDivision::by(rhs << shift);
+
+    for word in words.iter_mut().rev() {
+        let a = double_word(*word, rem);
+        let (q, r) = fast_division.div_rem(a);
+        *word = q;
+        rem = r;
+    }
+    rem >> shift
+}
+
+/// words % rhs
+pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
+    let mut rem: Word = 0;
+    for word in words.iter().rev() {
+        let (v0, v1) = split_double_word(double_word(*word, rem) % extend_word(rhs));
+        debug_assert!(v1 == 0);
+        rem = v0;
+    }
+    rem
+}
+
+/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
+/// bottom words of lhs by the remainder.
+///
+/// rhs must have top bit of 1.
+/// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
+///
+/// lhs = [lhs / rhs, lhs % rhs]
+fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) {
+    assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
+    debug_assert!(rhs.last().unwrap().leading_zeros() == 0);
+    div_rem_in_place_simple(lhs, rhs);
+}
+
+/// Simple division algorithm in place.
+///
+/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
+/// bottom words of lhs by the remainder.
+///
+/// rhs must have top bit of 1.
+/// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
+///
+/// lhs = [lhs / rhs, lhs % rhs]
+fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
+    // The Art of Computer Programming, algorithm 4.3.1D.
+
+    let n = rhs.len();
+    assert!(n >= 2);
+    let rhs0 = rhs[n - 1];
+    let rhs1 = rhs[n - 2];
+    debug_assert!(rhs0.leading_zeros() == 0);
+
+    let fast_division_rhs0 = FastDivision::by(rhs0);
+
+    let mut lhs_len = lhs.len();
+    assert!(lhs_len >= n);
+
+    while lhs_len > n {
+        let lhs0 = lhs[lhs_len - 1];
+        let lhs1 = lhs[lhs_len - 2];
+        let lhs2 = lhs[lhs_len - 3];
+        let lhs01 = double_word(lhs1, lhs0);
+
+        // Approximate the next word of quotient by
+        // q = floor([lhs0, lhs1] / rhs0)
+        // r = remainder (or None if overflow)
+
+        // exact_q = floor([lhs0, lhs1, ...] / [rhs0, ...])
+        // [lhs0, lhs1, ...] / [rhs0, ...] < ([lhs0, lhs1] + [0..1)) / rhs0
+        // exact_q <= floor(([lhs0, lhs1] + [0..1)) / rhs0) = q
+        //
+        // B = WORD_BITS, rhs0 >= 2^(B-1)
+        //
+        // [lhs0, lhs1, ...] / [rhs0, ...] > [lhs0, lhs1] / (rhs0 + 1)
+        //   = [lhs0, lhs1] / rhs0 * (1 - 1 / (rhs0+1))
+        //   >= q * (1 - 1/(rhs0+1)) = q - (q / (rhs0+1))
+        //   >= q - (2^B+1) / 2^(B-1) > q-2
+        // exact_q >= q-2
+        //
+        // Therefore q is never too small and at most 2 too large.
+
+        // Then improve the approximation:
+        // q' = min(floor([lhs0, lhs1, lhs2] / [rhs0, rhs1]), Word::MAX)
+        // q'-1 <= exact_q <= q' <= q
+        // Most of the time exact_q = q'.
+        // (by the same reasoning as above, except with 2B instead of B).
+
+        // We must decrease q at most twice.
+        // [lhs0, lhs1] = q * rhs0 + r
+        //
+        // q must be decreased if:
+        // q-1 >= floor([lhs0, lhs1, lhs2] / [rhs0, rhs1])
+        // q > [lhs0, lhs1, lhs2] / [rhs0, rhs1]
+        // q * [rhs0, rhs1] > [lhs0, lhs1, lhs2]
+        // q * rhs1 > [r, lhs2]
+        let mut q = if lhs0 < rhs0 {
+            let (mut q, mut r) = fast_division_rhs0.div_rem(lhs01);
+            while extend_word(q) * extend_word(rhs1) > double_word(lhs2, r) {
+                q -= 1;
+                match r.checked_add(rhs0) {
+                    None => break,
+                    Some(r2) => r = r2,
+                }
+            }
+            q
+        } else {
+            // In this case MAX is accurate (r is already overflown).
+            Word::MAX
+        };
+
+        // Subtract a multiple of rhs.
+        let mut borrow =
+            mul::sub_mul_word_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], q, &rhs);
+
+        if borrow > lhs0 {
+            // Rare case: q is too large (by 1).
+            // Add a correction.
+            q -= 1;
+            let carry = add::add_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], &rhs);
+            debug_assert!(carry);
+            borrow -= 1;
+        }
+        debug_assert!(borrow == lhs0);
+        // lhs0 is now logically zeroed out
+        lhs_len -= 1;
+        // Store next digit of quotient.
+        lhs[lhs_len] = q;
+    }
+    // Quotient is now in lhs[n..] and remainder in lhs[..n].
 }
 
 /// Fast repeated division by a given value.
