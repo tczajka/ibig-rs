@@ -13,10 +13,10 @@ use core::{
     ops::{Mul, MulAssign},
 };
 
-/// If both lengths >= this, use Karatsuba algorithm.
-const THRESHOLD_KARATSUBA: usize = 24;
-/// If both lengths >= this, use Toom-Cook-3 algorithm.
-const THRESHOLD_TOOM_3: usize = 192;
+/// If both lengths < this, simple multiplication can be used.
+const THRESHOLD_SIMPLE: usize = 24;
+/// If both lengths < this, Karatsuba multiplication can be used.
+const THRESHOLD_KARATSUBA: usize = 192;
 
 impl Mul<UBig> for UBig {
     type Output = UBig;
@@ -214,9 +214,9 @@ fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
 fn mul_temp_buffer_len(a_len: usize, b_len: usize) -> usize {
     let n = a_len.min(b_len);
 
-    if n < THRESHOLD_KARATSUBA {
+    if n < THRESHOLD_SIMPLE {
         0
-    } else if n < THRESHOLD_TOOM_3 {
+    } else if n < THRESHOLD_KARATSUBA {
         // Karatsuba multiplication.
         //
         // We prove by induction that f(n) <= 2n + 2 log_2 (n-1).
@@ -262,9 +262,9 @@ fn add_signed_mul<'a>(
     if a.len() < b.len() {
         mem::swap(&mut a, &mut b);
     }
-    if b.len() < THRESHOLD_KARATSUBA {
+    if b.len() < THRESHOLD_SIMPLE {
         add_signed_mul_simple(c, sign, a, b)
-    } else if b.len() < THRESHOLD_TOOM_3 {
+    } else if b.len() < THRESHOLD_KARATSUBA {
         add_signed_mul_karatsuba(c, sign, a, b, temp)
     } else {
         add_signed_mul_toom_3(c, sign, a, b, temp)
@@ -288,7 +288,7 @@ fn add_signed_mul_simple(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> 
 /// Returns carry.
 fn add_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
-    debug_assert!(b.len() < THRESHOLD_KARATSUBA);
+    debug_assert!(b.len() < THRESHOLD_SIMPLE);
     let mut carry: Word = 0;
     for (i, m) in b.iter().enumerate() {
         carry += add_mul_word_in_place(&mut c[i..], *m, a);
@@ -303,7 +303,7 @@ fn add_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
 /// Returns borrow.
 fn sub_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
-    debug_assert!(b.len() < THRESHOLD_KARATSUBA);
+    debug_assert!(b.len() < THRESHOLD_SIMPLE);
     let mut borrow: Word = 0;
     for (i, m) in b.iter().enumerate() {
         borrow += sub_mul_word_in_place(&mut c[i..], *m, a);
@@ -324,10 +324,10 @@ fn add_signed_mul_karatsuba<'a>(
     temp: &mut [Word],
 ) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
-    debug_assert!(b.len() < THRESHOLD_TOOM_3);
+    debug_assert!(b.len() < THRESHOLD_KARATSUBA);
 
     let mut carry: SignedWord = 0;
-    while b.len() >= THRESHOLD_KARATSUBA {
+    while b.len() >= THRESHOLD_SIMPLE {
         let n = b.len();
         let mut carry_n: SignedWord = 0; // at c[n]
         while a.len() >= n {
@@ -367,9 +367,9 @@ fn add_signed_mul_karatsuba_same_len(
 ) -> SignedWord {
     let n = a.len();
     debug_assert!(b.len() == n && c.len() == 2 * n);
-    debug_assert!(n < THRESHOLD_TOOM_3);
+    debug_assert!(n < THRESHOLD_KARATSUBA);
 
-    if n < THRESHOLD_KARATSUBA {
+    if n < THRESHOLD_SIMPLE {
         return add_signed_mul_simple(c, sign, a, b);
     }
 
@@ -438,7 +438,7 @@ fn add_signed_mul_toom_3<'a>(
     assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
 
     let mut carry: SignedWord = 0;
-    while b.len() >= THRESHOLD_TOOM_3 {
+    while b.len() >= THRESHOLD_KARATSUBA {
         let n = b.len();
         let mut carry_n: SignedWord = 0; // at c[n]
         while a.len() >= n {
@@ -496,7 +496,7 @@ fn add_signed_mul_toom_3_same_len(
     // t1 = (3V(0) + 2V(-1) + V(2))/6 - 2V(inf)
     // t2 = (V(1) + V(-1))/2
 
-    if n < THRESHOLD_TOOM_3 {
+    if n < THRESHOLD_KARATSUBA {
         return add_signed_mul_karatsuba(c, sign, a, b, temp);
     }
 
