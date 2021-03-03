@@ -30,6 +30,9 @@ impl std::error::Error for OutOfBoundsError {}
 /// Machine word.
 pub(crate) type Word = usize;
 
+/// Signed machine word.
+pub(crate) type SignedWord = isize;
+
 #[cfg(target_pointer_width = "16")]
 /// Double machine word.
 pub(crate) type DoubleWord = u32;

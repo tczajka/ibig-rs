@@ -46,9 +46,11 @@ fn test_random_arithmetic() {
     let mut rng = StdRng::seed_from_u64(3);
     let p = ubig!(1000000007);
 
-    for _ in 0..100 {
-        let len_a: u32 = (&mut rng).gen_range(1000..10000);
-        let len_b: u32 = (&mut rng).gen_range(1000..10000);
+    for iter in 0..100 {
+        let big = iter > 80;
+        let range = if big { 1000000 } else { 100000 };
+        let len_a: u32 = (&mut rng).gen_range(1000..range);
+        let len_b: u32 = (&mut rng).gen_range(1000..range);
         let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
         let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
         let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
@@ -56,7 +58,11 @@ fn test_random_arithmetic() {
         assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
         assert_eq!(&a + &b - &a, b);
         assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
-        assert_eq!((&a * &b + &c) / &a, b);
-        assert_eq!((&a * &b + &c) % &a, c);
+        // Division and radix conversion are not fast enough yet.
+        if !big {
+            assert_eq!((&a * &b + &c) / &a, b);
+            assert_eq!((&a * &b + &c) % &a, c);
+            assert_eq!(UBig::from_str_radix(&a.to_str_radix(33), 33).unwrap(), a);
+        }
     }
 }

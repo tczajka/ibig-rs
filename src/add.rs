@@ -1,7 +1,7 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{extend_word, split_double_word, Word},
+    primitive::{extend_word, split_double_word, PrimitiveSigned, SignedWord, Word},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -143,10 +143,21 @@ pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
 ///
 /// Returns overflow.
 pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
-    debug_assert!(!words.is_empty());
+    assert!(!words.is_empty());
     let (a, overflow) = words[0].overflowing_add(rhs);
     words[0] = a;
     overflow && add_one_in_place(&mut words[1..])
+}
+
+/// Add a signed word to a non-empty word sequence.
+///
+/// Returns overflow.
+pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> SignedWord {
+    assert!(!words.is_empty());
+    match rhs.to_sign_magnitude() {
+        (Positive, u) => SignedWord::from(add_word_in_place(words, u)),
+        (Negative, u) => -SignedWord::from(sub_word_in_place(words, u)),
+    }
 }
 
 /// Add a word sequence of same length in place.
@@ -592,6 +603,19 @@ mod tests {
         let overflow = add_word_in_place(&mut a, Word::MAX / 2 + 3);
         assert_eq!(overflow, true);
         assert_eq!(a, [1, 0, 0]);
+    }
+
+    #[test]
+    fn test_add_signed_word_in_place() {
+        let mut a = [1, 2, 3];
+        let overflow = add_signed_word_in_place(&mut a, 4);
+        assert_eq!(overflow, 0);
+        assert_eq!(a, [5, 2, 3]);
+
+        let mut a = [3, 0];
+        let overflow = add_signed_word_in_place(&mut a, -4);
+        assert_eq!(overflow, -1);
+        assert_eq!(a, [Word::MAX, Word::MAX]);
     }
 
     #[test]

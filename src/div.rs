@@ -492,13 +492,7 @@ impl UBig {
         if rhs == 0 {
             panic_divide_by_0();
         }
-        let mut rem: Word = 0;
-        for word in lhs.iter().rev() {
-            let (v0, v1) = split_double_word(double_word(*word, rem) % extend_word(rhs));
-            debug_assert!(v1 == 0);
-            rem = v0;
-        }
-        UBig::from_word(rem)
+        UBig::from_word(rem_by_word(lhs, rhs))
     }
 
     /// (buffer / rhs, buffer % rhs)
@@ -661,6 +655,17 @@ pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
         rem = r;
     }
     rem >> shift
+}
+
+/// words % rhs
+pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
+    let mut rem: Word = 0;
+    for word in words.iter().rev() {
+        let (v0, v1) = split_double_word(double_word(*word, rem) % extend_word(rhs));
+        debug_assert!(v1 == 0);
+        rem = v0;
+    }
+    rem
 }
 
 impl Div<IBig> for IBig {
