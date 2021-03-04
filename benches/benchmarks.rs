@@ -161,6 +161,16 @@ fn bench_mul_1e1_1e6(bencher: &mut Bencher) {
 }
 
 #[bench]
+fn bench_mul_1e1_1e7(bencher: &mut Bencher) {
+    bench_mul(10, 10_000_000, bencher);
+}
+
+#[bench]
+fn bench_mul_1e1_1e8(bencher: &mut Bencher) {
+    bench_mul(10, 100_000_000, bencher);
+}
+
+#[bench]
 fn bench_mul_1e2_1e3(bencher: &mut Bencher) {
     bench_mul(100, 1_000, bencher);
 }
@@ -181,6 +191,16 @@ fn bench_mul_1e2_1e6(bencher: &mut Bencher) {
 }
 
 #[bench]
+fn bench_mul_1e2_1e7(bencher: &mut Bencher) {
+    bench_mul(100, 10_000_000, bencher);
+}
+
+#[bench]
+fn bench_mul_1e2_1e8(bencher: &mut Bencher) {
+    bench_mul(100, 100_000_000, bencher);
+}
+
+#[bench]
 fn bench_mul_1e3_1e4(bencher: &mut Bencher) {
     bench_mul(1_000, 10_000, bencher);
 }
@@ -193,6 +213,16 @@ fn bench_mul_1e3_1e5(bencher: &mut Bencher) {
 #[bench]
 fn bench_mul_1e3_1e6(bencher: &mut Bencher) {
     bench_mul(1_000, 1_000_000, bencher);
+}
+
+#[bench]
+fn bench_mul_1e3_1e7(bencher: &mut Bencher) {
+    bench_mul(1_000, 10_000_000, bencher);
+}
+
+#[bench]
+fn bench_mul_1e3_1e8(bencher: &mut Bencher) {
+    bench_mul(1_000, 100_000_000, bencher);
 }
 
 #[bench]
