@@ -9,7 +9,7 @@ use crate::{
     ubig::{Repr::*, UBig},
 };
 use core::{
-    mem,
+    iter, mem,
     ops::{Div, DivAssign, Rem, RemAssign},
 };
 
@@ -894,6 +894,17 @@ fn panic_divide_by_0() -> ! {
 ///
 /// Returns words % rhs.
 pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
+    debug_assert!(rhs != 0);
+    if words.is_empty() {
+        return 0;
+    }
+    if rhs.is_power_of_two() {
+        let rem = words[0] & (rhs - 1);
+        let sh = rhs.trailing_zeros();
+        shift::shr_in_place(words, sh);
+        return rem;
+    }
+
     let shift = rhs.leading_zeros();
     let mut rem = shift::shl_in_place(words, shift);
     let fast_division = FastDivision::by(rhs << shift);
@@ -909,13 +920,37 @@ pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 
 /// words % rhs
 pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
-    let mut rem: Word = 0;
-    for word in words.iter().rev() {
-        let (v0, v1) = split_double_word(double_word(*word, rem) % extend_word(rhs));
-        debug_assert!(v1 == 0);
-        rem = v0;
+    debug_assert!(rhs != 0);
+    if words.is_empty() {
+        return 0;
     }
-    rem
+    if rhs.is_power_of_two() {
+        return words[0] & (rhs - 1);
+    }
+
+    let shift = rhs.leading_zeros();
+    let fast_division = FastDivision::by(rhs << shift);
+
+    if shift == 0 {
+        let mut rem: Word = 0;
+        for word in words.iter().rev() {
+            let a = double_word(*word, rem);
+            let (_, r) = fast_division.div_rem(a);
+            rem = r;
+        }
+        rem
+    } else {
+        let mut rem = 0;
+        let mut carry = 0;
+        for word in words.iter().rev().chain(iter::once(&0)) {
+            let w = carry | word >> (WORD_BITS - shift);
+            carry = word << shift;
+            let a = double_word(w, rem);
+            let (_, r) = fast_division.div_rem(a);
+            rem = r;
+        }
+        rem >> shift
+    }
 }
 
 /// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
@@ -1064,5 +1099,24 @@ impl FastDivision {
         }
         let (rem_lo, _) = split_double_word(remainder);
         (quotient, rem_lo)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_div_rem_by_word_in_place_empty() {
+        let mut a = [];
+        let rem = div_rem_by_word_in_place(&mut a, 7);
+        assert_eq!(rem, 0);
+    }
+
+    #[test]
+    fn test_rem_by_word_empty() {
+        let a = [];
+        let rem = rem_by_word(&a, 7);
+        assert_eq!(rem, 0);
     }
 }
