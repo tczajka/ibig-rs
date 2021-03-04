@@ -552,7 +552,7 @@ pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
 ///
 /// Returns overflow.
 pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> SignedWord {
-    if words.is_empty() {
+    if rhs == 0 || words.is_empty() {
         return rhs;
     }
     match rhs.to_sign_magnitude() {

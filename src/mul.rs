@@ -13,8 +13,13 @@ use core::{
     ops::{Mul, MulAssign},
 };
 
-/// If smaller length <= this, simple multiplication can be used.
+/// If smaller length <= MAX_LEN_SIMPLE, simple multiplication can be used.
 const MAX_LEN_SIMPLE: usize = 24;
+
+/// Split larger length into chunks of MUL_SIMPLE_CHUNK..2 * MUL_SIMPLE_CHUNK for memory
+/// locality.
+const MUL_SIMPLE_CHUNK: usize = 1024;
+
 /// If smaller length <= this, Karatsuba multiplication can be used.
 const MAX_LEN_KARATSUBA: usize = 192;
 
@@ -347,12 +352,43 @@ fn add_signed_mul(
 /// Simple method: O(a.len() * b.len()).
 ///
 /// Returns carry.
-fn add_signed_mul_simple(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> SignedWord {
+fn add_signed_mul_simple(mut c: &mut [Word], sign: Sign, mut a: &[Word], b: &[Word]) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_LEN_SIMPLE);
+
+    let n = b.len();
+    let mut carry_n = 0; // at c[n]
+    while a.len() >= 2 * MUL_SIMPLE_CHUNK {
+        // Propagate carry_n
+        carry_n = add::add_signed_word_in_place(&mut c[n..MUL_SIMPLE_CHUNK + n], carry_n);
+        carry_n += add_signed_mul_simple_chunk(
+            &mut c[..MUL_SIMPLE_CHUNK + n],
+            sign,
+            &a[..MUL_SIMPLE_CHUNK],
+            b,
+        );
+        a = &a[MUL_SIMPLE_CHUNK..];
+        c = &mut c[MUL_SIMPLE_CHUNK..];
+    }
+    debug_assert!(a.len() >= b.len() && a.len() < 2 * MUL_SIMPLE_CHUNK);
+    // Propagate carry_n
+    let mut carry = add::add_signed_word_in_place(&mut c[n..], carry_n);
+    carry += add_signed_mul_simple_chunk(c, sign, a, b);
+    carry
+}
+
+/// c += sign * a * b
+/// Simple method: O(a.len() * b.len()).
+///
+/// Returns carry.
+fn add_signed_mul_simple_chunk(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> SignedWord {
+    debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+    debug_assert!(b.len() <= MAX_LEN_SIMPLE);
+    debug_assert!(a.len() < 2 * MUL_SIMPLE_CHUNK);
+
     match sign {
-        Positive => SignedWord::from(add_mul_simple(c, a, b)),
-        Negative => -SignedWord::from(sub_mul_simple(c, a, b)),
+        Positive => SignedWord::from(add_mul_simple_chunk(c, a, b)),
+        Negative => -SignedWord::from(sub_mul_simple_chunk(c, a, b)),
     }
 }
 
@@ -360,9 +396,10 @@ fn add_signed_mul_simple(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> 
 /// Simple method: O(a.len() * b.len()).
 ///
 /// Returns carry.
-fn add_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
+fn add_mul_simple_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_LEN_SIMPLE);
+    debug_assert!(a.len() < 2 * MUL_SIMPLE_CHUNK);
     let mut carry: Word = 0;
     for (i, m) in b.iter().enumerate() {
         carry += add_mul_word_in_place(&mut c[i..], *m, a);
@@ -375,9 +412,10 @@ fn add_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
 /// Simple method: O(a.len() * b.len()).
 ///
 /// Returns borrow.
-fn sub_mul_simple(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
+fn sub_mul_simple_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_LEN_SIMPLE);
+    debug_assert!(a.len() < 2 * MUL_SIMPLE_CHUNK);
     let mut borrow: Word = 0;
     for (i, m) in b.iter().enumerate() {
         borrow += sub_mul_word_in_place(&mut c[i..], *m, a);
