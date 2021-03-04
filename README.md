@@ -1,3 +1,8 @@
+# ibig
+
+[![crate](https://img.shields.io/crates/v/ibig.svg)](https://crates.io/crates/ibig)
+[![tests](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/tczajka/ibig-rs/actions)
+
 Big integer library.
 
 The library implements arbitrarily large integer arithmetic in pure Rust.

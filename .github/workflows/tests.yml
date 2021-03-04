@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: Continuous integration
+name: Tests
 
 jobs:
   check:
@@ -31,8 +31,8 @@ jobs:
         with:
           command: test
 
-  test-32bit:
-    name: Test
+  test-32-bit:
+    name: Test 32-bit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -41,6 +41,7 @@ jobs:
           profile: minimal
           toolchain: stable-i686-unknown-linux-gnu
           override: true
+      - run: sudo apt install gcc-multilib
       - uses: actions-rs/cargo@v1
         with:
           command: test
