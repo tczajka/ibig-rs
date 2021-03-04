@@ -3,7 +3,7 @@ use crate::{
     ibig::IBig,
     mul::mul_word_in_place_with_carry,
     primitive::{Word, WORD_BITS},
-    radix::{check_radix_valid, digit_from_utf8_byte, Digit, is_radix_valid, RADIX_IN_WORD_TABLE},
+    radix::{check_radix_valid, digit_from_utf8_byte, is_radix_valid, Digit, RADIX_IN_WORD_TABLE},
     sign::Sign::*,
     ubig::UBig,
 };

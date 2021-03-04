@@ -670,9 +670,7 @@ struct PreparedLargeInNonPow2 {
 impl PreparedLargeInNonPow2 {
     /// Prepare a large number for formatting in a non-power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInNonPow2 {
-        debug_assert!(
-            words.len() >= 2 && is_radix_valid(radix) && !radix.is_power_of_two()
-        );
+        debug_assert!(words.len() >= 2 && is_radix_valid(radix) && !radix.is_power_of_two());
 
         let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
         // There is at most 1 extra digit per word beyond max_digits.
