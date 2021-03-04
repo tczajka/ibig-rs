@@ -41,7 +41,7 @@ impl UBig {
         for chunk in &mut chunks {
             buffer.push(Word::from_le_bytes(chunk.try_into().unwrap()));
         }
-        if chunks.remainder().len() > 0 {
+        if !chunks.remainder().is_empty() {
             buffer.push(word_from_le_bytes_partial(chunks.remainder()));
         }
         buffer.into()
@@ -71,7 +71,7 @@ impl UBig {
         for chunk in &mut chunks {
             buffer.push(Word::from_be_bytes(chunk.try_into().unwrap()));
         }
-        if chunks.remainder().len() > 0 {
+        if !chunks.remainder().is_empty() {
             buffer.push(word_from_be_bytes_partial(chunks.remainder()));
         }
         buffer.into()

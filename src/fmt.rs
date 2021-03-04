@@ -6,7 +6,7 @@ use crate::{
     ibig::IBig,
     primitive::{Word, WORD_BITS},
     radix::{
-        check_radix_valid, digit_to_ascii, Digit, DigitCase, RadixInWord, MAX_RADIX,
+        check_radix_valid, digit_to_ascii, is_radix_valid, Digit, DigitCase, RadixInWord,
         RADIX_IN_WORD_TABLE,
     },
     sign::Sign::{self, *},
@@ -546,7 +546,7 @@ struct PreparedLargeInPow2<'a> {
 impl PreparedLargeInPow2<'_> {
     /// Prepare a large number for formatting in a power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInPow2 {
-        debug_assert!(radix >= 2 && radix <= MAX_RADIX && radix.is_power_of_two());
+        debug_assert!(is_radix_valid(radix) && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
         // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
@@ -625,7 +625,7 @@ struct PreparedWordInNonPow2 {
 impl PreparedWordInNonPow2 {
     /// Prepare a `Word` for formatting in a non-power-of-2 radix.
     fn new(mut word: Word, radix: Digit) -> PreparedWordInNonPow2 {
-        debug_assert!(radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two());
+        debug_assert!(is_radix_valid(radix) && !radix.is_power_of_two());
 
         let mut prepared = PreparedWordInNonPow2 {
             digits: [0; MAX_DIGITS_IN_WORD_NON_POW_2],
@@ -671,7 +671,7 @@ impl PreparedLargeInNonPow2 {
     /// Prepare a large number for formatting in a non-power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInNonPow2 {
         debug_assert!(
-            words.len() >= 2 && radix >= 2 && radix <= MAX_RADIX && !radix.is_power_of_two()
+            words.len() >= 2 && is_radix_valid(radix) && !radix.is_power_of_two()
         );
 
         let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];

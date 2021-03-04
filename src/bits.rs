@@ -23,10 +23,10 @@ impl UBig {
     /// ```
     pub fn bit(&self, n: usize) -> bool {
         match self.repr() {
-            Small(word) => n < WORD_BITS as usize && word & (1 as Word) << n != 0,
+            Small(word) => n < WORD_BITS as usize && word & 1 << n != 0,
             Large(buffer) => {
                 let idx = n / WORD_BITS as usize;
-                idx < buffer.len() && buffer[idx] & (1 as Word) << (n % WORD_BITS as usize) != 0
+                idx < buffer.len() && buffer[idx] & 1 << (n % WORD_BITS as usize) != 0
             }
         }
     }
@@ -62,18 +62,18 @@ impl UBig {
         let mut buffer = Buffer::allocate(idx + 1);
         buffer.push(word);
         buffer.extend((1..idx).map(|_| 0));
-        buffer.push(1 << n % WORD_BITS as usize);
+        buffer.push(1 << (n % WORD_BITS as usize));
         buffer.into()
     }
 
     fn with_bit_large(mut buffer: Buffer, n: usize) -> UBig {
         let idx = n / WORD_BITS as usize;
         if idx < buffer.len() {
-            buffer[idx] |= 1 << n % WORD_BITS as usize;
+            buffer[idx] |= 1 << (n % WORD_BITS as usize);
         } else {
             buffer.ensure_capacity(idx + 1);
             buffer.push_zeros(idx - buffer.len());
-            buffer.push(1 << n % WORD_BITS as usize);
+            buffer.push(1 << (n % WORD_BITS as usize));
         }
         buffer.into()
     }
@@ -102,7 +102,7 @@ impl UBig {
     fn without_bit_large(mut buffer: Buffer, n: usize) -> UBig {
         let idx = n / WORD_BITS as usize;
         if idx < buffer.len() {
-            buffer[idx] &= !(1 << n % WORD_BITS as usize);
+            buffer[idx] &= !(1 << (n % WORD_BITS as usize));
         }
         buffer.into()
     }

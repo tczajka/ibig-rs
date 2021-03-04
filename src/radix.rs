@@ -7,9 +7,14 @@ pub(crate) type Digit = u32;
 /// Maximum supported radix.
 pub(crate) const MAX_RADIX: Digit = 36;
 
+/// Is a radix in valid range?
+pub(crate) fn is_radix_valid(radix: Digit) -> bool {
+    (2..=MAX_RADIX).contains(&radix)
+}
+
 /// Panics if `radix` is not in valid range.
-pub(crate) fn check_radix_valid(radix: u32) {
-    if radix < 2 || radix > MAX_RADIX {
+pub(crate) fn check_radix_valid(radix: Digit) {
+    if !is_radix_valid(radix) {
         panic!("Invalid radix: {}", radix);
     }
 }
