@@ -306,7 +306,7 @@ fn bench_div_1e1_1e6(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_div_1e2_1e1(bencher: &mut Bencher) {
-    bench_div(100, 10, bencher);
+    bench_div(100, 30, bencher);
 }
 
 #[bench]
@@ -331,7 +331,7 @@ fn bench_div_1e2_1e6(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_div_1e3_1e1(bencher: &mut Bencher) {
-    bench_div(1_000, 10, bencher);
+    bench_div(1_000, 30, bencher);
 }
 
 #[bench]
@@ -356,7 +356,7 @@ fn bench_div_1e3_1e6(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_div_1e4_1e1(bencher: &mut Bencher) {
-    bench_div(10_000, 10, bencher);
+    bench_div(10_000, 30, bencher);
 }
 
 #[bench]
@@ -381,7 +381,7 @@ fn bench_div_1e4_1e6(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_div_1e5_1e1(bencher: &mut Bencher) {
-    bench_div(100_000, 10, bencher);
+    bench_div(100_000, 30, bencher);
 }
 
 #[bench]
@@ -406,7 +406,7 @@ fn bench_div_1e5_1e6(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_div_1e6_1e1(bencher: &mut Bencher) {
-    bench_div(1_000_000, 10, bencher);
+    bench_div(1_000_000, 30, bencher);
 }
 
 #[bench]
@@ -435,6 +435,14 @@ fn bench_div_million_decimal(bencher: &mut Bencher) {
     bench_div(MILLION_DECIMAL, MILLION_DECIMAL, bencher);
 }
 */
+
+#[bench]
+fn bench_rem_1e5_1e1(bencher: &mut Bencher) {
+    let mut rng = StdRng::seed_from_u64(1);
+    let a = random_ubig(100_000 + 30, &mut rng);
+    let b = random_ubig(30, &mut rng);
+    bencher.iter(|| black_box(&a) % black_box(&b));
+}
 
 fn bench_to_str_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
     let mut rng = StdRng::seed_from_u64(1);
