@@ -12,6 +12,7 @@ use core::{
     mem,
     ops::{Mul, MulAssign},
 };
+use static_assertions::const_assert;
 
 /// If smaller length <= MAX_LEN_SIMPLE, simple multiplication can be used.
 const MAX_LEN_SIMPLE: usize = 24;
@@ -355,6 +356,7 @@ fn add_signed_mul(
 fn add_signed_mul_simple(mut c: &mut [Word], sign: Sign, mut a: &[Word], b: &[Word]) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_LEN_SIMPLE);
+    const_assert!(MUL_SIMPLE_CHUNK >= MAX_LEN_SIMPLE);
 
     let n = b.len();
     let mut carry_n = 0; // at c[n]
@@ -517,6 +519,13 @@ fn add_signed_mul_karatsuba_same_len(
     }
 
     let mid = (n + 1) / 2;
+
+    // We must have 3mid <= 2n.
+    //
+    // If MAX_LEN_SIMPLE >= 2 then n >= 3 and:
+    // 6mid <= 3(n+1) = 3n + 3 <= 4n
+    const_assert!(MAX_LEN_SIMPLE >= 2);
+
     let (a_lo, a_hi) = a.split_at(mid);
     let (b_lo, b_hi) = b.split_at(mid);
     let (my_temp, temp) = temp.split_at_mut(2 * mid);
@@ -637,7 +646,21 @@ fn add_signed_mul_toom_3_same_len(
 
     // Split into 3 parts. Note: a2, b2 may be shorter.
     let n3 = (n + 2) / 3;
+
+    // We must have:
+    // 2 * n3 <= n
+    // i * n3 + 2 <= (i+1) * n3
+    // 5 * n3 + 2 <= 2n
+    //
+    // Verify:
+    // 2 * n3 <= 2/3 (n+2) = 1/3 (2n + 2) <= n if n >= 2
+    // i * n3 + 2 <= (i+1) * n3 if n3 >= 2
+    // 5 * n3 + 2 <= 5/3 (n+2) + 2 = 1/3 (5n + 16) <= 2n if n >= 16
+    // If n >= 16, then n3 >= (16+2)/3 = 6 >= 2
+    const_assert!(MAX_LEN_KARATSUBA >= 15);
+
     let n3_short = n - 2 * n3;
+
     let (a0, a12) = a.split_at(n3);
     let (a1, a2) = a12.split_at(n3);
     let (b0, b12) = b.split_at(n3);

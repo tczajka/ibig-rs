@@ -11,14 +11,10 @@ repository = "https://github.com/tczajka/ibig-rs"
 homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
 
-[dependencies.ascii]
-version = "1.0"
-default-features = false
-
-[dependencies.rand]
-version = "0.8"
-default-features = false
-optional = true
+[dependencies]
+ascii = { version = "1.0", default-features = false }
+rand = { version = "0.8", default-features = false, optional = true }
+static_assertions = "1.1"
 
 [dev-dependencies]
 rand = "0.8"
