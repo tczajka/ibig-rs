@@ -5,7 +5,7 @@ use crate::{
     div,
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{self, Digit, DigitCase, RadixInWord, RADIX_IN_WORD_TABLE},
+    radix::{self, Digit, DigitCase},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -576,7 +576,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
             - (self.words.len() - 1) * WORD_BITS as usize) as u32;
 
         const MAX_BUFFER_LEN: usize = 32;
-        let mut buffer = [AsciiChar::Null; MAX_BUFFER_LEN];
+        let mut buffer = [AsciiChar::default(); MAX_BUFFER_LEN];
         let mut buffer_len = 0;
 
         loop {
@@ -610,12 +610,10 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
     }
 }
 
-const MAX_DIGITS_IN_WORD_NON_POW_2: usize = RadixInWord::for_radix(3).max_digits + 1;
-
 /// A `Word` prepared for formatting in a non-power-of-2 radix.
 struct PreparedWordInNonPow2 {
     // Little-endian digits.
-    digits: [u8; MAX_DIGITS_IN_WORD_NON_POW_2],
+    digits: [u8; radix::MAX_WORD_DIGITS_NON_POW_2],
     width: usize,
 }
 
@@ -625,7 +623,7 @@ impl PreparedWordInNonPow2 {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
         let mut prepared = PreparedWordInNonPow2 {
-            digits: [0; MAX_DIGITS_IN_WORD_NON_POW_2],
+            digits: [0; radix::MAX_WORD_DIGITS_NON_POW_2],
             width: 0,
         };
 
@@ -645,7 +643,7 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let mut digits = [AsciiChar::Null; MAX_DIGITS_IN_WORD_NON_POW_2];
+        let mut digits = [AsciiChar::default(); radix::MAX_WORD_DIGITS_NON_POW_2];
         for (idx, digit) in self.digits[..self.width].iter().enumerate() {
             digits[self.width - 1 - idx] = radix::digit_to_ascii(*digit as Digit, digit_case);
         }
@@ -669,16 +667,16 @@ impl PreparedLargeInNonPow2 {
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInNonPow2 {
         debug_assert!(words.len() >= 2 && radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
-        let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
-        // There is at most 1 extra digit per word beyond max_digits.
-        // Max total extra words: ceil(words.len() / max_digits).
+        let digits_per_word = radix::digits_per_word(radix);
+        let range_per_word = radix::range_per_word(radix);
+        // There is at most 1 extra digit per word beyond digits_per_word.
+        // Max total extra words: ceil(words.len() / digits_per_word).
         // One of them is top_group.
-        let mut low_groups =
-            Vec::with_capacity(words.len() + words.len() / radix_in_word.max_digits);
+        let mut low_groups = Vec::with_capacity(words.len() + words.len() / digits_per_word);
         let mut buffer = Buffer::allocate_no_extra(words.len());
         buffer.extend(words);
         while buffer.len() > 1 {
-            let rem = div::div_by_word_in_place(&mut buffer, radix_in_word.max_digits_range);
+            let rem = div::div_by_word_in_place(&mut buffer, range_per_word);
             low_groups.push(rem);
             buffer.pop_leading_zeros();
         }
@@ -693,17 +691,15 @@ impl PreparedLargeInNonPow2 {
 
 impl PreparedForFormatting for PreparedLargeInNonPow2 {
     fn width(&self) -> usize {
-        let radix_in_word = RADIX_IN_WORD_TABLE[self.radix as usize];
-        self.top_group.width() + self.low_groups.len() * radix_in_word.max_digits
+        let digits_per_word = radix::digits_per_word(self.radix);
+        self.top_group.width() + self.low_groups.len() * digits_per_word
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let radix_in_word = RADIX_IN_WORD_TABLE[self.radix as usize];
         self.top_group.write(writer, digit_case)?;
 
-        let mut digits: [AsciiChar; MAX_DIGITS_IN_WORD_NON_POW_2] =
-            [AsciiChar::Null; MAX_DIGITS_IN_WORD_NON_POW_2];
-        let n = radix_in_word.max_digits;
+        let mut digits = [AsciiChar::default(); radix::MAX_WORD_DIGITS_NON_POW_2];
+        let n = radix::digits_per_word(self.radix);
 
         for group_word in self.low_groups.iter().rev() {
             let mut x = *group_word;

@@ -81,6 +81,11 @@ fn test_ubig_to_str_radix() {
     assert_eq!(ubig!(3000).to_str_radix_uppercase(16), "BB8");
     assert_eq!(ubig!(3000).to_str_radix(32), "2to");
     assert_eq!(ubig!(3000).to_str_radix_uppercase(32), "2TO");
+    assert_eq!(ubig!(0xffffffff).to_str_radix(3), "102002022201221111210");
+    assert_eq!(
+        ubig!(0xffffffffffffffff).to_str_radix(3),
+        "11112220022122120101211020120210210211220"
+    );
 
     let a = UBig::from_le_bytes(&[0xff; 50]);
     assert_eq!(

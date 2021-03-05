@@ -3,7 +3,7 @@ use crate::{
     ibig::IBig,
     mul::mul_word_in_place_with_carry,
     primitive::{Word, WORD_BITS},
-    radix::{self, Digit, RADIX_IN_WORD_TABLE},
+    radix::{self, Digit},
     sign::Sign::*,
     ubig::UBig,
 };
@@ -101,7 +101,7 @@ impl UBig {
     fn from_str_radix_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
 
-        if src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits {
+        if src.len() <= radix::digits_per_word(radix) {
             let word = word_from_str_radix_pow2(src, radix)?;
             Ok(UBig::from_word(word))
         } else {
@@ -142,7 +142,7 @@ impl UBig {
     fn from_str_radix_non_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
-        if src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits {
+        if src.len() <= radix::digits_per_word(radix) {
             let word = word_from_str_radix_non_pow2(src.as_bytes(), radix)?;
             Ok(UBig::from_word(word))
         } else {
@@ -154,13 +154,13 @@ impl UBig {
     fn slow_from_str_radix_non_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
-        let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
-        let chunks = src.as_bytes().rchunks(radix_in_word.max_digits);
+        let digits_per_word = radix::digits_per_word(radix);
+        let range_per_word = radix::range_per_word(radix);
+        let chunks = src.as_bytes().rchunks(digits_per_word);
         let mut buffer = Buffer::allocate(chunks.len());
         for chunk in chunks.rev() {
             let next = word_from_str_radix_non_pow2(chunk, radix)?;
-            let carry =
-                mul_word_in_place_with_carry(&mut buffer, radix_in_word.max_digits_range, next);
+            let carry = mul_word_in_place_with_carry(&mut buffer, range_per_word, next);
             if carry != 0 {
                 buffer.push(carry);
             }
@@ -255,7 +255,7 @@ impl std::error::Error for ParseError {}
 
 fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
-    debug_assert!(src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits);
+    debug_assert!(src.len() <= radix::digits_per_word(radix));
 
     let log_radix = radix.trailing_zeros();
     let mut word = 0;
@@ -270,7 +270,7 @@ fn word_from_str_radix_pow2(src: &str, radix: Digit) -> Result<Word, ParseError>
 
 fn word_from_str_radix_non_pow2(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-    debug_assert!(src.len() <= RADIX_IN_WORD_TABLE[radix as usize].max_digits);
+    debug_assert!(src.len() <= radix::digits_per_word(radix));
 
     let mut word: Word = 0;
     for byte in src.iter() {

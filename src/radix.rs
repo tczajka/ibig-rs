@@ -54,67 +54,79 @@ pub(crate) fn digit_from_utf8_byte(byte: u8, radix: Digit) -> Option<Digit> {
     }
 }
 
-/// Properties of a given radix in a `Word`.
-#[derive(Clone, Copy)]
-pub(crate) struct RadixInWord {
-    /// Maximum number of digits that fit in a `Word`.
-    pub(crate) max_digits: usize,
-    /// Radix to the power of `max_digits`.
-    /// Only for non-power-of-2 radixes.
-    pub(crate) max_digits_range: Word,
+/// Maximum number of digits that a `Word` can ever have for any non-power-of-2 radix.
+pub(crate) const MAX_WORD_DIGITS_NON_POW_2: usize = RadixInfo::for_radix(3).digits_per_word + 1;
+
+/// The number of digits that can always fit in a `Word`.
+pub(crate) fn digits_per_word(radix: Digit) -> usize {
+    debug_assert!(is_radix_valid(radix));
+    RADIX_INFO_TABLE[radix as usize].digits_per_word
 }
 
-impl RadixInWord {
-    pub(crate) const fn for_radix(radix: Digit) -> RadixInWord {
+/// radix.pow(digits_per_word), only for non-power-of-2 radixes
+pub(crate) fn range_per_word(radix: Digit) -> Word {
+    debug_assert!(is_radix_valid(radix) && !radix.is_power_of_two());
+    RADIX_INFO_TABLE[radix as usize].range_per_word
+}
+
+/// Properties of a given radix.
+#[derive(Clone, Copy)]
+struct RadixInfo {
+    /// The number of digits that can always fit in a `Word`.
+    digits_per_word: usize,
+    /// Radix to the power of `max_digits`.
+    /// Only for non-power-of-2 radixes.
+    range_per_word: Word,
+}
+
+impl RadixInfo {
+    const fn for_radix(radix: Digit) -> RadixInfo {
         if radix.is_power_of_two() {
-            RadixInWord {
-                max_digits: (WORD_BITS / radix.trailing_zeros()) as usize,
-                max_digits_range: 0,
+            RadixInfo {
+                digits_per_word: (WORD_BITS / radix.trailing_zeros()) as usize,
+                range_per_word: 0,
             }
         } else {
-            RadixInWord::for_radix_recursive(
+            RadixInfo::for_radix_recursive(
                 radix,
-                RadixInWord {
-                    max_digits: 0,
-                    max_digits_range: 1,
+                RadixInfo {
+                    digits_per_word: 0,
+                    range_per_word: 1,
                 },
             )
         }
     }
 
-    const fn for_radix_recursive(radix: Digit, entry: RadixInWord) -> RadixInWord {
-        match entry.max_digits_range.checked_mul(radix as Word) {
-            None => entry,
-            Some(max_digits_range) => RadixInWord::for_radix_recursive(
+    const fn for_radix_recursive(radix: Digit, info: RadixInfo) -> RadixInfo {
+        match info.range_per_word.checked_mul(radix as Word) {
+            None => info,
+            Some(range_per_word) => RadixInfo::for_radix_recursive(
                 radix,
-                RadixInWord {
-                    max_digits: entry.max_digits + 1,
-                    max_digits_range,
+                RadixInfo {
+                    digits_per_word: info.digits_per_word + 1,
+                    range_per_word,
                 },
             ),
         }
     }
 }
 
-type RadixInWordTable = [RadixInWord; MAX_RADIX as usize + 1];
+type RadixInfoTable = [RadixInfo; MAX_RADIX as usize + 1];
 
-pub(crate) static RADIX_IN_WORD_TABLE: RadixInWordTable = fill_radix_in_word_table(
-    [RadixInWord {
-        max_digits: 0,
-        max_digits_range: 0,
+static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
+    [RadixInfo {
+        digits_per_word: 0,
+        range_per_word: 0,
     }; MAX_RADIX as usize + 1],
     2,
 );
 
-const fn fill_radix_in_word_table(
-    mut table: RadixInWordTable,
-    next_radix: Digit,
-) -> RadixInWordTable {
+const fn fill_radix_info_table(mut table: RadixInfoTable, next_radix: Digit) -> RadixInfoTable {
     if next_radix > MAX_RADIX {
         table
     } else {
-        table[next_radix as usize] = RadixInWord::for_radix(next_radix);
-        fill_radix_in_word_table(table, next_radix + 1)
+        table[next_radix as usize] = RadixInfo::for_radix(next_radix);
+        fill_radix_info_table(table, next_radix + 1)
     }
 }
 
@@ -123,18 +135,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_radix_in_word_table() {
+    fn test_radix_info_table() {
         for radix in 2..=MAX_RADIX {
-            let entry = &RADIX_IN_WORD_TABLE[radix as usize];
             // Check vs an approximation that happens to work for all bases.
             assert_eq!(
-                entry.max_digits,
+                digits_per_word(radix),
                 ((WORD_BITS as f64 + 0.01) / (radix as f64).log2()) as usize
             );
             if !radix.is_power_of_two() {
                 assert_eq!(
-                    entry.max_digits_range,
-                    (radix as usize).pow(entry.max_digits as u32)
+                    range_per_word(radix),
+                    (radix as usize).pow(digits_per_word(radix) as u32)
                 );
             }
         }
