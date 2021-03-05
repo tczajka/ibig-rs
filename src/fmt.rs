@@ -2,13 +2,10 @@
 
 use crate::{
     buffer::Buffer,
-    div::div_rem_by_word_in_place,
+    div,
     ibig::IBig,
     primitive::{Word, WORD_BITS},
-    radix::{
-        check_radix_valid, digit_to_ascii, is_radix_valid, Digit, DigitCase, RadixInWord,
-        RADIX_IN_WORD_TABLE,
-    },
+    radix::{self, Digit, DigitCase, RadixInWord, RADIX_IN_WORD_TABLE},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -179,7 +176,7 @@ impl UBig {
     /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
     /// ```
     pub fn in_radix(&self, radix: u32) -> InRadix {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         InRadix {
             sign: Positive,
             magnitude: self,
@@ -205,7 +202,7 @@ impl UBig {
     /// assert_eq!(ubig!(0x123f).in_radix(16).to_string(), "123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -233,7 +230,7 @@ impl UBig {
     /// assert_eq!(format!("{:#}", ubig!(0x123f).in_radix(16)), "123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         let in_radix = InRadix {
             sign: Positive,
             magnitude: self,
@@ -264,7 +261,7 @@ impl IBig {
     /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
     /// ```
     pub fn in_radix(&self, radix: u32) -> InRadix {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -290,7 +287,7 @@ impl IBig {
     /// assert_eq!(ibig!(-0x123f).in_radix(16).to_string(), "-123f");
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -318,7 +315,7 @@ impl IBig {
     /// assert_eq!(format!("{:#}", ibig!(-0x123f).in_radix(16)), "-123F");
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        check_radix_valid(radix);
+        radix::check_radix_valid(radix);
         let in_radix = InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
@@ -528,7 +525,7 @@ impl PreparedForFormatting for PreparedWordInPow2 {
         let mut digits = [AsciiChar::Null; WORD_BITS as usize];
         for idx in 0..self.width {
             let digit = (self.word >> (idx as u32 * self.log_radix)) as Digit & mask;
-            digits[self.width - 1 - idx] = digit_to_ascii(digit, digit_case);
+            digits[self.width - 1 - idx] = radix::digit_to_ascii(digit, digit_case);
         }
         let s: &AsciiStr = digits[..self.width].into();
         writer.write_str(s.as_str())?;
@@ -546,7 +543,7 @@ struct PreparedLargeInPow2<'a> {
 impl PreparedLargeInPow2<'_> {
     /// Prepare a large number for formatting in a power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInPow2 {
-        debug_assert!(is_radix_valid(radix) && radix.is_power_of_two());
+        debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
         // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
@@ -598,7 +595,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
                 bits -= self.log_radix;
                 digit = (word >> bits) as Digit & mask;
             }
-            buffer[buffer_len] = digit_to_ascii(digit, digit_case);
+            buffer[buffer_len] = radix::digit_to_ascii(digit, digit_case);
             buffer_len += 1;
             if buffer_len == MAX_BUFFER_LEN {
                 let s: &AsciiStr = (&buffer[..]).into();
@@ -625,7 +622,7 @@ struct PreparedWordInNonPow2 {
 impl PreparedWordInNonPow2 {
     /// Prepare a `Word` for formatting in a non-power-of-2 radix.
     fn new(mut word: Word, radix: Digit) -> PreparedWordInNonPow2 {
-        debug_assert!(is_radix_valid(radix) && !radix.is_power_of_two());
+        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
         let mut prepared = PreparedWordInNonPow2 {
             digits: [0; MAX_DIGITS_IN_WORD_NON_POW_2],
@@ -650,7 +647,7 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
         let mut digits = [AsciiChar::Null; MAX_DIGITS_IN_WORD_NON_POW_2];
         for (idx, digit) in self.digits[..self.width].iter().enumerate() {
-            digits[self.width - 1 - idx] = digit_to_ascii(*digit as Digit, digit_case);
+            digits[self.width - 1 - idx] = radix::digit_to_ascii(*digit as Digit, digit_case);
         }
         let s: &AsciiStr = digits[..self.width].into();
         writer.write_str(s.as_str())?;
@@ -670,7 +667,7 @@ struct PreparedLargeInNonPow2 {
 impl PreparedLargeInNonPow2 {
     /// Prepare a large number for formatting in a non-power-of-2 radix.
     fn new(words: &[Word], radix: Digit) -> PreparedLargeInNonPow2 {
-        debug_assert!(words.len() >= 2 && is_radix_valid(radix) && !radix.is_power_of_two());
+        debug_assert!(words.len() >= 2 && radix::is_radix_valid(radix) && !radix.is_power_of_two());
 
         let radix_in_word = RADIX_IN_WORD_TABLE[radix as usize];
         // There is at most 1 extra digit per word beyond max_digits.
@@ -681,7 +678,7 @@ impl PreparedLargeInNonPow2 {
         let mut buffer = Buffer::allocate_no_extra(words.len());
         buffer.extend(words);
         while buffer.len() > 1 {
-            let rem = div_rem_by_word_in_place(&mut buffer, radix_in_word.max_digits_range);
+            let rem = div::div_by_word_in_place(&mut buffer, radix_in_word.max_digits_range);
             low_groups.push(rem);
             buffer.pop_leading_zeros();
         }
@@ -712,7 +709,7 @@ impl PreparedForFormatting for PreparedLargeInNonPow2 {
             let mut x = *group_word;
             for i in (0..n).rev() {
                 let d = (x % (self.radix as Word)) as Digit;
-                digits[i] = digit_to_ascii(d, digit_case);
+                digits[i] = radix::digit_to_ascii(d, digit_case);
                 x /= self.radix as Word;
             }
             debug_assert!(x == 0);

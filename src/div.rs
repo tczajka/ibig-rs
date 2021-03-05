@@ -834,7 +834,7 @@ impl UBig {
         if rhs == 0 {
             panic_divide_by_0();
         }
-        let rem = div_rem_by_word_in_place(&mut buffer, rhs);
+        let rem = div_by_word_in_place(&mut buffer, rhs);
         (buffer.into(), UBig::from_word(rem))
     }
 
@@ -893,7 +893,7 @@ fn panic_divide_by_0() -> ! {
 /// rhs must be non-zero
 ///
 /// Returns words % rhs.
-pub(crate) fn div_rem_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
+pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
     debug_assert!(rhs != 0);
     if words.is_empty() {
         return 0;
@@ -1107,9 +1107,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_div_rem_by_word_in_place_empty() {
+    fn test_div_by_word_in_place_empty() {
         let mut a = [];
-        let rem = div_rem_by_word_in_place(&mut a, 7);
+        let rem = div_by_word_in_place(&mut a, 7);
         assert_eq!(rem, 0);
     }
 

@@ -4,8 +4,7 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     primitive::{
-        word_from_be_bytes_partial, word_from_le_bytes_partial, OutOfBoundsError, PrimitiveSigned,
-        PrimitiveUnsigned, Word, WORD_BITS, WORD_BYTES,
+        self, OutOfBoundsError, PrimitiveSigned, PrimitiveUnsigned, Word, WORD_BITS, WORD_BYTES,
     },
     sign::Sign::*,
     ubig::{Repr::*, UBig},
@@ -28,7 +27,7 @@ impl UBig {
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
-            UBig::from_word(word_from_le_bytes_partial(bytes))
+            UBig::from_word(primitive::word_from_le_bytes_partial(bytes))
         } else {
             UBig::from_le_bytes_large(bytes)
         }
@@ -42,7 +41,7 @@ impl UBig {
             buffer.push(Word::from_le_bytes(chunk.try_into().unwrap()));
         }
         if !chunks.remainder().is_empty() {
-            buffer.push(word_from_le_bytes_partial(chunks.remainder()));
+            buffer.push(primitive::word_from_le_bytes_partial(chunks.remainder()));
         }
         buffer.into()
     }
@@ -58,7 +57,7 @@ impl UBig {
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
-            UBig::from_word(word_from_be_bytes_partial(bytes))
+            UBig::from_word(primitive::word_from_be_bytes_partial(bytes))
         } else {
             UBig::from_be_bytes_large(bytes)
         }
@@ -72,7 +71,7 @@ impl UBig {
             buffer.push(Word::from_be_bytes(chunk.try_into().unwrap()));
         }
         if !chunks.remainder().is_empty() {
-            buffer.push(word_from_be_bytes_partial(chunks.remainder()));
+            buffer.push(primitive::word_from_be_bytes_partial(chunks.remainder()));
         }
         buffer.into()
     }
@@ -415,20 +414,5 @@ impl Default for IBig {
     /// Default value: 0.
     fn default() -> IBig {
         IBig::from(0u8)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_word_from_le_bytes_partial() {
-        assert_eq!(word_from_le_bytes_partial(&[1, 2]), 0x0201);
-    }
-
-    #[test]
-    fn test_word_from_be_bytes_partial() {
-        assert_eq!(word_from_be_bytes_partial(&[1, 2]), 0x0102);
     }
 }
