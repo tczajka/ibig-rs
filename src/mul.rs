@@ -181,20 +181,13 @@ impl UBig {
     }
 
     /// Multiply two large numbers.
-    fn mul_large<'a>(mut lhs: &'a [Word], mut rhs: &'a [Word]) -> UBig {
+    fn mul_large(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= 2 && rhs.len() >= 2);
-
-        if lhs.len() < rhs.len() {
-            mem::swap(&mut lhs, &mut rhs);
-        }
 
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
         buffer.push_zeros(lhs.len() + rhs.len());
 
-        let temp_len = mul_temp_buffer_len(lhs.len(), rhs.len());
-        let mut temp = Buffer::allocate_no_extra(temp_len);
-        temp.push_zeros(temp_len);
-
+        let mut temp = allocate_temp_mul_buffer(lhs.len().min(rhs.len()));
         let overflow = add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut temp);
         assert!(overflow == 0);
         buffer.into()
@@ -290,12 +283,10 @@ fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     borrow
 }
 
-/// Minimum temporary buffer required for multiplication.
-fn mul_temp_buffer_len(a_len: usize, b_len: usize) -> usize {
-    debug_assert!(a_len >= b_len);
-
-    let n = b_len;
-    if n <= MAX_LEN_SIMPLE {
+/// Temporary buffer required for multiplication.
+/// n is the length of the smaller factor in words.
+pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {
+    let temp_len = if n <= MAX_LEN_SIMPLE {
         0
     } else if n <= MAX_LEN_KARATSUBA {
         // Karatsuba multiplication.
@@ -324,22 +315,29 @@ fn mul_temp_buffer_len(a_len: usize, b_len: usize) -> usize {
         //
         // Note: this has to be at least as much as Karatsuba (for recursive calls).
         4 * n + 13 * (n.next_power_of_two().trailing_zeros() as usize)
-    }
+    };
+
+    let mut buffer = Buffer::allocate_no_extra(temp_len);
+    buffer.push_zeros(temp_len);
+    buffer
 }
 
 /// c += sign * a * b
 ///
-/// temp must have space of at least mul_temp_buffer_len(a.len(), b.len())
-///
 /// Returns carry.
-fn add_signed_mul(
+pub(crate) fn add_signed_mul<'a>(
     c: &mut [Word],
     sign: Sign,
-    a: &[Word],
-    b: &[Word],
+    mut a: &'a [Word],
+    mut b: &'a [Word],
     temp: &mut [Word],
 ) -> SignedWord {
-    debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+    debug_assert!(c.len() == a.len() + b.len());
+
+    if a.len() < b.len() {
+        mem::swap(&mut a, &mut b);
+    }
+
     if b.len() <= MAX_LEN_SIMPLE {
         add_signed_mul_simple(c, sign, a, b)
     } else if b.len() <= MAX_LEN_KARATSUBA {

@@ -8,8 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Added a dependency on `static_assertions 1.1`.
 
 ### Performance
-* Multiplying very large times a smaller number improved.
-  Now it avoids scanning memory repeatedly by processing the large number in chunks.
+* Large division improved. Now uses a divide and conquer algorithm.
+* Unbalanced multiplication (large x small) avoids scanning memory many times.
 
 ## 0.1.1 - 2021-03-03
 
