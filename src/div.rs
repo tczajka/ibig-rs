@@ -861,9 +861,10 @@ impl UBig {
     fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
         let (sh, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
         let _carry = div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
-        lhs.truncate(rhs.len());
-        shift::shr_in_place(&mut lhs, sh);
-        lhs.into()
+        let n = rhs.len();
+        rhs.copy_from_slice(&lhs[..n]);
+        shift::shr_in_place(&mut rhs, sh);
+        rhs.into()
     }
 
     /// `(lhs / rhs, lhs % rhs)`
@@ -873,10 +874,11 @@ impl UBig {
         if carry {
             lhs.push_may_reallocate(1);
         }
-        let q = UBig::shr_large_ref_words(&lhs, rhs.len());
-        lhs.truncate(rhs.len());
-        shift::shr_in_place(&mut lhs, sh);
-        (q, lhs.into())
+        let n = rhs.len();
+        rhs.copy_from_slice(&lhs[..n]);
+        shift::shr_in_place(&mut rhs, sh);
+        let q = UBig::shr_large_words(lhs, n);
+        (q, rhs.into())
     }
 
     /// Normalizes large arguments for division by shifting them left:
