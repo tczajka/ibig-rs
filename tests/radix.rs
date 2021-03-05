@@ -76,6 +76,7 @@ fn test_ubig_in_radix() {
 #[test]
 fn test_ubig_to_str_radix() {
     assert_eq!(ubig!(0).to_str_radix(16), "0");
+    assert_eq!(ubig!(0).to_str_radix(17), "0");
     assert_eq!(ubig!(100).to_str_radix(4), "1210");
     assert_eq!(ubig!(3000).to_str_radix(16), "bb8");
     assert_eq!(ubig!(3000).to_str_radix_uppercase(16), "BB8");
