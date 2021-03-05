@@ -272,12 +272,10 @@ fn bench_div_same_1e5(bencher: &mut Bencher) {
     bench_div(100_000, 100_000, bencher);
 }
 
-/*
 #[bench]
 fn bench_div_same_1e6(bencher: &mut Bencher) {
     bench_div(1_000_000, 1_000_000, bencher);
 }
-*/
 
 #[bench]
 fn bench_div_1e1_1e2(bencher: &mut Bencher) {
