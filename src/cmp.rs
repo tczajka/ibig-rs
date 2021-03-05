@@ -1,5 +1,6 @@
 use crate::{
     ibig::IBig,
+    primitive::Word,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -14,7 +15,7 @@ impl Ord for UBig {
             (Large(buffer), Large(other_buffer)) => buffer
                 .len()
                 .cmp(&other_buffer.len())
-                .then_with(|| buffer.iter().rev().cmp(other_buffer.iter().rev())),
+                .then_with(|| cmp_same_len(buffer, other_buffer)),
         }
     }
 }
@@ -40,4 +41,10 @@ impl PartialOrd for IBig {
     fn partial_cmp(&self, other: &IBig) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+
+/// Compare lhs with rhs as numbers.
+pub(crate) fn cmp_same_len(lhs: &[Word], rhs: &[Word]) -> Ordering {
+    assert!(lhs.len() == rhs.len());
+    lhs.iter().rev().cmp(rhs.iter().rev())
 }

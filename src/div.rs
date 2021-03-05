@@ -1,6 +1,7 @@
 use crate::{
     add,
     buffer::Buffer,
+    cmp,
     ibig::IBig,
     mul,
     primitive::{double_word, extend_word, split_double_word, DoubleWord, Word, WORD_BITS},
@@ -9,6 +10,7 @@ use crate::{
     ubig::{Repr::*, UBig},
 };
 use core::{
+    cmp::Ordering,
     iter, mem,
     ops::{Div, DivAssign, Rem, RemAssign},
 };
@@ -840,15 +842,18 @@ impl UBig {
 
     /// `lhs / rhs`
     fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let _ = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
+        let (_shift, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
+        let carry = div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
+        if carry {
+            lhs.push_may_reallocate(1);
+        }
         UBig::shr_large_words(lhs, rhs.len())
     }
 
     /// `lhs % rhs`
     fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
+        let (sh, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
+        let _carry = div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
         lhs.truncate(rhs.len());
         shift::shr_in_place(&mut lhs, sh);
         lhs.into()
@@ -856,8 +861,11 @@ impl UBig {
 
     /// `(lhs / rhs, lhs % rhs)`
     fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
-        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
-        div_rem_in_place(&mut lhs, &rhs);
+        let (sh, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
+        let carry = div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
+        if carry {
+            lhs.push_may_reallocate(1);
+        }
         let q = UBig::shr_large_ref_words(&lhs, rhs.len());
         lhs.truncate(rhs.len());
         shift::shr_in_place(&mut lhs, sh);
@@ -866,21 +874,20 @@ impl UBig {
 
     /// Normalizes large arguments for division by shifting them left:
     /// * lhs as least as long as rhs
-    /// * top words of lhs smaller than rhs.
     /// * top bit of rhs is 1
     ///
-    /// Returns shift size.
-    fn div_normalize(lhs: &mut Buffer, rhs: &mut Buffer) -> u32 {
+    /// Returns (shift size, Fast21 for top rhs word).
+    fn div_normalize(lhs: &mut Buffer, rhs: &mut [Word]) -> (u32, FastDiv21) {
         assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
         let sh = rhs.last().unwrap().leading_zeros();
         assert!(sh != WORD_BITS);
         let rhs_carry = shift::shl_in_place(rhs, sh);
         assert!(rhs_carry == 0);
         let lhs_carry = shift::shl_in_place(lhs, sh);
-        if lhs_carry != 0 || lhs.last().unwrap() >= rhs.last().unwrap() {
+        if lhs_carry != 0 {
             lhs.push_may_reallocate(lhs_carry);
         }
-        sh
+        (sh, FastDiv21::by(*rhs.last().unwrap()))
     }
 }
 
@@ -907,11 +914,11 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 
     let shift = rhs.leading_zeros();
     let mut rem = shift::shl_in_place(words, shift);
-    let fast_division = FastDivision::by(rhs << shift);
+    let fast_div_rhs_top = FastDiv21::by(rhs << shift);
 
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
-        let (q, r) = fast_division.div_rem(a);
+        let (q, r) = fast_div_rhs_top.div_rem(a);
         *word = q;
         rem = r;
     }
@@ -929,13 +936,13 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
     }
 
     let shift = rhs.leading_zeros();
-    let fast_division = FastDivision::by(rhs << shift);
+    let fast_div_rhs_top = FastDiv21::by(rhs << shift);
 
     if shift == 0 {
         let mut rem: Word = 0;
         for word in words.iter().rev() {
             let a = double_word(*word, rem);
-            let (_, r) = fast_division.div_rem(a);
+            let (_, r) = fast_div_rhs_top.div_rem(a);
             rem = r;
         }
         rem
@@ -946,7 +953,7 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
             let w = carry | word >> (WORD_BITS - shift);
             carry = word << shift;
             let a = double_word(w, rem);
-            let (_, r) = fast_division.div_rem(a);
+            let (_, r) = fast_div_rhs_top.div_rem(a);
             rem = r;
         }
         rem >> shift
@@ -957,13 +964,14 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
 /// bottom words of lhs by the remainder.
 ///
 /// rhs must have top bit of 1.
-/// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
 ///
 /// lhs = [lhs / rhs, lhs % rhs]
-fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) {
+///
+/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word], fast_div_rhs_top: FastDiv21) -> bool {
     assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
     debug_assert!(rhs.last().unwrap().leading_zeros() == 0);
-    div_rem_in_place_simple(lhs, rhs);
+    div_rem_in_place_simple(lhs, rhs, fast_div_rhs_top)
 }
 
 /// Simple division algorithm in place.
@@ -975,7 +983,9 @@ fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) {
 /// Inputs must be such that the quotient fits, i.e. top words of lhs must be smaller than rhs.
 ///
 /// lhs = [lhs / rhs, lhs % rhs]
-fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
+///
+/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word], fast_div_rhs_top: FastDiv21) -> bool {
     // The Art of Computer Programming, algorithm 4.3.1D.
 
     let n = rhs.len();
@@ -984,10 +994,14 @@ fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
     let rhs1 = rhs[n - 2];
     debug_assert!(rhs0.leading_zeros() == 0);
 
-    let fast_division_rhs0 = FastDivision::by(rhs0);
-
     let mut lhs_len = lhs.len();
     assert!(lhs_len >= n);
+
+    let quotient_carry = cmp::cmp_same_len(&lhs[lhs_len - n..], &rhs) >= Ordering::Equal;
+    if quotient_carry {
+        let overflow = add::sub_same_len_in_place(&mut lhs[lhs_len - n..], &rhs);
+        assert!(!overflow);
+    }
 
     while lhs_len > n {
         let lhs0 = lhs[lhs_len - 1];
@@ -1022,13 +1036,10 @@ fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
         // We must decrease q at most twice.
         // [lhs0, lhs1] = q * rhs0 + r
         //
-        // q must be decreased if:
-        // q-1 >= floor([lhs0, lhs1, lhs2] / [rhs0, rhs1])
-        // q > [lhs0, lhs1, lhs2] / [rhs0, rhs1]
-        // q * [rhs0, rhs1] > [lhs0, lhs1, lhs2]
-        // q * rhs1 > [r, lhs2]
+        // q must be decreased if subtracting q * rhs1 from [r, lhs2] overflows,
+        // i.e. if q * rhs1 > [r, lhs2].
         let mut q = if lhs0 < rhs0 {
-            let (mut q, mut r) = fast_division_rhs0.div_rem(lhs01);
+            let (mut q, mut r) = fast_div_rhs_top.div_rem(lhs01);
             while extend_word(q) * extend_word(rhs1) > double_word(lhs2, r) {
                 q -= 1;
                 match r.checked_add(rhs0) {
@@ -1061,23 +1072,24 @@ fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word]) {
         lhs[lhs_len] = q;
     }
     // Quotient is now in lhs[n..] and remainder in lhs[..n].
+    quotient_carry
 }
 
-/// Fast repeated division by a given value.
-struct FastDivision {
+/// Fast repeated division of 2 words by a given word.
+struct FastDiv21 {
     divisor: Word,
     reciprocal: Word,
 }
 
-impl FastDivision {
+impl FastDiv21 {
     /// Initialize from a given normalized divisor.
-    fn by(divisor: Word) -> FastDivision {
+    fn by(divisor: Word) -> FastDiv21 {
         debug_assert!(divisor.leading_zeros() == 0);
 
         let (recip_lo, recip_hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
         debug_assert!(recip_hi == 1);
 
-        FastDivision {
+        FastDiv21 {
             divisor,
             reciprocal: recip_lo,
         }
