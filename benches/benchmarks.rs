@@ -569,6 +569,11 @@ fn bench_from_dec_1e5(bencher: &mut Bencher) {
     bench_from_str_radix(100_000, 10, bencher);
 }
 
+#[bench]
+fn bench_from_dec_1e6(bencher: &mut Bencher) {
+    bench_from_str_radix(1_000_000, 10, bencher);
+}
+
 fn bench_pow(a: UBig, b: usize, bencher: &mut Bencher) {
     bencher.iter(|| black_box(&a).pow(black_box(b)));
 }
