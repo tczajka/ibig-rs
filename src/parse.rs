@@ -192,57 +192,61 @@ impl UBig {
     /// This result will usually not fit in CHUNK_LEN words.
     fn from_str_radix_non_pow2_large(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
+        let chunk_bytes = CHUNK_LEN * radix::digits_per_word(radix);
+        assert!(bytes.len() > chunk_bytes);
 
-        // Calculate (n, radix^n) for n = (chunk bytes) * 2^i, n < bytes.len().
-        let mut radix_powers: Vec<(usize, UBig)> = Vec::new();
+        // Calculate radix^n for n = (chunk_bytes << i) < bytes.len().
+        let mut radix_powers: Vec<UBig> = Vec::new();
+        radix_powers.push(UBig::from_word(radix::range_per_word(radix)).pow(CHUNK_LEN));
 
-        let mut n = CHUNK_LEN * radix::digits_per_word(radix);
-        assert!(bytes.len() > n);
-        let mut radix_n = UBig::from_word(radix::range_per_word(radix)).pow(CHUNK_LEN);
-        loop {
-            match n.checked_mul(2) {
-                Some(n2) if n2 < bytes.len() => {
-                    radix_powers.push((n, radix_n.clone()));
-                    n = n2;
-                    radix_n = &radix_n * &radix_n;
-                }
-                _ => {
-                    radix_powers.push((n, radix_n));
-                    break;
-                }
-            }
+        // while (chunk_bytes << radix_powers.len()) < bytes.len()
+        // To avoid overflow:
+        while chunk_bytes <= (bytes.len() - 1) >> radix_powers.len() {
+            let prev = radix_powers.last().unwrap();
+            let new = prev * prev;
+            radix_powers.push(new);
         }
 
-        UBig::from_str_radix_non_pow2_divide_conquer(bytes, radix, &radix_powers)
+        UBig::from_str_radix_non_pow2_divide_conquer(bytes, radix, chunk_bytes, &radix_powers)
     }
 
     /// Convert an unsigned string to `UBig` for a non-power-of-2 radix.
     ///
-    /// `radix_powers` contains (n, radix^n) for n = (chunk digits) * 2^i.
+    /// `radix_powers` contains radix^n for n = chunk digits << i
     fn from_str_radix_non_pow2_divide_conquer(
         bytes: &[u8],
         radix: Digit,
-        radix_powers: &[(usize, UBig)],
+        chunk_bytes: usize,
+        radix_powers: &[UBig],
     ) -> Result<UBig, ParseError> {
-        match radix_powers.last() {
+        debug_assert!(bytes.len() <= chunk_bytes << radix_powers.len());
+
+        match radix_powers.split_last() {
             None => UBig::from_str_radix_non_pow2_chunk(bytes, radix),
-            Some((n, radix_n)) => {
-                let radix_powers_shorter = &radix_powers[..radix_powers.len() - 1];
-                if bytes.len() <= *n {
-                    UBig::from_str_radix_non_pow2_divide_conquer(bytes, radix, radix_powers_shorter)
+            Some((radix_power, radix_powers)) => {
+                let bytes_lo_len = chunk_bytes << radix_powers.len();
+                if bytes.len() <= bytes_lo_len {
+                    UBig::from_str_radix_non_pow2_divide_conquer(
+                        bytes,
+                        radix,
+                        chunk_bytes,
+                        radix_powers,
+                    )
                 } else {
-                    let (bytes_hi, bytes_lo) = bytes.split_at(bytes.len() - n);
+                    let (bytes_hi, bytes_lo) = bytes.split_at(bytes.len() - bytes_lo_len);
                     let res_hi = UBig::from_str_radix_non_pow2_divide_conquer(
                         bytes_hi,
                         radix,
-                        radix_powers_shorter,
+                        chunk_bytes,
+                        radix_powers,
                     )?;
                     let res_lo = UBig::from_str_radix_non_pow2_divide_conquer(
                         bytes_lo,
                         radix,
-                        radix_powers_shorter,
+                        chunk_bytes,
+                        radix_powers,
                     )?;
-                    Ok(res_hi * radix_n + res_lo)
+                    Ok(res_hi * radix_power + res_lo)
                 }
             }
         }
