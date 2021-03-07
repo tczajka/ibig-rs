@@ -112,7 +112,7 @@ fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
 /// Temporary buffer required for multiplication.
 /// n is the length of the smaller factor in words.
 pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {
-    let mut temp_len = if n <= MAX_LEN_SIMPLE {
+    let temp_len = if n <= MAX_LEN_SIMPLE {
         0
     } else if n <= MAX_LEN_KARATSUBA {
         karatsuba::temp_buffer_len(n)
