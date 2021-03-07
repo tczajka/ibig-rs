@@ -175,8 +175,8 @@ impl UBig {
         buffer.push_zeros(lhs.len() + rhs.len());
 
         let mut temp = mul::allocate_temp_mul_buffer(lhs.len().min(rhs.len()));
-        let overflow = mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut temp);
-        assert!(overflow == 0);
+        //        mul::multiply(&mut buffer, lhs, rhs, &mut temp);
+        mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut temp);
         buffer.into()
     }
 }
