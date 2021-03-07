@@ -51,6 +51,7 @@ mod div;
 mod fmt;
 mod ibig;
 mod mul;
+mod mul_ops;
 mod parse;
 mod pow;
 pub mod prelude;
