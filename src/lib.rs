@@ -42,6 +42,7 @@ pub use crate::{
 };
 
 mod add;
+mod add_ops;
 mod bits;
 mod buffer;
 mod cmp;
