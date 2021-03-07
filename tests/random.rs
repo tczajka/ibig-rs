@@ -58,10 +58,10 @@ fn test_random_arithmetic() {
         assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
         assert_eq!(&a + &b - &a, b);
         assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
-        // Division and radix conversion are not fast enough yet.
+        assert_eq!((&a * &b + &c) / &a, b);
+        assert_eq!((&a * &b + &c) % &a, c);
+        // Radix conversion is not fast enough yet.
         if !big {
-            assert_eq!((&a * &b + &c) / &a, b);
-            assert_eq!((&a * &b + &c) % &a, c);
             assert_eq!(UBig::from_str_radix(&a.to_str_radix(33), 33).unwrap(), a);
         }
     }
