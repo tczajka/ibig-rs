@@ -7,6 +7,7 @@ use crate::{
     sign::Sign::*,
     ubig::UBig,
 };
+use alloc::vec::Vec;
 use core::{
     fmt::{self, Display, Formatter},
     str::FromStr,
