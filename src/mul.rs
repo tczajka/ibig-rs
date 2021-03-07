@@ -160,7 +160,7 @@ pub(crate) fn add_signed_mul<'a>(
 /// c += sign * a * b
 ///
 /// Returns carry.
-fn add_signed_mul_same_len<'a>(
+fn add_signed_mul_same_len(
     c: &mut [Word],
     sign: Sign,
     a: &[Word],
