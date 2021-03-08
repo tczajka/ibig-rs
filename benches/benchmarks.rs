@@ -446,71 +446,71 @@ fn bench_rem_1e5_1e1(bencher: &mut Bencher) {
     bench_rem(100_000, 30, bencher)
 }
 
-fn bench_to_str_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
+fn bench_in_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
     let mut rng = StdRng::seed_from_u64(1);
     let a = random_ubig(bits, &mut rng);
-    bencher.iter(|| black_box(&a).to_str_radix(radix));
+    bencher.iter(|| black_box(&a).in_radix(radix).to_string());
 }
 
 #[bench]
 fn bench_to_hex_1e1(bencher: &mut Bencher) {
-    bench_to_str_radix(10, 16, bencher);
+    bench_in_radix(10, 16, bencher);
 }
 
 #[bench]
 fn bench_to_hex_1e2(bencher: &mut Bencher) {
-    bench_to_str_radix(100, 16, bencher);
+    bench_in_radix(100, 16, bencher);
 }
 
 #[bench]
 fn bench_to_hex_1e3(bencher: &mut Bencher) {
-    bench_to_str_radix(1000, 16, bencher);
+    bench_in_radix(1000, 16, bencher);
 }
 
 #[bench]
 fn bench_to_hex_1e4(bencher: &mut Bencher) {
-    bench_to_str_radix(10_000, 16, bencher);
+    bench_in_radix(10_000, 16, bencher);
 }
 
 #[bench]
 fn bench_to_hex_1e5(bencher: &mut Bencher) {
-    bench_to_str_radix(100_000, 16, bencher);
+    bench_in_radix(100_000, 16, bencher);
 }
 
 #[bench]
 fn bench_to_hex_1e6(bencher: &mut Bencher) {
-    bench_to_str_radix(1_000_000, 16, bencher);
+    bench_in_radix(1_000_000, 16, bencher);
 }
 
 #[bench]
 fn bench_to_dec_1e1(bencher: &mut Bencher) {
-    bench_to_str_radix(10, 10, bencher);
+    bench_in_radix(10, 10, bencher);
 }
 
 #[bench]
 fn bench_to_dec_1e2(bencher: &mut Bencher) {
-    bench_to_str_radix(100, 10, bencher);
+    bench_in_radix(100, 10, bencher);
 }
 
 #[bench]
 fn bench_to_dec_1e3(bencher: &mut Bencher) {
-    bench_to_str_radix(1000, 10, bencher);
+    bench_in_radix(1000, 10, bencher);
 }
 
 #[bench]
 fn bench_to_dec_1e4(bencher: &mut Bencher) {
-    bench_to_str_radix(10_000, 10, bencher);
+    bench_in_radix(10_000, 10, bencher);
 }
 
 #[bench]
 fn bench_to_dec_1e5(bencher: &mut Bencher) {
-    bench_to_str_radix(100_000, 10, bencher);
+    bench_in_radix(100_000, 10, bencher);
 }
 
 fn bench_from_str_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
     let mut rng = StdRng::seed_from_u64(1);
     let a = random_ubig(bits, &mut rng);
-    let s = a.to_str_radix(radix);
+    let s = a.in_radix(radix).to_string();
     bencher.iter(|| UBig::from_str_radix(black_box(&s), radix));
 }
 

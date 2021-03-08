@@ -1,3 +1,5 @@
+//! Simple division algorithm.
+
 use crate::{
     add, cmp,
     div::fast_divisor::FastDivisor,

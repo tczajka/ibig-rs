@@ -1,3 +1,5 @@
+//! Division functions.
+
 use crate::{
     primitive::{double_word, extend_word, Word},
     shift,

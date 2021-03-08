@@ -1,3 +1,5 @@
+//! Bit shift functions.
+
 use crate::primitive::{double_word, extend_word, split_double_word, Word, WORD_BITS};
 
 /// Shift left by less than WORD_BITS in place.

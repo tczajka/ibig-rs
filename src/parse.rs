@@ -1,3 +1,5 @@
+//! Parsing numbers.
+
 use crate::{
     buffer::Buffer,
     ibig::IBig,

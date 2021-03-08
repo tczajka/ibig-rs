@@ -1,3 +1,5 @@
+//! Divide and conquer division algorithm.
+
 use crate::{
     add,
     div::{self, fast_divisor::FastDivisor},

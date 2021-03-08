@@ -62,7 +62,10 @@ fn test_random_arithmetic() {
         assert_eq!((&a * &b + &c) % &a, c);
         // Radix conversion is not fast enough yet.
         if !big {
-            assert_eq!(UBig::from_str_radix(&a.to_str_radix(33), 33).unwrap(), a);
+            assert_eq!(
+                UBig::from_str_radix(&a.in_radix(33).to_string(), 33).unwrap(),
+                a
+            );
         }
     }
 }

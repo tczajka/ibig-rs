@@ -1,3 +1,5 @@
+//! Bit shift operators.
+
 use crate::{
     buffer::Buffer,
     ibig::IBig,
@@ -708,7 +710,7 @@ impl UBig {
         let words = &words[shift_words.min(words.len())..];
 
         match words {
-            &[] => UBig::from_word(0),
+            [] => UBig::from_word(0),
             &[w] => UBig::from_word(w >> shift_bits),
             &[lo, hi] => UBig::from(double_word(lo, hi) >> shift_bits),
             _ => {

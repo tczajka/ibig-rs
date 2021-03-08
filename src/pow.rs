@@ -1,3 +1,5 @@
+//! Exponentiation.
+
 use crate::{
     ibig::IBig,
     primitive::PrimitiveUnsigned,

@@ -1,3 +1,5 @@
+//! Toom-Cook-3 multiplication algorithm.
+
 use crate::{
     add, div, mul,
     primitive::{SignedWord, Word},

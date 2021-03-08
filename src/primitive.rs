@@ -1,4 +1,4 @@
-//! Primitive types.
+//! Primitive integral types.
 
 #[cfg(not(any(
     target_pointer_width = "16",

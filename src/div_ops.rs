@@ -1,3 +1,5 @@
+//! Division operators.
+
 use crate::{
     buffer::Buffer,
     div,

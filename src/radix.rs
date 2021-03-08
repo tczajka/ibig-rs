@@ -1,3 +1,5 @@
+//! Information about radixes.
+
 use crate::primitive::{Word, WORD_BITS};
 use ascii::AsciiChar;
 

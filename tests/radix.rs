@@ -71,39 +71,32 @@ fn test_ubig_in_radix() {
     assert_eq!(format!("{:+#010}", ubig!(3000).in_radix(16)), "+000000BB8");
     assert_eq!(format!("{}", ubig!(1294).in_radix(36)), "zy");
     assert_eq!(format!("{:#010}", ubig!(1294).in_radix(36)), "00000000ZY");
-}
 
-#[test]
-fn test_ubig_to_str_radix() {
-    assert_eq!(ubig!(0).to_str_radix(16), "0");
-    assert_eq!(ubig!(0).to_str_radix(17), "0");
-    assert_eq!(ubig!(100).to_str_radix(4), "1210");
-    assert_eq!(ubig!(3000).to_str_radix(16), "bb8");
-    assert_eq!(ubig!(3000).to_str_radix_uppercase(16), "BB8");
-    assert_eq!(ubig!(3000).to_str_radix(32), "2to");
-    assert_eq!(ubig!(3000).to_str_radix_uppercase(32), "2TO");
-    assert_eq!(ubig!(0xffffffff).to_str_radix(3), "102002022201221111210");
     assert_eq!(
-        ubig!(0xffffffffffffffff).to_str_radix(3),
+        ubig!(0xffffffff).in_radix(3).to_string(),
+        "102002022201221111210"
+    );
+    assert_eq!(
+        ubig!(0xffffffffffffffff).in_radix(3).to_string(),
         "11112220022122120101211020120210210211220"
     );
 
     let a = UBig::from_le_bytes(&[0xff; 50]);
     assert_eq!(
-        a.to_str_radix(32),
+        a.in_radix(32).to_string(),
         "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
     );
 
-    assert_eq!(ubig!(123456789).to_str_radix(10), "123456789");
+    assert_eq!(ubig!(123456789).to_string(), "123456789");
     assert_eq!(
         ubig!(_123456789000000000000000000000000000000000123789749847509837450987340589273405)
-            .to_str_radix(10),
+            .to_string(),
         "123456789000000000000000000000000000000000123789749847509837450987340589273405"
     );
-    assert_eq!(ubig!(_0x83c0d7401f0188462502c2e5f7035386b1c341d307e5fbe8200756201607769a706134cfab1).to_str_radix(10),
+    assert_eq!(ubig!(_0x83c0d7401f0188462502c2e5f7035386b1c341d307e5fbe8200756201607769a706134cfab1).to_string(),
             "1048383517376714931597372965085953822045235087388094946568022880798260489887669110556129969");
     assert_eq!(
-        ubig!(_1048383517376714931597372965085953822045235087388094946568022880798260489887669110556129969).to_str_radix(16),
+        ubig!(_1048383517376714931597372965085953822045235087388094946568022880798260489887669110556129969).in_radix(16).to_string(),
         "83c0d7401f0188462502c2e5f7035386b1c341d307e5fbe8200756201607769a706134cfab1");
 }
 
@@ -166,21 +159,15 @@ fn test_ibig_in_radix() {
     assert_eq!(format!("{:#010}", ibig!(3000).in_radix(16)), "0000000BB8");
     assert_eq!(format!("{:#010}", ibig!(-3000).in_radix(16)), "-000000BB8");
     assert_eq!(format!("{:#010}", ibig!(-3000).in_radix(10)), "-000003000");
-}
 
-#[test]
-fn test_ibig_to_str_radix() {
-    assert_eq!(ibig!(0).to_str_radix(16), "0");
-    assert_eq!(ibig!(100).to_str_radix(4), "1210");
-    assert_eq!(ibig!(-100).to_str_radix(4), "-1210");
-    assert_eq!(ibig!(3000).to_str_radix(16), "bb8");
-    assert_eq!(ibig!(-3000).to_str_radix(16), "-bb8");
-    assert_eq!(ibig!(3000).to_str_radix_uppercase(16), "BB8");
-    assert_eq!(ibig!(-3000).to_str_radix_uppercase(16), "-BB8");
-    assert_eq!(ibig!(3000).to_str_radix(32), "2to");
-    assert_eq!(ibig!(-3000).to_str_radix(32), "-2to");
-    assert_eq!(ibig!(3000).to_str_radix_uppercase(32), "2TO");
-    assert_eq!(ibig!(-3000).to_str_radix_uppercase(32), "-2TO");
+    assert_eq!(ibig!(0).in_radix(16).to_string(), "0");
+    assert_eq!(ibig!(100).in_radix(4).to_string(), "1210");
+    assert_eq!(ibig!(-100).in_radix(4).to_string(), "-1210");
+    assert_eq!(ibig!(3000).in_radix(16).to_string(), "bb8");
+    assert_eq!(ibig!(-3000).in_radix(16).to_string(), "-bb8");
+    assert_eq!(ibig!(3000).in_radix(32).to_string(), "2to");
+    assert_eq!(ibig!(-3000).in_radix(32).to_string(), "-2to");
+    assert_eq!(ibig!(-1234).to_string(), "-1234");
 }
 
 #[test]
@@ -217,7 +204,8 @@ fn test_ubig_from_str_radix() {
     assert_eq!(
         UBig::from_str_radix("abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
             .unwrap()
-            .to_str_radix(16),
+            .in_radix(16)
+            .to_string(),
         "abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
     );
     assert_eq!(
@@ -226,7 +214,8 @@ fn test_ubig_from_str_radix() {
             8
         )
         .unwrap()
-        .to_str_radix(16),
+        .in_radix(16)
+        .to_string(),
         "a70a75394a70b95dde5ce5cee77397bb9dcecd2e72e72e"
     );
 
@@ -287,7 +276,8 @@ fn test_ibig_from_str_radix() {
     assert_eq!(
         IBig::from_str_radix("-abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
             .unwrap()
-            .to_str_radix(16),
+            .in_radix(16)
+            .to_string(),
         "-abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
     );
 

@@ -130,7 +130,7 @@ fn test_ibig_from_unsigned() {
 fn test_ibig_from_signed() {
     assert_eq!(IBig::from(0i32), IBig::from(UBig::from(0u32)));
     assert_eq!(IBig::from(100i32), IBig::from(UBig::from(100u32)));
-    assert_eq!(IBig::from(-0xeei32).to_str_radix(16), "-ee");
+    assert_eq!(IBig::from(-0xeei32).in_radix(16).to_string(), "-ee");
 }
 
 #[test]

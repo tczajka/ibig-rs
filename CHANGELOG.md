@@ -4,8 +4,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
-### Features
-* `InRadix::to_string` inherent method.
+### Deprecated features
+* `UBig::to_str_radix`
+* `UBig::to_str_radix_uppercase`
+* `IBig::to_str_radix`
+* `IBig::to_str_radix_uppercase`
 
 ### Dependencies
 * Added a dependency on `static_assertions 1.1`.

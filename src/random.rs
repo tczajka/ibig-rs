@@ -1,3 +1,5 @@
+//! Random distributions on big integers.
+
 use crate::{
     buffer::Buffer,
     ibig::IBig,

@@ -1,3 +1,5 @@
+//! Addition and subtraction operators.
+
 use crate::{
     add,
     buffer::Buffer,

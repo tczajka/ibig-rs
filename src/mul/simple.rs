@@ -1,3 +1,5 @@
+//! Simple multiplication algorithm.
+
 use crate::{
     add, mul,
     primitive::{SignedWord, Word},

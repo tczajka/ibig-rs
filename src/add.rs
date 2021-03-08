@@ -1,3 +1,5 @@
+//! Addition and subtraction functions.
+
 use crate::{
     primitive::{PrimitiveSigned, SignedWord, Word},
     sign::Sign::{self, *},

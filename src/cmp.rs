@@ -1,3 +1,5 @@
+//! Comparisons operators.
+
 use crate::{
     ibig::IBig,
     primitive::Word,

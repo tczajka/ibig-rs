@@ -1,3 +1,5 @@
+//! Operators on the sign of `IBig`.
+
 use crate::{
     ibig::IBig,
     ubig::{Repr::*, UBig},

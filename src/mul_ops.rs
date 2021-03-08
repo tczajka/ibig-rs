@@ -1,3 +1,5 @@
+//! Multiplication operators.
+
 use crate::{
     buffer::Buffer,
     ibig::IBig,
