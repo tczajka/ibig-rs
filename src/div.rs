@@ -1,8 +1,7 @@
 use crate::{
-    primitive::{double_word, Word, WORD_BITS},
+    primitive::{double_word, extend_word, Word},
     shift,
 };
-use core::iter;
 use fast_divisor::FastDivisor;
 
 mod divide_conquer;
@@ -53,28 +52,17 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
     }
 
     let shift = rhs.leading_zeros();
-    let fast_div_rhs_top = FastDivisor::new(rhs << shift);
+    let fast_div_rhs = FastDivisor::new(rhs << shift);
 
-    if shift == 0 {
-        let mut rem: Word = 0;
-        for word in words.iter().rev() {
-            let a = double_word(*word, rem);
-            let (_, r) = fast_div_rhs_top.div_rem(a);
-            rem = r;
-        }
-        rem
-    } else {
-        let mut rem = 0;
-        let mut carry = 0;
-        for word in words.iter().rev().chain(iter::once(&0)) {
-            let w = carry | word >> (WORD_BITS - shift);
-            carry = word << shift;
-            let a = double_word(w, rem);
-            let (_, r) = fast_div_rhs_top.div_rem(a);
-            rem = r;
-        }
-        rem >> shift
+    let mut rem: Word = 0;
+    for word in words.iter().rev() {
+        let a = double_word(*word, rem);
+        let (_, r) = fast_div_rhs.div_rem(a);
+        rem = r;
     }
+    let a = extend_word(rem) << shift;
+    let (_, rem) = fast_div_rhs.div_rem(a);
+    rem >> shift
 }
 
 /// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
