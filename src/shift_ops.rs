@@ -554,7 +554,7 @@ impl UBig {
         debug_assert!(!self.is_zero());
 
         match self.into_repr() {
-            Small(word) => UBig::shl_small_usize(word, rhs),
+            Small(word) => UBig::shl_word_usize(word, rhs),
             Large(buffer) => UBig::shl_large_usize(buffer, rhs),
         }
     }
@@ -564,24 +564,24 @@ impl UBig {
         debug_assert!(!self.is_zero());
 
         match self.repr() {
-            Small(word) => UBig::shl_small_usize(*word, rhs),
+            Small(word) => UBig::shl_word_usize(*word, rhs),
             Large(buffer) => UBig::shl_large_ref_usize(buffer, rhs),
         }
     }
 
     /// Shift left one non-zero `Word` by `usize` bits.
-    fn shl_small_usize(word: Word, rhs: usize) -> UBig {
+    fn shl_word_usize(word: Word, rhs: usize) -> UBig {
         debug_assert!(word != 0);
 
-        if rhs <= word.leading_zeros() as usize {
-            UBig::from_word(word << rhs)
+        if rhs <= WORD_BITS as usize {
+            UBig::from(extend_word(word) << rhs)
         } else {
-            UBig::shl_small_usize_slow(word, rhs)
+            UBig::shl_word_usize_slow(word, rhs)
         }
     }
 
     /// Shift left one non-zero `Word` by `usize` bits.
-    fn shl_small_usize_slow(word: Word, rhs: usize) -> UBig {
+    fn shl_word_usize_slow(word: Word, rhs: usize) -> UBig {
         let shift_words = rhs / WORD_BITS as usize;
         let shift_bits = (rhs % WORD_BITS as usize) as u32;
         let (lo, hi) = split_double_word(extend_word(word) << shift_bits);
@@ -667,7 +667,7 @@ impl UBig {
     /// Shift right by `usize` bits.
     fn shr_usize(self, rhs: usize) -> UBig {
         match self.into_repr() {
-            Small(word) => UBig::shr_small_usize(word, rhs),
+            Small(word) => UBig::shr_word_usize(word, rhs),
             Large(buffer) => UBig::shr_large_usize(buffer, rhs),
         }
     }
@@ -675,13 +675,13 @@ impl UBig {
     /// Shift right reference by `usize` bits.
     fn shr_ref_usize(&self, rhs: usize) -> UBig {
         match self.repr() {
-            Small(word) => UBig::shr_small_usize(*word, rhs),
+            Small(word) => UBig::shr_word_usize(*word, rhs),
             Large(buffer) => UBig::shr_large_ref_usize(buffer, rhs),
         }
     }
 
     /// Shift right one `Word` by `usize` bits.
-    fn shr_small_usize(word: Word, rhs: usize) -> UBig {
+    fn shr_word_usize(word: Word, rhs: usize) -> UBig {
         let word = if rhs < (WORD_BITS as usize) {
             word >> rhs
         } else {
