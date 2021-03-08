@@ -839,9 +839,9 @@ impl UBig {
 
     /// `lhs / rhs`
     fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let (_shift, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
-        let carry = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
-        if carry {
+        let _sh = UBig::div_normalize(&mut lhs, &mut rhs);
+        let overflow = div::div_rem_in_place(&mut lhs, &rhs);
+        if overflow {
             lhs.push_may_reallocate(1);
         }
         UBig::shr_large_words(lhs, rhs.len())
@@ -849,8 +849,8 @@ impl UBig {
 
     /// `lhs % rhs`
     fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let (sh, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
-        let _carry = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
+        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
+        let _overflow = div::div_rem_in_place(&mut lhs, &rhs);
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
         shift::shr_in_place(&mut rhs, sh);
@@ -859,15 +859,15 @@ impl UBig {
 
     /// `(lhs / rhs, lhs % rhs)`
     fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
-        let (sh, fast_div_rhs_top) = UBig::div_normalize(&mut lhs, &mut rhs);
-        let carry = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
-        if carry {
+        let sh = UBig::div_normalize(&mut lhs, &mut rhs);
+        let overflow = div::div_rem_in_place(&mut lhs, &rhs);
+        if overflow {
             lhs.push_may_reallocate(1);
         }
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
-        shift::shr_in_place(&mut rhs, sh);
         let q = UBig::shr_large_words(lhs, n);
+        shift::shr_in_place(&mut rhs, sh);
         (q, rhs.into())
     }
 
@@ -875,8 +875,8 @@ impl UBig {
     /// * lhs as least as long as rhs
     /// * top bit of rhs is 1
     ///
-    /// Returns (shift size, Fast21 for top rhs word).
-    fn div_normalize(lhs: &mut Buffer, rhs: &mut [Word]) -> (u32, div::FastDiv21) {
+    /// Returns shift size.
+    fn div_normalize(lhs: &mut Buffer, rhs: &mut [Word]) -> u32 {
         assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
         let sh = rhs.last().unwrap().leading_zeros();
         assert!(sh != WORD_BITS);
@@ -886,7 +886,7 @@ impl UBig {
         if lhs_carry != 0 {
             lhs.push_may_reallocate(lhs_carry);
         }
-        (sh, div::FastDiv21::by(*rhs.last().unwrap()))
+        sh
     }
 }
 

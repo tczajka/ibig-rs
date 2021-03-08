@@ -1,13 +1,13 @@
 use crate::{
-    add, cmp, mul,
-    primitive::{
-        double_word, extend_word, split_double_word, DoubleWord, SignedWord, Word, WORD_BITS,
-    },
+    primitive::{double_word, Word, WORD_BITS},
     shift,
-    sign::Sign::*,
 };
-use core::{cmp::Ordering, iter};
-use static_assertions::const_assert;
+use core::iter;
+use fast_divisor::FastDivisor;
+
+mod divide_conquer;
+mod fast_divisor;
+mod simple;
 
 /// If divisor or quotient is at most this length, use the simple division algorithm.
 const MAX_LEN_SIMPLE: usize = 32;
@@ -31,7 +31,7 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 
     let shift = rhs.leading_zeros();
     let mut rem = shift::shl_in_place(words, shift);
-    let fast_div_rhs_top = FastDiv21::by(rhs << shift);
+    let fast_div_rhs_top = FastDivisor::new(rhs << shift);
 
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
@@ -53,7 +53,7 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
     }
 
     let shift = rhs.leading_zeros();
-    let fast_div_rhs_top = FastDiv21::by(rhs << shift);
+    let fast_div_rhs_top = FastDivisor::new(rhs << shift);
 
     if shift == 0 {
         let mut rem: Word = 0;
@@ -80,280 +80,19 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
 /// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
 /// bottom words of lhs by the remainder.
 ///
+/// rhs must have at least 2 words and the top bit must be 1.
+///
 /// lhs = [lhs / rhs, lhs % rhs]
 ///
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
-pub(crate) fn div_rem_in_place(
-    lhs: &mut [Word],
-    rhs: &[Word],
-    fast_div_rhs_top: FastDiv21,
-) -> bool {
+pub(crate) fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
+    let fast_div_rhs_top = FastDivisor::new(*rhs.last().unwrap());
 
     if rhs.len() <= MAX_LEN_SIMPLE || lhs.len() - rhs.len() <= MAX_LEN_SIMPLE {
-        div_rem_in_place_simple(lhs, rhs, fast_div_rhs_top)
+        simple::div_rem_in_place(lhs, rhs, fast_div_rhs_top)
     } else {
-        // We need space for multiplications summing up to rhs.len().
-        // One of the factors will be at most floor(rhs.len()/2).
-        let mut temp = mul::allocate_temp_mul_buffer(rhs.len() / 2);
-        div_rem_in_place_divide_conquer(lhs, rhs, fast_div_rhs_top, &mut temp)
-    }
-}
-
-/// Division in place using the simple algorithm.
-///
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-///
-/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
-fn div_rem_in_place_simple(lhs: &mut [Word], rhs: &[Word], fast_div_rhs_top: FastDiv21) -> bool {
-    // The Art of Computer Programming, algorithm 4.3.1D.
-
-    let n = rhs.len();
-    assert!(n >= 2);
-    let rhs0 = rhs[n - 1];
-    let rhs1 = rhs[n - 2];
-    debug_assert!(rhs0.leading_zeros() == 0);
-
-    let mut lhs_len = lhs.len();
-    assert!(lhs_len >= n);
-
-    let quotient_carry = cmp::cmp_same_len(&lhs[lhs_len - n..], &rhs) >= Ordering::Equal;
-    if quotient_carry {
-        let overflow = add::sub_same_len_in_place(&mut lhs[lhs_len - n..], &rhs);
-        assert!(!overflow);
-    }
-
-    while lhs_len > n {
-        let lhs0 = lhs[lhs_len - 1];
-        let lhs1 = lhs[lhs_len - 2];
-        let lhs2 = lhs[lhs_len - 3];
-        let lhs01 = double_word(lhs1, lhs0);
-
-        // Approximate the next word of quotient by
-        // q = floor([lhs0, lhs1] / rhs0)
-        // r = remainder
-        // q may be too large, but never too small
-        //
-        // Then improve the approximation by adding an extra word.
-        // q' = floor([lhs0, lhs1, lhs2] / [rhs0, rhs1])
-        // Most of the time q' will be exact, but may be 1 too large.
-        //
-        // q must be decreased if subtracting q * rhs1 from [r, lhs2] overflows,
-        // i.e. if q * rhs1 > [r, lhs2].
-        //
-        // This can happen at most twice, because r will certainly overflow after
-        // adding rhs0 twice.
-        let mut q = if lhs0 < rhs0 {
-            let (mut q, mut r) = fast_div_rhs_top.div_rem(lhs01);
-            while extend_word(q) * extend_word(rhs1) > double_word(lhs2, r) {
-                q -= 1;
-                match r.checked_add(rhs0) {
-                    None => break,
-                    Some(r2) => r = r2,
-                }
-            }
-            q
-        } else {
-            // In this case MAX is accurate (r is already overflown).
-            Word::MAX
-        };
-
-        // Subtract a multiple of rhs.
-        let mut borrow =
-            mul::sub_mul_word_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], q, &rhs);
-
-        if borrow > lhs0 {
-            // Rare case: q is too large (by 1).
-            // Add a correction.
-            q -= 1;
-            let carry = add::add_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], &rhs);
-            debug_assert!(carry);
-            borrow -= 1;
-        }
-        debug_assert!(borrow == lhs0);
-        // lhs0 is now logically zeroed out
-        lhs_len -= 1;
-        // Store next digit of quotient.
-        lhs[lhs_len] = q;
-    }
-    // Quotient is now in lhs[n..] and remainder in lhs[..n].
-    quotient_carry
-}
-
-/// Division in place using divide and conquer.
-///
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-///
-/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
-fn div_rem_in_place_divide_conquer(
-    lhs: &mut [Word],
-    rhs: &[Word],
-    fast_div_rhs_top: FastDiv21,
-    temp: &mut [Word],
-) -> bool {
-    let mut overflow = false;
-    let n = rhs.len();
-    let mut m = lhs.len();
-    assert!(n > MAX_LEN_SIMPLE && m >= n);
-    while m >= 2 * n {
-        let o = div_rem_in_place_divide_conquer_same_len(
-            &mut lhs[m - 2 * n..m],
-            rhs,
-            fast_div_rhs_top,
-            temp,
-        );
-        if o {
-            assert!(m == lhs.len());
-            overflow = true;
-        }
-        m -= n;
-    }
-    let o =
-        div_rem_in_place_divide_conquer_small_quotient(&mut lhs[..m], rhs, fast_div_rhs_top, temp);
-    if o {
-        assert!(m == lhs.len());
-        overflow = true;
-    }
-    overflow
-}
-
-/// Division in place using divide and conquer.
-/// Quotient length = divisor length.
-///
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-///
-/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
-fn div_rem_in_place_divide_conquer_same_len(
-    lhs: &mut [Word],
-    rhs: &[Word],
-    fast_div_rhs_top: FastDiv21,
-    temp: &mut [Word],
-) -> bool {
-    let n = rhs.len();
-    assert!(n > MAX_LEN_SIMPLE && lhs.len() == 2 * n);
-    // To guarantee n_lo >= 2.
-    const_assert!(MAX_LEN_SIMPLE >= 3);
-    let n_lo = n / 2;
-
-    // Divide lhs[n_lo..] by rhs, putting quotient in lhs[n+n_lo..] and remainder in lhs[n_lo..n+n_lo].
-    let overflow = div_rem_in_place_divide_conquer_small_quotient(
-        &mut lhs[n_lo..],
-        rhs,
-        fast_div_rhs_top,
-        temp,
-    );
-
-    // Divide lhs[..n+n_lo] by rhs, putting the rest of the quotient in lhs[n..n+n_lo] and remainder
-    // in lhs[..n].
-    let overflow_lo = div_rem_in_place_divide_conquer_small_quotient(
-        &mut lhs[..n + n_lo],
-        rhs,
-        fast_div_rhs_top,
-        temp,
-    );
-    assert!(!overflow_lo);
-
-    overflow
-}
-
-/// Division in place using divide and conquer.
-/// Quotient length < divisor length.
-///
-/// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
-/// bottom words of lhs by the remainder.
-///
-/// lhs = [lhs / rhs, lhs % rhs]
-///
-/// Returns carry in the quotient. It is at most 1 because rhs is normalized.
-fn div_rem_in_place_divide_conquer_small_quotient(
-    lhs: &mut [Word],
-    rhs: &[Word],
-    fast_div_rhs_top: FastDiv21,
-    temp: &mut [Word],
-) -> bool {
-    let n = rhs.len();
-    assert!(n >= 2 && lhs.len() >= n);
-    let m = lhs.len() - n;
-    assert!(m < n);
-    if m <= MAX_LEN_SIMPLE {
-        return div_rem_in_place_simple(lhs, rhs, fast_div_rhs_top);
-    }
-    const_assert!(MAX_LEN_SIMPLE >= 1);
-    // Use top m words of the divisor to get a quotient approximation. It may be too large by at most 2.
-    // Quotient is in lhs[n..], remainder in lhs[..n].
-    // This is 2m / m division.
-    let mut q_overflow: SignedWord = div_rem_in_place_divide_conquer_same_len(
-        &mut lhs[n - m..],
-        &rhs[n - m..],
-        fast_div_rhs_top,
-        temp,
-    )
-    .into();
-    let (rem, q) = lhs.split_at_mut(n);
-
-    // Subtract q * (the rest of rhs) from rem.
-    // The multiplication here is m words by * (n-m) words.
-    let mut rem_overflow: SignedWord = mul::add_signed_mul(rem, Negative, q, &rhs[..n - m], temp);
-    if q_overflow != 0 {
-        rem_overflow -= SignedWord::from(add::sub_same_len_in_place(&mut rem[m..], &rhs[..n - m]));
-    }
-
-    // If the remainder overflowed, adjust q and rem.
-    while rem_overflow < 0 {
-        rem_overflow += SignedWord::from(add::add_same_len_in_place(rem, rhs));
-        q_overflow -= SignedWord::from(add::sub_one_in_place(q));
-    }
-
-    assert!(rem_overflow == 0 && q_overflow >= 0 && q_overflow <= 1);
-    q_overflow != 0
-}
-
-/// Fast repeated division of 2 words by a given word.
-#[derive(Clone, Copy)]
-pub(crate) struct FastDiv21 {
-    divisor: Word,
-    reciprocal: Word,
-}
-
-impl FastDiv21 {
-    /// Initialize from a given normalized divisor.
-    pub(crate) fn by(divisor: Word) -> FastDiv21 {
-        debug_assert!(divisor.leading_zeros() == 0);
-
-        let (recip_lo, recip_hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
-        debug_assert!(recip_hi == 1);
-
-        FastDiv21 {
-            divisor,
-            reciprocal: recip_lo,
-        }
-    }
-
-    /// Divide a value.
-    /// The result must fit in a single word.
-    fn div_rem(&self, dividend: DoubleWord) -> (Word, Word) {
-        let (_, dividend_hi) = split_double_word(dividend);
-        // Approximate quotient: it may be too small by at most 3.
-        // self.reciprocal + (1<<BITS) is approximately (1<<(2*BITS)) / self.divisor.
-        let (_, mul_hi) =
-            split_double_word(extend_word(self.reciprocal) * extend_word(dividend_hi));
-        let mut quotient = mul_hi + dividend_hi;
-        let mut remainder = dividend - extend_word(self.divisor) * extend_word(quotient);
-        while remainder >= extend_word(self.divisor) {
-            quotient += 1;
-            remainder -= extend_word(self.divisor);
-        }
-        let (rem_lo, _) = split_double_word(remainder);
-        (quotient, rem_lo)
+        divide_conquer::div_rem_in_place(lhs, rhs, fast_div_rhs_top)
     }
 }
 
