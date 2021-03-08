@@ -27,25 +27,25 @@ impl Display for OutOfBoundsError {
 #[cfg(feature = "std")]
 impl std::error::Error for OutOfBoundsError {}
 
-/// Machine word.
-pub(crate) type Word = usize;
-
-/// Signed machine word.
-pub(crate) type SignedWord = isize;
-
 #[cfg(target_pointer_width = "16")]
-/// Double machine word.
-pub(crate) type DoubleWord = u32;
-#[cfg(target_pointer_width = "32")]
-/// Double machine word.
-pub(crate) type DoubleWord = u64;
-#[cfg(target_pointer_width = "64")]
-/// Double machine word.
-pub(crate) type DoubleWord = u128;
+mod word_types {
+    /// Machine word.
+    pub(crate) type Word = u16;
+
+    /// Signed machine word.
+    pub(crate) type SignedWord = i16;
+
+    /// Double machine word.
+    pub(crate) type DoubleWord = u32;
+}
+
+pub(crate) use word_types::DoubleWord;
+pub(crate) use word_types::SignedWord;
+pub(crate) use word_types::Word;
 
 /// Cast `Word` to `DoubleWord`.
 pub(crate) fn extend_word(word: Word) -> DoubleWord {
-    word as DoubleWord
+    DoubleWord::from(word)
 }
 
 /// Create a `DoubleWord` from two `Word`s.
@@ -64,6 +64,7 @@ where
     Self: Default,
     Self: TryFrom<Word>,
     Self: TryInto<Word>,
+    Self: TryInto<usize>,
 {
     const BYTE_SIZE: usize = size_of::<Self>();
     const BIT_SIZE: u32 = 8 * Self::BYTE_SIZE as u32;
@@ -163,6 +164,42 @@ pub(crate) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[Word::BYTE_SIZE - bytes.len()..].copy_from_slice(bytes);
     Word::from_be_bytes(word_bytes)
+}
+
+#[cfg(target_pointer_width = "16")]
+mod word_types {
+    /// Machine word.
+    pub(crate) type Word = u16;
+
+    /// Signed machine word.
+    pub(crate) type SignedWord = i16;
+
+    /// Double machine word.
+    pub(crate) type DoubleWord = u32;
+}
+
+#[cfg(target_pointer_width = "32")]
+mod word_types {
+    /// Machine word.
+    pub(crate) type Word = u32;
+
+    /// Signed machine word.
+    pub(crate) type SignedWord = i32;
+
+    /// Double machine word.
+    pub(crate) type DoubleWord = u64;
+}
+
+#[cfg(not(any(target_pointer_width = "16", target_pointer_width = "32")))]
+mod word_types {
+    /// Machine word.
+    pub(crate) type Word = u64;
+
+    /// Signed machine word.
+    pub(crate) type SignedWord = i64;
+
+    /// Double machine word.
+    pub(crate) type DoubleWord = u128;
 }
 
 #[cfg(test)]

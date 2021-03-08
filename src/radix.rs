@@ -145,7 +145,7 @@ mod tests {
             if !radix.is_power_of_two() {
                 assert_eq!(
                     range_per_word(radix),
-                    (radix as usize).pow(digits_per_word(radix) as u32)
+                    (radix as Word).pow(digits_per_word(radix) as u32)
                 );
             }
         }

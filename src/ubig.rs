@@ -183,10 +183,10 @@ mod tests {
         assert_eq!(capacity(&a), capacity(&num));
     }
 
-    fn gen_ubig(num_words: usize) -> UBig {
-        let mut buf = Buffer::allocate(num_words);
+    fn gen_ubig(num_words: u16) -> UBig {
+        let mut buf = Buffer::allocate(num_words.into());
         for i in 0..num_words {
-            buf.push(i);
+            buf.push(i.into());
         }
         buf.into()
     }
