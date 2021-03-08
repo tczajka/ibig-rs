@@ -4,6 +4,7 @@ extern crate test;
 
 use ibig::prelude::*;
 use rand::prelude::*;
+use std::fmt::Write;
 use test::{bench::Bencher, black_box};
 
 /*
@@ -449,7 +450,12 @@ fn bench_rem_1e5_1e1(bencher: &mut Bencher) {
 fn bench_in_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
     let mut rng = StdRng::seed_from_u64(1);
     let a = random_ubig(bits, &mut rng);
-    bencher.iter(|| black_box(&a).in_radix(radix).to_string());
+    let mut out = String::with_capacity(bits);
+    bencher.iter(|| {
+        out.clear();
+        write!(&mut out, "{}", black_box(&a).in_radix(black_box(radix))).unwrap();
+        black_box(out.len())
+    });
 }
 
 #[bench]
