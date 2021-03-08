@@ -4,13 +4,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+### Features
+* `InRadix::to_string` inherent method.
+
 ### Dependencies
 * Added a dependency on `static_assertions 1.1`.
 
 ### Performance
 * Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
 * Parsing large numbers improved using a divide and conquer algorithm, O(n^1.47).
-* Unbalanced multiplication (large x small) avoids scanning memory many times.
+* Unbalanced operations (large x small) improved, avoid scanning memory many times.
 
 ## 0.1.1 - 2021-03-03
 
