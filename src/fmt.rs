@@ -161,8 +161,8 @@ impl UpperHex for IBig {
 impl UBig {
     /// Representation in a given radix.
     ///
-    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
-    /// than converting to a string and then formatting.
+    /// Using `in_radix` rather than `to_str_radix` avoids a memory allocation and supports
+    /// `format!` features for formatting integers.
     ///
     /// # Panics
     ///
@@ -203,15 +203,14 @@ impl UBig {
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         radix::check_radix_valid(radix);
-        let in_radix = InRadix {
+        InRadix {
             sign: Positive,
             magnitude: self,
             radix,
             prefix: "",
             digit_case: Some(DigitCase::Lower),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+        }
+        .to_string()
     }
 
     /// Upper-case string representation in an arbitrary radix.
@@ -231,23 +230,22 @@ impl UBig {
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         radix::check_radix_valid(radix);
-        let in_radix = InRadix {
+        InRadix {
             sign: Positive,
             magnitude: self,
             radix,
             prefix: "",
             digit_case: Some(DigitCase::Upper),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+        }
+        .to_string()
     }
 }
 
 impl IBig {
     /// Representation in a given radix.
     ///
-    /// Using `in_radix` allows more numeric formatting options and is a bit more efficient formatting
-    /// than converting to a string and then formatting.
+    /// Using `in_radix` rather than `to_str_radix` avoids a memory allocation and supports
+    /// `format!` features for formatting integers.
     ///
     /// # Panics
     ///
@@ -288,15 +286,14 @@ impl IBig {
     /// ```
     pub fn to_str_radix(&self, radix: u32) -> String {
         radix::check_radix_valid(radix);
-        let in_radix = InRadix {
+        InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix,
             prefix: "",
             digit_case: Some(DigitCase::Lower),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+        }
+        .to_string()
     }
 
     /// Upper-case string representation in an arbitrary radix.
@@ -316,15 +313,14 @@ impl IBig {
     /// ```
     pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
         radix::check_radix_valid(radix);
-        let in_radix = InRadix {
+        InRadix {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix,
             prefix: "",
             digit_case: Some(DigitCase::Upper),
-        };
-
-        in_radix.format(|prepared| in_radix.format_continuation_to_string(prepared))
+        }
+        .to_string()
     }
 }
 
@@ -354,6 +350,13 @@ pub struct InRadix<'a> {
 }
 
 impl InRadix<'_> {
+    /// Represent the number as `String`.
+    ///
+    /// Slightly more efficient than `Display::to_string`.
+    pub fn to_string(&self) -> String {
+        self.format(|prepared| self.format_continuation_to_string(prepared))
+    }
+
     /// Format `InRadix`.
     ///
     /// Takes a continuation that completes formatting given a `PreparedForFormatting`.
@@ -361,21 +364,24 @@ impl InRadix<'_> {
     where
         F: FnOnce(&mut dyn PreparedForFormatting) -> R,
     {
-        match self.magnitude.repr() {
-            Small(word) => {
-                if self.radix.is_power_of_two() {
+        if self.radix.is_power_of_two() {
+            match self.magnitude.repr() {
+                Small(word) => {
                     let mut prepared = PreparedWordInPow2::new(*word, self.radix);
                     continuation(&mut prepared)
-                } else {
-                    let mut prepared = PreparedWordInNonPow2::new(*word, self.radix);
+                }
+                Large(buffer) => {
+                    let mut prepared = PreparedLargeInPow2::new(buffer, self.radix);
                     continuation(&mut prepared)
                 }
             }
-            Large(buffer) => {
-                if self.radix.is_power_of_two() {
-                    let mut prepared = PreparedLargeInPow2::new(buffer, self.radix);
+        } else {
+            match self.magnitude.repr() {
+                Small(word) => {
+                    let mut prepared = PreparedWordInNonPow2::new(*word, self.radix);
                     continuation(&mut prepared)
-                } else {
+                }
+                Large(buffer) => {
                     let mut prepared = PreparedLargeInNonPow2::new(buffer, self.radix);
                     continuation(&mut prepared)
                 }
@@ -462,7 +468,7 @@ impl InRadix<'_> {
 
         width += sign.len();
 
-        let digit_case = self.digit_case.unwrap();
+        let digit_case = self.digit_case.unwrap_or(DigitCase::Lower);
 
         let mut s = String::with_capacity(width);
         s += sign;
