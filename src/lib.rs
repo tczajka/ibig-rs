@@ -59,6 +59,7 @@ pub mod prelude;
 mod primitive;
 mod radix;
 mod shift;
+mod shift_ops;
 mod sign;
 mod ubig;
 

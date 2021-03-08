@@ -96,20 +96,6 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
     Word::MAX - carry_plus_max
 }
 
-/// words -= mult * rhs
-///
-/// Returns borrow.
-#[allow(dead_code)]
-fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
-    assert!(words.len() >= rhs.len());
-    let n = rhs.len();
-    let mut borrow = sub_mul_word_same_len_in_place(&mut words[..n], mult, rhs);
-    if words.len() > n {
-        borrow = Word::from(add::sub_word_in_place(&mut words[n..], borrow));
-    }
-    borrow
-}
-
 /// Temporary buffer required for multiplication.
 /// n is the length of the smaller factor in words.
 pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {

@@ -208,9 +208,9 @@ pub(crate) fn add_signed_mul_same_len(
     // Now t1 = (3V(0) + 2V(-1) + V(2))/6 - 2V(inf)
     //     t2 = (V(1) + V(-1))/2
     let t1_rem = div::div_by_word_in_place(t1, 6);
+    let t2_rem = shift::shr_in_place(t2, 1);
     assert_eq!(t1_rem, 0);
-    assert_eq!(t2[0] & 1, 0);
-    shift::shr_in_place(t2, 1);
+    assert_eq!(t2_rem, 0);
 
     // c1 -= t1
     // c3 += t1

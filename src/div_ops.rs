@@ -844,7 +844,8 @@ impl UBig {
         if overflow {
             lhs.push_may_reallocate(1);
         }
-        UBig::shr_large_words(lhs, rhs.len())
+        lhs.erase_front(rhs.len());
+        lhs.into()
     }
 
     /// `lhs % rhs`
@@ -853,7 +854,8 @@ impl UBig {
         let _overflow = div::div_rem_in_place(&mut lhs, &rhs);
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
-        shift::shr_in_place(&mut rhs, sh);
+        let low_bits = shift::shr_in_place(&mut rhs, sh);
+        debug_assert!(low_bits == 0);
         rhs.into()
     }
 
@@ -866,9 +868,10 @@ impl UBig {
         }
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
-        let q = UBig::shr_large_words(lhs, n);
-        shift::shr_in_place(&mut rhs, sh);
-        (q, rhs.into())
+        let low_bits = shift::shr_in_place(&mut rhs, sh);
+        debug_assert!(low_bits == 0);
+        lhs.erase_front(n);
+        (lhs.into(), rhs.into())
     }
 
     /// Normalizes large arguments for division by shifting them left:

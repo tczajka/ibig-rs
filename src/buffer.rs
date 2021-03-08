@@ -61,11 +61,6 @@ impl Buffer {
         }
     }
 
-    /// Will reallocate after resizing to `new_len` and `shrink`?
-    pub(crate) fn will_reallocate(&self, new_len: usize) -> bool {
-        new_len > self.capacity() || self.capacity() > Buffer::max_compact_capacity(new_len)
-    }
-
     /// Change capacity to store `num_words` plus some extra space for future growth.
     ///
     /// # Panics
@@ -109,6 +104,16 @@ impl Buffer {
         self.0.extend(iter::repeat(0).take(n));
     }
 
+    /// Insert `n` zeros in front.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is not enough capacity.
+    pub(crate) fn push_zeros_front(&mut self, n: usize) {
+        assert!(n <= self.capacity() - self.len());
+        self.0.splice(..0, iter::repeat(0).take(n));
+    }
+
     /// Pop the most significant `Word`.
     pub(crate) fn pop(&mut self) -> Option<Word> {
         self.0.pop()
@@ -126,6 +131,13 @@ impl Buffer {
         assert!(self.len() >= len);
 
         self.0.truncate(len);
+    }
+
+    /// Erase first n elements.
+    pub(crate) fn erase_front(&mut self, n: usize) {
+        assert!(self.len() >= n);
+
+        self.0.drain(..n);
     }
 
     /// Clone from `other` and resize if necessary.
@@ -319,6 +331,14 @@ mod tests {
     }
 
     #[test]
+    fn test_push_zeros_front() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        buffer.push_zeros_front(2);
+        assert_eq!(&buffer[..], [0, 0, 1]);
+    }
+
+    #[test]
     fn test_truncate() {
         let mut buffer = Buffer::allocate(5);
         buffer.push(1);
@@ -326,6 +346,16 @@ mod tests {
         buffer.push(3);
         buffer.truncate(1);
         assert_eq!(&buffer[..], [1]);
+    }
+
+    #[test]
+    fn test_erase_front() {
+        let mut buffer = Buffer::allocate(5);
+        buffer.push(1);
+        buffer.push(2);
+        buffer.push(3);
+        buffer.erase_front(2);
+        assert_eq!(&buffer[..], [3]);
     }
 
     #[test]

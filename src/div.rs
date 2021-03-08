@@ -22,9 +22,8 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
         return 0;
     }
     if rhs.is_power_of_two() {
-        let rem = words[0] & (rhs - 1);
         let sh = rhs.trailing_zeros();
-        shift::shr_in_place(words, sh);
+        let rem = shift::shr_in_place(words, sh);
         return rem;
     }
 
