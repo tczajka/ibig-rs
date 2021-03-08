@@ -99,6 +99,7 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
 /// words -= mult * rhs
 ///
 /// Returns borrow.
+#[allow(dead_code)]
 fn sub_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     assert!(words.len() >= rhs.len());
     let n = rhs.len();

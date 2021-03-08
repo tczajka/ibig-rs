@@ -60,12 +60,14 @@ fn add_signed_mul_chunk(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> S
 fn add_mul_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(a.len() < 2 * CHUNK_LEN);
-    let mut carry: Word = 0;
+    let mut carry = false;
     for (i, m) in b.iter().enumerate() {
-        carry += mul::add_mul_word_in_place(&mut c[i..], *m, a);
+        let carry_word = mul::add_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
+        let (carry_word, carry_next) = add::add_with_carry(c[i + a.len()], carry_word, carry);
+        c[i + a.len()] = carry_word;
+        carry = carry_next;
     }
-    debug_assert!(carry <= 1);
-    carry != 0
+    carry
 }
 
 /// c -= a * b
@@ -75,10 +77,12 @@ fn add_mul_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
 fn sub_mul_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(a.len() < 2 * CHUNK_LEN);
-    let mut borrow: Word = 0;
+    let mut borrow = false;
     for (i, m) in b.iter().enumerate() {
-        borrow += mul::sub_mul_word_in_place(&mut c[i..], *m, a);
+        let borrow_word = mul::sub_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
+        let (borrow_word, borrow_next) = add::sub_with_borrow(c[i + a.len()], borrow_word, borrow);
+        c[i + a.len()] = borrow_word;
+        borrow = borrow_next;
     }
-    debug_assert!(borrow <= 1);
-    borrow != 0
+    borrow
 }

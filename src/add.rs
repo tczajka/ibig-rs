@@ -1,8 +1,58 @@
 use crate::{
-    primitive::{extend_word, split_double_word, PrimitiveSigned, SignedWord, Word},
+    primitive::{PrimitiveSigned, SignedWord, Word},
     sign::Sign::{self, *},
 };
 use core::cmp::Ordering::*;
+
+// Add a + b + carry.
+//
+// Returns (result, overflow).
+
+#[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
+    let (sum, c0) = a.overflowing_add(b);
+    let (sum, c1) = sum.overflowing_add(Word::from(carry));
+    (sum, c0 | c1)
+}
+
+#[cfg(target_arch = "x86")]
+pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
+    let mut sum = 0;
+    let carry = unsafe { core::arch::x86::_addcarry_u32(carry.into(), a, b, &mut sum) };
+    (sum, carry != 0)
+}
+
+#[cfg(target_arch = "x86_64")]
+pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
+    let mut sum = 0;
+    let carry = unsafe { core::arch::x86_64::_addcarry_u64(carry.into(), a, b, &mut sum) };
+    (sum, carry != 0)
+}
+
+// Subtract a - b - borrow.
+//
+// Returns (result, overflow).
+
+#[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+    let (diff, b0) = a.overflowing_sub(b);
+    let (diff, b1) = diff.overflowing_sub(Word::from(borrow));
+    (diff, b0 | b1)
+}
+
+#[cfg(target_arch = "x86")]
+pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+    let mut diff = 0;
+    let borrow = unsafe { core::arch::x86::_subborrow_u32(borrow.into(), a, b, &mut diff) };
+    (diff, borrow != 0)
+}
+
+#[cfg(target_arch = "x86_64")]
+pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+    let mut diff = 0;
+    let borrow = unsafe { core::arch::x86_64::_subborrow_u64(borrow.into(), a, b, &mut diff) };
+    (diff, borrow != 0)
+}
 
 /// Add one to a word sequence.
 ///
@@ -16,44 +66,6 @@ pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
         }
     }
     true
-}
-
-/// Add a word to a non-empty word sequence.
-///
-/// Returns overflow.
-pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
-    assert!(!words.is_empty());
-    let (a, overflow) = words[0].overflowing_add(rhs);
-    words[0] = a;
-    overflow && add_one_in_place(&mut words[1..])
-}
-
-/// Add a word sequence of same length in place.
-///
-/// Returns overflow.
-pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(words.len() == rhs.len());
-
-    let mut carry = 0;
-    for (a, b) in words.iter_mut().zip(rhs.iter()) {
-        let (sum, c) = split_double_word(extend_word(*a) + extend_word(*b) + extend_word(carry));
-        *a = sum;
-        carry = c;
-    }
-    carry != 0
-}
-
-/// Add a word sequence in place.
-///
-/// Returns overflow.
-pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(words.len() >= rhs.len());
-
-    let mut overflow = add_same_len_in_place(&mut words[..rhs.len()], rhs);
-    if overflow {
-        overflow = add_one_in_place(&mut words[rhs.len()..]);
-    }
-    overflow
 }
 
 /// Subtract one from a word sequence.
@@ -70,6 +82,16 @@ pub(crate) fn sub_one_in_place(words: &mut [Word]) -> bool {
     true
 }
 
+/// Add a word to a non-empty word sequence.
+///
+/// Returns overflow.
+pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
+    assert!(!words.is_empty());
+    let (a, overflow) = words[0].overflowing_add(rhs);
+    words[0] = a;
+    overflow && add_one_in_place(&mut words[1..])
+}
+
 /// Subtract a word from a non-empty word sequence.
 ///
 /// Returns borrow.
@@ -80,22 +102,43 @@ pub(crate) fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
     borrow && sub_one_in_place(&mut words[1..])
 }
 
+/// Add a word sequence of same length in place.
+///
+/// Returns overflow.
+pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(words.len() == rhs.len());
+
+    let mut carry = false;
+    for (a, b) in words.iter_mut().zip(rhs.iter()) {
+        let (sum, c) = add_with_carry(*a, *b, carry);
+        *a = sum;
+        carry = c;
+    }
+    carry
+}
+
 /// lhs -= rhs
 ///
 /// Returns borrow.
 pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
-    // carry_plus_1 is 0 or 1
-    let mut carry_plus_1: Word = 1;
+    let mut borrow = false;
     for (a, b) in lhs.iter_mut().zip(rhs.iter()) {
-        // (diff, c) = a - b + carry_plus_1 + (1 << WORD_BITS - 1)
-        let (diff, c) = split_double_word(
-            extend_word(*a) + extend_word(Word::MAX) + extend_word(carry_plus_1) - extend_word(*b),
-        );
+        let (diff, borrow1) = sub_with_borrow(*a, *b, borrow);
         *a = diff;
-        carry_plus_1 = c;
+        borrow = borrow1;
     }
-    carry_plus_1 == 0
+    borrow
+}
+
+/// Add a word sequence in place.
+///
+/// Returns overflow.
+pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
+    debug_assert!(words.len() >= rhs.len());
+
+    let carry = add_same_len_in_place(&mut words[..rhs.len()], rhs);
+    carry && add_one_in_place(&mut words[rhs.len()..])
 }
 
 /// lhs -= rhs
@@ -103,11 +146,8 @@ pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
 /// Returns borrow.
 pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(lhs.len() >= rhs.len());
-    let mut borrow = sub_same_len_in_place(&mut lhs[..rhs.len()], rhs);
-    if borrow {
-        borrow = sub_one_in_place(&mut lhs[rhs.len()..]);
-    }
-    borrow
+    let borrow = sub_same_len_in_place(&mut lhs[..rhs.len()], rhs);
+    borrow && sub_one_in_place(&mut lhs[rhs.len()..])
 }
 
 /// rhs = lhs - rhs
@@ -115,17 +155,13 @@ pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
 /// Returns borrow.
 pub(crate) fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
-    // carry_plus_1 is 0 or 1
-    let mut carry_plus_1: Word = 1;
+    let mut borrow = false;
     for (a, b) in lhs.iter().zip(rhs.iter_mut()) {
-        // (diff, c) = a - b + carry_plus_1 + (1 << WORD_BITS - 1)
-        let (diff, c) = split_double_word(
-            extend_word(*a) + extend_word(Word::MAX) + extend_word(carry_plus_1) - extend_word(*b),
-        );
+        let (diff, borrow1) = sub_with_borrow(*a, *b, borrow);
         *b = diff;
-        carry_plus_1 = c;
+        borrow = borrow1;
     }
-    carry_plus_1 == 0
+    borrow
 }
 
 /// (sign, lhs) = lhs - rhs
