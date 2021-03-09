@@ -143,31 +143,42 @@ impl UBig {
         panic!("trailing_zeros_large(0)")
     }
 
-    /// Integer logarithm base 2.
+    /// Bit length.
     ///
-    /// Returns the floor of the logarithm base 2 of the number.
-    /// In other words, it is the position of the highest 1 bit in the binary representation.
+    /// The length of the binary representation of the number.
     ///
-    /// For 0, it returns `None`.
+    /// For 0, the length is 0.
+    ///
+    /// For non-zero numbers it is:
+    /// * `in_radix(2).to_string().len()`
+    /// * the index of the top 1 bit plus one
+    /// * the floor of the logarithm base 2 of the number plus one.
+    ///
+    ///
     ///
     /// # Examples
     ///
     /// ```
     /// # use ibig::prelude::*;
-    /// assert_eq!(ubig!(17).ilog2(), Some(4));
-    /// assert_eq!(ubig!(0b101000000).ilog2(), Some(8));
-    /// assert_eq!(ubig!(0).ilog2(), None);
+    /// assert_eq!(ubig!(17).bit_len(), 5);
+    /// assert_eq!(ubig!(0b101000000).bit_len(), 9);
+    /// assert_eq!(ubig!(0).bit_len(), 0);
+    /// let x = ubig!(_0x90ffff3450897234);
+    /// assert_eq!(x.bit_len(), x.in_radix(2).to_string().len());
     /// ```
-    pub fn ilog2(&self) -> Option<usize> {
+    pub fn bit_len(&self) -> usize {
         match self.repr() {
-            Small(0) => None,
-            Small(word) => Some((WORD_BITS - 1 - word.leading_zeros()) as usize),
-            Large(buffer) => Some(
-                buffer.len() * WORD_BITS_USIZE
-                    - 1
-                    - buffer.last().unwrap().leading_zeros() as usize,
-            ),
+            Small(word) => (WORD_BITS - word.leading_zeros()) as usize,
+            Large(buffer) => {
+                buffer.len() * WORD_BITS_USIZE - buffer.last().unwrap().leading_zeros() as usize
+            }
         }
+    }
+
+    /// Deprecated: use `bit_len` instead.
+    #[deprecated(since = "0.1.2", note = "use `bit_len` instead")]
+    pub fn ilog2(&self) -> Option<usize> {
+        self.bit_len().checked_sub(1)
     }
 
     /// True if the number is a power of 2.

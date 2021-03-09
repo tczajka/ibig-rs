@@ -70,6 +70,17 @@ fn test_trailing_zeros() {
 }
 
 #[test]
+fn test_bit_len() {
+    assert_eq!(ubig!(0).bit_len(), 0);
+    assert_eq!(ubig!(0xf0000).bit_len(), 20);
+    assert_eq!(
+        ubig!(_0xfffffffffffffffffffff00000000000000000000000000000000000000000000000000).bit_len(),
+        284
+    );
+}
+
+#[test]
+#[allow(deprecated)]
 fn test_ilog2() {
     assert_eq!(ubig!(0).ilog2(), None);
     assert_eq!(ubig!(0xf0000).ilog2(), Some(19));

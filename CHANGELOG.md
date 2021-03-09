@@ -4,8 +4,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+### New features
+* `bit_len`
+
 ### Deprecated features
-* `to_str_radix`, `to_str_radix_uppercase`
+* `to_str_radix`, `to_str_radix_uppercase`. Use `in_radix(...)` instead.
+* `ilog2`. Use `bit_len` instead.
 
 ### Dependencies
 * Added a dependency on `static_assertions 1.1`.
@@ -14,6 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
 * Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
 * Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
+* Other minor performance improvements.
 
 ## 0.1.1 - 2021-03-03
 
