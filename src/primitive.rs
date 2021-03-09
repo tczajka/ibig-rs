@@ -27,18 +27,6 @@ impl Display for OutOfBoundsError {
 #[cfg(feature = "std")]
 impl std::error::Error for OutOfBoundsError {}
 
-#[cfg(target_pointer_width = "16")]
-mod word_types {
-    /// Machine word.
-    pub(crate) type Word = u16;
-
-    /// Signed machine word.
-    pub(crate) type SignedWord = i16;
-
-    /// Double machine word.
-    pub(crate) type DoubleWord = u32;
-}
-
 pub(crate) use word_types::DoubleWord;
 pub(crate) use word_types::SignedWord;
 pub(crate) use word_types::Word;
