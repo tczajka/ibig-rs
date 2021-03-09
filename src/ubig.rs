@@ -51,6 +51,14 @@ impl UBig {
     pub(crate) fn into_repr(self) -> Repr {
         self.0
     }
+
+    /// Length in Words.
+    pub(crate) fn len(&self) -> usize {
+        match self.repr() {
+            Small(_) => 1,
+            Large(buffer) => buffer.len(),
+        }
+    }
 }
 
 impl Clone for UBig {

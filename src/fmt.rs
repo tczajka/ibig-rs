@@ -1,8 +1,8 @@
 //! Formatting numbers.
 
 use crate::{
-    buffer::Buffer,
     div,
+    div_ops::DivRem,
     ibig::IBig,
     primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit, DigitCase},
@@ -14,7 +14,11 @@ use ascii::{AsciiChar, AsciiStr};
 use core::{
     cmp::max,
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
+    mem,
 };
+
+/// Format non-power-of-2 radix in chunks of CHUNK_LEN * digits_per_word.
+const CHUNK_LEN: usize = 16;
 
 impl Display for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -287,8 +291,17 @@ impl Display for InRadix<'_> {
                     self.format_prepared(f, digit_case, &mut prepared)
                 }
                 Large(buffer) => {
-                    let mut prepared = PreparedLargeInNonPow2::new(buffer, self.radix, digit_case);
-                    self.format_prepared(f, digit_case, &mut prepared)
+                    let radix_info = radix::radix_info(self.radix);
+                    let max_digits = buffer.len() * (radix_info.digits_per_word + 1);
+                    if max_digits <= CHUNK_LEN * radix_info.digits_per_word {
+                        let mut prepared =
+                            PreparedMediumInNonPow2::new(self.magnitude, self.radix, digit_case);
+                        self.format_prepared(f, digit_case, &mut prepared)
+                    } else {
+                        let mut prepared =
+                            PreparedLargeInNonPow2::new(self.magnitude, self.radix, digit_case);
+                        self.format_prepared(f, digit_case, &mut prepared)
+                    }
                 }
             }
         }
@@ -538,47 +551,53 @@ impl PreparedForFormatting for PreparedWordInNonPow2 {
     }
 }
 
-/// A large number prepared for formatting in a non-power-of-2 radix.
-struct PreparedLargeInNonPow2 {
+/// A medium number prepared for formatting in a non-power-of-2 radix.
+/// Must have no more than CHUNK_LEN * digits_per_word digits.
+struct PreparedMediumInNonPow2 {
     top_group: PreparedWordInNonPow2,
-    // Little endian in groups of max digits per word.
-    // TODO: Change to static array when recursive implemented.
-    low_groups: Vec<Word>,
+    // Little endian in groups of digits_per_word.
+    low_groups: [Word; CHUNK_LEN],
+    num_low_groups: usize,
     radix: Digit,
 }
 
-impl PreparedLargeInNonPow2 {
-    /// Prepare a large number for formatting in a non-power-of-2 radix.
-    fn new(words: &[Word], radix: Digit, digit_case: DigitCase) -> PreparedLargeInNonPow2 {
-        debug_assert!(words.len() >= 2 && radix::is_radix_valid(radix) && !radix.is_power_of_two());
+impl PreparedMediumInNonPow2 {
+    /// Prepare a medium number for formatting in a non-power-of-2 radix.
+    fn new(number: &UBig, radix: Digit, digit_case: DigitCase) -> PreparedMediumInNonPow2 {
+        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
         let radix_info = radix::radix_info(radix);
 
-        // There is at most 1 extra digit per word beyond digits_per_word.
-        // Max total extra words: ceil(words.len() / digits_per_word).
-        // One of them is top_group.
-        let mut low_groups =
-            Vec::with_capacity(words.len() + words.len() / radix_info.digits_per_word);
-        let mut buffer = Buffer::allocate_no_extra(words.len());
-        buffer.extend(words);
-        while buffer.len() > 1 {
-            let rem =
-                div::fast_div_by_word_in_place(&mut buffer, radix_info.fast_div_range_per_word);
-            low_groups.push(rem);
-            buffer.pop_leading_zeros();
+        let (mut buffer, mut buffer_len) = ubig_to_chunk_buffer(number);
+
+        let mut low_groups = [0; CHUNK_LEN];
+        let mut num_low_groups = 0;
+
+        while buffer_len > 1 {
+            let rem = div::fast_div_by_word_in_place(
+                &mut buffer[..buffer_len],
+                radix_info.fast_div_range_per_word,
+            );
+            low_groups[num_low_groups] = rem;
+            num_low_groups += 1;
+
+            while buffer[buffer_len - 1] == 0 {
+                buffer_len -= 1;
+            }
         }
-        assert!(buffer.len() == 1);
-        PreparedLargeInNonPow2 {
+        assert!(buffer_len == 1);
+        PreparedMediumInNonPow2 {
             top_group: PreparedWordInNonPow2::new(buffer[0], radix, digit_case, 1),
             low_groups,
+            num_low_groups,
             radix,
         }
     }
 }
 
-impl PreparedForFormatting for PreparedLargeInNonPow2 {
+impl PreparedForFormatting for PreparedMediumInNonPow2 {
     fn width(&self) -> usize {
         let radix_info = radix::radix_info(self.radix);
-        self.top_group.width() + self.low_groups.len() * radix_info.digits_per_word
+        self.top_group.width() + self.num_low_groups * radix_info.digits_per_word
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
@@ -586,7 +605,7 @@ impl PreparedForFormatting for PreparedLargeInNonPow2 {
 
         self.top_group.write(writer, digit_case)?;
 
-        for group_word in self.low_groups.iter().rev() {
+        for group_word in self.low_groups[..self.num_low_groups].iter().rev() {
             let mut prepared = PreparedWordInNonPow2::new(
                 *group_word,
                 self.radix,
@@ -597,4 +616,159 @@ impl PreparedForFormatting for PreparedLargeInNonPow2 {
         }
         Ok(())
     }
+}
+
+/// A large number prepared for formatting in a non-power-of-2 radix.
+struct PreparedLargeInNonPow2 {
+    top_chunk: PreparedMediumInNonPow2,
+    // radix^((digits_per_word * CHUNK_LEN) << i)
+    radix_powers: Vec<UBig>,
+    // little endian chunks: (i, (digits_per_word * CHUNK_LEN)<<i digit number)
+    // decreasing in size, so there is a logarithmic number of them
+    big_chunks: Vec<(usize, UBig)>,
+    radix: Digit,
+}
+
+impl PreparedLargeInNonPow2 {
+    /// Prepare a medium number for formatting in a non-power-of-2 radix.
+    fn new(number: &UBig, radix: Digit, digit_case: DigitCase) -> PreparedLargeInNonPow2 {
+        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
+        let radix_info = radix::radix_info(radix);
+
+        let mut radix_powers = Vec::new();
+        let mut big_chunks = Vec::new();
+        let chunk_power = UBig::from_word(radix_info.range_per_word).pow(CHUNK_LEN);
+        if chunk_power > *number {
+            return PreparedLargeInNonPow2 {
+                top_chunk: PreparedMediumInNonPow2::new(number, radix, digit_case),
+                radix_powers,
+                big_chunks,
+                radix,
+            };
+        }
+
+        radix_powers.push(chunk_power);
+        loop {
+            let prev = radix_powers.last().unwrap();
+            // Avoid multiplication if we know prev * prev > number just by looking at lengths.
+            if 2 * prev.len() - 1 > number.len() {
+                break;
+            }
+            let new = prev * prev;
+            if new > *number {
+                break;
+            }
+            radix_powers.push(new);
+        }
+
+        let mut power_iter = radix_powers.iter().enumerate().rev();
+        let mut x = {
+            let (i, p) = power_iter.next().unwrap();
+            let (q, r) = number.div_rem(p);
+            big_chunks.push((i, r));
+            q
+        };
+        for (i, p) in power_iter {
+            if x >= *p {
+                let (q, r) = x.div_rem(p);
+                big_chunks.push((i, r));
+                x = q;
+            }
+        }
+
+        PreparedLargeInNonPow2 {
+            top_chunk: PreparedMediumInNonPow2::new(&x, radix, digit_case),
+            radix_powers,
+            big_chunks,
+            radix,
+        }
+    }
+
+    /// Write (digits_per_word * CHUNK_LEN) << i digits.
+    fn write_big_chunk(
+        &self,
+        writer: &mut dyn Write,
+        digit_case: DigitCase,
+        i: usize,
+        x: UBig,
+    ) -> fmt::Result {
+        if i == 0 {
+            self.write_chunk(writer, digit_case, x)
+        } else {
+            let (q, r) = x.div_rem(&self.radix_powers[i - 1]);
+            self.write_big_chunk(writer, digit_case, i - 1, q)?;
+            self.write_big_chunk(writer, digit_case, i - 1, r)
+        }
+    }
+
+    /// Write digits_per_word * CHUNK_LEN digits.
+    fn write_chunk(&self, writer: &mut dyn Write, digit_case: DigitCase, x: UBig) -> fmt::Result {
+        let radix_info = radix::radix_info(self.radix);
+        let (mut buffer, mut buffer_len) = ubig_to_chunk_buffer(&x);
+
+        let mut groups = [0; CHUNK_LEN];
+
+        for group in groups.iter_mut() {
+            *group = div::fast_div_by_word_in_place(
+                &mut buffer[..buffer_len],
+                radix_info.fast_div_range_per_word,
+            );
+            while buffer_len != 0 && buffer[buffer_len - 1] == 0 {
+                buffer_len -= 1;
+            }
+        }
+        assert_eq!(buffer_len, 0);
+
+        for group in groups.iter().rev() {
+            let mut prepared = PreparedWordInNonPow2::new(
+                *group,
+                self.radix,
+                digit_case,
+                radix_info.digits_per_word,
+            );
+            prepared.write(writer, digit_case)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl PreparedForFormatting for PreparedLargeInNonPow2 {
+    fn width(&self) -> usize {
+        let mut num_digits = self.top_chunk.width();
+        let radix_info = radix::radix_info(self.radix);
+        for (i, _) in &self.big_chunks {
+            num_digits += (radix_info.digits_per_word * CHUNK_LEN) << i;
+        }
+        num_digits
+    }
+
+    fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
+        self.top_chunk.write(writer, digit_case)?;
+
+        let mut big_chunks = mem::take(&mut self.big_chunks);
+        for (i, val) in big_chunks.drain(..).rev() {
+            self.write_big_chunk(writer, digit_case, i, val)?;
+        }
+        Ok(())
+    }
+}
+
+fn ubig_to_chunk_buffer(x: &UBig) -> ([Word; CHUNK_LEN], usize) {
+    let mut buffer = [0; CHUNK_LEN];
+    let buffer_len;
+    match x.repr() {
+        Small(0) => {
+            buffer_len = 0;
+        }
+        Small(word) => {
+            buffer_len = 1;
+            buffer[0] = *word;
+        }
+        Large(b) => {
+            buffer_len = b.len();
+            buffer[..buffer_len].copy_from_slice(b);
+        }
+    }
+    (buffer, buffer_len)
 }

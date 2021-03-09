@@ -201,23 +201,6 @@ fn test_ubig_from_str_radix() {
     );
     assert_eq!(UBig::from_str_radix("f1Ee", 16).unwrap(), ubig!(0xf1ee));
     assert_eq!(UBig::from_str_radix("Pp", 32).unwrap(), ubig!(825));
-    assert_eq!(
-        UBig::from_str_radix("abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
-            .unwrap()
-            .in_radix(16)
-            .to_string(),
-        "abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
-    );
-    assert_eq!(
-        UBig::from_str_radix(
-            "12341235234512341345356745634563563563457356356354645634563456",
-            8
-        )
-        .unwrap()
-        .in_radix(16)
-        .to_string(),
-        "a70a75394a70b95dde5ce5cee77397bb9dcecd2e72e72e"
-    );
 
     assert_eq!(UBig::from_str_radix("12345", 10), Ok(ubig!(12345)));
     assert_eq!(UBig::from_str_radix("abzz", 36), Ok(ubig!(482111)));
@@ -273,6 +256,53 @@ fn test_ibig_from_str_radix() {
         IBig::from_str_radix("-1010110", 2).unwrap(),
         ibig!(-0b1010110)
     );
+    {
+        let x: IBig = "-1234".parse().unwrap();
+        assert_eq!(x, ibig!(-1234));
+    }
+}
+
+#[test]
+fn test_radix_round_trip() {
+    assert_eq!(
+        UBig::from_str_radix("abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
+            .unwrap()
+            .in_radix(16)
+            .to_string(),
+        "abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
+    );
+    assert_eq!(
+        UBig::from_str_radix(
+            "12341235234512341345356745634563563563457356356354645634563456",
+            8
+        )
+        .unwrap()
+        .in_radix(16)
+        .to_string(),
+        "a70a75394a70b95dde5ce5cee77397bb9dcecd2e72e72e"
+    );
+
+    let x: UBig = "1287912837409187345908734509873240897234".parse().unwrap();
+    assert_eq!(x.to_string(), "1287912837409187345908734509873240897234");
+
+    // 1000..000, 999.999
+    for i in 0..1000 {
+        let x = ubig!(10).pow(i);
+        let y: UBig = x.to_string().parse().unwrap();
+        assert_eq!(x, y);
+        let y: UBig = (&x - ubig!(1)).to_string().parse().unwrap();
+        assert_eq!(&x - ubig!(1), y);
+    }
+
+    // hex 1000...000, fff...fff
+    for i in 0..100 {
+        let x: UBig = ubig!(1) << (64 * i);
+        let y: UBig = x.to_string().parse().unwrap();
+        assert_eq!(x, y);
+        let y: UBig = (&x - ubig!(1)).to_string().parse().unwrap();
+        assert_eq!(&x - ubig!(1), y);
+    }
+
     assert_eq!(
         IBig::from_str_radix("-abCCcaacacbbcbabcbacbacbabcabcbabcabbc1000", 16)
             .unwrap()
@@ -280,11 +310,6 @@ fn test_ibig_from_str_radix() {
             .to_string(),
         "-abcccaacacbbcbabcbacbacbabcabcbabcabbc1000"
     );
-
-    {
-        let x: IBig = "-1234".parse().unwrap();
-        assert_eq!(x, ibig!(-1234));
-    }
 }
 
 #[test]

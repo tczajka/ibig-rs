@@ -5,18 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## Unreleased
 
 ### Deprecated features
-* `UBig::to_str_radix`
-* `UBig::to_str_radix_uppercase`
-* `IBig::to_str_radix`
-* `IBig::to_str_radix_uppercase`
+* `to_str_radix`, `to_str_radix_uppercase`
 
 ### Dependencies
 * Added a dependency on `static_assertions 1.1`.
 
 ### Performance
 * Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
-* Parsing large numbers improved using a divide and conquer algorithm, O(n^1.47).
-* Unbalanced operations (large x small) improved, avoid scanning memory many times.
+* Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
+* Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
 
 ## 0.1.1 - 2021-03-03
 

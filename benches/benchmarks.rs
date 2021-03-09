@@ -513,6 +513,11 @@ fn bench_to_dec_1e5(bencher: &mut Bencher) {
     bench_in_radix(100_000, 10, bencher);
 }
 
+#[bench]
+fn bench_to_dec_1e6(bencher: &mut Bencher) {
+    bench_in_radix(1_000_000, 10, bencher);
+}
+
 fn bench_from_str_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
     let mut rng = StdRng::seed_from_u64(1);
     let a = random_ubig(bits, &mut rng);

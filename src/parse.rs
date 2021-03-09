@@ -15,7 +15,7 @@ use core::{
     str::FromStr,
 };
 
-/// Parse non-power-of-2 radix in chunks of CHUNK_LEN * digits_per_word(radix).
+/// Parse non-power-of-2 radix in chunks of CHUNK_LEN * digits_per_word.
 const CHUNK_LEN: usize = 256;
 
 impl FromStr for UBig {
@@ -198,7 +198,7 @@ impl UBig {
         let chunk_bytes = CHUNK_LEN * radix_info.digits_per_word;
         assert!(bytes.len() > chunk_bytes);
 
-        // Calculate radix^n for n = (chunk_bytes << i) < bytes.len().
+        // Calculate radix^(CHUNK_LEN<<i).
         let mut radix_powers: Vec<UBig> = Vec::new();
         radix_powers.push(UBig::from_word(radix_info.range_per_word).pow(CHUNK_LEN));
 
