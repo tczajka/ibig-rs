@@ -109,8 +109,9 @@ impl UBig {
     /// Convert an unsigned string to `UBig` for a power-of-2 radix.
     fn from_str_radix_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
+        let radix_info = radix::radix_info(radix);
 
-        if src.len() <= radix::digits_per_word(radix) {
+        if src.len() <= radix_info.digits_per_word {
             let word = from_str_radix_pow2_word(src, radix)?;
             Ok(UBig::from_word(word))
         } else {
@@ -154,14 +155,13 @@ impl UBig {
     /// Convert an unsigned string to `UBig` for a non-power-of-2 radix.
     fn from_str_radix_non_pow2(src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-
+        let radix_info = radix::radix_info(radix);
         let bytes = src.as_bytes();
-        let digits_per_word = radix::digits_per_word(radix);
 
-        if bytes.len() <= digits_per_word {
+        if bytes.len() <= radix_info.digits_per_word {
             let word = from_str_radix_non_pow2_word(bytes, radix)?;
             Ok(UBig::from_word(word))
-        } else if bytes.len() <= CHUNK_LEN * digits_per_word {
+        } else if bytes.len() <= CHUNK_LEN * radix_info.digits_per_word {
             UBig::from_str_radix_non_pow2_chunk(bytes, radix)
         } else {
             UBig::from_str_radix_non_pow2_large(bytes, radix)
@@ -173,16 +173,15 @@ impl UBig {
     /// The length of input is limited to `CHUNK_LEN * digits_per_word(radix)`.
     fn from_str_radix_non_pow2_chunk(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
+        let radix_info = radix::radix_info(radix);
+        debug_assert!(bytes.len() <= CHUNK_LEN * radix_info.digits_per_word);
 
-        let digits_per_word = radix::digits_per_word(radix);
-        debug_assert!(bytes.len() <= CHUNK_LEN * digits_per_word);
-
-        let range_per_word = radix::range_per_word(radix);
-        let groups = bytes.rchunks(digits_per_word);
+        let groups = bytes.rchunks(radix_info.digits_per_word);
         let mut buffer = Buffer::allocate(groups.len());
         for group in groups.rev() {
             let next = from_str_radix_non_pow2_word(group, radix)?;
-            let carry = mul::mul_word_in_place_with_carry(&mut buffer, range_per_word, next);
+            let carry =
+                mul::mul_word_in_place_with_carry(&mut buffer, radix_info.range_per_word, next);
             if carry != 0 {
                 buffer.push(carry);
             }
@@ -195,12 +194,13 @@ impl UBig {
     /// This result will usually not fit in CHUNK_LEN words.
     fn from_str_radix_non_pow2_large(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-        let chunk_bytes = CHUNK_LEN * radix::digits_per_word(radix);
+        let radix_info = radix::radix_info(radix);
+        let chunk_bytes = CHUNK_LEN * radix_info.digits_per_word;
         assert!(bytes.len() > chunk_bytes);
 
         // Calculate radix^n for n = (chunk_bytes << i) < bytes.len().
         let mut radix_powers: Vec<UBig> = Vec::new();
-        radix_powers.push(UBig::from_word(radix::range_per_word(radix)).pow(CHUNK_LEN));
+        radix_powers.push(UBig::from_word(radix_info.range_per_word).pow(CHUNK_LEN));
 
         // while (chunk_bytes << radix_powers.len()) < bytes.len()
         // To avoid overflow:
@@ -345,7 +345,7 @@ impl std::error::Error for ParseError {}
 /// The length of the string must be at most digits_per_word(radix).
 fn from_str_radix_pow2_word(src: &str, radix: Digit) -> Result<Word, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
-    debug_assert!(src.len() <= radix::digits_per_word(radix));
+    debug_assert!(src.len() <= radix::radix_info(radix).digits_per_word);
 
     let log_radix = radix.trailing_zeros();
     let mut word = 0;
@@ -363,7 +363,7 @@ fn from_str_radix_pow2_word(src: &str, radix: Digit) -> Result<Word, ParseError>
 /// The length of the string must be at most digits_per_word(radix).
 fn from_str_radix_non_pow2_word(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-    debug_assert!(src.len() <= radix::digits_per_word(radix));
+    debug_assert!(src.len() <= radix::radix_info(radix).digits_per_word);
 
     let mut word: Word = 0;
     for byte in src.iter() {

@@ -1,6 +1,9 @@
 //! Information about radixes.
 
-use crate::primitive::{Word, WORD_BITS};
+use crate::{
+    div::fast_divisor::FastDivisor,
+    primitive::{Word, WORD_BITS},
+};
 use ascii::AsciiChar;
 
 /// Digit and radix type.
@@ -59,43 +62,52 @@ pub(crate) fn digit_from_utf8_byte(byte: u8, radix: Digit) -> Option<Digit> {
 /// Maximum number of digits that a `Word` can ever have for any non-power-of-2 radix.
 pub(crate) const MAX_WORD_DIGITS_NON_POW_2: usize = RadixInfo::for_radix(3).digits_per_word + 1;
 
-/// The number of digits that can always fit in a `Word`.
-pub(crate) fn digits_per_word(radix: Digit) -> usize {
-    debug_assert!(is_radix_valid(radix));
-    RADIX_INFO_TABLE[radix as usize].digits_per_word
-}
-
-/// radix.pow(digits_per_word), only for non-power-of-2 radixes
-pub(crate) fn range_per_word(radix: Digit) -> Word {
-    debug_assert!(is_radix_valid(radix) && !radix.is_power_of_two());
-    RADIX_INFO_TABLE[radix as usize].range_per_word
-}
-
 /// Properties of a given radix.
 #[derive(Clone, Copy)]
-struct RadixInfo {
+pub(crate) struct RadixInfo {
     /// The number of digits that can always fit in a `Word`.
-    digits_per_word: usize,
+    pub(crate) digits_per_word: usize,
+
     /// Radix to the power of `max_digits`.
     /// Only for non-power-of-2 radixes.
-    range_per_word: Word,
+    pub(crate) range_per_word: Word,
+
+    /// Faster division by `radix`.
+    pub(crate) fast_div_radix: FastDivisor,
+
+    /// Faster division by range_per_word.
+    /// Only for non-power-of-2 radixes.
+    pub(crate) fast_div_range_per_word: FastDivisor,
+}
+
+/// RadixInfo for a given radix.
+pub(crate) fn radix_info(radix: Digit) -> &'static RadixInfo {
+    debug_assert!(is_radix_valid(radix));
+    &RADIX_INFO_TABLE[radix as usize]
 }
 
 impl RadixInfo {
     const fn for_radix(radix: Digit) -> RadixInfo {
+        let fast_div_radix = FastDivisor::new(radix as Word);
         if radix.is_power_of_two() {
             RadixInfo {
                 digits_per_word: (WORD_BITS / radix.trailing_zeros()) as usize,
                 range_per_word: 0,
+                fast_div_radix,
+                fast_div_range_per_word: FastDivisor::new(1),
             }
         } else {
-            RadixInfo::for_radix_recursive(
+            let mut info = RadixInfo::for_radix_recursive(
                 radix,
                 RadixInfo {
                     digits_per_word: 0,
                     range_per_word: 1,
+                    fast_div_radix,
+                    fast_div_range_per_word: FastDivisor::new(1),
                 },
-            )
+            );
+            info.fast_div_range_per_word = FastDivisor::new(info.range_per_word);
+            info
         }
     }
 
@@ -107,6 +119,7 @@ impl RadixInfo {
                 RadixInfo {
                     digits_per_word: info.digits_per_word + 1,
                     range_per_word,
+                    ..info
                 },
             ),
         }
@@ -119,6 +132,8 @@ static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
     [RadixInfo {
         digits_per_word: 0,
         range_per_word: 0,
+        fast_div_radix: FastDivisor::new(1),
+        fast_div_range_per_word: FastDivisor::new(1),
     }; MAX_RADIX as usize + 1],
     2,
 );
@@ -139,15 +154,16 @@ mod tests {
     #[test]
     fn test_radix_info_table() {
         for radix in 2..=MAX_RADIX {
+            let info = radix_info(radix);
             // Check vs an approximation that happens to work for all bases.
             assert_eq!(
-                digits_per_word(radix),
+                info.digits_per_word,
                 ((WORD_BITS as f64 + 0.01) / (radix as f64).log2()) as usize
             );
             if !radix.is_power_of_two() {
                 assert_eq!(
-                    range_per_word(radix),
-                    (radix as Word).pow(digits_per_word(radix) as u32)
+                    info.range_per_word,
+                    (radix as Word).pow(info.digits_per_word as u32)
                 );
             }
         }

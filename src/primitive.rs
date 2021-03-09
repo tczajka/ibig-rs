@@ -32,16 +32,16 @@ pub(crate) use word_types::SignedWord;
 pub(crate) use word_types::Word;
 
 /// Cast `Word` to `DoubleWord`.
-pub(crate) fn extend_word(word: Word) -> DoubleWord {
-    DoubleWord::from(word)
+pub(crate) const fn extend_word(word: Word) -> DoubleWord {
+    word as DoubleWord
 }
 
 /// Create a `DoubleWord` from two `Word`s.
-pub(crate) fn double_word(low: Word, high: Word) -> DoubleWord {
+pub(crate) const fn double_word(low: Word, high: Word) -> DoubleWord {
     extend_word(low) | extend_word(high) << WORD_BITS
 }
 
-pub(crate) fn split_double_word(dw: DoubleWord) -> (Word, Word) {
+pub(crate) const fn split_double_word(dw: DoubleWord) -> (Word, Word) {
     (dw as Word, (dw >> WORD_BITS) as Word)
 }
 

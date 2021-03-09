@@ -11,11 +11,8 @@ impl FastDivisorNormalized {
     /// Initialize from a given normalized divisor.
     ///
     /// divisor must have top bit of 1
-    pub(crate) fn new(divisor: Word) -> FastDivisorNormalized {
-        debug_assert!(divisor.leading_zeros() == 0);
-
-        let (recip_lo, recip_hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
-        debug_assert!(recip_hi == 1);
+    pub(crate) const fn new(divisor: Word) -> FastDivisorNormalized {
+        let (recip_lo, _) = split_double_word(DoubleWord::MAX / extend_word(divisor));
 
         FastDivisorNormalized {
             divisor,
@@ -39,5 +36,49 @@ impl FastDivisorNormalized {
         }
         let (rem_lo, _) = split_double_word(remainder);
         (quotient, rem_lo)
+    }
+}
+
+/// Fast repeated division by a given Word.
+#[derive(Clone, Copy)]
+pub(crate) struct FastDivisor {
+    pub(crate) normalized: FastDivisorNormalized,
+    pub(crate) shift: u32,
+}
+
+impl FastDivisor {
+    /// Initialize from a given divisor.
+    pub(crate) const fn new(divisor: Word) -> FastDivisor {
+        let shift = divisor.leading_zeros();
+
+        FastDivisor {
+            normalized: FastDivisorNormalized::new(divisor << shift),
+            shift,
+        }
+    }
+
+    /// Divide a value.
+    pub(crate) fn div_rem(&self, dividend: Word) -> (Word, Word) {
+        let (q, r) = self.normalized.div_rem(extend_word(dividend) << self.shift);
+        (q, r >> self.shift)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::prelude::*;
+
+    #[test]
+    fn test_fast_divisor() {
+        let mut rng = StdRng::seed_from_u64(1);
+        for _ in 0..1000000 {
+            let a = rng.gen();
+            let b = rng.gen_range(1..=Word::MAX);
+            let fast_div = FastDivisor::new(b);
+            let (q, r) = fast_div.div_rem(a);
+            assert_eq!(q, a / b);
+            assert_eq!(r, a % b);
+        }
     }
 }

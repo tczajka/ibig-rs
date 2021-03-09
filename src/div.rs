@@ -4,10 +4,10 @@ use crate::{
     primitive::{double_word, extend_word, Word},
     shift,
 };
-use fast_divisor::FastDivisorNormalized;
+use fast_divisor::{FastDivisor, FastDivisorNormalized};
 
 mod divide_conquer;
-mod fast_divisor;
+pub(crate) mod fast_divisor;
 mod simple;
 
 /// If divisor or quotient is at most this length, use the simple division algorithm.
@@ -29,17 +29,23 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
         return rem;
     }
 
-    let shift = rhs.leading_zeros();
-    let mut rem = shift::shl_in_place(words, shift);
-    let fast_div_rhs_top = FastDivisorNormalized::new(rhs << shift);
+    let fast_div_rhs = FastDivisor::new(rhs);
+    fast_div_by_word_in_place(words, fast_div_rhs)
+}
+
+/// words = words / rhs
+///
+/// Returns words % rhs.
+pub(crate) fn fast_div_by_word_in_place(words: &mut [Word], fast_div_rhs: FastDivisor) -> Word {
+    let mut rem = shift::shl_in_place(words, fast_div_rhs.shift);
 
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
-        let (q, r) = fast_div_rhs_top.div_rem(a);
+        let (q, r) = fast_div_rhs.normalized.div_rem(a);
         *word = q;
         rem = r;
     }
-    rem >> shift
+    rem >> fast_div_rhs.shift
 }
 
 /// words % rhs
