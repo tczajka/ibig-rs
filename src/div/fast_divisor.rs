@@ -1,21 +1,23 @@
 use crate::primitive::{extend_word, split_double_word, DoubleWord, Word};
 
-/// Fast repeated division of DoubleWord by a given Word.
+/// Fast repeated division by a given normalized Word.
 #[derive(Clone, Copy)]
-pub(crate) struct FastDivisor {
+pub(crate) struct FastDivisorNormalized {
     divisor: Word,
     reciprocal: Word,
 }
 
-impl FastDivisor {
+impl FastDivisorNormalized {
     /// Initialize from a given normalized divisor.
-    pub(crate) fn new(divisor: Word) -> FastDivisor {
+    ///
+    /// divisor must have top bit of 1
+    pub(crate) fn new(divisor: Word) -> FastDivisorNormalized {
         debug_assert!(divisor.leading_zeros() == 0);
 
         let (recip_lo, recip_hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
         debug_assert!(recip_hi == 1);
 
-        FastDivisor {
+        FastDivisorNormalized {
             divisor,
             reciprocal: recip_lo,
         }

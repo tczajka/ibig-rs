@@ -2,7 +2,7 @@
 
 use crate::{
     add, cmp,
-    div::fast_divisor::FastDivisor,
+    div::fast_divisor::FastDivisorNormalized,
     mul,
     primitive::{double_word, extend_word, Word},
 };
@@ -19,7 +19,7 @@ use core::cmp::Ordering;
 pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],
-    fast_div_rhs_top: FastDivisor,
+    fast_div_rhs_top: FastDivisorNormalized,
 ) -> bool {
     // The Art of Computer Programming, algorithm 4.3.1D.
 

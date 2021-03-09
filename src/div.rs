@@ -4,7 +4,7 @@ use crate::{
     primitive::{double_word, extend_word, Word},
     shift,
 };
-use fast_divisor::FastDivisor;
+use fast_divisor::FastDivisorNormalized;
 
 mod divide_conquer;
 mod fast_divisor;
@@ -31,7 +31,7 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 
     let shift = rhs.leading_zeros();
     let mut rem = shift::shl_in_place(words, shift);
-    let fast_div_rhs_top = FastDivisor::new(rhs << shift);
+    let fast_div_rhs_top = FastDivisorNormalized::new(rhs << shift);
 
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
@@ -53,7 +53,7 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
     }
 
     let shift = rhs.leading_zeros();
-    let fast_div_rhs = FastDivisor::new(rhs << shift);
+    let fast_div_rhs = FastDivisorNormalized::new(rhs << shift);
 
     let mut rem: Word = 0;
     for word in words.iter().rev() {
@@ -76,7 +76,7 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
 pub(crate) fn div_rem_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
-    let fast_div_rhs_top = FastDivisor::new(*rhs.last().unwrap());
+    let fast_div_rhs_top = FastDivisorNormalized::new(*rhs.last().unwrap());
 
     if rhs.len() <= MAX_LEN_SIMPLE || lhs.len() - rhs.len() <= MAX_LEN_SIMPLE {
         simple::div_rem_in_place(lhs, rhs, fast_div_rhs_top)
