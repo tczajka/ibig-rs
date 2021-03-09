@@ -11,7 +11,7 @@ use crate::sign::Sign::{self, *};
 use core::{
     convert::{TryFrom, TryInto},
     fmt::{self, Debug, Display, Formatter},
-    mem::size_of,
+    mem,
 };
 
 /// Number out of bounds.
@@ -66,7 +66,7 @@ where
     Self: TryInto<Word>,
     Self: TryInto<usize>,
 {
-    const BYTE_SIZE: usize = size_of::<Self>();
+    const BYTE_SIZE: usize = mem::size_of::<Self>();
     const BIT_SIZE: u32 = 8 * Self::BYTE_SIZE as u32;
     type ByteRepr: AsRef<[u8]> + AsMut<[u8]>;
 
@@ -91,7 +91,7 @@ where
 macro_rules! impl_primitive_unsigned {
     ($t:ty) => {
         impl PrimitiveUnsigned for $t {
-            type ByteRepr = [u8; size_of::<$t>()];
+            type ByteRepr = [u8; Self::BYTE_SIZE];
 
             fn to_le_bytes(self) -> Self::ByteRepr {
                 self.to_le_bytes()
@@ -152,6 +152,7 @@ impl_primitive_signed!(i128, u128);
 impl_primitive_signed!(isize, usize);
 
 pub(crate) const WORD_BITS: u32 = Word::BIT_SIZE;
+pub(crate) const WORD_BITS_USIZE: usize = WORD_BITS as usize;
 pub(crate) const WORD_BYTES: usize = Word::BYTE_SIZE;
 
 pub(crate) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {

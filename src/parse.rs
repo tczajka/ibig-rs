@@ -4,7 +4,7 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     mul,
-    primitive::{Word, WORD_BITS},
+    primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit},
     sign::Sign::*,
     ubig::UBig,
@@ -129,7 +129,7 @@ impl UBig {
             .len()
             .checked_mul(log_radix as usize)
             .expect("number too large");
-        let mut buffer = Buffer::allocate((num_bits - 1) / WORD_BITS as usize + 1);
+        let mut buffer = Buffer::allocate((num_bits - 1) / WORD_BITS_USIZE + 1);
         let mut bits = 0;
         let mut word = 0;
         for byte in src.as_bytes().iter().rev() {

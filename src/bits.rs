@@ -3,7 +3,7 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{double_word, Word, WORD_BITS},
+    primitive::{double_word, Word, WORD_BITS, WORD_BITS_USIZE},
     sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
 };
@@ -25,10 +25,10 @@ impl UBig {
     /// ```
     pub fn bit(&self, n: usize) -> bool {
         match self.repr() {
-            Small(word) => n < WORD_BITS as usize && word & 1 << n != 0,
+            Small(word) => n < WORD_BITS_USIZE && word & 1 << n != 0,
             Large(buffer) => {
-                let idx = n / WORD_BITS as usize;
-                idx < buffer.len() && buffer[idx] & 1 << (n % WORD_BITS as usize) != 0
+                let idx = n / WORD_BITS_USIZE;
+                idx < buffer.len() && buffer[idx] & 1 << (n % WORD_BITS_USIZE) != 0
             }
         }
     }
@@ -48,7 +48,7 @@ impl UBig {
     pub fn set_bit(&mut self, n: usize) {
         match mem::take(self).into_repr() {
             Small(word) => {
-                if n < WORD_BITS as usize {
+                if n < WORD_BITS_USIZE {
                     *self = UBig::from_word(word | 1 << n)
                 } else {
                     *self = UBig::with_bit_word_slow(word, n)
@@ -59,23 +59,23 @@ impl UBig {
     }
 
     fn with_bit_word_slow(word: Word, n: usize) -> UBig {
-        debug_assert!(n >= WORD_BITS as usize);
-        let idx = n / WORD_BITS as usize;
+        debug_assert!(n >= WORD_BITS_USIZE);
+        let idx = n / WORD_BITS_USIZE;
         let mut buffer = Buffer::allocate(idx + 1);
         buffer.push(word);
         buffer.extend((1..idx).map(|_| 0));
-        buffer.push(1 << (n % WORD_BITS as usize));
+        buffer.push(1 << (n % WORD_BITS_USIZE));
         buffer.into()
     }
 
     fn with_bit_large(mut buffer: Buffer, n: usize) -> UBig {
-        let idx = n / WORD_BITS as usize;
+        let idx = n / WORD_BITS_USIZE;
         if idx < buffer.len() {
-            buffer[idx] |= 1 << (n % WORD_BITS as usize);
+            buffer[idx] |= 1 << (n % WORD_BITS_USIZE);
         } else {
             buffer.ensure_capacity(idx + 1);
             buffer.push_zeros(idx - buffer.len());
-            buffer.push(1 << (n % WORD_BITS as usize));
+            buffer.push(1 << (n % WORD_BITS_USIZE));
         }
         buffer.into()
     }
@@ -93,7 +93,7 @@ impl UBig {
     pub fn clear_bit(&mut self, n: usize) {
         match mem::take(self).into_repr() {
             Small(word) => {
-                if n < WORD_BITS as usize {
+                if n < WORD_BITS_USIZE {
                     *self = UBig::from_word(word & !(1 << n))
                 }
             }
@@ -102,9 +102,9 @@ impl UBig {
     }
 
     fn without_bit_large(mut buffer: Buffer, n: usize) -> UBig {
-        let idx = n / WORD_BITS as usize;
+        let idx = n / WORD_BITS_USIZE;
         if idx < buffer.len() {
-            buffer[idx] &= !(1 << (n % WORD_BITS as usize));
+            buffer[idx] &= !(1 << (n % WORD_BITS_USIZE));
         }
         buffer.into()
     }
@@ -137,7 +137,7 @@ impl UBig {
 
         for (idx, word) in words.iter().enumerate() {
             if *word != 0 {
-                return idx * WORD_BITS as usize + word.trailing_zeros() as usize;
+                return idx * WORD_BITS_USIZE + word.trailing_zeros() as usize;
             }
         }
         panic!("trailing_zeros_large(0)")
@@ -163,7 +163,7 @@ impl UBig {
             Small(0) => None,
             Small(word) => Some((WORD_BITS - 1 - word.leading_zeros()) as usize),
             Large(buffer) => Some(
-                buffer.len() * WORD_BITS as usize
+                buffer.len() * WORD_BITS_USIZE
                     - 1
                     - buffer.last().unwrap().leading_zeros() as usize,
             ),

@@ -3,7 +3,9 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{double_word, extend_word, split_double_word, PrimitiveSigned, Word, WORD_BITS},
+    primitive::{
+        double_word, extend_word, split_double_word, PrimitiveSigned, Word, WORD_BITS_USIZE,
+    },
     shift,
     sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
@@ -573,7 +575,7 @@ impl UBig {
     fn shl_word_usize(word: Word, rhs: usize) -> UBig {
         debug_assert!(word != 0);
 
-        if rhs <= WORD_BITS as usize {
+        if rhs <= WORD_BITS_USIZE {
             UBig::from(extend_word(word) << rhs)
         } else {
             UBig::shl_word_usize_slow(word, rhs)
@@ -582,8 +584,8 @@ impl UBig {
 
     /// Shift left one non-zero `Word` by `usize` bits.
     fn shl_word_usize_slow(word: Word, rhs: usize) -> UBig {
-        let shift_words = rhs / WORD_BITS as usize;
-        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        let shift_words = rhs / WORD_BITS_USIZE;
+        let shift_bits = (rhs % WORD_BITS_USIZE) as u32;
         let (lo, hi) = split_double_word(extend_word(word) << shift_bits);
         let mut buffer = Buffer::allocate(shift_words + 2);
         buffer.push_zeros(shift_words);
@@ -594,13 +596,13 @@ impl UBig {
 
     /// Shift left `buffer` by `rhs` bits.
     fn shl_large_usize(mut buffer: Buffer, rhs: usize) -> UBig {
-        let shift_words = rhs / WORD_BITS as usize;
+        let shift_words = rhs / WORD_BITS_USIZE;
 
         if buffer.capacity() < buffer.len() + shift_words + 1 {
             return UBig::shl_large_ref_usize(&buffer, rhs);
         }
 
-        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        let shift_bits = (rhs % WORD_BITS_USIZE) as u32;
         let carry = shift::shl_in_place(&mut buffer, shift_bits);
         buffer.push(carry);
         buffer.push_zeros_front(shift_words);
@@ -609,8 +611,8 @@ impl UBig {
 
     /// Shift left large number of words by `rhs` bits.
     fn shl_large_ref_usize(words: &[Word], rhs: usize) -> UBig {
-        let shift_words = rhs / WORD_BITS as usize;
-        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        let shift_words = rhs / WORD_BITS_USIZE;
+        let shift_bits = (rhs % WORD_BITS_USIZE) as u32;
 
         let mut buffer = Buffer::allocate(shift_words + words.len() + 1);
         buffer.push_zeros(shift_words);
@@ -682,7 +684,7 @@ impl UBig {
 
     /// Shift right one `Word` by `usize` bits.
     fn shr_word_usize(word: Word, rhs: usize) -> UBig {
-        let word = if rhs < (WORD_BITS as usize) {
+        let word = if rhs < WORD_BITS_USIZE {
             word >> rhs
         } else {
             0
@@ -692,11 +694,11 @@ impl UBig {
 
     /// Shift right `buffer` by `rhs` bits.
     fn shr_large_usize(mut buffer: Buffer, rhs: usize) -> UBig {
-        let shift_words = rhs / WORD_BITS as usize;
+        let shift_words = rhs / WORD_BITS_USIZE;
         if shift_words >= buffer.len() {
             return UBig::from_word(0);
         }
-        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        let shift_bits = (rhs % WORD_BITS_USIZE) as u32;
         buffer.erase_front(shift_words);
         shift::shr_in_place(&mut buffer, shift_bits);
         buffer.into()
@@ -704,8 +706,8 @@ impl UBig {
 
     /// Shift right large number of words by `rhs` bits.
     fn shr_large_ref_usize(words: &[Word], rhs: usize) -> UBig {
-        let shift_words = rhs / WORD_BITS as usize;
-        let shift_bits = (rhs % WORD_BITS as usize) as u32;
+        let shift_words = rhs / WORD_BITS_USIZE;
+        let shift_bits = (rhs % WORD_BITS_USIZE) as u32;
 
         let words = &words[shift_words.min(words.len())..];
 

@@ -1,6 +1,6 @@
 //! Word buffer.
 
-use crate::primitive::{Word, WORD_BITS};
+use crate::primitive::{Word, WORD_BITS_USIZE};
 
 use alloc::vec::Vec;
 use core::{
@@ -42,7 +42,7 @@ impl Buffer {
     pub(crate) fn panic_too_large() -> ! {
         panic!(
             "number too large, maximum is {} bits",
-            Buffer::MAX_CAPACITY * (WORD_BITS as usize)
+            Buffer::MAX_CAPACITY * WORD_BITS_USIZE
         )
     }
 
@@ -165,7 +165,7 @@ impl Buffer {
     /// operations, and for radix conversions (even base 2 can be represented).
     ///
     /// It also ensures that we can add two lengths without overflow.
-    pub(crate) const MAX_CAPACITY: usize = usize::MAX / (WORD_BITS as usize);
+    pub(crate) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS_USIZE;
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).

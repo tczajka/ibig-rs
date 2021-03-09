@@ -4,7 +4,7 @@ use crate::{
     buffer::Buffer,
     div,
     ibig::IBig,
-    primitive::{Word, WORD_BITS},
+    primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit, DigitCase},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
@@ -402,7 +402,7 @@ impl PreparedForFormatting for PreparedWordInPow2 {
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
         let mask: Digit = (1 << self.log_radix) - 1;
-        let mut digits = [AsciiChar::Null; WORD_BITS as usize];
+        let mut digits = [AsciiChar::Null; WORD_BITS_USIZE];
         for idx in 0..self.width {
             let digit = (self.word >> (idx as u32 * self.log_radix)) as Digit & mask;
             digits[self.width - 1 - idx] = radix::digit_to_ascii(digit, digit_case);
@@ -429,7 +429,7 @@ impl PreparedLargeInPow2<'_> {
         // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
         // words.len() <= Buffer::MAX_CAPACITY.
         let width = max(
-            (words.len() * WORD_BITS as usize - words.last().unwrap().leading_zeros() as usize
+            (words.len() * WORD_BITS_USIZE - words.last().unwrap().leading_zeros() as usize
                 + (log_radix - 1) as usize)
                 / log_radix as usize,
             1,
@@ -453,7 +453,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
         let mut it = self.words.iter().rev();
         let mut word = it.next().unwrap();
         let mut bits = (self.width * self.log_radix as usize
-            - (self.words.len() - 1) * WORD_BITS as usize) as u32;
+            - (self.words.len() - 1) * WORD_BITS_USIZE) as u32;
 
         const MAX_BUFFER_LEN: usize = 32;
         let mut buffer = [AsciiChar::default(); MAX_BUFFER_LEN];
