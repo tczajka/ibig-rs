@@ -1,6 +1,6 @@
 [package]
 name = "ibig"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
 description = "Big integer library"
@@ -13,7 +13,7 @@ readme = "README.md"
 
 [dependencies]
 ascii = { version = "1.0", default-features = false }
-rand = { version = "0.8", default-features = false, optional = true }
+rand = { version = "0.8.3", default-features = false, optional = true }
 static_assertions = "1.1"
 
 [dev-dependencies]

@@ -2,7 +2,7 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.1.2 - 2021-03-09
 
 ### New features
 * `bit_len`
@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Dependencies
 * Added a dependency on `static_assertions 1.1`.
+* Bumped `rand` to `0.8.3`.
 
 ### Performance
 * Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
