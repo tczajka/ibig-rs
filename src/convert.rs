@@ -288,7 +288,7 @@ fn ubig_from_unsigned<T>(x: T) -> UBig
 where
     T: PrimitiveUnsigned,
 {
-    match TryInto::<Word>::try_into(x) {
+    match x.try_into() {
         Ok(w) => UBig::from_word(w),
         Err(_) => {
             let repr = x.to_le_bytes();

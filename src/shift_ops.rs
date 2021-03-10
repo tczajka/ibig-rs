@@ -529,10 +529,8 @@ impl UBig {
         if self.is_zero() {
             self
         } else {
-            match TryInto::<usize>::try_into(rhs) {
-                Ok(rhs_usize) => self.shl_usize(rhs_usize),
-                Err(_) => Buffer::panic_too_large(),
-            }
+            let rhs_usize = rhs.try_into().unwrap_or_else(|_| Buffer::panic_too_large());
+            self.shl_usize(rhs_usize)
         }
     }
 
@@ -544,10 +542,8 @@ impl UBig {
         if self.is_zero() {
             UBig::from_word(0)
         } else {
-            match TryInto::<usize>::try_into(rhs) {
-                Ok(rhs_usize) => self.shl_ref_usize(rhs_usize),
-                Err(_) => Buffer::panic_too_large(),
-            }
+            let rhs_usize = rhs.try_into().unwrap_or_else(|_| Buffer::panic_too_large());
+            self.shl_ref_usize(rhs_usize)
         }
     }
 
@@ -649,7 +645,7 @@ impl UBig {
     where
         T: TryInto<usize>,
     {
-        match TryInto::<usize>::try_into(rhs) {
+        match rhs.try_into() {
             Ok(rhs_usize) => self.shr_usize(rhs_usize),
             Err(_) => UBig::from_word(0),
         }
@@ -660,7 +656,7 @@ impl UBig {
     where
         T: TryInto<usize>,
     {
-        match TryInto::<usize>::try_into(rhs) {
+        match rhs.try_into() {
             Ok(rhs_usize) => self.shr_ref_usize(rhs_usize),
             Err(_) => UBig::from_word(0),
         }
