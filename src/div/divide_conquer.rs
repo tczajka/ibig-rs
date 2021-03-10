@@ -1,8 +1,8 @@
 //! Divide and conquer division algorithm.
 
 use crate::{
-    add,
-    div::{self, fast_divisor::FastDivisorNormalized},
+    add, div,
+    fast_divide::FastDivideNormalized,
     mul,
     primitive::{SignedWord, Word},
     sign::Sign::*,
@@ -20,7 +20,7 @@ use static_assertions::const_assert;
 pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],
-    fast_div_rhs_top: FastDivisorNormalized,
+    fast_div_rhs_top: FastDivideNormalized,
 ) -> bool {
     assert!(rhs.len() > div::MAX_LEN_SIMPLE);
 
@@ -34,7 +34,7 @@ pub(crate) fn div_rem_in_place(
 fn div_rem_in_place_any_len(
     lhs: &mut [Word],
     rhs: &[Word],
-    fast_div_rhs_top: FastDivisorNormalized,
+    fast_div_rhs_top: FastDivideNormalized,
     temp: &mut [Word],
 ) -> bool {
     let mut overflow = false;
@@ -61,7 +61,7 @@ fn div_rem_in_place_any_len(
 fn div_rem_in_place_same_len(
     lhs: &mut [Word],
     rhs: &[Word],
-    fast_div_rhs_top: FastDivisorNormalized,
+    fast_div_rhs_top: FastDivideNormalized,
     temp: &mut [Word],
 ) -> bool {
     let n = rhs.len();
@@ -94,7 +94,7 @@ fn div_rem_in_place_same_len(
 fn div_rem_in_place_small_quotient(
     lhs: &mut [Word],
     rhs: &[Word],
-    fast_div_rhs_top: FastDivisorNormalized,
+    fast_div_rhs_top: FastDivideNormalized,
     temp: &mut [Word],
 ) -> bool {
     let n = rhs.len();

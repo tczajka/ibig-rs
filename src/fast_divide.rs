@@ -1,6 +1,8 @@
+//! Divide by a prearranged Word quickly using multiplication by the reciprocal.
+
 use crate::primitive::{double_word, extend_word, split_double_word, DoubleWord, Word, WORD_BITS};
 
-/// Divide a Words by a prearranged Word quickly.
+/// Divide a Word by a prearranged divisor.
 ///
 /// Granlund, Montgomerry "Division by Invariant Integers using Multiplication"
 /// Algorithm 4.1.
@@ -68,23 +70,27 @@ impl FastDivideSmall {
         let r = n - q * self.divisor;
         (q, r)
     }
+
+    pub(crate) const fn dummy() -> Self {
+        Self::new(2)
+    }
 }
 
 /// Fast repeated division by a given normalized Word.
 #[derive(Clone, Copy)]
-pub(crate) struct FastDivisorNormalized {
+pub(crate) struct FastDivideNormalized {
     divisor: Word,
     reciprocal: Word,
 }
 
-impl FastDivisorNormalized {
+impl FastDivideNormalized {
     /// Initialize from a given normalized divisor.
     ///
     /// divisor must have top bit of 1
-    pub(crate) const fn new(divisor: Word) -> FastDivisorNormalized {
+    pub(crate) const fn new(divisor: Word) -> Self {
         let (recip_lo, _) = split_double_word(DoubleWord::MAX / extend_word(divisor));
 
-        FastDivisorNormalized {
+        FastDivideNormalized {
             divisor,
             reciprocal: recip_lo,
         }
@@ -111,20 +117,24 @@ impl FastDivisorNormalized {
 
 /// Fast repeated division by a given Word.
 #[derive(Clone, Copy)]
-pub(crate) struct FastDivisor {
-    pub(crate) normalized: FastDivisorNormalized,
+pub(crate) struct FastDivide {
+    pub(crate) normalized: FastDivideNormalized,
     pub(crate) shift: u32,
 }
 
-impl FastDivisor {
+impl FastDivide {
     /// Initialize from a given divisor.
-    pub(crate) const fn new(divisor: Word) -> FastDivisor {
+    pub(crate) const fn new(divisor: Word) -> Self {
         let shift = divisor.leading_zeros();
 
-        FastDivisor {
-            normalized: FastDivisorNormalized::new(divisor << shift),
+        FastDivide {
+            normalized: FastDivideNormalized::new(divisor << shift),
             shift,
         }
+    }
+
+    pub(crate) const fn dummy() -> Self {
+        Self::new(1)
     }
 }
 
@@ -149,15 +159,15 @@ mod tests {
     }
 
     #[test]
-    fn test_fast_divisor() {
+    fn test_fast_divide_normalized() {
         let mut rng = StdRng::seed_from_u64(1);
         for _ in 0..1000000 {
-            let a = rng.gen();
-            let b = rng.gen_range(1..=Word::MAX);
-            let fast_div = FastDivisor::new(b);
-            let (q, r) = fast_div.div_rem(a);
-            assert_eq!(q, a / b);
-            assert_eq!(r, a % b);
+            let d = rng.gen_range(Word::MAX / 2 + 1..=Word::MAX);
+            let q = rng.gen();
+            let r = rng.gen_range(0..d);
+            let a = extend_word(q) * extend_word(d) + extend_word(r);
+            let fast_div = FastDivideNormalized::new(d);
+            assert_eq!(fast_div.div_rem(a), (q, r));
         }
     }
 }

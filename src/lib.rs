@@ -49,6 +49,7 @@ mod cmp;
 mod convert;
 mod div;
 mod div_ops;
+mod fast_divide;
 mod fmt;
 mod ibig;
 mod mul;

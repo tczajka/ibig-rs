@@ -58,8 +58,9 @@ fn test_random_arithmetic() {
         assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
         assert_eq!(&a + &b - &a, b);
         assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
-        assert_eq!((&a * &b + &c) / &a, b);
-        assert_eq!((&a * &b + &c) % &a, c);
+        let (q, r) = (&a * &b + &c).div_rem(&a);
+        assert_eq!(q, b);
+        assert_eq!(r, c);
         assert_eq!(
             UBig::from_str_radix(&a.in_radix(33).to_string(), 33).unwrap(),
             a

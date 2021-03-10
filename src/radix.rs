@@ -1,7 +1,7 @@
 //! Information about radixes.
 
 use crate::{
-    div::fast_divisor::{FastDivideSmall, FastDivisor},
+    fast_divide::{FastDivide, FastDivideSmall},
     primitive::{Word, WORD_BITS},
 };
 use ascii::AsciiChar;
@@ -77,7 +77,7 @@ pub(crate) struct RadixInfo {
 
     /// Faster division by range_per_word.
     /// Only for non-power-of-2 radixes.
-    pub(crate) fast_div_range_per_word: FastDivisor,
+    pub(crate) fast_div_range_per_word: FastDivide,
 }
 
 /// RadixInfo for a given radix.
@@ -94,7 +94,7 @@ impl RadixInfo {
                 digits_per_word: (WORD_BITS / radix.trailing_zeros()) as usize,
                 range_per_word: 0,
                 fast_div_radix,
-                fast_div_range_per_word: FastDivisor::new(1),
+                fast_div_range_per_word: FastDivide::dummy(),
             }
         } else {
             let mut info = RadixInfo::for_radix_recursive(
@@ -103,10 +103,10 @@ impl RadixInfo {
                     digits_per_word: 0,
                     range_per_word: 1,
                     fast_div_radix,
-                    fast_div_range_per_word: FastDivisor::new(1),
+                    fast_div_range_per_word: FastDivide::dummy(),
                 },
             );
-            info.fast_div_range_per_word = FastDivisor::new(info.range_per_word);
+            info.fast_div_range_per_word = FastDivide::new(info.range_per_word);
             info
         }
     }
@@ -132,8 +132,8 @@ static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
     [RadixInfo {
         digits_per_word: 0,
         range_per_word: 0,
-        fast_div_radix: FastDivideSmall::new(2),
-        fast_div_range_per_word: FastDivisor::new(1),
+        fast_div_radix: FastDivideSmall::dummy(),
+        fast_div_range_per_word: FastDivide::dummy(),
     }; MAX_RADIX as usize + 1],
     2,
 );
