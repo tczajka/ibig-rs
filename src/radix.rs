@@ -1,7 +1,7 @@
 //! Information about radixes.
 
 use crate::{
-    div::fast_divisor::FastDivisor,
+    div::fast_divisor::{FastDivideSmall, FastDivisor},
     primitive::{Word, WORD_BITS},
 };
 use ascii::AsciiChar;
@@ -73,7 +73,7 @@ pub(crate) struct RadixInfo {
     pub(crate) range_per_word: Word,
 
     /// Faster division by `radix`.
-    pub(crate) fast_div_radix: FastDivisor,
+    pub(crate) fast_div_radix: FastDivideSmall,
 
     /// Faster division by range_per_word.
     /// Only for non-power-of-2 radixes.
@@ -88,7 +88,7 @@ pub(crate) fn radix_info(radix: Digit) -> &'static RadixInfo {
 
 impl RadixInfo {
     const fn for_radix(radix: Digit) -> RadixInfo {
-        let fast_div_radix = FastDivisor::new(radix as Word);
+        let fast_div_radix = FastDivideSmall::new(radix as Word);
         if radix.is_power_of_two() {
             RadixInfo {
                 digits_per_word: (WORD_BITS / radix.trailing_zeros()) as usize,
@@ -132,7 +132,7 @@ static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
     [RadixInfo {
         digits_per_word: 0,
         range_per_word: 0,
-        fast_div_radix: FastDivisor::new(1),
+        fast_div_radix: FastDivideSmall::new(2),
         fast_div_range_per_word: FastDivisor::new(1),
     }; MAX_RADIX as usize + 1],
     2,
