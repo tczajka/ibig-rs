@@ -148,10 +148,7 @@ impl MulAssign<Sign> for Sign {
 impl UBig {
     /// Multiply two `Word`s.
     fn mul_word(a: Word, b: Word) -> UBig {
-        match a.checked_mul(b) {
-            Some(c) => UBig::from_word(c),
-            None => UBig::from(extend_word(a) * extend_word(b)),
-        }
+        UBig::from(extend_word(a) * extend_word(b))
     }
 
     /// Multiply a large number by a `Word`.

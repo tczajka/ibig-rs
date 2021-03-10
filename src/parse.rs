@@ -129,7 +129,7 @@ impl UBig {
         let num_bits = src
             .len()
             .checked_mul(log_radix as usize)
-            .expect("number too large");
+            .unwrap_or_else(|| Buffer::panic_too_large());
         let mut buffer = Buffer::allocate((num_bits - 1) / WORD_BITS_USIZE + 1);
         let mut bits = 0;
         let mut word = 0;
