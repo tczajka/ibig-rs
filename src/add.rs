@@ -1,10 +1,11 @@
 //! Addition and subtraction functions.
 
 use crate::{
-    primitive::{PrimitiveSigned, SignedWord, Word},
+    primitive::{PrimitiveSigned, SignedWord, Word, WORD_BITS},
     sign::Sign::{self, *},
 };
 use core::cmp::Ordering::*;
+use static_assertions::const_assert;
 
 // Add a + b + carry.
 //
@@ -19,6 +20,7 @@ pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
 
 #[cfg(target_arch = "x86")]
 pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
+    const_assert!(WORD_BITS == 32);
     let mut sum = 0;
     let carry = unsafe { core::arch::x86::_addcarry_u32(carry.into(), a, b, &mut sum) };
     (sum, carry != 0)
@@ -26,6 +28,7 @@ pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
 
 #[cfg(target_arch = "x86_64")]
 pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
+    const_assert!(WORD_BITS == 64);
     let mut sum = 0;
     let carry = unsafe { core::arch::x86_64::_addcarry_u64(carry.into(), a, b, &mut sum) };
     (sum, carry != 0)
@@ -44,6 +47,7 @@ pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
 
 #[cfg(target_arch = "x86")]
 pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+    const_assert!(WORD_BITS == 32);
     let mut diff = 0;
     let borrow = unsafe { core::arch::x86::_subborrow_u32(borrow.into(), a, b, &mut diff) };
     (diff, borrow != 0)
@@ -51,6 +55,7 @@ pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
 
 #[cfg(target_arch = "x86_64")]
 pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+    const_assert!(WORD_BITS == 64);
     let mut diff = 0;
     let borrow = unsafe { core::arch::x86_64::_subborrow_u64(borrow.into(), a, b, &mut diff) };
     (diff, borrow != 0)
