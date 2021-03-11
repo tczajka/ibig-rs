@@ -50,22 +50,22 @@ impl FastDivideSmall {
 
     /// ( n / divisor, n % divisor)
     pub(crate) fn div_rem(&self, n: Word) -> (Word, Word) {
-        // q = floor( (m + 2^N) * n / 2^(N+shift) )
+        // q = floor( (m + 2^N) * n / 2^(N+len) )
         //
-        // Let divisor * (2^N + m) = 2^(N+shift) + k, 1 <= k <= 2^shift
+        // Let divisor * (2^N + m) = 2^(N+len) + k, 1 <= k <= 2^len
         //
-        // (m + 2^N) * n / 2^(N+shift) = ( (2^(N+shift)+k) / divisor ) * (n / 2^(N+shift))
-        // = k * n / (divisor * 2^(N+shift)) + n / divisor
-        // On the one hand, this is >= n / divisor
+        // (m + 2^N) * n / 2^(N+len) = ( (2^(N+len)+k) / divisor ) * (n / 2^(N+len))
+        // = k * n / (divisor * 2^(N+len)) + n / divisor
+        // On one hand, this is >= n / divisor
         // On the other hand, this is:
-        // <= (2^shift * (2^N-1) / 2^(N+shift) + n) / divisor
+        // <= (2^len * (2^N-1) / 2^(N+len) + n) / divisor
         // = (n + 1 - 2^-N) / divisor < (n + 1) / divisor
         //
         // Therefore the floor is always exact q.
 
         // t = m * n / 2^N
         let (_, t) = split_double_word(extend_word(self.m) * extend_word(n));
-        // q = (t + n) / 2^shift = (t + (n - t)/2) / 2^(shift-1)
+        // q = (t + n) / 2^len = (t + (n - t)/2) / 2^(len-1)
         let q = (t + ((n - t) >> 1)) >> self.shift;
         let r = n - q * self.divisor;
         (q, r)
@@ -156,7 +156,8 @@ impl FastDivideNormalized {
         // debug_assert!(n_hi < d);
         let b = n_lo >> (WORD_BITS - 1);
         // Spread bit b on all bits.
-        let b_spread = (0 as Word).wrapping_sub(b);
+        let zero: Word = 0;
+        let b_spread = zero.wrapping_sub(b);
 
         // big_q = n + (n_hi + b) * m + b * (d - 2^N)
         // adjustment = n_lo + b * (d - 2^N) >= 0
