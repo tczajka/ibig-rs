@@ -1,6 +1,9 @@
 //! Divide by a prearranged Word quickly using multiplication by the reciprocal.
 
-use crate::primitive::{double_word, extend_word, split_double_word, DoubleWord, Word, WORD_BITS};
+use crate::{
+    math,
+    primitive::{double_word, extend_word, split_double_word, DoubleWord, Word, WORD_BITS},
+};
 
 /// Divide a Word by a prearranged divisor.
 ///
@@ -21,7 +24,7 @@ impl FastDivideSmall {
         // assert!(divisor > 1);
         // Asserts don't work in const functions.
 
-        let len = WORD_BITS - (divisor - 1).leading_zeros();
+        let len = math::const_ceil_log_2_word(divisor);
         // 2^(len-1) < divisor <= 2^len
         //
         // Calculate:
@@ -38,7 +41,7 @@ impl FastDivideSmall {
         // divisor * (2^N + m) = divisor * floor(2^(N+len) / divisor + 1)
         // = 2^(N+len) + (1 ..= 2^len)
         let (lo, _hi) = split_double_word(
-            double_word(0, (Word::MAX >> (WORD_BITS - len)) - (divisor - 1)) / extend_word(divisor),
+            double_word(0, math::const_ones_word(len) - (divisor - 1)) / extend_word(divisor),
         );
         // assert!(_hi == 0);
         FastDivideSmall {

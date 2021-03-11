@@ -12,6 +12,7 @@ use core::{
     convert::{TryFrom, TryInto},
     fmt::{self, Debug, Display, Formatter},
     mem,
+    ops::{Add, Div, Mul, Shl, Shr, Sub},
 };
 
 /// Number out of bounds.
@@ -50,16 +51,26 @@ where
     Self: Copy,
     Self: Debug,
     Self: Default,
+    Self: From<u8>,
     Self: TryFrom<Word>,
     Self: TryInto<Word>,
     Self: TryInto<usize>,
+    Self: Eq,
+    Self: Add<Output = Self>,
+    Self: Div<Output = Self>,
+    Self: Mul<Output = Self>,
+    Self: Sub<Output = Self>,
+    Self: Shl<u32, Output = Self>,
+    Self: Shr<u32, Output = Self>,
 {
     const BYTE_SIZE: usize = mem::size_of::<Self>();
     const BIT_SIZE: u32 = 8 * Self::BYTE_SIZE as u32;
+    const MAX: Self;
     type ByteRepr: AsRef<[u8]> + AsMut<[u8]>;
 
     fn to_le_bytes(self) -> Self::ByteRepr;
     fn from_le_bytes(repr: Self::ByteRepr) -> Self;
+    fn leading_zeros(self) -> u32;
 }
 
 pub(crate) trait PrimitiveSigned
@@ -80,6 +91,7 @@ macro_rules! impl_primitive_unsigned {
     ($t:ty) => {
         impl PrimitiveUnsigned for $t {
             type ByteRepr = [u8; Self::BYTE_SIZE];
+            const MAX: Self = Self::MAX;
 
             fn to_le_bytes(self) -> Self::ByteRepr {
                 self.to_le_bytes()
@@ -87,6 +99,10 @@ macro_rules! impl_primitive_unsigned {
 
             fn from_le_bytes(repr: Self::ByteRepr) -> Self {
                 Self::from_le_bytes(repr)
+            }
+
+            fn leading_zeros(self) -> u32 {
+                self.leading_zeros()
             }
         }
     };

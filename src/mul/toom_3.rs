@@ -1,7 +1,7 @@
 //! Toom-Cook-3 multiplication algorithm.
 
 use crate::{
-    add, div, mul,
+    add, div, math, mul,
     primitive::{SignedWord, Word},
     shift,
     sign::Sign::{self, *},
@@ -34,7 +34,7 @@ pub(crate) fn temp_buffer_len(n: usize) -> usize {
     //
     // 20 log_3 (n-2.5) <= 20 log_3 n = 20 log_2 n / log_2 3 < 13 log_2 n
     // So we use 4n + 13 ceil log_2 n.
-    4 * n + 13 * (n.next_power_of_two().trailing_zeros() as usize)
+    4 * n + 13 * (math::ceil_log_2(n) as usize)
 }
 
 /// c += sign * a * b

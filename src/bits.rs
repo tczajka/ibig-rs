@@ -3,7 +3,8 @@
 use crate::{
     buffer::Buffer,
     ibig::IBig,
-    primitive::{double_word, Word, WORD_BITS, WORD_BITS_USIZE},
+    math,
+    primitive::{double_word, Word, WORD_BITS_USIZE},
     sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
 };
@@ -168,7 +169,7 @@ impl UBig {
     /// ```
     pub fn bit_len(&self) -> usize {
         match self.repr() {
-            Small(word) => (WORD_BITS - word.leading_zeros()) as usize,
+            Small(word) => math::bit_len(*word) as usize,
             Large(buffer) => {
                 buffer.len() * WORD_BITS_USIZE - buffer.last().unwrap().leading_zeros() as usize
             }

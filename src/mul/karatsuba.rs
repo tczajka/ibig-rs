@@ -1,7 +1,7 @@
 //! Karatsuba multiplication algorithm.
 
 use crate::{
-    add, mul,
+    add, math, mul,
     primitive::{SignedWord, Word},
     sign::Sign,
 };
@@ -24,8 +24,8 @@ pub(crate) fn temp_buffer_len(n: usize) -> usize {
     //      <= n+1 + n+1 + 2log ((n+1)/2-1)
     //       = 2n + 2log (n-1)
     //
-    // Use 2n + ceil log_2 n.
-    2 * n + 2 * (n.next_power_of_two().trailing_zeros() as usize)
+    // Use 2n + 2 ceil log_2 n.
+    2 * n + 2 * (math::ceil_log_2(n) as usize)
 }
 
 /// c += sign * a * b

@@ -4,6 +4,7 @@ use crate::{
     div,
     div_ops::DivRem,
     ibig::IBig,
+    math,
     primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit, DigitCase},
     sign::Sign::{self, *},
@@ -12,7 +13,6 @@ use crate::{
 use alloc::{format, string::String, vec::Vec};
 use ascii::{AsciiChar, AsciiStr};
 use core::{
-    cmp::max,
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
     mem,
 };
@@ -395,10 +395,7 @@ impl PreparedWordInPow2 {
         debug_assert!(radix >= 2 && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
-        let width = max(
-            (WORD_BITS - word.leading_zeros() + log_radix - 1) / log_radix,
-            1,
-        ) as usize;
+        let width = math::ceil_div(math::bit_len(word), log_radix).max(1) as usize;
 
         PreparedWordInPow2 {
             word,
@@ -414,7 +411,7 @@ impl PreparedForFormatting for PreparedWordInPow2 {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let mask: Digit = (1 << self.log_radix) - 1;
+        let mask: Digit = math::ones(self.log_radix);
         let mut digits = [AsciiChar::Null; WORD_BITS_USIZE];
         for idx in 0..self.width {
             let digit = (self.word >> (idx as u32 * self.log_radix)) as Digit & mask;
@@ -439,14 +436,15 @@ impl PreparedLargeInPow2<'_> {
         debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
         let log_radix = radix.trailing_zeros();
         debug_assert!(log_radix <= WORD_BITS);
-        // No overflow because words.len() * WORD_BITS + (log_radix-1) <= usize::MAX for
+
+        // No overflow because words.len() * WORD_BITS <= usize::MAX for
         // words.len() <= Buffer::MAX_CAPACITY.
-        let width = max(
-            (words.len() * WORD_BITS_USIZE - words.last().unwrap().leading_zeros() as usize
-                + (log_radix - 1) as usize)
-                / log_radix as usize,
-            1,
-        );
+        let width = math::ceil_div(
+            words.len() * WORD_BITS_USIZE - words.last().unwrap().leading_zeros() as usize,
+            log_radix as usize,
+        )
+        .max(1);
+
         PreparedLargeInPow2 {
             words,
             log_radix,
@@ -461,7 +459,7 @@ impl PreparedForFormatting for PreparedLargeInPow2<'_> {
     }
 
     fn write(&mut self, writer: &mut dyn Write, digit_case: DigitCase) -> fmt::Result {
-        let mask: Digit = (1 << self.log_radix) - 1;
+        let mask: Digit = math::ones(self.log_radix);
 
         let mut it = self.words.iter().rev();
         let mut word = it.next().unwrap();

@@ -52,6 +52,7 @@ mod div_ops;
 mod fast_divide;
 mod fmt;
 mod ibig;
+mod math;
 mod mul;
 mod mul_ops;
 mod parse;
