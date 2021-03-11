@@ -72,7 +72,11 @@ impl FastDivideSmall {
     }
 
     pub(crate) const fn dummy() -> Self {
-        Self::new(2)
+        FastDivideSmall {
+            divisor: 0,
+            shift: 0,
+            m: 0,
+        }
     }
 }
 
@@ -188,6 +192,10 @@ impl FastDivideNormalized {
 
         (quotient, remainder)
     }
+
+    pub(crate) const fn dummy() -> Self {
+        FastDivideNormalized { divisor: 0, m: 0 }
+    }
 }
 
 /// Fast repeated division by a given Word.
@@ -209,7 +217,10 @@ impl FastDivide {
     }
 
     pub(crate) const fn dummy() -> Self {
-        Self::new(1)
+        FastDivide {
+            normalized: FastDivideNormalized::dummy(),
+            shift: 0,
+        }
     }
 }
 

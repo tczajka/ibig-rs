@@ -54,6 +54,7 @@ fn test_random_arithmetic() {
         let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
         let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
         let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
+        let radix = (&mut rng).gen_range(2..=36);
 
         assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
         assert_eq!(&a + &b - &a, b);
@@ -62,7 +63,7 @@ fn test_random_arithmetic() {
         assert_eq!(q, b);
         assert_eq!(r, c);
         assert_eq!(
-            UBig::from_str_radix(&a.in_radix(33).to_string(), 33).unwrap(),
+            UBig::from_str_radix(&a.in_radix(radix).to_string(), radix).unwrap(),
             a
         )
     }
