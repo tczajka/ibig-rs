@@ -2,6 +2,11 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.0 - 2021-03-11
+
+### Removed features
+* Removed deprecated functions `to_str_radix`, `to_str_radix_uppercase`, `ilog2`.
+
 ## 0.1.2 - 2021-03-09
 
 ### New features

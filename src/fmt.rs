@@ -10,7 +10,7 @@ use crate::{
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
-use alloc::{format, string::String, vec::Vec};
+use alloc::vec::Vec;
 use ascii::{AsciiChar, AsciiStr};
 use core::{
     fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
@@ -186,18 +186,6 @@ impl UBig {
             digit_case: None,
         }
     }
-
-    /// Deprecated: use `in_radix` instead.
-    #[deprecated(since = "0.1.2", note = "use `in_radix` instead")]
-    pub fn to_str_radix(&self, radix: u32) -> String {
-        format!("{}", self.in_radix(radix))
-    }
-
-    /// Deprecated: use `in_radix` instead.
-    #[deprecated(since = "0.1.2", note = "use `in_radix` instead")]
-    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        format!("{:#}", self.in_radix(radix))
-    }
 }
 
 impl IBig {
@@ -223,18 +211,6 @@ impl IBig {
             prefix: "",
             digit_case: None,
         }
-    }
-
-    /// Deprecated: use `in_radix` instead.
-    #[deprecated(since = "0.1.2", note = "use in_radix instead")]
-    pub fn to_str_radix(&self, radix: u32) -> String {
-        format!("{}", self.in_radix(radix))
-    }
-
-    /// Deprecated: use `in_radix` instead.
-    #[deprecated(since = "0.1.2", note = "use in_radix instead")]
-    pub fn to_str_radix_uppercase(&self, radix: u32) -> String {
-        format!("{:#}", self.in_radix(radix))
     }
 }
 

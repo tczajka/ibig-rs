@@ -80,17 +80,6 @@ fn test_bit_len() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn test_ilog2() {
-    assert_eq!(ubig!(0).ilog2(), None);
-    assert_eq!(ubig!(0xf0000).ilog2(), Some(19));
-    assert_eq!(
-        ubig!(_0xfffffffffffffffffffff00000000000000000000000000000000000000000000000000).ilog2(),
-        Some(283)
-    );
-}
-
-#[test]
 fn test_is_power_of_two() {
     assert_eq!(ubig!(0).is_power_of_two(), false);
     assert_eq!(ubig!(1).is_power_of_two(), true);

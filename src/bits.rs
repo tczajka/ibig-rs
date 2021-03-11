@@ -176,12 +176,6 @@ impl UBig {
         }
     }
 
-    /// Deprecated: use `bit_len` instead.
-    #[deprecated(since = "0.1.2", note = "use `bit_len` instead")]
-    pub fn ilog2(&self) -> Option<usize> {
-        self.bit_len().checked_sub(1)
-    }
-
     /// True if the number is a power of 2.
     ///
     /// # Examples
