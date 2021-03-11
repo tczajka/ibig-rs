@@ -2,7 +2,7 @@
 
 use crate::{
     math,
-    primitive::{double_word, extend_word, split_double_word, DoubleWord, Word, WORD_BITS},
+    primitive::{double_word, extend_word, split_double_word, DoubleWord, Word},
 };
 
 /// Divide a Word by a prearranged divisor.
@@ -11,11 +11,15 @@ use crate::{
 /// Algorithm 4.1.
 #[derive(Clone, Copy)]
 pub(crate) struct FastDivideSmall {
-    // 2..=Word::MAX
+    // 2 <= divisor < 2^N, N = WORD_BITS
     divisor: Word,
-    // ceil log_2 divisor - 1
+
+    // Let n = ceil(log_2(divisor))
+    // 2^(n-1) < divisor <= 2^n
+    // shift = n - 1
     shift: u32,
-    // m = floor (2^(N+shift) / divisor) - 2^N + 1
+
+    // m = floor(B * 2^n / divisor) + 1 - B, where B = 2^N
     m: Word,
 }
 
@@ -23,54 +27,55 @@ impl FastDivideSmall {
     pub(crate) const fn new(divisor: Word) -> Self {
         // assert!(divisor > 1);
         // Asserts don't work in const functions.
+        let n = math::const_ceil_log_2_word(divisor);
 
-        let len = math::const_ceil_log_2_word(divisor);
-        // 2^(len-1) < divisor <= 2^len
-        //
         // Calculate:
-        // m = floor(2^(N+len) / divisor) + 1 - 2^N
-        //   = floor(2^N * (2^len - divisor) / divisor) + 1
-        //   = floor(2^N * (2^len-1 - (divisor-1)) / divisor) + 1
-        // m >= 2^N + 1 - 2^N > 0
-        // m <= 2^(N+len) / (2^(len-1) + 1) + 1 - 2^N
-        //    = (2^(N+len) - 2^(N+len-1) - 2^N + 2^(len-1) + 1) / (2^(len-1) + 1)
-        //    < 2^(N+len-1) / 2^(len-1) = 2^N
+        // m = floor(B * 2^n / divisor) + 1 - B
+        // m >= B + 1 - B >= 1
+        // m <= B * 2^n / (2^(n-1) + 1) + 1 - B
+        //    = (B * 2^n + 2^(n-1) + 1) / (2^(n-1) + 1) - B
+        //    = B * (2^n + 2^(n-1-N) + 2^-N) / (2^(n-1)+1) - B
+        //    < B * (2^n + 2^1) / (2^(n-1)+1) - B
+        //    = B
         // So m fits in a Word.
         //
         // Note:
-        // divisor * (2^N + m) = divisor * floor(2^(N+len) / divisor + 1)
-        // = 2^(N+len) + (1 ..= 2^len)
+        // divisor * (B + m) = divisor * floor(B * 2^n / divisor + 1)
+        // = B * 2^n + k, 1 <= k <= divisor
+
+        // m = floor(B * (2^n-1 - (divisor-1)) / divisor) + 1
         let (lo, _hi) = split_double_word(
-            double_word(0, math::const_ones_word(len) - (divisor - 1)) / extend_word(divisor),
+            double_word(0, math::const_ones_word(n) - (divisor - 1)) / extend_word(divisor),
         );
         // assert!(_hi == 0);
         FastDivideSmall {
             divisor,
-            shift: len - 1,
+            shift: n - 1,
             m: lo + 1,
         }
     }
 
-    /// ( n / divisor, n % divisor)
-    pub(crate) fn div_rem(&self, n: Word) -> (Word, Word) {
-        // q = floor( (m + 2^N) * n / 2^(N+len) )
+    /// ( a / divisor, a % divisor)
+    pub(crate) fn div_rem(&self, a: Word) -> (Word, Word) {
+        // q = floor( (B + m) * a / (B * 2^n) )
         //
-        // Let divisor * (2^N + m) = 2^(N+len) + k, 1 <= k <= 2^len
+        // Remember that divisor * (B + m) = B * 2^n + k, 1 <= k <= 2^n
         //
-        // (m + 2^N) * n / 2^(N+len) = ( (2^(N+len)+k) / divisor ) * (n / 2^(N+len))
-        // = k * n / (divisor * 2^(N+len)) + n / divisor
-        // On one hand, this is >= n / divisor
+        // (B + m) * a / (B * 2^n)
+        // = a / divisor * (B * 2^n + k) / (B * 2^n)
+        // = a / divisor + k * a / (divisor * B * 2^n)
+        // On one hand, this is >= a / divisor
         // On the other hand, this is:
-        // <= (2^len * (2^N-1) / 2^(N+len) + n) / divisor
-        // = (n + 1 - 2^-N) / divisor < (n + 1) / divisor
+        // <= a / divisor + 2^n * (B-1) / (2^n * B) / divisor
+        // < (a + 1) / divisor
         //
-        // Therefore the floor is always exact q.
+        // Therefore the floor is always the exact quotient.
 
-        // t = m * n / 2^N
-        let (_, t) = split_double_word(extend_word(self.m) * extend_word(n));
-        // q = (t + n) / 2^len = (t + (n - t)/2) / 2^(len-1)
-        let q = (t + ((n - t) >> 1)) >> self.shift;
-        let r = n - q * self.divisor;
+        // t = m * n / B
+        let (_, t) = split_double_word(extend_word(self.m) * extend_word(a));
+        // q = (t + a) / 2^n = (t + (a - t)/2) / 2^(n-1)
+        let q = (t + ((a - t) >> 1)) >> self.shift;
+        let r = a - q * self.divisor;
         (q, r)
     }
 
@@ -87,13 +92,14 @@ impl FastDivideSmall {
 ///
 /// Assumes quotient fits in a Word.
 ///
-/// Granlund, Montgomerry "Division by Invariant Integers using Multiplication"
-/// Algorithm 8.1.
+/// Möller, Granlund, "Improved division by invariant integers"
+/// Algorithm 4.
 #[derive(Clone, Copy)]
 pub(crate) struct FastDivideNormalized {
     // Top bit must be 1.
     divisor: Word,
-    // floor ((2^2N - 1) / divisor) - 2^N
+
+    // floor ((B^2 - 1) / divisor) - B, where B = 2^WORD_BITS
     m: Word,
 }
 
@@ -109,91 +115,74 @@ impl FastDivideNormalized {
 
         // Note:
         // m > 0
-        // (m + 2^N) * divisor < 2^2N
-        // (m + 2^N) * divisor >= 2^2N - divisor
+        // (m + B) * divisor = B^2 - k for some 1 <= k <= divisor
 
         FastDivideNormalized { divisor, m }
     }
 
-    /// (n / divisor, n % divisor)
+    /// (a / divisor, a % divisor)
     /// The result must fit in a single word.
-    pub(crate) fn div_rem(&self, n: DoubleWord) -> (Word, Word) {
-        // Let d = divisor.
-        // Let (2^N + m) * d = 2^2N - k, 0 < k <= d
-        // Approximate 2^N * quotient is:
-        // 2^N * n / d <= (2^N + m) * n / 2^N = n + n*m / 2^N
-        //
-        // Let [n_hi, n_lo] = n.
-        // b = top bit of n_lo
-        //
-        // Calculate:
-        // big_q = n + (n_hi + b) * m + b * (d - 2^N)
-        //
-        // big_q >= n + b * (d - 2^N) >= n - b * 2^(N-1) >= 0
-        // big_q = n_hi * (m + 2^N) + n_lo + b * (m - 2^N + divisor)
-        //       <= (d-1) * (m + 2^N) + (2^N-1) + (m - 2^N + 2^N - 1)
-        //       = d * (m + 2^N) - 2 < 2^2N
-        // So big_q fits in DoubleWord.
-        //
-        // Let big_q = (q_hi, q_lo).
-        //
-        // We will use q_hi as the quotient approximation.
-        //
-        // remainder = n - q_hi * d
-        // = (n * 2^N - big_q * d + q_lo * d) / 2^N
-        // = (n * 2^N - (n_hi * (m+2^N) + n_lo + b(m-2^N+d)) * d + q_lo * d) / 2^N
-        // = (n * 2^N - ((n_hi+b) * (m+2^N) + n_lo + b(d - 2^(N+1))) * d + q_lo*d) / 2^N
-        // = (n * 2^N - (n_hi+b) * (m+2^N)d - n_lo * d - b * d * (d - 2^(N+1)) + q_lo * d) / 2^N
-        // = (n_hi * 2^2N + n_lo * 2^N - (n_hi+b) * (2^2N-k) - n_lo * d - b*d*(d-2^(N+1)) + q_lo*d)/2^N
-        // = (n_lo * (2^N-d) + (n_hi+b)*k - b*2^2N - b*d*(d-2^(N+1)) + q_lo*d) / 2^N
-        // = (n_lo * (2^N-d) + (n_hi+b)*k - b*(2^2N + d^2 - d*2^(N+1)) + q_lo*d) / 2^N
-        // = (n_lo * (2^N-d) + (n_hi+b)*k - b*(2^N-d)^2 + q_lo*d) / 2^N
-        // = ((n_hi+b)*k + q_lo*d)/2^N + (1-d*2^-N)(n_lo + b*(d-2^N))
-        // = ((n_hi+b)*k + q_lo*d)/2^N + (1-d*2^-N)((n_lo-b*2^(N-1)) + b * (d-2^(N-1)))
-        //
-        // remainder >= 0
-        //
-        // On the other hand:
-        // remainder <= ((d-1+1)*d + (2^N-1)*d)/2^N + (1-d*2^-N)(2^(N-1)-1 + (d-2^(N-1)))
-        // < d^2/2^N + d + (1-d*2^-N)*d = 2*d
-        //
-        // Therefore the q_hi may only be 1 too small.
+    pub(crate) fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
+        let (a_lo, a_hi) = split_double_word(a);
+        debug_assert!(a_hi < self.divisor);
 
-        let (n_lo, n_hi) = split_double_word(n);
-        // debug_assert!(n_hi < d);
-        let b = n_lo >> (WORD_BITS - 1);
-        // Spread bit b on all bits.
-        let zero: Word = 0;
-        let b_spread = zero.wrapping_sub(b);
+        // Approximate quotient is (m + B) * a / B^2 ~= (m * a/B + a)/B.
+        // This is q1 below.
+        // This doesn't overflow because a_hi < Word::MAX.
+        let (q0, q1) = split_double_word(extend_word(self.m) * extend_word(a_hi) + a);
 
-        // big_q = n + (n_hi + b) * m + b * (d - 2^N)
-        // adjustment = n_lo + b * (d - 2^N) >= 0
-        // q = q_hi is the high word of big_q
-        let adjustment = n_lo.wrapping_add(b_spread & self.divisor);
-        let (_, x_hi) = split_double_word(
-            extend_word(n_hi + b) * extend_word(self.m) + extend_word(adjustment),
-        );
-        let q = n_hi + x_hi;
+        // q = q1 + 1 is our first approximation, but calculate mod B.
+        // r = a - q * d
+        let q = q1.wrapping_add(1);
+        let r = a_lo.wrapping_sub(q.wrapping_mul(self.divisor));
 
-        // q2 = 2^N - (q+1)
-        let q2 = Word::MAX - q;
+        // Theorem: max(-d, q0+1-B) <= r < max(B-d, q0)
+        // Proof:
+        // r = a - q * d = a - q1 * d - d
+        // = a - (q1 * B + q0 - q0) * d/B - d
+        // = a - (m * a_hi + a - q0) * d/B - d
+        // = a - ((m+B) * a_hi + a_lo - q0) * d/B - d
+        // = a - ((B^2-k)/d * a_hi + a_lo - q0) * d/B - d
+        // = a - B * a_hi + (a_hi * k - a_lo * d + q0 * d) / B - d
+        // = (a_hi * k + a_lo * (B - d) + q0 * d) / B - d
+        //
+        // r >= q0 * d / B - d
+        // r >= -d
+        // r >= d/B (q0 - B) > q0-B
+        // r >= max(-d, q0+1-B)
+        //
+        // r < (d * d + B * (B-d) + q0 * d) / B - d
+        // = (B-d)^2 / B + q0 * d / B
+        // = (1 - d/B) * (B-d) + (d/B) * q0
+        // <= max(B-d, q0)
+        // QED
 
-        // rem = n - (q+1)*d = n - 2^N * d + q2 * d
-        // We are keeping it modulo 2^2N.
-        // If rem >= 0, then the result is (q+1, rem).
-        // If rem < 0, then the result is (q, rem + d).
-        let rem = n
-            .wrapping_sub(double_word(0, self.divisor))
-            .wrapping_add(extend_word(q2) * extend_word(self.divisor));
+        // if r mod B > q0 { q -= 1; r += d; }
+        //
+        // Consider two cases:
+        // a) r >= 0:
+        // Then r = r mod B > q0, hence r < B-d. Adding d will not overflow r.
+        // b) r < 0:
+        // Then r mod B = r-B > q0, and r >= -d, so adding d will make r non-negative.
+        // In either case, this will result in 0 <= r < B.
 
-        let (rem_lo, rem_hi) = split_double_word(rem);
-        // rem_hi is 0 or -1
-        // quotient = q+1 + rem_hi = rem_hi - q2 (mod 2^N)
-        let quotient = rem_hi.wrapping_sub(q2);
-        // remainder = rem + d * (-rem_hi)
-        let remainder = rem_lo.wrapping_add(self.divisor & rem_hi);
+        // In a branch-free way:
+        // decrease = 0xffff.fff = -1 if r mod B > q0, 0 otherwise.
+        let (_, decrease) = split_double_word(extend_word(q0).wrapping_sub(extend_word(r)));
+        let q = q.wrapping_add(decrease);
+        let r = r.wrapping_add(decrease & self.divisor);
 
-        (quotient, remainder)
+        // At this point 0 <= r < B, i.e. 0 <= r < 2d.
+        // if r >= d { q += 1; r -= d; }
+        // In a branch-free way:
+        // increase = 0xffff.fff = -1 if r >= d, 0 otherwise
+        let (_, increase) =
+            split_double_word(extend_word(r).wrapping_sub(extend_word(self.divisor)));
+        let increase = !increase;
+        let q = q.wrapping_sub(increase);
+        let r = r.wrapping_sub(increase & self.divisor);
+
+        (q, r)
     }
 
     pub(crate) const fn dummy() -> Self {
@@ -230,6 +219,7 @@ impl FastDivide {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitive::WORD_BITS;
     use rand::prelude::*;
 
     #[test]
@@ -237,7 +227,8 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(1);
         for _ in 0..1000000 {
             let d_bits = rng.gen_range(2..=WORD_BITS);
-            let d = rng.gen_range(Word::MAX / 2 + 1..=Word::MAX) >> (WORD_BITS - d_bits);
+            let max_d = math::ones(d_bits);
+            let d = rng.gen_range(max_d / 2 + 1..=max_d);
             let fast_div = FastDivideSmall::new(d);
             let n = rng.gen();
             let (q, r) = fast_div.div_rem(n);
