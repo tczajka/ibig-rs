@@ -1,11 +1,11 @@
 //! Division operators.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     div,
     fast_divide::{FastDivide, FastDivideNormalized},
     ibig::IBig,
-    primitive::Word,
     shift,
     sign::Abs,
     ubig::{Repr::*, UBig},

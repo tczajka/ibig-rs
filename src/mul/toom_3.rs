@@ -1,9 +1,9 @@
 //! Toom-Cook-3 multiplication algorithm.
 
 use crate::{
-    add, div, math, mul,
-    primitive::{SignedWord, Word},
-    shift,
+    add,
+    arch::{SignedWord, Word},
+    div, math, mul, shift,
     sign::Sign::{self, *},
 };
 

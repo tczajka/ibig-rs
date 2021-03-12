@@ -1,11 +1,12 @@
 //! Formatting numbers.
 
 use crate::{
+    arch::Word,
     div,
     div_ops::DivRem,
     ibig::IBig,
     math,
-    primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
+    primitive::{WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit, DigitCase},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},

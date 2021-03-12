@@ -1,8 +1,8 @@
 //! Comparisons operators.
 
 use crate::{
+    arch::Word,
     ibig::IBig,
-    primitive::Word,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };

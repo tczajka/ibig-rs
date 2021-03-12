@@ -1,6 +1,6 @@
 //! Word buffer.
 
-use crate::primitive::{Word, WORD_BITS_USIZE};
+use crate::{arch::Word, primitive::WORD_BITS_USIZE};
 
 use alloc::vec::Vec;
 use core::{

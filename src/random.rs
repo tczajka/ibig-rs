@@ -1,9 +1,9 @@
 //! Random distributions on big integers.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
-    primitive::Word,
     sign::UnsignedAbs,
     ubig::{Repr::*, UBig},
 };

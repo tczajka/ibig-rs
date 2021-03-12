@@ -18,14 +18,16 @@ jobs:
           command: check
 
   test:
-    name: Test
+    name: Test 64-bit
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: stable-x86_64-unknown-linux-gnu
           override: true
       - uses: actions-rs/cargo@v1
         with:
@@ -34,6 +36,8 @@ jobs:
   test-32-bit:
     name: Test 32-bit
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -46,9 +50,27 @@ jobs:
         with:
           command: test
 
+  test-16-bit:
+    name: Test 16-bit
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test --features force-16-bit
+
   build-no-std:
     name: Build no-std
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -71,7 +93,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - run: rustup component add rustfmt
+          components: rustfmt
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -87,7 +109,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - run: rustup component add clippy
+          components: clippy
       - uses: actions-rs/cargo@v1
         with:
           command: clippy

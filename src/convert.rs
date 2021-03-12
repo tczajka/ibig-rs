@@ -1,10 +1,11 @@
 //! Conversions between types.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
     primitive::{
-        self, OutOfBoundsError, PrimitiveSigned, PrimitiveUnsigned, Word, WORD_BITS, WORD_BYTES,
+        self, OutOfBoundsError, PrimitiveSigned, PrimitiveUnsigned, WORD_BITS, WORD_BYTES,
     },
     sign::Sign::*,
     ubig::{Repr::*, UBig},

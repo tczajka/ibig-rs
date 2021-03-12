@@ -1,10 +1,11 @@
 //! Bitwise operators.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
     math,
-    primitive::{double_word, Word, WORD_BITS_USIZE},
+    primitive::{double_word, WORD_BITS_USIZE},
     sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},
 };

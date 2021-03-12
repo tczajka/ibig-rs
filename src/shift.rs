@@ -1,6 +1,9 @@
 //! Bit shift functions.
 
-use crate::primitive::{double_word, extend_word, split_double_word, Word, WORD_BITS};
+use crate::{
+    arch::Word,
+    primitive::{double_word, extend_word, split_double_word, WORD_BITS},
+};
 
 /// Shift left by less than WORD_BITS in place.
 /// Returns carry.

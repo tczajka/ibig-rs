@@ -25,6 +25,10 @@ default = ["std", "rand"]
 # Interface with the std library.
 std = []
 
+# Force 16-bit arithmetic.
+# For testing 16-bit implementation on non-16-bit architectures.
+force-16-bit = []
+
 [[test]]
 name = "random"
 required-features = ["rand"]

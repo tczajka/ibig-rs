@@ -1,8 +1,9 @@
 //! Karatsuba multiplication algorithm.
 
 use crate::{
-    add, math, mul,
-    primitive::{SignedWord, Word},
+    add,
+    arch::{SignedWord, Word},
+    math, mul,
     sign::Sign,
 };
 

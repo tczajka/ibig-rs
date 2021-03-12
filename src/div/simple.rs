@@ -1,10 +1,12 @@
 //! Simple division algorithm.
 
 use crate::{
-    add, cmp,
+    add,
+    arch::Word,
+    cmp,
     fast_divide::FastDivideNormalized,
     mul,
-    primitive::{double_word, extend_word, Word},
+    primitive::{double_word, extend_word},
 };
 use core::cmp::Ordering;
 

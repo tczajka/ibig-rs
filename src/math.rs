@@ -1,6 +1,6 @@
 //! Mathematical functions.
 
-use crate::primitive::{PrimitiveUnsigned, Word};
+use crate::{arch::Word, primitive::PrimitiveUnsigned};
 
 /// The length of an integer in bits.
 /// 0 for 0.

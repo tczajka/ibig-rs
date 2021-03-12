@@ -1,10 +1,11 @@
 //! Parsing numbers.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
     mul,
-    primitive::{Word, WORD_BITS, WORD_BITS_USIZE},
+    primitive::{WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit},
     sign::Sign::*,
     ubig::UBig,

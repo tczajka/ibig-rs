@@ -1,10 +1,11 @@
 //! Divide and conquer division algorithm.
 
 use crate::{
-    add, div,
+    add,
+    arch::{SignedWord, Word},
+    div,
     fast_divide::FastDivideNormalized,
     mul,
-    primitive::{SignedWord, Word},
     sign::Sign::*,
 };
 use static_assertions::const_assert;

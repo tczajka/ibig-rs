@@ -1,13 +1,9 @@
 //! Primitive integral types.
 
-#[cfg(not(any(
-    target_pointer_width = "16",
-    target_pointer_width = "32",
-    target_pointer_width = "64"
-)))]
-compile_error!("Machine architecture must be 16-bit, 32-bit or 64-bit.");
-
-use crate::sign::Sign::{self, *};
+use crate::{
+    arch::{DoubleWord, Word},
+    sign::Sign::{self, *},
+};
 use core::{
     convert::{TryFrom, TryInto},
     fmt::{self, Debug, Display, Formatter},
@@ -27,10 +23,6 @@ impl Display for OutOfBoundsError {
 
 #[cfg(feature = "std")]
 impl std::error::Error for OutOfBoundsError {}
-
-pub(crate) use word_types::DoubleWord;
-pub(crate) use word_types::SignedWord;
-pub(crate) use word_types::Word;
 
 /// Cast `Word` to `DoubleWord`.
 pub(crate) const fn extend_word(word: Word) -> DoubleWord {
@@ -169,42 +161,6 @@ pub(crate) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[Word::BYTE_SIZE - bytes.len()..].copy_from_slice(bytes);
     Word::from_be_bytes(word_bytes)
-}
-
-#[cfg(target_pointer_width = "16")]
-mod word_types {
-    /// Machine word.
-    pub(crate) type Word = u16;
-
-    /// Signed machine word.
-    pub(crate) type SignedWord = i16;
-
-    /// Double machine word.
-    pub(crate) type DoubleWord = u32;
-}
-
-#[cfg(target_pointer_width = "32")]
-mod word_types {
-    /// Machine word.
-    pub(crate) type Word = u32;
-
-    /// Signed machine word.
-    pub(crate) type SignedWord = i32;
-
-    /// Double machine word.
-    pub(crate) type DoubleWord = u64;
-}
-
-#[cfg(not(any(target_pointer_width = "16", target_pointer_width = "32")))]
-mod word_types {
-    /// Machine word.
-    pub(crate) type Word = u64;
-
-    /// Signed machine word.
-    pub(crate) type SignedWord = i64;
-
-    /// Double machine word.
-    pub(crate) type DoubleWord = u128;
 }
 
 #[cfg(test)]

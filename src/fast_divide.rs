@@ -1,8 +1,9 @@
 //! Divide by a prearranged Word quickly using multiplication by the reciprocal.
 
 use crate::{
+    arch::{DoubleWord, Word},
     math,
-    primitive::{double_word, extend_word, split_double_word, DoubleWord, Word},
+    primitive::{double_word, extend_word, split_double_word},
 };
 
 /// Divide a Word by a prearranged divisor.

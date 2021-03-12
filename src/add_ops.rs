@@ -2,9 +2,9 @@
 
 use crate::{
     add,
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
-    primitive::Word,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };

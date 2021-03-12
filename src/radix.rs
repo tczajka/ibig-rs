@@ -1,8 +1,9 @@
 //! Information about radixes.
 
 use crate::{
+    arch::Word,
     fast_divide::{FastDivide, FastDivideSmall},
-    primitive::{Word, WORD_BITS},
+    primitive::WORD_BITS,
 };
 use ascii::AsciiChar;
 

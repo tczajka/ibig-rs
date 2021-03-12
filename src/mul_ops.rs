@@ -1,10 +1,11 @@
 //! Multiplication operators.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
     mul,
-    primitive::{extend_word, Word},
+    primitive::extend_word,
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };

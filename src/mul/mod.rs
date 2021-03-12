@@ -1,7 +1,8 @@
 use crate::{
     add,
+    arch::{SignedWord, Word},
     buffer::Buffer,
-    primitive::{double_word, extend_word, split_double_word, SignedWord, Word},
+    primitive::{double_word, extend_word, split_double_word},
     sign::Sign::{self, *},
 };
 use core::mem;

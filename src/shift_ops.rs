@@ -1,11 +1,10 @@
 //! Bit shift operators.
 
 use crate::{
+    arch::Word,
     buffer::Buffer,
     ibig::IBig,
-    primitive::{
-        double_word, extend_word, split_double_word, PrimitiveSigned, Word, WORD_BITS_USIZE,
-    },
+    primitive::{double_word, extend_word, split_double_word, PrimitiveSigned, WORD_BITS_USIZE},
     shift,
     sign::{Sign::*, UnsignedAbs},
     ubig::{Repr::*, UBig},

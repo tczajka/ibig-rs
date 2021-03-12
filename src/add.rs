@@ -1,65 +1,11 @@
 //! Addition and subtraction functions.
 
 use crate::{
-    primitive::{PrimitiveSigned, SignedWord, Word, WORD_BITS},
+    arch::{self, SignedWord, Word},
+    primitive::PrimitiveSigned,
     sign::Sign::{self, *},
 };
 use core::cmp::Ordering::*;
-use static_assertions::const_assert;
-
-// Add a + b + carry.
-//
-// Returns (result, overflow).
-
-#[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
-    let (sum, c0) = a.overflowing_add(b);
-    let (sum, c1) = sum.overflowing_add(Word::from(carry));
-    (sum, c0 | c1)
-}
-
-#[cfg(target_arch = "x86")]
-pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
-    const_assert!(WORD_BITS == 32);
-    let mut sum = 0;
-    let carry = unsafe { core::arch::x86::_addcarry_u32(carry.into(), a, b, &mut sum) };
-    (sum, carry != 0)
-}
-
-#[cfg(target_arch = "x86_64")]
-pub(crate) fn add_with_carry(a: Word, b: Word, carry: bool) -> (Word, bool) {
-    const_assert!(WORD_BITS == 64);
-    let mut sum = 0;
-    let carry = unsafe { core::arch::x86_64::_addcarry_u64(carry.into(), a, b, &mut sum) };
-    (sum, carry != 0)
-}
-
-// Subtract a - b - borrow.
-//
-// Returns (result, overflow).
-
-#[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
-    let (diff, b0) = a.overflowing_sub(b);
-    let (diff, b1) = diff.overflowing_sub(Word::from(borrow));
-    (diff, b0 | b1)
-}
-
-#[cfg(target_arch = "x86")]
-pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
-    const_assert!(WORD_BITS == 32);
-    let mut diff = 0;
-    let borrow = unsafe { core::arch::x86::_subborrow_u32(borrow.into(), a, b, &mut diff) };
-    (diff, borrow != 0)
-}
-
-#[cfg(target_arch = "x86_64")]
-pub(crate) fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
-    const_assert!(WORD_BITS == 64);
-    let mut diff = 0;
-    let borrow = unsafe { core::arch::x86_64::_subborrow_u64(borrow.into(), a, b, &mut diff) };
-    (diff, borrow != 0)
-}
 
 /// Add one to a word sequence.
 ///
@@ -117,7 +63,7 @@ pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
 
     let mut carry = false;
     for (a, b) in words.iter_mut().zip(rhs.iter()) {
-        let (sum, c) = add_with_carry(*a, *b, carry);
+        let (sum, c) = arch::add_with_carry(*a, *b, carry);
         *a = sum;
         carry = c;
     }
@@ -131,7 +77,7 @@ pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
     for (a, b) in lhs.iter_mut().zip(rhs.iter()) {
-        let (diff, borrow1) = sub_with_borrow(*a, *b, borrow);
+        let (diff, borrow1) = arch::sub_with_borrow(*a, *b, borrow);
         *a = diff;
         borrow = borrow1;
     }
@@ -164,7 +110,7 @@ pub(crate) fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
     for (a, b) in lhs.iter().zip(rhs.iter_mut()) {
-        let (diff, borrow1) = sub_with_borrow(*a, *b, borrow);
+        let (diff, borrow1) = arch::sub_with_borrow(*a, *b, borrow);
         *b = diff;
         borrow = borrow1;
     }
