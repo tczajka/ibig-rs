@@ -73,3 +73,6 @@ mod macros;
 mod random;
 #[cfg(feature = "rand")]
 pub use crate::random::{UniformIBig, UniformUBig};
+
+#[cfg(feature = "num-traits")]
+mod num_traits;

@@ -2,6 +2,17 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Features
+* Implemented num-traits traits.
+
+### Deprecated features
+* `IBig::is_positive`, `IBig::is_negative`. Just use `> ibig!(0)`, `< ibig!(0)`.
+
+### Dependencies
+* Added optional dependency on `num-traits 0.2.14`.
+
 ## 0.2.0 - 2021-03-11
 
 ### Removed features

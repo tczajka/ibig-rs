@@ -525,7 +525,7 @@ impl UBig {
     where
         T: TryInto<usize>,
     {
-        if self.is_zero() {
+        if self == UBig::from_word(0) {
             self
         } else {
             let rhs_usize = rhs.try_into().unwrap_or_else(|_| Buffer::panic_too_large());
@@ -538,7 +538,7 @@ impl UBig {
     where
         T: TryInto<usize>,
     {
-        if self.is_zero() {
+        if *self == UBig::from_word(0) {
             UBig::from_word(0)
         } else {
             let rhs_usize = rhs.try_into().unwrap_or_else(|_| Buffer::panic_too_large());
@@ -548,7 +548,7 @@ impl UBig {
 
     /// Shift left by `usize` bits.
     fn shl_usize(self, rhs: usize) -> UBig {
-        debug_assert!(!self.is_zero());
+        debug_assert!(self != UBig::from_word(0));
 
         match self.into_repr() {
             Small(word) => UBig::shl_word_usize(word, rhs),
@@ -558,7 +558,7 @@ impl UBig {
 
     /// Shift left reference by `usize` bits.
     fn shl_ref_usize(&self, rhs: usize) -> UBig {
-        debug_assert!(!self.is_zero());
+        debug_assert!(*self != UBig::from_word(0));
 
         match self.repr() {
             Small(word) => UBig::shl_word_usize(*word, rhs),

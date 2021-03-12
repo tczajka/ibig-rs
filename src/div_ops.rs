@@ -7,7 +7,7 @@ use crate::{
     fast_divide::{FastDivide, FastDivideNormalized},
     ibig::IBig,
     shift,
-    sign::Abs,
+    sign::{Abs, Sign::*},
     ubig::{Repr::*, UBig},
 };
 use core::{
@@ -635,10 +635,9 @@ impl DivEuclid<IBig> for IBig {
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            q - s
-        } else {
-            q
+        match r.sign() {
+            Positive => q,
+            Negative => q - s,
         }
     }
 }
@@ -648,10 +647,9 @@ impl DivEuclid<&IBig> for IBig {
 
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            q - rhs.signum()
-        } else {
-            q
+        match r.sign() {
+            Positive => q,
+            Negative => q - rhs.signum(),
         }
     }
 }
@@ -662,10 +660,9 @@ impl DivEuclid<IBig> for &IBig {
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            q - s
-        } else {
-            q
+        match r.sign() {
+            Positive => q,
+            Negative => q - s,
         }
     }
 }
@@ -675,10 +672,9 @@ impl DivEuclid<&IBig> for &IBig {
 
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            q - rhs.signum()
-        } else {
-            q
+        match r.sign() {
+            Positive => q,
+            Negative => q - rhs.signum(),
         }
     }
 }
@@ -688,10 +684,9 @@ impl RemEuclid<IBig> for IBig {
 
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
-        if r.is_negative() {
-            r + rhs.abs()
-        } else {
-            r
+        match r.sign() {
+            Positive => r,
+            Negative => r + rhs.abs(),
         }
     }
 }
@@ -701,10 +696,9 @@ impl RemEuclid<&IBig> for IBig {
 
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
-        if r.is_negative() {
-            r + rhs.abs()
-        } else {
-            r
+        match r.sign() {
+            Positive => r,
+            Negative => r + rhs.abs(),
         }
     }
 }
@@ -714,10 +708,9 @@ impl RemEuclid<IBig> for &IBig {
 
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
-        if r.is_negative() {
-            r + rhs.abs()
-        } else {
-            r
+        match r.sign() {
+            Positive => r,
+            Negative => r + rhs.abs(),
         }
     }
 }
@@ -727,10 +720,9 @@ impl RemEuclid<&IBig> for &IBig {
 
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
-        if r.is_negative() {
-            r + rhs.abs()
-        } else {
-            r
+        match r.sign() {
+            Positive => r,
+            Negative => r + rhs.abs(),
         }
     }
 }
@@ -741,10 +733,9 @@ impl DivRemEuclid<IBig> for IBig {
 
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
-        if r.is_negative() {
-            (q - rhs.signum(), r + rhs.abs())
-        } else {
-            (q, r)
+        match r.sign() {
+            Positive => (q, r),
+            Negative => (q - rhs.signum(), r + rhs.abs()),
         }
     }
 }
@@ -755,10 +746,9 @@ impl DivRemEuclid<&IBig> for IBig {
 
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            (q - rhs.signum(), r + rhs.abs())
-        } else {
-            (q, r)
+        match r.sign() {
+            Positive => (q, r),
+            Negative => (q - rhs.signum(), r + rhs.abs()),
         }
     }
 }
@@ -769,10 +759,9 @@ impl DivRemEuclid<IBig> for &IBig {
 
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
-        if r.is_negative() {
-            (q - rhs.signum(), r + rhs.abs())
-        } else {
-            (q, r)
+        match r.sign() {
+            Positive => (q, r),
+            Negative => (q - rhs.signum(), r + rhs.abs()),
         }
     }
 }
@@ -783,10 +772,9 @@ impl DivRemEuclid<&IBig> for &IBig {
 
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
-        if r.is_negative() {
-            (q - rhs.signum(), r + rhs.abs())
-        } else {
-            (q, r)
+        match r.sign() {
+            Positive => (q, r),
+            Negative => (q - rhs.signum(), r + rhs.abs()),
         }
     }
 }

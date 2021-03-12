@@ -13,14 +13,16 @@ readme = "README.md"
 
 [dependencies]
 ascii = { version = "1.0", default-features = false }
-rand = { version = "0.8.3", default-features = false, optional = true }
 static_assertions = "1.1"
 
+rand = { version = "0.8.3", default-features = false, optional = true }
+num-traits = { version = "0.2.14", default-features = false, optional = true }
+
 [dev-dependencies]
-rand = "0.8"
+rand = "0.8.3"
 
 [features]
-default = ["std", "rand"]
+default = ["std", "rand", "num-traits"]
 
 # Interface with the std library.
 std = []

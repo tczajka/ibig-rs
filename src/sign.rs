@@ -1,9 +1,6 @@
 //! Operators on the sign of `IBig`.
 
-use crate::{
-    ibig::IBig,
-    ubig::{Repr::*, UBig},
-};
+use crate::{ibig::IBig, ubig::UBig};
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -25,13 +22,6 @@ impl Neg for Sign {
     }
 }
 
-impl UBig {
-    /// Is it zero?
-    pub(crate) fn is_zero(&self) -> bool {
-        *self.repr() == Small(0)
-    }
-}
-
 impl IBig {
     /// A number representing the sign of `self`.
     ///
@@ -47,7 +37,7 @@ impl IBig {
     pub fn signum(&self) -> IBig {
         match self.sign() {
             Positive => {
-                if self.magnitude().is_zero() {
+                if *self.magnitude() == UBig::from_word(0) {
                     IBig::from(0u8)
                 } else {
                     IBig::from(1u8)
@@ -57,30 +47,16 @@ impl IBig {
         }
     }
 
-    /// Is the number smaller than 0?
-    ///
-    /// # Examples
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-5).is_negative(), true);
-    /// assert_eq!(ibig!(0).is_negative(), false);
-    /// assert_eq!(ibig!(5).is_negative(), false);
-    /// ```
+    /// Deprecated. Use `< ibig!(0)` instead.
+    #[deprecated(since = "0.2.1", note = "use `< ibig!(0)` instead")]
     pub fn is_negative(&self) -> bool {
-        self.sign() == Negative
+        *self < IBig::from(0u8)
     }
 
-    /// Is the number greater than 0?
-    ///
-    /// # Examples
-    /// ```
-    /// # use ibig::prelude::*;
-    /// assert_eq!(ibig!(-5).is_positive(), false);
-    /// assert_eq!(ibig!(0).is_positive(), false);
-    /// assert_eq!(ibig!(5).is_positive(), true);
-    /// ```
+    /// Deprecated. Use `> ibig!(0)` instead.
+    #[deprecated(since = "0.2.1", note = "use `> ibig!(0)` instead")]
     pub fn is_positive(&self) -> bool {
-        self.sign() == Positive && !self.magnitude().is_zero()
+        *self > IBig::from(0u8)
     }
 }
 

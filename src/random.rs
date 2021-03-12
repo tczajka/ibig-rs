@@ -27,7 +27,7 @@ impl UBig {
     where
         R: Rng + ?Sized,
     {
-        debug_assert!(!range.is_zero());
+        debug_assert!(*range != UBig::from_word(0));
 
         match range.repr() {
             Small(word) => UBig::from_word(rng.gen_range(0..*word)),
@@ -104,7 +104,7 @@ impl UniformSampler for UniformUBig {
         B2: SampleBorrow<UBig>,
     {
         let range = high.borrow() - low.borrow();
-        if range.is_zero() {
+        if range == UBig::from_word(0) {
             panic!("Empty range");
         }
         UniformUBig {
@@ -160,7 +160,7 @@ impl UniformSampler for UniformIBig {
         B2: SampleBorrow<IBig>,
     {
         let range = high.borrow() - low.borrow();
-        if !range.is_positive() {
+        if range <= IBig::from(0u8) {
             panic!("Empty range");
         }
         UniformIBig {
@@ -175,7 +175,7 @@ impl UniformSampler for UniformIBig {
         B2: SampleBorrow<IBig>,
     {
         let range = high.borrow() - low.borrow() + IBig::from(1u8);
-        if !range.is_positive() {
+        if range <= IBig::from(0u8) {
             panic!("Empty range");
         }
         UniformIBig {

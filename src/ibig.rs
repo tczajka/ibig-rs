@@ -29,7 +29,7 @@ pub struct IBig {
 
 impl IBig {
     pub(crate) fn from_sign_magnitude(mut sign: Sign, magnitude: UBig) -> IBig {
-        if magnitude.is_zero() {
+        if magnitude == UBig::from_word(0) {
             sign = Positive;
         }
         IBig { sign, magnitude }
