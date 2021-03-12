@@ -85,7 +85,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --no-default-features --features "rand, num_traits"
+          args: --no-default-features --features "rand, num-traits"
 
   fmt:
     name: Rustfmt
