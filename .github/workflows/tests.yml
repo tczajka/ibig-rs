@@ -18,7 +18,10 @@ jobs:
           command: check
 
   test:
-    name: Test 64-bit
+    name: Test
+    strategy: 
+      matrix:
+        bits: [16, 32, 64]
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: -D warnings
@@ -32,9 +35,10 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --features force-${{ matrix.bits }}-bit
 
-  test-32-bit:
-    name: Test 32-bit
+  test-x86:
+    name: Test x86
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: -D warnings
@@ -50,8 +54,8 @@ jobs:
         with:
           command: test
 
-  test-16-bit:
-    name: Test 16-bit
+  test-x86_64:
+    name: Test x86_64
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: -D warnings
@@ -60,12 +64,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: stable-x86_64-unknown-linux-gnu
           override: true
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features force-16-bit
 
   build-no-std:
     name: Build no-std
@@ -82,7 +85,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --no-default-features --features rand
+          args: --no-default-features --features "rand, num_traits"
 
   fmt:
     name: Rustfmt

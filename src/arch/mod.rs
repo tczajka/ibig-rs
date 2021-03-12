@@ -23,39 +23,82 @@ pub(crate) use arch_impl::add::add_with_carry;
 /// Returns (result, overflow).
 pub(crate) use arch_impl::add::sub_with_borrow;
 
+#[cfg(all(feature = "force-16-bit", feature = "force-32-bit"))]
+compile_error!("features force-16-bit and force-32-bit are mutually exclusive");
+
+#[cfg(all(feature = "force-16-bit", feature = "force-64-bit"))]
+compile_error!("features force-16-bit and force-64-bit are mutually exclusive");
+
+#[cfg(all(feature = "force-32-bit", feature = "force-64-bit"))]
+compile_error!("features force-32-bit and force-64-bit are mutually exclusive");
+
 #[cfg_attr(
-    all(target_arch = "x86", not(feature = "force-16-bit")),
+    all(
+        target_arch = "x86",
+        not(any(
+            feature = "force-16-bit",
+            feature = "force-32-bit",
+            feature = "force-64-bit"
+        ))
+    ),
     path = "x86/mod.rs"
 )]
 #[cfg_attr(
-    all(target_arch = "x86_64", not(feature = "force-16-bit")),
+    all(
+        target_arch = "x86_64",
+        not(any(
+            feature = "force-16-bit",
+            feature = "force-32-bit",
+            feature = "force-64-bit"
+        ))
+    ),
     path = "x86_64/mod.rs"
 )]
 #[cfg_attr(
     any(
         all(
             target_pointer_width = "16",
-            not(any(target_arch = "x86", target_arch = "x86_64",)),
+            not(any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                feature = "force-16-bit",
+                feature = "force-32-bit",
+                feature = "force-64-bit"
+            )),
         ),
         feature = "force-16-bit",
     ),
     path = "generic_16_bit/mod.rs"
 )]
 #[cfg_attr(
-    all(
-        target_pointer_width = "32",
-        not(any(target_arch = "x86", target_arch = "x86_64", feature = "force-16-bit")),
+    any(
+        all(
+            target_pointer_width = "32",
+            not(any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                feature = "force-16-bit",
+                feature = "force-32-bit",
+                feature = "force-64-bit"
+            )),
+        ),
+        feature = "force-32-bit"
     ),
     path = "generic_32_bit/mod.rs"
 )]
 #[cfg_attr(
-    not(any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_pointer_width = "16",
-        target_pointer_width = "32",
-        feature = "force-16-bit",
-    )),
+    any(
+        not(any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            feature = "force-16-bit",
+            feature = "force-32-bit",
+            feature = "force-64-bit",
+            target_pointer_width = "16",
+            target_pointer_width = "32"
+        )),
+        feature = "force-64-bit"
+    ),
     path = "generic_64_bit/mod.rs"
 )]
 mod arch_impl;
