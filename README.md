@@ -28,4 +28,4 @@ assert_eq!(
 );
 ```
 
-[Bencharks](https://crates.io/crates/bigint-benchmark).
+[Benchmarks](https://github.com/tczajka/bigint-benchmark-rs)
