@@ -39,20 +39,20 @@ pub(crate) fn sub_one_in_place(words: &mut [Word]) -> bool {
 ///
 /// Returns overflow.
 pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
-    assert!(!words.is_empty());
-    let (a, overflow) = words[0].overflowing_add(rhs);
-    words[0] = a;
-    overflow && add_one_in_place(&mut words[1..])
+    let (word_0, words_hi) = words.split_first_mut().unwrap();
+    let (a, overflow) = word_0.overflowing_add(rhs);
+    *word_0 = a;
+    overflow && add_one_in_place(words_hi)
 }
 
 /// Subtract a word from a non-empty word sequence.
 ///
 /// Returns borrow.
 pub(crate) fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
-    debug_assert!(!words.is_empty());
-    let (a, borrow) = words[0].overflowing_sub(rhs);
-    words[0] = a;
-    borrow && sub_one_in_place(&mut words[1..])
+    let (word_0, words_hi) = words.split_first_mut().unwrap();
+    let (a, borrow) = word_0.overflowing_sub(rhs);
+    *word_0 = a;
+    borrow && sub_one_in_place(words_hi)
 }
 
 /// Add a word sequence of same length in place.
@@ -84,23 +84,22 @@ pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     borrow
 }
 
-/// Add a word sequence in place.
+/// lhs += rhs
 ///
 /// Returns overflow.
-pub(crate) fn add_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(words.len() >= rhs.len());
-
-    let carry = add_same_len_in_place(&mut words[..rhs.len()], rhs);
-    carry && add_one_in_place(&mut words[rhs.len()..])
+pub(crate) fn add_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
+    let (lhs_lo, lhs_hi) = lhs.split_at_mut(rhs.len());
+    let carry = add_same_len_in_place(lhs_lo, rhs);
+    carry && add_one_in_place(lhs_hi)
 }
 
 /// lhs -= rhs
 ///
 /// Returns borrow.
 pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
-    debug_assert!(lhs.len() >= rhs.len());
-    let borrow = sub_same_len_in_place(&mut lhs[..rhs.len()], rhs);
-    borrow && sub_one_in_place(&mut lhs[rhs.len()..])
+    let (lhs_lo, lhs_hi) = lhs.split_at_mut(rhs.len());
+    let borrow = sub_same_len_in_place(lhs_lo, rhs);
+    borrow && sub_one_in_place(lhs_hi)
 }
 
 /// rhs = lhs - rhs
