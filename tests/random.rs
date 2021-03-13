@@ -46,25 +46,29 @@ fn test_random_arithmetic() {
     let mut rng = StdRng::seed_from_u64(3);
     let p = ubig!(1000000007);
 
-    for iter in 0..100 {
-        let big = iter > 80;
-        let range = if big { 1000000 } else { 100000 };
-        let len_a: u32 = (&mut rng).gen_range(1000..range);
-        let len_b: u32 = (&mut rng).gen_range(1000..range);
-        let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
-        let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
-        let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
-        let radix = (&mut rng).gen_range(2..=36);
+    // 10^2 bits: 10^5 cases
+    // 10^6 bits: 10 cases
+    for log_num_bits in 2..=6 {
+        let num_bits = 10u32.pow(log_num_bits);
+        let num_cases = 10u32.pow(7 - log_num_bits);
+        for _ in 0..num_cases {
+            let len_a: u32 = (&mut rng).gen_range(10..num_bits);
+            let len_b: u32 = (&mut rng).gen_range(10..num_bits);
+            let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
+            let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
+            let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));
+            let radix = (&mut rng).gen_range(2..=36);
 
-        assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
-        assert_eq!(&a + &b - &a, b);
-        assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
-        let (q, r) = (&a * &b + &c).div_rem(&a);
-        assert_eq!(q, b);
-        assert_eq!(r, c);
-        assert_eq!(
-            UBig::from_str_radix(&a.in_radix(radix).to_string(), radix).unwrap(),
-            a
-        )
+            assert_eq!((&a + &b) % &p, ((&a % &p) + (&b % &p)) % &p);
+            assert_eq!(&a + &b - &a, b);
+            assert_eq!((&a * &b) % &p, ((&a % &p) * (&b % &p)) % &p);
+            let (q, r) = (&a * &b + &c).div_rem(&a);
+            assert_eq!(q, b);
+            assert_eq!(r, c);
+            assert_eq!(
+                UBig::from_str_radix(&a.in_radix(radix).to_string(), radix).unwrap(),
+                a
+            )
+        }
     }
 }
