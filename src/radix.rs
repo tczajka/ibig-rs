@@ -5,7 +5,7 @@ use crate::{
     fast_divide::{FastDivide, FastDivideSmall},
     primitive::WORD_BITS,
 };
-use ascii::AsciiChar;
+use static_assertions::const_assert;
 
 /// Digit and radix type.
 pub(crate) type Digit = u32;
@@ -25,24 +25,15 @@ pub(crate) fn check_radix_valid(radix: Digit) {
     }
 }
 
-/// Lower-case or upper-case digits: a-z or A-Z.
-#[derive(Clone, Copy)]
+const_assert!(b'a' > b'0' + 10 && b'A' > b'0' + 10);
+
+/// u8 representation is: how much digits >= 10 should be offset by in ASCII.
+#[derive(Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
 pub(crate) enum DigitCase {
-    Lower = b'a',
-    Upper = b'A',
-}
-
-/// Converts a `Digit` to its ASCII representation.
-///
-/// Panics if `digit` is out of range.
-pub(crate) fn digit_to_ascii(digit: Digit, digit_case: DigitCase) -> AsciiChar {
-    let ascii = match digit {
-        0..=9 => b'0' + (digit as u8),
-        10..=35 => (digit_case as u8) + (digit - 10) as u8,
-        _ => panic!("Invalid digit"),
-    };
-    AsciiChar::from_ascii(ascii).unwrap()
+    NoLetters = 0,
+    Lower = b'a' - b'0' - 10,
+    Upper = b'A' - b'0' - 10,
 }
 
 /// Converts a byte (ASCII) representation of a digit to its value.
@@ -168,15 +159,6 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn test_digit_to_ascii() {
-        assert_eq!(digit_to_ascii(7, DigitCase::Lower), AsciiChar::_7);
-        assert_eq!(digit_to_ascii(10, DigitCase::Lower), AsciiChar::a);
-        assert_eq!(digit_to_ascii(35, DigitCase::Lower), AsciiChar::z);
-        assert_eq!(digit_to_ascii(7, DigitCase::Upper), AsciiChar::_7);
-        assert_eq!(digit_to_ascii(35, DigitCase::Upper), AsciiChar::Z);
     }
 
     #[test]

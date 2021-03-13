@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Dependencies
 * Added optional dependency on `num-traits 0.2.14`.
+* Removed dependency on `ascii`.
 
 ## 0.2.0 - 2021-03-11
 

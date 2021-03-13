@@ -4,10 +4,7 @@ use crate::{arch::Word, primitive::PrimitiveUnsigned};
 
 /// The length of an integer in bits.
 /// 0 for 0.
-pub(crate) fn bit_len<T>(x: T) -> u32
-where
-    T: PrimitiveUnsigned,
-{
+pub(crate) fn bit_len<T: PrimitiveUnsigned>(x: T) -> u32 {
     T::BIT_SIZE - x.leading_zeros()
 }
 
@@ -19,10 +16,7 @@ pub(crate) const fn const_bit_len_word(x: Word) -> u32 {
 
 /// Ceiling of log_2(x).
 /// x must be non-zero.
-pub(crate) fn ceil_log_2<T>(x: T) -> u32
-where
-    T: PrimitiveUnsigned,
-{
+pub(crate) fn ceil_log_2<T: PrimitiveUnsigned>(x: T) -> u32 {
     debug_assert!(x != T::from(0u8));
     bit_len(x - T::from(1u8))
 }
@@ -34,15 +28,31 @@ pub(crate) const fn const_ceil_log_2_word(x: Word) -> u32 {
 }
 
 /// Ceiling of a / b.
-pub(crate) fn ceil_div<T>(a: T, b: T) -> T
-where
-    T: PrimitiveUnsigned,
-{
+pub(crate) fn ceil_div<T: PrimitiveUnsigned>(a: T, b: T) -> T {
     if a == T::from(0u8) {
         T::from(0u8)
     } else {
         (a - T::from(1u8)) / b + T::from(1u8)
     }
+}
+
+/// Ceiling of a / b.
+pub(crate) const fn const_ceil_div_usize(a: usize, b: usize) -> usize {
+    if a == 0 {
+        0
+    } else {
+        (a - 1) / b + 1
+    }
+}
+
+/// Round up a to a multiple of b.
+pub(crate) fn round_up<T: PrimitiveUnsigned>(a: T, b: T) -> T {
+    ceil_div(a, b) * b
+}
+
+/// Round up a to a multiple of b.
+pub(crate) const fn const_round_up_usize(a: usize, b: usize) -> usize {
+    const_ceil_div_usize(a, b) * b
 }
 
 /// n ones: 2^n - 1
@@ -93,6 +103,14 @@ mod tests {
         assert_eq!(ceil_div(9u32, 10u32), 1);
         assert_eq!(ceil_div(10u32, 10u32), 1);
         assert_eq!(ceil_div(11u32, 10u32), 2);
+    }
+
+    #[test]
+    fn test_round_up() {
+        assert_eq!(round_up(0u32, 10u32), 0);
+        assert_eq!(round_up(9u32, 10u32), 10);
+        assert_eq!(round_up(10u32, 10u32), 10);
+        assert_eq!(round_up(11u32, 10u32), 20);
     }
 
     #[test]

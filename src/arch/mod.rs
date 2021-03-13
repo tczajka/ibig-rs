@@ -1,4 +1,4 @@
-//! Architecture dependent things.
+//! Architecture dependent functionality.
 
 /// Machine word.
 pub(crate) use arch_impl::word::Word;
@@ -16,12 +16,23 @@ pub(crate) use arch_impl::word::DoubleWord;
 /// Returns (result, overflow).
 pub(crate) use arch_impl::add::add_with_carry;
 
-/// fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool) {
+/// fn sub_with_borrow(a: Word, b: Word, borrow: bool) -> (Word, bool)
 ///
 /// Subtract a - b - borrow.
 ///
 /// Returns (result, overflow).
 pub(crate) use arch_impl::add::sub_with_borrow;
+
+/// const DIGIT_CHUNK_LEN: usize
+///
+/// Chunk length for digit conversion.
+pub(crate) use arch_impl::digits::DIGIT_CHUNK_LEN;
+
+/// fn digit_chunk_raw_to_ascii(digits: &mut [u8; DIGIT_CHUNK_LEN], digit_case: DigitCase);
+/// digits must be valid
+///
+/// Convert raw digits to ASCII.
+pub(crate) use arch_impl::digits::digit_chunk_raw_to_ascii;
 
 /// Architecture choice. The logic works like this:
 /// 1. If the configuration option force_bits is set to 16, 32 or 64, use generic_<n>_bit.
