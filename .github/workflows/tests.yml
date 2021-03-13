@@ -24,7 +24,7 @@ jobs:
         bits: [16, 32, 64]
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -D warnings
+      RUSTFLAGS: -D warnings --cfg force_bits="${{ matrix.bits }}$"
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -35,7 +35,6 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features force-${{ matrix.bits }}-bit
 
   test-x86:
     name: Test x86

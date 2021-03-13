@@ -27,13 +27,9 @@ default = ["std", "rand", "num-traits"]
 # Interface with the std library.
 std = []
 
-# Force 16-bit word size without platform-specific code.
+# Deprecated. They don't do anything. Use --cfg force_bits=... instead.
 force-16-bit = []
-
-# Force 32-bit word size without platform-specific code.
 force-32-bit = []
-
-# Force 64-bit word size without platform-specific code.
 force-64-bit = []
 
 [[test]]
