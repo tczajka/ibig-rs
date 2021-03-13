@@ -1,36 +1,28 @@
 //! Formatting numbers.
 
 use crate::{
-    arch::Word,
-    div,
-    div_ops::DivRem,
     ibig::IBig,
-    math,
-    primitive::{WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit, DigitCase},
     sign::Sign::{self, *},
-    ubig::{Repr::*, UBig},
+    ubig::UBig,
 };
-use alloc::vec::Vec;
-use core::{
-    fmt::{self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write},
-    mem,
+use core::fmt::{
+    self, Alignment, Binary, Debug, Display, Formatter, LowerHex, Octal, UpperHex, Write,
 };
 use digit_writer::DigitWriter;
 
 mod digit_writer;
-
-/// Format non-power-of-2 radix in chunks of CHUNK_LEN * digits_per_word.
-const CHUNK_LEN: usize = 16;
+mod non_power_two;
+mod power_two;
 
 impl Display for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: Positive,
             magnitude: self,
             radix: 10,
             prefix: "",
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -44,12 +36,12 @@ impl Debug for UBig {
 
 impl Binary for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: Positive,
             magnitude: self,
             radix: 2,
             prefix: if f.alternate() { "0b" } else { "" },
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -57,12 +49,12 @@ impl Binary for UBig {
 
 impl Octal for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: Positive,
             magnitude: self,
             radix: 8,
             prefix: if f.alternate() { "0o" } else { "" },
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -70,12 +62,12 @@ impl Octal for UBig {
 
 impl LowerHex for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: Positive,
             magnitude: self,
             radix: 16,
             prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Lower),
+            digit_case: DigitCase::Lower,
         }
         .fmt(f)
     }
@@ -83,12 +75,12 @@ impl LowerHex for UBig {
 
 impl UpperHex for UBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: Positive,
             magnitude: self,
             radix: 16,
             prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Upper),
+            digit_case: DigitCase::Upper,
         }
         .fmt(f)
     }
@@ -96,12 +88,12 @@ impl UpperHex for UBig {
 
 impl Display for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix: 10,
             prefix: "",
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -115,12 +107,12 @@ impl Debug for IBig {
 
 impl Binary for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix: 2,
             prefix: if f.alternate() { "0b" } else { "" },
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -128,12 +120,12 @@ impl Binary for IBig {
 
 impl Octal for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix: 8,
             prefix: if f.alternate() { "0o" } else { "" },
-            digit_case: Some(DigitCase::NoLetters),
+            digit_case: DigitCase::NoLetters,
         }
         .fmt(f)
     }
@@ -141,12 +133,12 @@ impl Octal for IBig {
 
 impl LowerHex for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix: 16,
             prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Lower),
+            digit_case: DigitCase::Lower,
         }
         .fmt(f)
     }
@@ -154,12 +146,12 @@ impl LowerHex for IBig {
 
 impl UpperHex for IBig {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        InRadix {
+        InRadixFull {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix: 16,
             prefix: if f.alternate() { "0x" } else { "" },
-            digit_case: Some(DigitCase::Upper),
+            digit_case: DigitCase::Upper,
         }
         .fmt(f)
     }
@@ -185,8 +177,6 @@ impl UBig {
             sign: Positive,
             magnitude: self,
             radix,
-            prefix: "",
-            digit_case: None,
         }
     }
 }
@@ -211,8 +201,6 @@ impl IBig {
             sign: self.sign(),
             magnitude: self.magnitude(),
             radix,
-            prefix: "",
-            digit_case: None,
         }
     }
 }
@@ -238,62 +226,51 @@ pub struct InRadix<'a> {
     sign: Sign,
     magnitude: &'a UBig,
     radix: Digit,
+}
+
+/// Representation in a given radix with a prefix and digit case.
+struct InRadixFull<'a> {
+    sign: Sign,
+    magnitude: &'a UBig,
+    radix: Digit,
     prefix: &'static str,
-    /// None means the case will be decide based on the "alternate" format.
-    digit_case: Option<DigitCase>,
+    digit_case: DigitCase,
 }
 
 impl Display for InRadix<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let digit_case = self.digit_case.unwrap_or_else(|| {
-            if self.radix <= 10 {
-                DigitCase::NoLetters
-            } else if f.alternate() {
-                DigitCase::Upper
-            } else {
-                DigitCase::Lower
-            }
-        });
-
-        if self.radix.is_power_of_two() {
-            match self.magnitude.repr() {
-                Small(word) => {
-                    let mut prepared = PreparedWordInPow2::new(*word, self.radix);
-                    self.format_prepared(f, digit_case, &mut prepared)
-                }
-                Large(buffer) => {
-                    let mut prepared = PreparedLargeInPow2::new(buffer, self.radix);
-                    self.format_prepared(f, digit_case, &mut prepared)
-                }
-            }
+        let digit_case = if self.radix <= 10 {
+            DigitCase::NoLetters
+        } else if f.alternate() {
+            DigitCase::Upper
         } else {
-            match self.magnitude.repr() {
-                Small(word) => {
-                    let mut prepared = PreparedWordInNonPow2::new(*word, self.radix, 1);
-                    self.format_prepared(f, digit_case, &mut prepared)
-                }
-                Large(buffer) => {
-                    let radix_info = radix::radix_info(self.radix);
-                    let max_digits = buffer.len() * (radix_info.digits_per_word + 1);
-                    if max_digits <= CHUNK_LEN * radix_info.digits_per_word {
-                        let mut prepared = PreparedMediumInNonPow2::new(self.magnitude, self.radix);
-                        self.format_prepared(f, digit_case, &mut prepared)
-                    } else {
-                        let mut prepared = PreparedLargeInNonPow2::new(self.magnitude, self.radix);
-                        self.format_prepared(f, digit_case, &mut prepared)
-                    }
-                }
-            }
+            DigitCase::Lower
+        };
+
+        InRadixFull {
+            sign: self.sign,
+            magnitude: self.magnitude,
+            radix: self.radix,
+            prefix: "",
+            digit_case,
         }
+        .fmt(f)
     }
 }
 
-impl InRadix<'_> {
+impl InRadixFull<'_> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        if self.radix.is_power_of_two() {
+            self.fmt_power_two(f)
+        } else {
+            self.fmt_non_power_two(f)
+        }
+    }
+
     /// Format using a `PreparedForFormatting`.
     fn format_prepared(
         &self,
         f: &mut Formatter,
-        digit_case: DigitCase,
         prepared: &mut dyn PreparedForFormatting,
     ) -> fmt::Result {
         let mut width = prepared.width();
@@ -311,7 +288,7 @@ impl InRadix<'_> {
         width += sign.len() + self.prefix.len();
 
         let mut write_digits = |f| {
-            let mut digit_writer = DigitWriter::new(f, digit_case);
+            let mut digit_writer = DigitWriter::new(f, self.digit_case);
             prepared.write(&mut digit_writer)?;
             digit_writer.flush()
         };
@@ -367,357 +344,4 @@ trait PreparedForFormatting {
 
     /// Write to a stream.
     fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result;
-}
-
-/// A `Word` prepared for formatting in a power-of-2 radix.
-struct PreparedWordInPow2 {
-    word: Word,
-    log_radix: u32,
-    width: usize,
-}
-
-impl PreparedWordInPow2 {
-    /// Prepare a `Word` for formatting in a power-of-2 radix.
-    fn new(word: Word, radix: Digit) -> PreparedWordInPow2 {
-        debug_assert!(radix >= 2 && radix.is_power_of_two());
-        let log_radix = radix.trailing_zeros();
-        debug_assert!(log_radix <= WORD_BITS);
-        let width = math::ceil_div(math::bit_len(word), log_radix).max(1) as usize;
-
-        PreparedWordInPow2 {
-            word,
-            log_radix,
-            width,
-        }
-    }
-}
-
-impl PreparedForFormatting for PreparedWordInPow2 {
-    fn width(&self) -> usize {
-        self.width
-    }
-
-    fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result {
-        let mask: Word = math::ones(self.log_radix);
-        let mut digits = [0; WORD_BITS_USIZE];
-        for idx in 0..self.width {
-            let digit = ((self.word >> (idx as u32 * self.log_radix)) & mask) as u8;
-            digits[self.width - 1 - idx] = digit;
-        }
-        digit_writer.write(&digits[..self.width])
-    }
-}
-
-/// A large number prepared for formatting in a power-of-2 radix.
-struct PreparedLargeInPow2<'a> {
-    words: &'a [Word],
-    log_radix: u32,
-    width: usize,
-}
-
-impl PreparedLargeInPow2<'_> {
-    /// Prepare a large number for formatting in a power-of-2 radix.
-    fn new(words: &[Word], radix: Digit) -> PreparedLargeInPow2 {
-        debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
-        let log_radix = radix.trailing_zeros();
-        debug_assert!(log_radix <= WORD_BITS);
-
-        // No overflow because words.len() * WORD_BITS <= usize::MAX for
-        // words.len() <= Buffer::MAX_CAPACITY.
-        let width = math::ceil_div(
-            words.len() * WORD_BITS_USIZE - words.last().unwrap().leading_zeros() as usize,
-            log_radix as usize,
-        )
-        .max(1);
-
-        PreparedLargeInPow2 {
-            words,
-            log_radix,
-            width,
-        }
-    }
-}
-
-impl PreparedForFormatting for PreparedLargeInPow2<'_> {
-    fn width(&self) -> usize {
-        self.width
-    }
-
-    fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result {
-        let mask: Word = math::ones(self.log_radix);
-
-        let mut it = self.words.iter().rev();
-        let mut word = it.next().unwrap();
-        let mut bits = (self.width * self.log_radix as usize
-            - (self.words.len() - 1) * WORD_BITS_USIZE) as u32;
-
-        loop {
-            let digit;
-            if bits < self.log_radix {
-                match it.next() {
-                    Some(w) => {
-                        let extra_bits = self.log_radix - bits;
-                        bits = WORD_BITS - extra_bits;
-                        digit = ((word << extra_bits | w >> bits) & mask) as u8;
-                        word = w;
-                    }
-                    None => break,
-                }
-            } else {
-                bits -= self.log_radix;
-                digit = ((word >> bits) & mask) as u8;
-            }
-            digit_writer.write(&[digit])?;
-        }
-        debug_assert!(bits == 0);
-        Ok(())
-    }
-}
-
-/// A `Word` prepared for formatting in a non-power-of-2 radix.
-struct PreparedWordInNonPow2 {
-    // digits[start_index..] actually used.
-    digits: [u8; radix::MAX_WORD_DIGITS_NON_POW_2],
-    start_index: usize,
-}
-
-impl PreparedWordInNonPow2 {
-    /// Prepare a `Word` for formatting in a non-power-of-2 radix.
-    fn new(mut word: Word, radix: Digit, min_digits: usize) -> PreparedWordInNonPow2 {
-        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-        let radix_info = radix::radix_info(radix);
-
-        let mut prepared = PreparedWordInNonPow2 {
-            digits: [0; radix::MAX_WORD_DIGITS_NON_POW_2],
-            start_index: radix::MAX_WORD_DIGITS_NON_POW_2,
-        };
-
-        let max_start = radix::MAX_WORD_DIGITS_NON_POW_2 - min_digits;
-        while prepared.start_index > max_start || word != 0 {
-            let (new_word, d) = radix_info.fast_div_radix.div_rem(word);
-            word = new_word;
-            prepared.start_index -= 1;
-            prepared.digits[prepared.start_index] = d as u8;
-        }
-
-        prepared
-    }
-}
-
-impl PreparedForFormatting for PreparedWordInNonPow2 {
-    fn width(&self) -> usize {
-        radix::MAX_WORD_DIGITS_NON_POW_2 - self.start_index
-    }
-
-    fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result {
-        digit_writer.write(&self.digits[self.start_index..])
-    }
-}
-
-/// A medium number prepared for formatting in a non-power-of-2 radix.
-/// Must have no more than CHUNK_LEN * digits_per_word digits.
-struct PreparedMediumInNonPow2 {
-    top_group: PreparedWordInNonPow2,
-    // Little endian in groups of digits_per_word.
-    low_groups: [Word; CHUNK_LEN],
-    num_low_groups: usize,
-    radix: Digit,
-}
-
-impl PreparedMediumInNonPow2 {
-    /// Prepare a medium number for formatting in a non-power-of-2 radix.
-    fn new(number: &UBig, radix: Digit) -> PreparedMediumInNonPow2 {
-        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-        let radix_info = radix::radix_info(radix);
-
-        let (mut buffer, mut buffer_len) = ubig_to_chunk_buffer(number);
-
-        let mut low_groups = [0; CHUNK_LEN];
-        let mut num_low_groups = 0;
-
-        while buffer_len > 1 {
-            let rem = div::fast_div_by_word_in_place(
-                &mut buffer[..buffer_len],
-                radix_info.fast_div_range_per_word,
-            );
-            low_groups[num_low_groups] = rem;
-            num_low_groups += 1;
-
-            while buffer[buffer_len - 1] == 0 {
-                buffer_len -= 1;
-            }
-        }
-        assert!(buffer_len == 1);
-        PreparedMediumInNonPow2 {
-            top_group: PreparedWordInNonPow2::new(buffer[0], radix, 1),
-            low_groups,
-            num_low_groups,
-            radix,
-        }
-    }
-}
-
-impl PreparedForFormatting for PreparedMediumInNonPow2 {
-    fn width(&self) -> usize {
-        let radix_info = radix::radix_info(self.radix);
-        self.top_group.width() + self.num_low_groups * radix_info.digits_per_word
-    }
-
-    fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result {
-        let radix_info = radix::radix_info(self.radix);
-
-        self.top_group.write(digit_writer)?;
-
-        for group_word in self.low_groups[..self.num_low_groups].iter().rev() {
-            let mut prepared =
-                PreparedWordInNonPow2::new(*group_word, self.radix, radix_info.digits_per_word);
-            prepared.write(digit_writer)?;
-        }
-        Ok(())
-    }
-}
-
-/// A large number prepared for formatting in a non-power-of-2 radix.
-struct PreparedLargeInNonPow2 {
-    top_chunk: PreparedMediumInNonPow2,
-    // radix^((digits_per_word * CHUNK_LEN) << i)
-    radix_powers: Vec<UBig>,
-    // little endian chunks: (i, (digits_per_word * CHUNK_LEN)<<i digit number)
-    // decreasing in size, so there is a logarithmic number of them
-    big_chunks: Vec<(usize, UBig)>,
-    radix: Digit,
-}
-
-impl PreparedLargeInNonPow2 {
-    /// Prepare a medium number for formatting in a non-power-of-2 radix.
-    fn new(number: &UBig, radix: Digit) -> PreparedLargeInNonPow2 {
-        debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
-        let radix_info = radix::radix_info(radix);
-
-        let mut radix_powers = Vec::new();
-        let mut big_chunks = Vec::new();
-        let chunk_power = UBig::from_word(radix_info.range_per_word).pow(CHUNK_LEN);
-        if chunk_power > *number {
-            return PreparedLargeInNonPow2 {
-                top_chunk: PreparedMediumInNonPow2::new(number, radix),
-                radix_powers,
-                big_chunks,
-                radix,
-            };
-        }
-
-        radix_powers.push(chunk_power);
-        loop {
-            let prev = radix_powers.last().unwrap();
-            // Avoid multiplication if we know prev * prev > number just by looking at lengths.
-            if 2 * prev.len() - 1 > number.len() {
-                break;
-            }
-            let new = prev * prev;
-            if new > *number {
-                break;
-            }
-            radix_powers.push(new);
-        }
-
-        let mut power_iter = radix_powers.iter().enumerate().rev();
-        let mut x = {
-            let (i, p) = power_iter.next().unwrap();
-            let (q, r) = number.div_rem(p);
-            big_chunks.push((i, r));
-            q
-        };
-        for (i, p) in power_iter {
-            if x >= *p {
-                let (q, r) = x.div_rem(p);
-                big_chunks.push((i, r));
-                x = q;
-            }
-        }
-
-        PreparedLargeInNonPow2 {
-            top_chunk: PreparedMediumInNonPow2::new(&x, radix),
-            radix_powers,
-            big_chunks,
-            radix,
-        }
-    }
-
-    /// Write (digits_per_word * CHUNK_LEN) << i digits.
-    fn write_big_chunk(&self, digit_writer: &mut DigitWriter, i: usize, x: UBig) -> fmt::Result {
-        if i == 0 {
-            self.write_chunk(digit_writer, x)
-        } else {
-            let (q, r) = x.div_rem(&self.radix_powers[i - 1]);
-            self.write_big_chunk(digit_writer, i - 1, q)?;
-            self.write_big_chunk(digit_writer, i - 1, r)
-        }
-    }
-
-    /// Write digits_per_word * CHUNK_LEN digits.
-    fn write_chunk(&self, digit_writer: &mut DigitWriter, x: UBig) -> fmt::Result {
-        let radix_info = radix::radix_info(self.radix);
-        let (mut buffer, mut buffer_len) = ubig_to_chunk_buffer(&x);
-
-        let mut groups = [0; CHUNK_LEN];
-
-        for group in groups.iter_mut() {
-            *group = div::fast_div_by_word_in_place(
-                &mut buffer[..buffer_len],
-                radix_info.fast_div_range_per_word,
-            );
-            while buffer_len != 0 && buffer[buffer_len - 1] == 0 {
-                buffer_len -= 1;
-            }
-        }
-        assert_eq!(buffer_len, 0);
-
-        for group in groups.iter().rev() {
-            let mut prepared =
-                PreparedWordInNonPow2::new(*group, self.radix, radix_info.digits_per_word);
-            prepared.write(digit_writer)?;
-        }
-
-        Ok(())
-    }
-}
-
-impl PreparedForFormatting for PreparedLargeInNonPow2 {
-    fn width(&self) -> usize {
-        let mut num_digits = self.top_chunk.width();
-        let radix_info = radix::radix_info(self.radix);
-        for (i, _) in &self.big_chunks {
-            num_digits += (radix_info.digits_per_word * CHUNK_LEN) << i;
-        }
-        num_digits
-    }
-
-    fn write(&mut self, digit_writer: &mut DigitWriter) -> fmt::Result {
-        self.top_chunk.write(digit_writer)?;
-
-        let mut big_chunks = mem::take(&mut self.big_chunks);
-        for (i, val) in big_chunks.drain(..).rev() {
-            self.write_big_chunk(digit_writer, i, val)?;
-        }
-        Ok(())
-    }
-}
-
-fn ubig_to_chunk_buffer(x: &UBig) -> ([Word; CHUNK_LEN], usize) {
-    let mut buffer = [0; CHUNK_LEN];
-    let buffer_len;
-    match x.repr() {
-        Small(0) => {
-            buffer_len = 0;
-        }
-        Small(word) => {
-            buffer_len = 1;
-            buffer[0] = *word;
-        }
-        Large(b) => {
-            buffer_len = b.len();
-            buffer[..buffer_len].copy_from_slice(b);
-        }
-    }
-    (buffer, buffer_len)
 }
