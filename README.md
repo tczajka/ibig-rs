@@ -3,9 +3,9 @@
 [![crate](https://img.shields.io/crates/v/ibig.svg)](https://crates.io/crates/ibig)
 [![tests](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml)
 
-Big integer library.
+A big integer library with good performance.
 
-The library implements arbitrarily large integer arithmetic in pure Rust.
+The library implements efficient large integer arithmetic in pure Rust.
 
 The two integer types are `UBig` (for unsigned integers) and `IBig` (for signed integers).
 
@@ -27,3 +27,5 @@ assert_eq!(
     "hello 0x1a7e7c487267d2658a93"
 );
 ```
+
+[Bencharks](https://crates.io/crates/bigint-benchmark).

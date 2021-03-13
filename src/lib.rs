@@ -1,6 +1,6 @@
-//! Big integer library.
+//! A big integer library with good performance.
 //!
-//! The library implements arbitrarily large integer arithmetic in pure Rust.
+//! The library implements efficient large integer arithmetic in pure Rust.
 //!
 //! The two integer types are [UBig](struct.UBig.html) (for unsigned integers)
 //! and [IBig](struct.IBig.html) (for signed integers).
