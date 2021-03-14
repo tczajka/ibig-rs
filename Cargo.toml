@@ -1,12 +1,12 @@
 [package]
 name = "ibig"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
 description = "A big integer library with good performance"
 keywords = ["bigint", "bignum", "mathematics"]
 categories = ["mathematics", "no-std"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/tczajka/ibig-rs"
 homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
