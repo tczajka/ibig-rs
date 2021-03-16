@@ -127,6 +127,12 @@ fn test_ibig_from_unsigned() {
 }
 
 #[test]
+fn test_ibig_from_bool() {
+    assert_eq!(IBig::from(false), IBig::from(0u8));
+    assert_eq!(IBig::from(true), IBig::from(1u8));
+}
+
+#[test]
 fn test_ibig_from_signed() {
     assert_eq!(IBig::from(0i32), IBig::from(UBig::from(0u32)));
     assert_eq!(IBig::from(100i32), IBig::from(UBig::from(100u32)));

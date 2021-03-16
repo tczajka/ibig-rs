@@ -250,6 +250,12 @@ impl_try_from!(impl TryFrom<&IBig> for i64 as signed_from_ibig);
 impl_try_from!(impl TryFrom<&IBig> for i128 as signed_from_ibig);
 impl_try_from!(impl TryFrom<&IBig> for isize as signed_from_ibig);
 
+impl From<bool> for IBig {
+    fn from(b: bool) -> IBig {
+        u8::from(b).into()
+    }
+}
+
 impl From<UBig> for IBig {
     fn from(x: UBig) -> IBig {
         IBig::from_sign_magnitude(Positive, x)

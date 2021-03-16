@@ -914,3 +914,25 @@ impl AndNot<&IBig> for &IBig {
         }
     }
 }
+
+impl UBig {
+    /// low n bits or'd
+    pub(crate) fn are_low_bits_nonzero(&self, n: usize) -> bool {
+        match self.repr() {
+            Small(word) => {
+                let n = n.min(WORD_BITS_USIZE) as u32;
+                word & math::ones::<Word>(n) != 0
+            }
+            Large(buffer) => {
+                let n_words = n / WORD_BITS_USIZE;
+                if n_words >= buffer.len() {
+                    true
+                } else {
+                    let n_top = (n % WORD_BITS_USIZE) as u32;
+                    buffer[..n_words].iter().any(|x| *x != 0)
+                        || buffer[n_words] & math::ones::<Word>(n_top) != 0
+                }
+            }
+        }
+    }
+}

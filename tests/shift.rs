@@ -84,6 +84,9 @@ fn test_ubig_shl_negative() {
 
 #[test]
 fn test_ibig_shl() {
+    assert_eq!(ibig!(0) << 4u32, ibig!(0));
+    assert_eq!(ibig!(0) << (1u128 << 127), ibig!(0));
+
     assert_eq!(ibig!(0xef) << 4u32, ibig!(0xef0));
     assert_eq!(&ibig!(0xef) << 4u32, ibig!(0xef0));
     assert_eq!(ibig!(0xef) << &4u32, ibig!(0xef0));
@@ -245,6 +248,16 @@ fn test_ibig_shr() {
         (ibig!(-0xe0), 4, ibig!(-0xe)),
         (ibig!(-0xef), 4, ibig!(-0xf)),
         (ibig!(-0xef), 100, ibig!(-1)),
+        (ibig!(0xff) << 1000, 1000, ibig!(0xff)),
+        ((ibig!(0xff) << 1000) + ibig!(1), 1000, ibig!(0xff)),
+        (ibig!(-0xff) << 1000, 1000, ibig!(-0xff)),
+        ((ibig!(-0xff) << 1000) - ibig!(1), 1000, ibig!(-0x100)),
+        (
+            (ibig!(-0xff) << 1000) - (ibig!(1) << 999),
+            1000,
+            ibig!(-0x100),
+        ),
+        (ibig!(-0xff) << 1000, 2000, ibig!(-1)),
     ];
     for (a, b, c) in &test_cases {
         assert_eq!(a >> b, *c);
@@ -260,4 +273,11 @@ fn test_ibig_shr() {
         x >>= *b;
         assert_eq!(x, *c);
     }
+
+    assert_eq!(ibig!(0xef) >> (ubig!(1) << 1000), ibig!(0));
+    assert_eq!(ibig!(-0xef) >> (ubig!(1) << 1000), ibig!(-1));
+    assert_eq!(ibig!(-0xef) >> (ibig!(1) << 1000), ibig!(-1));
+    assert_eq!(&ibig!(-0xef) >> (ibig!(1) << 1000), ibig!(-1));
+    assert_eq!(ibig!(-0xef) >> &(ibig!(1) << 1000), ibig!(-1));
+    assert_eq!(&ibig!(-0xef) >> &(ibig!(1) << 1000), ibig!(-1));
 }
