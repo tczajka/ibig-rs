@@ -2,9 +2,16 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.3.0 - unreleased
+
+### The following functionality will get removed:
+* `IBig::is_positive`, `IBig::is_negative`. Just compare with 0 instead.
+* Shifts left and right by types other than `usize` and `&usize`.
+
+## 0.2.2 - unreleased
 
 ### Features
+* `to_f32`, `to_f64`. Round to nearest, breaking ties to even.
 * `From<bool>` for `IBig`.
 
 ## 0.2.1 - 2021-03-14
