@@ -34,6 +34,9 @@ pub(crate) fn temp_buffer_len(n: usize) -> usize {
     //
     // 20 log_3 (n-2.5) <= 20 log_3 n = 20 log_2 n / log_2 3 < 13 log_2 n
     // So we use 4n + 13 ceil log_2 n.
+    //
+    // Note: the recurence also works when we transition to Karatsuba, because
+    // Karatsuba memory requirements are smaller.
     4 * n + 13 * (math::ceil_log_2(n) as usize)
 }
 

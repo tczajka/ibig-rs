@@ -105,7 +105,7 @@ pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {
     } else if n <= MAX_LEN_KARATSUBA {
         karatsuba::temp_buffer_len(n)
     } else {
-        toom_3::temp_buffer_len(n).max(karatsuba::temp_buffer_len(MAX_LEN_KARATSUBA))
+        toom_3::temp_buffer_len(n)
     };
 
     let mut buffer = Buffer::allocate_no_extra(temp_len);
