@@ -29,16 +29,6 @@ impl Buffer {
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
     }
 
-    /// Creates a `Buffer` with exactly specified capacity.
-    ///
-    /// It leaves no extra space for future growth.
-    pub(crate) fn allocate_no_extra(num_words: usize) -> Buffer {
-        if num_words > Buffer::MAX_CAPACITY {
-            Buffer::panic_too_large();
-        }
-        Buffer(Vec::with_capacity(num_words))
-    }
-
     pub(crate) fn panic_too_large() -> ! {
         panic!(
             "number too large, maximum is {} bits",

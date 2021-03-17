@@ -3,11 +3,11 @@
 use crate::{
     add,
     arch::{SignedWord, Word},
-    buffer::Buffer,
     primitive::{double_word, extend_word, split_double_word},
     sign::Sign::{self, *},
 };
-use core::mem;
+use alloc::vec::Vec;
+use core::{iter, mem};
 use static_assertions::const_assert;
 
 /// If smaller length <= MAX_LEN_SIMPLE, simple multiplication can be used.
@@ -100,9 +100,10 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
     Word::MAX - carry_plus_max
 }
 
-/// Temporary buffer required for multiplication.
+/// Temporary scratch space required for multiplication.
+///
 /// n is the length of the smaller factor in words.
-pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {
+pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Vec<Word> {
     let temp_len = if n <= MAX_LEN_SIMPLE {
         0
     } else if n <= MAX_LEN_KARATSUBA {
@@ -111,9 +112,9 @@ pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Buffer {
         toom_3::temp_buffer_len(n)
     };
 
-    let mut buffer = Buffer::allocate_no_extra(temp_len);
-    buffer.push_zeros(temp_len);
-    buffer
+    let mut temp = Vec::with_capacity(temp_len);
+    temp.extend(iter::repeat(0).take(temp_len));
+    temp
 }
 
 /// c = a * b

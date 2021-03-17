@@ -233,7 +233,6 @@ mod tests {
             let fast_div = FastDivideSmall::new(d);
             let n = rng.gen();
             let (q, r) = fast_div.div_rem(n);
-            dbg!(d, n, q, r);
             assert_eq!(q, n / d);
             assert_eq!(r, n % d);
         }
