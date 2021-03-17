@@ -6,8 +6,9 @@ use crate::{
     primitive::{double_word, extend_word, split_double_word},
     sign::Sign::{self, *},
 };
+use alloc::vec;
 use alloc::vec::Vec;
-use core::{iter, mem};
+use core::mem;
 use static_assertions::const_assert;
 
 /// If smaller length <= MAX_LEN_SIMPLE, simple multiplication can be used.
@@ -112,9 +113,7 @@ pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Vec<Word> {
         toom_3::temp_buffer_len(n)
     };
 
-    let mut temp = Vec::with_capacity(temp_len);
-    temp.extend(iter::repeat(0).take(temp_len));
-    temp
+    vec![0; temp_len]
 }
 
 /// c = a * b
