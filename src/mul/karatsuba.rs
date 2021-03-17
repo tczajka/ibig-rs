@@ -3,7 +3,8 @@
 use crate::{
     add,
     arch::{SignedWord, Word},
-    math, mul,
+    math,
+    mul::{self, helpers},
     sign::Sign,
 };
 
@@ -42,7 +43,7 @@ pub(crate) fn add_signed_mul(
 ) -> SignedWord {
     debug_assert!(a.len() >= b.len() && b.len() >= MIN_LEN && c.len() == a.len() + b.len());
 
-    mul::add_signed_mul_split_into_same_len(c, sign, a, b, temp, add_signed_mul_same_len)
+    helpers::add_signed_mul_split_into_same_len(c, sign, a, b, temp, add_signed_mul_same_len)
 }
 
 /// c += sign * a * b

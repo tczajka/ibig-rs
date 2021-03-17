@@ -1,3 +1,5 @@
+//! Multiplication.
+
 use crate::{
     add,
     arch::{SignedWord, Word},
@@ -17,6 +19,7 @@ const_assert!(MAX_LEN_SIMPLE + 1 >= karatsuba::MIN_LEN);
 const MAX_LEN_KARATSUBA: usize = 192;
 const_assert!(MAX_LEN_KARATSUBA + 1 >= toom_3::MIN_LEN);
 
+mod helpers;
 mod karatsuba;
 mod simple;
 mod toom_3;
@@ -159,43 +162,10 @@ fn add_signed_mul_same_len(
     debug_assert!(b.len() == n && c.len() == 2 * n);
 
     if n <= MAX_LEN_SIMPLE {
-        simple::add_signed_mul(c, sign, a, b)
+        simple::add_signed_mul_same_len(c, sign, a, b)
     } else if n <= MAX_LEN_KARATSUBA {
         karatsuba::add_signed_mul_same_len(c, sign, a, b, temp)
     } else {
         toom_3::add_signed_mul_same_len(c, sign, a, b, temp)
     }
-}
-
-/// c += sign * a * b
-///
-/// Splits into multiplies of length b.len(), and one final short multiply.
-///
-/// Returns carry.
-fn add_signed_mul_split_into_same_len<F>(
-    mut c: &mut [Word],
-    sign: Sign,
-    mut a: &[Word],
-    b: &[Word],
-    temp: &mut [Word],
-    f_add_signed_mul_same_len: F,
-) -> SignedWord
-where
-    F: Fn(&mut [Word], Sign, &[Word], &[Word], &mut [Word]) -> SignedWord,
-{
-    let mut carry: SignedWord = 0;
-    let n = b.len();
-    let mut carry_n: SignedWord = 0; // at c[n]
-    while a.len() >= n {
-        // Propagate carry.
-        carry_n = add::add_signed_word_in_place(&mut c[n..2 * n], carry_n);
-        let (a_lo, a_hi) = a.split_at(n);
-        carry_n += f_add_signed_mul_same_len(&mut c[..2 * n], sign, a_lo, b, temp);
-        a = a_hi;
-        c = &mut c[n..];
-    }
-    carry += add::add_signed_word_in_place(&mut c[n..], carry_n);
-    carry += add_signed_mul(c, sign, b, a, temp);
-    debug_assert!(carry.abs() <= 1);
-    carry
 }
