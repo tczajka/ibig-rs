@@ -1,15 +1,10 @@
-#![feature(test)]
-
-extern crate test;
-
+use criterion::{
+    black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
+    PlotConfiguration,
+};
 use ibig::prelude::*;
 use rand::prelude::*;
 use std::fmt::Write;
-use test::{bench::Bencher, black_box};
-
-/*
-const MILLION_DECIMAL: usize = 3321928;
-*/
 
 fn random_ubig<R>(bits: usize, rng: &mut R) -> UBig
 where
@@ -18,598 +13,176 @@ where
     rng.gen_range(ubig!(1) << (bits - 1)..ubig!(1) << bits)
 }
 
-fn bench_add(bits: usize, bencher: &mut Bencher) {
+fn bench_add(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits, &mut rng);
-    let b = random_ubig(bits, &mut rng);
-    bencher.iter(|| black_box(&a) + black_box(&b));
+    let mut group = criterion.benchmark_group("add");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a) + black_box(&b))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_add_1e1(bencher: &mut Bencher) {
-    bench_add(10, bencher);
-}
-
-#[bench]
-fn bench_add_1e2(bencher: &mut Bencher) {
-    bench_add(100, bencher);
-}
-
-#[bench]
-fn bench_add_1e3(bencher: &mut Bencher) {
-    bench_add(1000, bencher);
-}
-
-#[bench]
-fn bench_add_1e4(bencher: &mut Bencher) {
-    bench_add(10_000, bencher);
-}
-
-#[bench]
-fn bench_add_1e5(bencher: &mut Bencher) {
-    bench_add(100_000, bencher);
-}
-
-#[bench]
-fn bench_add_1e6(bencher: &mut Bencher) {
-    bench_add(1_000_000, bencher);
-}
-
-fn bench_sub(bits: usize, bencher: &mut Bencher) {
+fn bench_sub(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits + 1, &mut rng);
-    let b = random_ubig(bits, &mut rng);
-    bencher.iter(|| black_box(&a) - black_box(&b));
+    let mut group = criterion.benchmark_group("sub");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        let c = a + &b;
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&c) - black_box(&b))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_sub_1e1(bencher: &mut Bencher) {
-    bench_sub(10, bencher);
-}
-
-#[bench]
-fn bench_sub_1e2(bencher: &mut Bencher) {
-    bench_sub(100, bencher);
-}
-
-#[bench]
-fn bench_sub_1e3(bencher: &mut Bencher) {
-    bench_sub(1000, bencher);
-}
-
-#[bench]
-fn bench_sub_1e4(bencher: &mut Bencher) {
-    bench_sub(10_000, bencher);
-}
-
-#[bench]
-fn bench_sub_1e5(bencher: &mut Bencher) {
-    bench_sub(100_000, bencher);
-}
-
-#[bench]
-fn bench_sub_1e6(bencher: &mut Bencher) {
-    bench_sub(1_000_000, bencher);
-}
-
-fn bench_mul(bits_a: usize, bits_b: usize, bencher: &mut Bencher) {
+fn bench_mul(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits_a, &mut rng);
-    let b = random_ubig(bits_b, &mut rng);
-    bencher.iter(|| black_box(&a) * black_box(&b));
+    let mut group = criterion.benchmark_group("mul");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a) * black_box(&b))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_mul_same_1e1(bencher: &mut Bencher) {
-    bench_mul(10, 10, bencher);
-}
-
-#[bench]
-fn bench_mul_same_1e2(bencher: &mut Bencher) {
-    bench_mul(100, 100, bencher);
-}
-
-#[bench]
-fn bench_mul_same_1e3(bencher: &mut Bencher) {
-    bench_mul(1000, 1000, bencher);
-}
-
-#[bench]
-fn bench_mul_same_1e4(bencher: &mut Bencher) {
-    bench_mul(10_000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_mul_same_1e5(bencher: &mut Bencher) {
-    bench_mul(100_000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_mul_same_1e6(bencher: &mut Bencher) {
-    bench_mul(1_000_000, 1_000_000, bencher);
-}
-
-/*
-#[bench]
-fn bench_mul_million_decimal(bencher: &mut Bencher) {
-    bench_mul(MILLION_DECIMAL, MILLION_DECIMAL, bencher);
-}
-*/
-
-#[bench]
-fn bench_mul_1e1_1e2(bencher: &mut Bencher) {
-    bench_mul(10, 100, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e3(bencher: &mut Bencher) {
-    bench_mul(10, 1000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e4(bencher: &mut Bencher) {
-    bench_mul(10, 10_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e5(bencher: &mut Bencher) {
-    bench_mul(10, 100_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e6(bencher: &mut Bencher) {
-    bench_mul(10, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e7(bencher: &mut Bencher) {
-    bench_mul(10, 10_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e1_1e8(bencher: &mut Bencher) {
-    bench_mul(10, 100_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e3(bencher: &mut Bencher) {
-    bench_mul(100, 1000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e4(bencher: &mut Bencher) {
-    bench_mul(100, 10_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e5(bencher: &mut Bencher) {
-    bench_mul(100, 100_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e6(bencher: &mut Bencher) {
-    bench_mul(100, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e7(bencher: &mut Bencher) {
-    bench_mul(100, 10_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e2_1e8(bencher: &mut Bencher) {
-    bench_mul(100, 100_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e3_1e4(bencher: &mut Bencher) {
-    bench_mul(1000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e3_1e5(bencher: &mut Bencher) {
-    bench_mul(1000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e3_1e6(bencher: &mut Bencher) {
-    bench_mul(1000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e3_1e7(bencher: &mut Bencher) {
-    bench_mul(1000, 10_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e3_1e8(bencher: &mut Bencher) {
-    bench_mul(1000, 100_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e4_1e5(bencher: &mut Bencher) {
-    bench_mul(10_000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e4_1e6(bencher: &mut Bencher) {
-    bench_mul(10_000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_mul_1e5_1e6(bencher: &mut Bencher) {
-    bench_mul(100_000, 1_000_000, bencher);
-}
-
-fn bench_div(bits_q: usize, bits_r: usize, bencher: &mut Bencher) {
+fn bench_div(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits_q + bits_r, &mut rng);
-    let b = random_ubig(bits_r, &mut rng);
-    bencher.iter(|| black_box(&a).div_rem(black_box(&b)));
+    let mut group = criterion.benchmark_group("div");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(2 * bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a).div_rem(black_box(&b)))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_div_same_1e1(bencher: &mut Bencher) {
-    bench_div(30, 30, bencher);
-}
-
-#[bench]
-fn bench_div_same_1e2(bencher: &mut Bencher) {
-    bench_div(100, 100, bencher);
-}
-
-#[bench]
-fn bench_div_same_1e3(bencher: &mut Bencher) {
-    bench_div(1000, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_same_1e4(bencher: &mut Bencher) {
-    bench_div(10_000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_same_1e5(bencher: &mut Bencher) {
-    bench_div(100_000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_div_same_1e6(bencher: &mut Bencher) {
-    bench_div(1_000_000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e1_1e2(bencher: &mut Bencher) {
-    bench_div(10, 100, bencher);
-}
-
-#[bench]
-fn bench_div_1e1_1e3(bencher: &mut Bencher) {
-    bench_div(10, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_1e1_1e4(bencher: &mut Bencher) {
-    bench_div(10, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e1_1e5(bencher: &mut Bencher) {
-    bench_div(10, 100_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e1_1e6(bencher: &mut Bencher) {
-    bench_div(10, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e2_1e1(bencher: &mut Bencher) {
-    bench_div(100, 30, bencher);
-}
-
-#[bench]
-fn bench_div_1e2_1e3(bencher: &mut Bencher) {
-    bench_div(100, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_1e2_1e4(bencher: &mut Bencher) {
-    bench_div(100, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e2_1e5(bencher: &mut Bencher) {
-    bench_div(100, 100_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e2_1e6(bencher: &mut Bencher) {
-    bench_div(100, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e3_1e1(bencher: &mut Bencher) {
-    bench_div(1000, 30, bencher);
-}
-
-#[bench]
-fn bench_div_1e3_1e2(bencher: &mut Bencher) {
-    bench_div(1000, 100, bencher);
-}
-
-#[bench]
-fn bench_div_1e3_1e4(bencher: &mut Bencher) {
-    bench_div(1000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e3_1e5(bencher: &mut Bencher) {
-    bench_div(1000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e3_1e6(bencher: &mut Bencher) {
-    bench_div(1000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e4_1e1(bencher: &mut Bencher) {
-    bench_div(10_000, 30, bencher);
-}
-
-#[bench]
-fn bench_div_1e4_1e2(bencher: &mut Bencher) {
-    bench_div(10_000, 100, bencher);
-}
-
-#[bench]
-fn bench_div_1e4_1e3(bencher: &mut Bencher) {
-    bench_div(10_000, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_1e4_1e5(bencher: &mut Bencher) {
-    bench_div(10_000, 100_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e4_1e6(bencher: &mut Bencher) {
-    bench_div(10_000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e5_1e1(bencher: &mut Bencher) {
-    bench_div(100_000, 30, bencher);
-}
-
-#[bench]
-fn bench_div_1e5_1e2(bencher: &mut Bencher) {
-    bench_div(100_000, 100, bencher);
-}
-
-#[bench]
-fn bench_div_1e5_1e3(bencher: &mut Bencher) {
-    bench_div(100_000, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_1e5_1e4(bencher: &mut Bencher) {
-    bench_div(100_000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e5_1e6(bencher: &mut Bencher) {
-    bench_div(100_000, 1_000_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e6_1e1(bencher: &mut Bencher) {
-    bench_div(1_000_000, 30, bencher);
-}
-
-#[bench]
-fn bench_div_1e6_1e2(bencher: &mut Bencher) {
-    bench_div(1_000_000, 100, bencher);
-}
-
-#[bench]
-fn bench_div_1e6_1e3(bencher: &mut Bencher) {
-    bench_div(1_000_000, 1000, bencher);
-}
-
-#[bench]
-fn bench_div_1e6_1e4(bencher: &mut Bencher) {
-    bench_div(1_000_000, 10_000, bencher);
-}
-
-#[bench]
-fn bench_div_1e6_1e5(bencher: &mut Bencher) {
-    bench_div(1_000_000, 100_000, bencher);
-}
-
-/*
-#[bench]
-fn bench_div_million_decimal(bencher: &mut Bencher) {
-    bench_div(MILLION_DECIMAL, MILLION_DECIMAL, bencher);
-}
-*/
-
-fn bench_rem(bits_q: usize, bits_r: usize, bencher: &mut Bencher) {
+fn bench_to_hex(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits_q + bits_r, &mut rng);
-    let b = random_ubig(bits_r, &mut rng);
-    bencher.iter(|| black_box(&a) % black_box(&b));
+    let mut group = criterion.benchmark_group("to_hex");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let mut out = String::with_capacity(bits / 4 + 1);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| {
+                out.clear();
+                write!(&mut out, "{:x}", black_box(&a)).unwrap();
+                out.len()
+            })
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_rem_1e5_1e1(bencher: &mut Bencher) {
-    bench_rem(100_000, 30, bencher)
-}
-
-fn bench_in_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
+fn bench_to_dec(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits, &mut rng);
-    let mut out = String::with_capacity(bits);
-    bencher.iter(|| {
-        out.clear();
-        write!(&mut out, "{}", black_box(&a).in_radix(black_box(radix))).unwrap();
-        black_box(out.len())
-    });
+    let mut group = criterion.benchmark_group("to_dec");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let mut out = String::with_capacity(bits / 3 + 1);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| {
+                out.clear();
+                write!(&mut out, "{}", black_box(&a)).unwrap();
+                out.len()
+            })
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_to_hex_1e1(bencher: &mut Bencher) {
-    bench_in_radix(10, 16, bencher);
-}
-
-#[bench]
-fn bench_to_hex_1e2(bencher: &mut Bencher) {
-    bench_in_radix(100, 16, bencher);
-}
-
-#[bench]
-fn bench_to_hex_1e3(bencher: &mut Bencher) {
-    bench_in_radix(1000, 16, bencher);
-}
-
-#[bench]
-fn bench_to_hex_1e4(bencher: &mut Bencher) {
-    bench_in_radix(10_000, 16, bencher);
-}
-
-#[bench]
-fn bench_to_hex_1e5(bencher: &mut Bencher) {
-    bench_in_radix(100_000, 16, bencher);
-}
-
-#[bench]
-fn bench_to_hex_1e6(bencher: &mut Bencher) {
-    bench_in_radix(1_000_000, 16, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e1(bencher: &mut Bencher) {
-    bench_in_radix(10, 10, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e2(bencher: &mut Bencher) {
-    bench_in_radix(100, 10, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e3(bencher: &mut Bencher) {
-    bench_in_radix(1000, 10, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e4(bencher: &mut Bencher) {
-    bench_in_radix(10_000, 10, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e5(bencher: &mut Bencher) {
-    bench_in_radix(100_000, 10, bencher);
-}
-
-#[bench]
-fn bench_to_dec_1e6(bencher: &mut Bencher) {
-    bench_in_radix(1_000_000, 10, bencher);
-}
-
-fn bench_from_str_radix(bits: usize, radix: u32, bencher: &mut Bencher) {
+fn bench_from_hex(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
-    let a = random_ubig(bits, &mut rng);
-    let s = a.in_radix(radix).to_string();
-    bencher.iter(|| UBig::from_str_radix(black_box(&s), radix));
+    let mut group = criterion.benchmark_group("from_hex");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let s = a.in_radix(16).to_string();
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| UBig::from_str_radix(black_box(&s), 16))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_from_hex_1e1(bencher: &mut Bencher) {
-    bench_from_str_radix(10, 16, bencher);
+fn bench_from_dec(criterion: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(1);
+    let mut group = criterion.benchmark_group("from_dec");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let s = a.in_radix(10).to_string();
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| UBig::from_str_radix(black_box(&s), 10))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_from_hex_1e2(bencher: &mut Bencher) {
-    bench_from_str_radix(100, 16, bencher);
+fn bench_pow(criterion: &mut Criterion) {
+    let mut group = criterion.benchmark_group("pow");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_power in 1..=6 {
+        let p = 10usize.pow(log_power);
+        group.bench_with_input(BenchmarkId::from_parameter(p), &p, |bencher, p| {
+            bencher.iter(|| ubig!(3).pow(*p))
+        });
+    }
+
+    group.finish();
 }
 
-#[bench]
-fn bench_from_hex_1e3(bencher: &mut Bencher) {
-    bench_from_str_radix(1000, 16, bencher);
-}
+criterion_group!(
+    benches,
+    bench_add,
+    bench_sub,
+    bench_mul,
+    bench_div,
+    bench_to_hex,
+    bench_to_dec,
+    bench_from_hex,
+    bench_from_dec,
+    bench_pow
+);
 
-#[bench]
-fn bench_from_hex_1e4(bencher: &mut Bencher) {
-    bench_from_str_radix(10_000, 16, bencher);
-}
-
-#[bench]
-fn bench_from_hex_1e5(bencher: &mut Bencher) {
-    bench_from_str_radix(100_000, 16, bencher);
-}
-
-#[bench]
-fn bench_from_hex_1e6(bencher: &mut Bencher) {
-    bench_from_str_radix(1_000_000, 16, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e1(bencher: &mut Bencher) {
-    bench_from_str_radix(10, 10, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e2(bencher: &mut Bencher) {
-    bench_from_str_radix(100, 10, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e3(bencher: &mut Bencher) {
-    bench_from_str_radix(1000, 10, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e4(bencher: &mut Bencher) {
-    bench_from_str_radix(10_000, 10, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e5(bencher: &mut Bencher) {
-    bench_from_str_radix(100_000, 10, bencher);
-}
-
-#[bench]
-fn bench_from_dec_1e6(bencher: &mut Bencher) {
-    bench_from_str_radix(1_000_000, 10, bencher);
-}
-
-fn bench_pow(a: UBig, b: usize, bencher: &mut Bencher) {
-    bencher.iter(|| black_box(&a).pow(black_box(b)));
-}
-
-#[bench]
-fn bench_pow_3_1e1(bencher: &mut Bencher) {
-    bench_pow(ubig!(3), 10, bencher);
-}
-
-#[bench]
-fn bench_pow_3_1e2(bencher: &mut Bencher) {
-    bench_pow(ubig!(3), 100, bencher);
-}
-
-#[bench]
-fn bench_pow_3_1e3(bencher: &mut Bencher) {
-    bench_pow(ubig!(3), 1000, bencher);
-}
-
-#[bench]
-fn bench_pow_3_1e4(bencher: &mut Bencher) {
-    bench_pow(ubig!(3), 10_000, bencher);
-}
-
-#[bench]
-fn bench_pow_3_1e5(bencher: &mut Bencher) {
-    bench_pow(ubig!(3), 100_000, bencher);
-}
+criterion_main!(benches);
