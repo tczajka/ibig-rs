@@ -1,7 +1,7 @@
 //! Format in a power-of-two radix.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     fmt::{digit_writer::DigitWriter, InRadixFull, PreparedForFormatting},
     math,
     primitive::{WORD_BITS, WORD_BITS_USIZE},

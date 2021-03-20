@@ -2,7 +2,7 @@
 
 use crate::{
     add,
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
     sign::Sign::*,

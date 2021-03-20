@@ -1,7 +1,10 @@
 //! Addition and subtraction functions.
 
 use crate::{
-    arch::{self, SignedWord, Word},
+    arch::{
+        self,
+        word::{SignedWord, Word},
+    },
     primitive::PrimitiveSigned,
     sign::Sign::{self, *},
 };
@@ -63,7 +66,7 @@ pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
 
     let mut carry = false;
     for (a, b) in words.iter_mut().zip(rhs.iter()) {
-        let (sum, c) = arch::add_with_carry(*a, *b, carry);
+        let (sum, c) = arch::add::add_with_carry(*a, *b, carry);
         *a = sum;
         carry = c;
     }
@@ -77,7 +80,7 @@ pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
     for (a, b) in lhs.iter_mut().zip(rhs.iter()) {
-        let (diff, borrow1) = arch::sub_with_borrow(*a, *b, borrow);
+        let (diff, borrow1) = arch::add::sub_with_borrow(*a, *b, borrow);
         *a = diff;
         borrow = borrow1;
     }
@@ -109,7 +112,7 @@ pub(crate) fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
     for (a, b) in lhs.iter().zip(rhs.iter_mut()) {
-        let (diff, borrow1) = arch::sub_with_borrow(*a, *b, borrow);
+        let (diff, borrow1) = arch::add::sub_with_borrow(*a, *b, borrow);
         *b = diff;
         borrow = borrow1;
     }

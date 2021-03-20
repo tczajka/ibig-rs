@@ -1,7 +1,7 @@
 //! Bit shift operators.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
     primitive::{double_word, extend_word, split_double_word, PrimitiveSigned, WORD_BITS_USIZE},

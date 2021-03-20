@@ -1,7 +1,7 @@
 //! Parse in a power-of-two radix.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     parse::ParseError,
     primitive::{WORD_BITS, WORD_BITS_USIZE},

@@ -1,7 +1,7 @@
 //! Division operators.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     div,
     fast_divide::{FastDivide, FastDivideNormalized},

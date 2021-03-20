@@ -1,7 +1,7 @@
 //! Divide by a prearranged Word quickly using multiplication by the reciprocal.
 
 use crate::{
-    arch::{DoubleWord, Word},
+    arch::word::{DoubleWord, Word},
     math,
     primitive::{double_word, extend_word, split_double_word},
 };

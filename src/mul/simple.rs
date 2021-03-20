@@ -1,7 +1,10 @@
 //! Simple multiplication algorithm.
 
 use crate::{
-    arch::{self, SignedWord, Word},
+    arch::{
+        self,
+        word::{SignedWord, Word},
+    },
     mul::{self, helpers},
     sign::Sign::{self, *},
 };
@@ -61,7 +64,7 @@ fn add_mul_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     let mut carry = false;
     for (i, m) in b.iter().enumerate() {
         let carry_word = mul::add_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
-        let (carry_word, carry_next) = arch::add_with_carry(c[i + a.len()], carry_word, carry);
+        let (carry_word, carry_next) = arch::add::add_with_carry(c[i + a.len()], carry_word, carry);
         c[i + a.len()] = carry_word;
         carry = carry_next;
     }
@@ -78,7 +81,8 @@ fn sub_mul_chunk(c: &mut [Word], a: &[Word], b: &[Word]) -> bool {
     let mut borrow = false;
     for (i, m) in b.iter().enumerate() {
         let borrow_word = mul::sub_mul_word_same_len_in_place(&mut c[i..i + a.len()], *m, a);
-        let (borrow_word, borrow_next) = arch::sub_with_borrow(c[i + a.len()], borrow_word, borrow);
+        let (borrow_word, borrow_next) =
+            arch::add::sub_with_borrow(c[i + a.len()], borrow_word, borrow);
         c[i + a.len()] = borrow_word;
         borrow = borrow_next;
     }

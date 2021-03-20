@@ -2,7 +2,7 @@
 
 use crate::{
     add,
-    arch::Word,
+    arch::word::Word,
     cmp,
     fast_divide::FastDivideNormalized,
     mul,

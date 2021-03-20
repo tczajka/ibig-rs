@@ -1,7 +1,7 @@
 //! Division functions.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     fast_divide::{FastDivide, FastDivideNormalized},
     primitive::{double_word, extend_word},
     shift,

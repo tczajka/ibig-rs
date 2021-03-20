@@ -2,7 +2,7 @@
 
 use crate::{
     add,
-    arch::{SignedWord, Word},
+    arch::word::{SignedWord, Word},
     primitive::{double_word, extend_word, split_double_word},
     sign::Sign::{self, *},
 };

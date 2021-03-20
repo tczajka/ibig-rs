@@ -1,7 +1,7 @@
 //! Conversions between types.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
     primitive::{

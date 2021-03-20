@@ -2,7 +2,7 @@
 
 use crate::{
     add,
-    arch::{SignedWord, Word},
+    arch::word::{SignedWord, Word},
     math,
     mul::{self, helpers},
     sign::Sign,

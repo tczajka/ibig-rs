@@ -1,7 +1,7 @@
 //! Information about radixes.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     fast_divide::{FastDivide, FastDivideSmall},
     primitive::WORD_BITS,
 };

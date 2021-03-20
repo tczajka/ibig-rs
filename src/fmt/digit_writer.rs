@@ -6,7 +6,7 @@ use core::{convert::TryInto, fmt, str};
 /// Minimum buffer length.
 const BUFFER_LEN_MIN: usize = 32;
 
-const BUFFER_LEN: usize = math::const_round_up_usize(BUFFER_LEN_MIN, arch::DIGIT_CHUNK_LEN);
+const BUFFER_LEN: usize = math::const_round_up_usize(BUFFER_LEN_MIN, arch::digits::DIGIT_CHUNK_LEN);
 
 /// DigitWriter allows writing raw digits and turns them into ASCII.
 pub(crate) struct DigitWriter<'a> {
@@ -43,10 +43,12 @@ impl<'a> DigitWriter<'a> {
 
     /// Must call flush to make sure all the data is written.
     pub(crate) fn flush(&mut self) -> fmt::Result {
-        let buffer_len_rounded = math::round_up(self.buffer_len, arch::DIGIT_CHUNK_LEN);
+        let buffer_len_rounded = math::round_up(self.buffer_len, arch::digits::DIGIT_CHUNK_LEN);
         self.buffer[self.buffer_len..buffer_len_rounded].fill(0);
-        for chunk in self.buffer[..buffer_len_rounded].chunks_exact_mut(arch::DIGIT_CHUNK_LEN) {
-            arch::digit_chunk_raw_to_ascii(chunk.try_into().unwrap(), self.digit_case);
+        for chunk in
+            self.buffer[..buffer_len_rounded].chunks_exact_mut(arch::digits::DIGIT_CHUNK_LEN)
+        {
+            arch::digits::digit_chunk_raw_to_ascii(chunk.try_into().unwrap(), self.digit_case);
         }
         let b = &self.buffer[..self.buffer_len];
         // Safe because the buffer contains only ASCII characters 0-9, a-z, A-Z.

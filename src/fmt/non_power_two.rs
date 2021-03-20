@@ -1,7 +1,7 @@
 //! Format in a non-power-of-two radix.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     div,
     div_ops::DivRem,
     fmt::{digit_writer::DigitWriter, InRadixFull, PreparedForFormatting},

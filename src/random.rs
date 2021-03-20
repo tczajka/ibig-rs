@@ -1,7 +1,7 @@
 //! Random distributions on big integers.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
     sign::UnsignedAbs,

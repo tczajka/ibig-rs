@@ -1,7 +1,7 @@
 //! Bitwise operators.
 
 use crate::{
-    arch::Word,
+    arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
     math,

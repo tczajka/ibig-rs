@@ -1,4 +1,4 @@
-use crate::arch::Word;
+use crate::arch::word::Word;
 
 /// Add a + b + carry.
 ///

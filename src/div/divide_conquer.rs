@@ -2,7 +2,7 @@
 
 use crate::{
     add,
-    arch::{SignedWord, Word},
+    arch::word::{SignedWord, Word},
     div,
     fast_divide::FastDivideNormalized,
     mul,
