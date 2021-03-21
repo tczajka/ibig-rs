@@ -270,19 +270,8 @@ impl PreparedForFormatting for PreparedLarge {
 
 fn ubig_to_chunk_buffer(x: &UBig) -> ([Word; CHUNK_LEN], usize) {
     let mut buffer = [0; CHUNK_LEN];
-    let buffer_len;
-    match x.repr() {
-        Small(0) => {
-            buffer_len = 0;
-        }
-        Small(word) => {
-            buffer_len = 1;
-            buffer[0] = *word;
-        }
-        Large(b) => {
-            buffer_len = b.len();
-            buffer[..buffer_len].copy_from_slice(b);
-        }
-    }
+    let words = x.as_words();
+    let buffer_len = words.len();
+    buffer[..buffer_len].copy_from_slice(words);
     (buffer, buffer_len)
 }

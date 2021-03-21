@@ -2,6 +2,7 @@
 
 use self::Repr::*;
 use crate::{arch::word::Word, buffer::Buffer};
+use core::slice;
 
 /// Internal representation of UBig.
 #[derive(Debug, Eq, Hash, PartialEq)]
@@ -57,6 +58,15 @@ impl UBig {
         match self.repr() {
             Small(_) => 1,
             Large(buffer) => buffer.len(),
+        }
+    }
+
+    /// Representation in Words.
+    pub(crate) fn as_words(&self) -> &[Word] {
+        match self.repr() {
+            Small(0) => &[],
+            Small(word) => slice::from_ref(word),
+            Large(buffer) => &buffer,
         }
     }
 }
