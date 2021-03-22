@@ -8,6 +8,7 @@ A big integer library with good performance.
 The library implements efficient large integer arithmetic in pure Rust.
 
 The two integer types are `UBig` (for unsigned integers) and `IBig` (for signed integers).
+Modular arithmetic is also supported by the module `modular`.
 
 ## Example
 

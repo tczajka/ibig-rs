@@ -13,6 +13,17 @@ mod simple;
 /// If divisor or quotient is at most this length, use the simple division algorithm.
 const MAX_LEN_SIMPLE: usize = 32;
 
+/// Normalize a large divisor.
+///
+/// Returns (shift, fast division for the top word).
+pub(crate) fn normalize_large(words: &mut [Word]) -> (u32, FastDivideNormalized) {
+    assert!(words.len() >= 2);
+    let shift = words.last().unwrap().leading_zeros();
+    let overflow = shift::shl_in_place(words, shift);
+    assert!(overflow == 0);
+    (shift, FastDivideNormalized::new(*words.last().unwrap()))
+}
+
 /// words = words / rhs
 ///
 /// rhs must be non-zero
@@ -59,16 +70,28 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
     }
 
     let fast_div_rhs = FastDivide::new(rhs);
-
-    let mut rem: Word = 0;
-    for word in words.iter().rev() {
-        let a = double_word(*word, rem);
-        let (_, r) = fast_div_rhs.normalized.div_rem(a);
-        rem = r;
-    }
+    let rem = fast_rem_by_word(words, fast_div_rhs.normalized);
     let a = extend_word(rem) << fast_div_rhs.shift;
     let (_, rem) = fast_div_rhs.normalized.div_rem(a);
     rem >> fast_div_rhs.shift
+}
+
+/// words % rhs
+pub(crate) fn fast_rem_by_word(words: &[Word], fast_div_rhs: FastDivideNormalized) -> Word {
+    let mut iter = words.iter().rev();
+
+    let mut rem: Word = 0;
+    match iter.next() {
+        None => return rem,
+        Some(word) => rem = fast_div_rhs.div_rem_word(*word).1,
+    }
+
+    for word in iter {
+        let a = double_word(*word, rem);
+        let (_, r) = fast_div_rhs.div_rem(a);
+        rem = r;
+    }
+    rem
 }
 
 /// Divide lhs by rhs, replacing the top words of lhs by the quotient and the

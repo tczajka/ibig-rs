@@ -4,7 +4,6 @@ use crate::{
     arch::word::Word,
     buffer::Buffer,
     div,
-    fast_divide::{FastDivide, FastDivideNormalized},
     ibig::IBig,
     shift,
     sign::{Abs, Sign::*},
@@ -830,8 +829,12 @@ impl UBig {
 
     /// `lhs / rhs`
     fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let fast_div_rhs_top = UBig::div_normalize(&mut lhs, &mut rhs);
-        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top.normalized);
+        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
+        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
+        if lhs_carry != 0 {
+            lhs.push_may_reallocate(lhs_carry);
+        }
+        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
         if overflow {
             lhs.push_may_reallocate(1);
         }
@@ -841,48 +844,36 @@ impl UBig {
 
     /// `lhs % rhs`
     fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let fast_div_rhs_top = UBig::div_normalize(&mut lhs, &mut rhs);
-        let _overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top.normalized);
+        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
+        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
+        if lhs_carry != 0 {
+            lhs.push_may_reallocate(lhs_carry);
+        }
+        let _overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
-        let low_bits = shift::shr_in_place(&mut rhs, fast_div_rhs_top.shift);
+        let low_bits = shift::shr_in_place(&mut rhs, shift);
         debug_assert!(low_bits == 0);
         rhs.into()
     }
 
     /// `(lhs / rhs, lhs % rhs)`
     fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
-        let fast_div_rhs_top = UBig::div_normalize(&mut lhs, &mut rhs);
-        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top.normalized);
+        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
+        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
+        if lhs_carry != 0 {
+            lhs.push_may_reallocate(lhs_carry);
+        }
+        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
         if overflow {
             lhs.push_may_reallocate(1);
         }
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
-        let low_bits = shift::shr_in_place(&mut rhs, fast_div_rhs_top.shift);
+        let low_bits = shift::shr_in_place(&mut rhs, shift);
         debug_assert!(low_bits == 0);
         lhs.erase_front(n);
         (lhs.into(), rhs.into())
-    }
-
-    /// Normalizes large arguments for division by shifting them left:
-    /// * lhs as least as long as rhs
-    /// * top bit of rhs is 1
-    ///
-    /// Returns FastDivide for the top rhs word.
-    fn div_normalize(lhs: &mut Buffer, rhs: &mut [Word]) -> FastDivide {
-        assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
-        let shift = rhs.last().unwrap().leading_zeros();
-        let rhs_carry = shift::shl_in_place(rhs, shift);
-        assert!(rhs_carry == 0);
-        let lhs_carry = shift::shl_in_place(lhs, shift);
-        if lhs_carry != 0 {
-            lhs.push_may_reallocate(lhs_carry);
-        }
-        FastDivide {
-            normalized: FastDivideNormalized::new(*rhs.last().unwrap()),
-            shift,
-        }
     }
 }
 

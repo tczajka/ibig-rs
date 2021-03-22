@@ -121,6 +121,14 @@ impl FastDivideNormalized {
         FastDivideNormalized { divisor, m }
     }
 
+    pub(crate) fn div_rem_word(&self, a: Word) -> (Word, Word) {
+        if a < self.divisor {
+            (0, a)
+        } else {
+            (1, a - self.divisor)
+        }
+    }
+
     /// (a / divisor, a % divisor)
     /// The result must fit in a single word.
     pub(crate) fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
