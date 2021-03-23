@@ -163,7 +163,6 @@ impl Clone for ModuloRepr<'_> {
             (&mut *self, source)
         {
             modulo_large.clone_from(source_large);
-            return;
         } else {
             *self = source.clone();
         }

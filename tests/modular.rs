@@ -74,7 +74,7 @@ fn test_convert() {
 #[test]
 fn test_negate() {
     let ring = ModuloRing::new(&ubig!(100));
-    let x = ring.from(ibig!(-1234));
+    let x = ring.from(-1234);
     let y = -x;
     assert_eq!(y.residue(), ubig!(34));
 
@@ -98,7 +98,56 @@ fn test_different_rings() {
 fn test_cmp_different_rings() {
     let ring1 = ModuloRing::new(&ubig!(100));
     let ring2 = ModuloRing::new(&ubig!(200));
-    let x = ring1.from(ubig!(5));
-    let y = ring2.from(ubig!(5));
+    let x = ring1.from(5);
+    let y = ring2.from(5);
     let _ = x == y;
+}
+
+#[test]
+fn test_add() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
+    let test_cases = [
+        (ring1.from(1), ring1.from(2), ring1.from(3)),
+        (ring1.from(99), ring1.from(5), ring1.from(4)),
+        (ring1.from(99), ring1.from(99), ring1.from(98)),
+        (
+            ring2.from(ubig!(111111111111111111111111111111)),
+            ring2.from(ubig!(222222222222222223333333333333)),
+            ring2.from(ubig!(333333333333333334444444444444)),
+        ),
+        (
+            ring2.from(ubig!(111111111111111111111111111111)),
+            ring2.from(ubig!(888888888888888888888888888889)),
+            ring2.from(ubig!(0)),
+        ),
+        (
+            ring2.from(ubig!(999999999999999999999999999999)),
+            ring2.from(ubig!(999999999999999999999999999997)),
+            ring2.from(ubig!(999999999999999999999999999996)),
+        ),
+    ];
+
+    for (a, b, c) in &test_cases {
+        assert!(a + b == *c);
+        assert!(a.clone() + b == *c);
+        assert!(a + b.clone() == *c);
+        assert!(a.clone() + b.clone() == *c);
+        let mut x = a.clone();
+        x += b;
+        assert!(x == *c);
+        let mut x = a.clone();
+        x += b.clone();
+        assert!(x == *c);
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_add_different_rings() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(200));
+    let x = ring1.from(5);
+    let y = ring2.from(5);
+    let _ = x + y;
 }

@@ -45,8 +45,8 @@ impl ModuloRing {
     /// let y = ring.from(ubig!(3366));
     /// assert!(x == y);
     /// ```
-    pub fn from<'a, T: ToModulo>(&'a self, x: T) -> Modulo<'a> {
-        x.to_modulo(self)
+    pub fn from<T: IntoModulo>(&self, x: T) -> Modulo {
+        x.into_modulo(self)
     }
 }
 
@@ -103,13 +103,13 @@ impl ModuloLarge<'_> {
     }
 }
 
-/// Trait for types that can be converted to `Modulo` in a `ModuloRing`.
-pub trait ToModulo {
-    fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a>;
+/// Trait for types that can be converted into `Modulo` in a `ModuloRing`.
+pub trait IntoModulo {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo;
 }
 
-impl ToModulo for UBig {
-    fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+impl IntoModulo for UBig {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(&self, ring_small).into(),
             ModuloRingRepr::Large(ring_large) => ModuloLarge::from_ubig(self, ring_large).into(),
@@ -117,8 +117,8 @@ impl ToModulo for UBig {
     }
 }
 
-impl ToModulo for &UBig {
-    fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+impl IntoModulo for &UBig {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(self, ring_small).into(),
             ModuloRingRepr::Large(ring_large) => {
@@ -128,10 +128,10 @@ impl ToModulo for &UBig {
     }
 }
 
-impl ToModulo for IBig {
-    fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+impl IntoModulo for IBig {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         let (sign, mag) = self.into_sign_magnitude();
-        let modulo = mag.to_modulo(ring);
+        let modulo = mag.into_modulo(ring);
         match sign {
             Positive => modulo,
             Negative => -modulo,
@@ -139,9 +139,9 @@ impl ToModulo for IBig {
     }
 }
 
-impl ToModulo for &IBig {
-    fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
-        let modulo = self.magnitude().to_modulo(ring);
+impl IntoModulo for &IBig {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+        let modulo = self.magnitude().into_modulo(ring);
         match self.sign() {
             Positive => modulo,
             Negative => -modulo,
@@ -183,38 +183,38 @@ impl<'a> ModuloLarge<'a> {
     }
 }
 
-/// Implement `ToModulo` for unsigned primitives.
-macro_rules! impl_to_modulo_for_unsigned {
+/// Implement `IntoModulo` for unsigned primitives.
+macro_rules! impl_into_modulo_for_unsigned {
     ($t:ty) => {
-        impl ToModulo for $t {
-            fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
-                UBig::from(self).to_modulo(ring)
+        impl IntoModulo for $t {
+            fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+                UBig::from(self).into_modulo(ring)
             }
         }
     };
 }
 
-/// Implement `ToModulo` for signed primitives.
-macro_rules! impl_to_modulo_for_signed {
+/// Implement `IntoModulo` for signed primitives.
+macro_rules! impl_into_modulo_for_signed {
     ($t:ty) => {
-        impl ToModulo for $t {
-            fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
-                IBig::from(self).to_modulo(ring)
+        impl IntoModulo for $t {
+            fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+                IBig::from(self).into_modulo(ring)
             }
         }
     };
 }
 
-impl_to_modulo_for_unsigned!(bool);
-impl_to_modulo_for_unsigned!(u8);
-impl_to_modulo_for_unsigned!(u16);
-impl_to_modulo_for_unsigned!(u32);
-impl_to_modulo_for_unsigned!(u64);
-impl_to_modulo_for_unsigned!(u128);
-impl_to_modulo_for_unsigned!(usize);
-impl_to_modulo_for_signed!(i8);
-impl_to_modulo_for_signed!(i16);
-impl_to_modulo_for_signed!(i32);
-impl_to_modulo_for_signed!(i64);
-impl_to_modulo_for_signed!(i128);
-impl_to_modulo_for_signed!(isize);
+impl_into_modulo_for_unsigned!(bool);
+impl_into_modulo_for_unsigned!(u8);
+impl_into_modulo_for_unsigned!(u16);
+impl_into_modulo_for_unsigned!(u32);
+impl_into_modulo_for_unsigned!(u64);
+impl_into_modulo_for_unsigned!(u128);
+impl_into_modulo_for_unsigned!(usize);
+impl_into_modulo_for_signed!(i8);
+impl_into_modulo_for_signed!(i16);
+impl_into_modulo_for_signed!(i32);
+impl_into_modulo_for_signed!(i64);
+impl_into_modulo_for_signed!(i128);
+impl_into_modulo_for_signed!(isize);

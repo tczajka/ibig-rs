@@ -16,7 +16,7 @@
 //! assert_eq!(y.residue(), ubig!(7655));
 //! ```
 
-pub use convert::ToModulo;
+pub use convert::IntoModulo;
 pub use modulo::Modulo;
 pub use modulo_ring::ModuloRing;
 
