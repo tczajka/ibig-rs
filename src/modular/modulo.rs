@@ -13,7 +13,7 @@ use alloc::vec::Vec;
 /// ```
 /// # use ibig::{prelude::*, modular::ModuloRing};
 /// let ring = ModuloRing::new(&ubig!(100));
-/// let x = ring.from(ibig!(-1234));
+/// let x = ring.from(-1234);
 /// assert_eq!(x.residue(), ubig!(66));
 /// ```
 pub struct Modulo<'a>(ModuloRepr<'a>);

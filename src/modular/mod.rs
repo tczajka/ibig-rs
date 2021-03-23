@@ -11,7 +11,7 @@
 //! use ibig::{prelude::*, modular::ModuloRing};
 //!
 //! let ring = ModuloRing::new(&ubig!(10000));
-//! let x = ring.from(ubig!(12345));
+//! let x = ring.from(12345);
 //! let y = -x;
 //! assert_eq!(y.residue(), ubig!(7655));
 //! ```

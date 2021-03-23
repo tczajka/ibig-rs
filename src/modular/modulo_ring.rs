@@ -12,7 +12,7 @@ use core::cmp::Ordering;
 
 /// A ring of integers modulo a positive integer.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```
 /// # use ibig::{prelude::*, modular::ModuloRing};

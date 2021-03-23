@@ -41,8 +41,9 @@ impl ModuloRing {
     /// ```
     /// # use ibig::{prelude::*, modular::ModuloRing};
     /// let ring = ModuloRing::new(&ubig!(100));
-    /// let x = ring.from(ibig!(-1234));
-    /// assert_eq!(x.residue(), ubig!(66));
+    /// let x = ring.from(-1234);
+    /// let y = ring.from(ubig!(3366));
+    /// assert!(x == y);
     /// ```
     pub fn from<'a, T: ToModulo>(&'a self, x: T) -> Modulo<'a> {
         x.to_modulo(self)
@@ -74,7 +75,7 @@ impl Modulo<'_> {
     /// ```
     /// # use ibig::{prelude::*, modular::ModuloRing};
     /// let ring = ModuloRing::new(&ubig!(100));
-    /// let x = ring.from(ibig!(-1234));
+    /// let x = ring.from(-1234);
     /// assert_eq!(x.residue(), ubig!(66));
     /// ```
     pub fn residue(&self) -> UBig {
@@ -181,3 +182,39 @@ impl<'a> ModuloLarge<'a> {
         ModuloLarge::new(vec, ring)
     }
 }
+
+/// Implement `ToModulo` for unsigned primitives.
+macro_rules! impl_to_modulo_for_unsigned {
+    ($t:ty) => {
+        impl ToModulo for $t {
+            fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+                UBig::from(self).to_modulo(ring)
+            }
+        }
+    };
+}
+
+/// Implement `ToModulo` for signed primitives.
+macro_rules! impl_to_modulo_for_signed {
+    ($t:ty) => {
+        impl ToModulo for $t {
+            fn to_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+                IBig::from(self).to_modulo(ring)
+            }
+        }
+    };
+}
+
+impl_to_modulo_for_unsigned!(bool);
+impl_to_modulo_for_unsigned!(u8);
+impl_to_modulo_for_unsigned!(u16);
+impl_to_modulo_for_unsigned!(u32);
+impl_to_modulo_for_unsigned!(u64);
+impl_to_modulo_for_unsigned!(u128);
+impl_to_modulo_for_unsigned!(usize);
+impl_to_modulo_for_signed!(i8);
+impl_to_modulo_for_signed!(i16);
+impl_to_modulo_for_signed!(i32);
+impl_to_modulo_for_signed!(i64);
+impl_to_modulo_for_signed!(i128);
+impl_to_modulo_for_signed!(isize);
