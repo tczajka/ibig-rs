@@ -33,6 +33,12 @@ fn test_clone() {
     let y = ring2.from(ubig!(1));
     x.clone_from(&y);
     assert!(x == y);
+
+    let ring3 = ModuloRing::new(&ubig!(10).pow(100));
+    let x = ring2.from(ubig!(1));
+    let mut y = ring3.from(ubig!(2));
+    y.clone_from(&x);
+    assert!(x == y);
 }
 
 #[test]
