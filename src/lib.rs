@@ -19,7 +19,9 @@
 //!
 //! The two main integer types are [UBig](struct.UBig.html) (for unsigned integers)
 //! and [IBig](struct.IBig.html) (for signed integers). Modular arithmetic is also
-//! supported by the module `modular`.
+//! supported by the module [modular](modular/index.html).
+//!
+//! # Example
 //!
 //! ```
 //! # use ibig::ParseError;

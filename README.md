@@ -1,6 +1,7 @@
 # ibig
 
 [![crate](https://img.shields.io/crates/v/ibig.svg)](https://crates.io/crates/ibig)
+[![docs](https://docs.rs/ibig/badge.svg)](https://docs.rs/ibig)
 [![tests](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml)
 
 A big integer library with good performance.
