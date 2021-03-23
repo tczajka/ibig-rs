@@ -75,14 +75,18 @@ fn test_convert() {
 fn test_negate() {
     let ring = ModuloRing::new(&ubig!(100));
     let x = ring.from(-1234);
+    let y = -&x;
+    assert_eq!(y.residue(), ubig!(34));
     let y = -x;
     assert_eq!(y.residue(), ubig!(34));
 
     let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
     let x = ring.from(ibig!(-_33333123456789012345678901234567890));
-    let y = -x;
+    let y = -&x;
     assert!(y == ring.from(ubig!(_44444123456789012345678901234567890)));
     assert_eq!(y.residue(), ubig!(_123456789012345678901234567890));
+    let y = -x;
+    assert!(y == ring.from(ubig!(_44444123456789012345678901234567890)));
 }
 
 #[test]
@@ -104,7 +108,7 @@ fn test_cmp_different_rings() {
 }
 
 #[test]
-fn test_add() {
+fn test_add_sub() {
     let ring1 = ModuloRing::new(&ubig!(100));
     let ring2 = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
     let test_cases = [
@@ -128,7 +132,12 @@ fn test_add() {
         ),
     ];
 
-    for (a, b, c) in &test_cases {
+    let all_test_cases = test_cases
+        .iter()
+        .map(|(a, b, c)| (a, b, c))
+        .chain(test_cases.iter().map(|(a, b, c)| (b, a, c)));
+
+    for (a, b, c) in all_test_cases {
         assert!(a + b == *c);
         assert!(a.clone() + b == *c);
         assert!(a + b.clone() == *c);
@@ -139,6 +148,17 @@ fn test_add() {
         let mut x = a.clone();
         x += b.clone();
         assert!(x == *c);
+
+        assert!(c - a == *b);
+        assert!(c.clone() - a == *b);
+        assert!(c - a.clone() == *b);
+        assert!(c.clone() - a.clone() == *b);
+        let mut x = c.clone();
+        x -= a;
+        assert!(x == *b);
+        let mut x = c.clone();
+        x -= a.clone();
+        assert!(x == *b);
     }
 }
 
@@ -150,4 +170,14 @@ fn test_add_different_rings() {
     let x = ring1.from(5);
     let y = ring2.from(5);
     let _ = x + y;
+}
+
+#[test]
+#[should_panic]
+fn test_sub_different_rings() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(200));
+    let x = ring1.from(5);
+    let y = ring2.from(5);
+    let _ = x - y;
 }
