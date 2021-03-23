@@ -4,14 +4,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## 0.3.0 - unreleased
 
-### The following functionality will get removed:
-* `IBig::is_positive`, `IBig::is_negative`. Just compare with 0 instead.
-* Shifts left and right by types other than `usize` and `&usize`.
+### Breaking changes
+* Removed deprecated `IBig::is_positive`, `IBig::is_negative`.
+  Just compare with `ibig!(0)` instead.
+* Shift left and right now only accepts `usize` for the number of bits, for consistency
+  with other bit addressing operations and exponents.
 
 ## 0.2.2 - unreleased
 
 ### Features
-* `to_f32`, `to_f64`. Round to nearest, breaking ties to even.
+* `ModuloRing`, modular addition and subtraction.
+* `to_f32`, `to_f64`. Round to nearest floating point number, breaking ties to even.
 * `From<bool>` for `IBig`.
 
 ## 0.2.1 - 2021-03-14
