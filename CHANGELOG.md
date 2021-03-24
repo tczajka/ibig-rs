@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## 0.3.0 - unreleased
 
 ### Breaking changes
+* Removed `prelude`.
+* Split into modules:
+  * Moved `InRadix` to `fmt`.
+  * Moved operator traits to `ops`.
+  * Moved errors to `error`.
+  * Moved distributions to `rand`.
 * Removed deprecated `IBig::is_positive`, `IBig::is_negative`.
   Just compare with `ibig!(0)` instead.
 * Shift left and right now only accepts `usize` for the number of bits, for consistency
