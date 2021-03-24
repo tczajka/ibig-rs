@@ -4,6 +4,7 @@ use crate::{
     arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
+    memory::MemoryAllocation,
     mul,
     primitive::extend_word,
     sign::Sign::{self, *},
@@ -174,9 +175,11 @@ impl UBig {
         let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
         buffer.push_zeros(lhs.len() + rhs.len());
 
-        let mut temp = mul::allocate_temp_mul_buffer(lhs.len().min(rhs.len()));
-        //        mul::multiply(&mut buffer, lhs, rhs, &mut temp);
-        mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut temp);
+        let mut allocation =
+            MemoryAllocation::new(mul::memory_requirement_exact(lhs.len().min(rhs.len())));
+        let mut memory = allocation.memory();
+        let overflow = mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut memory);
+        assert!(overflow == 0);
         buffer.into()
     }
 }

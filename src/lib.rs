@@ -72,6 +72,7 @@ mod fast_divide;
 mod fmt;
 mod ibig;
 mod math;
+mod memory;
 pub mod modular;
 mod mul;
 mod mul_ops;

@@ -3,11 +3,11 @@
 use crate::{
     add,
     arch::word::{SignedWord, Word},
+    memory::Memory,
     primitive::{double_word, extend_word, split_double_word},
-    sign::Sign::{self, *},
+    sign::Sign,
 };
-use alloc::vec;
-use alloc::vec::Vec;
+use alloc::alloc::Layout;
 use core::mem;
 use static_assertions::const_assert;
 
@@ -28,6 +28,7 @@ mod toom_3;
 /// Multiply a word sequence by a `Word` in place.
 ///
 /// Returns carry.
+#[must_use]
 pub(crate) fn mul_word_in_place(words: &mut [Word], rhs: Word) -> Word {
     mul_word_in_place_with_carry(words, rhs, 0)
 }
@@ -35,6 +36,7 @@ pub(crate) fn mul_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 /// Multiply a word sequence by a `Word` in place with carry in.
 ///
 /// Returns carry.
+#[must_use]
 pub(crate) fn mul_word_in_place_with_carry(words: &mut [Word], rhs: Word, mut carry: Word) -> Word {
     for a in words {
         // a * b + carry <= MAX * MAX + MAX < DoubleWord::MAX
@@ -49,6 +51,7 @@ pub(crate) fn mul_word_in_place_with_carry(words: &mut [Word], rhs: Word, mut ca
 /// words += mult * rhs
 ///
 /// Returns carry.
+#[must_use]
 fn add_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     assert!(words.len() == rhs.len());
     let mut carry: Word = 0;
@@ -66,6 +69,7 @@ fn add_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) 
 /// words += mult * rhs
 ///
 /// Returns carry.
+#[must_use]
 fn add_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     assert!(words.len() >= rhs.len());
     let n = rhs.len();
@@ -79,6 +83,7 @@ fn add_mul_word_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
 /// words -= mult * rhs
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs: &[Word]) -> Word {
     assert!(words.len() == rhs.len());
     // carry is in -Word::MAX..0
@@ -103,35 +108,34 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
 
 /// Temporary scratch space required for multiplication.
 ///
-/// n is the length of the smaller factor in words.
-pub(crate) fn allocate_temp_mul_buffer(n: usize) -> Vec<Word> {
-    let temp_len = if n <= MAX_LEN_SIMPLE {
-        0
+/// n bounds the length of the smaller factor in words.
+pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
+    if n <= MAX_LEN_SIMPLE {
+        Layout::from_size_align(0, 1).unwrap()
     } else if n <= MAX_LEN_KARATSUBA {
-        karatsuba::temp_buffer_len(n)
+        karatsuba::memory_requirement_up_to(n)
     } else {
-        toom_3::temp_buffer_len(n)
-    };
-
-    vec![0; temp_len]
+        toom_3::memory_requirement_up_to(n)
+    }
 }
 
-/// c = a * b
-fn multiply_same_len(c: &mut [Word], a: &[Word], b: &[Word], temp: &mut [Word]) {
-    c.fill(0);
-    let overflow = add_signed_mul_same_len(c, Positive, a, b, temp);
-    assert!(overflow == 0);
+/// Temporary scratch space required for multiplication.
+///
+/// n is the exact length of the smaller factor in words.
+pub(crate) fn memory_requirement_exact(n: usize) -> Layout {
+    memory_requirement_up_to(n)
 }
 
 /// c += sign * a * b
 ///
 /// Returns carry.
+#[must_use]
 pub(crate) fn add_signed_mul<'a>(
     c: &mut [Word],
     sign: Sign,
     mut a: &'a [Word],
     mut b: &'a [Word],
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> SignedWord {
     debug_assert!(c.len() == a.len() + b.len());
 
@@ -142,21 +146,22 @@ pub(crate) fn add_signed_mul<'a>(
     if b.len() <= MAX_LEN_SIMPLE {
         simple::add_signed_mul(c, sign, a, b)
     } else if b.len() <= MAX_LEN_KARATSUBA {
-        karatsuba::add_signed_mul(c, sign, a, b, temp)
+        karatsuba::add_signed_mul(c, sign, a, b, memory)
     } else {
-        toom_3::add_signed_mul(c, sign, a, b, temp)
+        toom_3::add_signed_mul(c, sign, a, b, memory)
     }
 }
 
 /// c += sign * a * b
 ///
 /// Returns carry.
+#[must_use]
 fn add_signed_mul_same_len(
     c: &mut [Word],
     sign: Sign,
     a: &[Word],
     b: &[Word],
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> SignedWord {
     let n = a.len();
     debug_assert!(b.len() == n && c.len() == 2 * n);
@@ -164,8 +169,8 @@ fn add_signed_mul_same_len(
     if n <= MAX_LEN_SIMPLE {
         simple::add_signed_mul_same_len(c, sign, a, b)
     } else if n <= MAX_LEN_KARATSUBA {
-        karatsuba::add_signed_mul_same_len(c, sign, a, b, temp)
+        karatsuba::add_signed_mul_same_len(c, sign, a, b, memory)
     } else {
-        toom_3::add_signed_mul_same_len(c, sign, a, b, temp)
+        toom_3::add_signed_mul_same_len(c, sign, a, b, memory)
     }
 }

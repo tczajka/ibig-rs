@@ -13,6 +13,7 @@ use core::cmp::Ordering::*;
 /// Add one to a word sequence.
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
     for word in words {
         let (a, overflow) = word.overflowing_add(1);
@@ -27,6 +28,7 @@ pub(crate) fn add_one_in_place(words: &mut [Word]) -> bool {
 /// Subtract one from a word sequence.
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_one_in_place(words: &mut [Word]) -> bool {
     for word in words {
         let (a, borrow) = word.overflowing_sub(1);
@@ -41,6 +43,7 @@ pub(crate) fn sub_one_in_place(words: &mut [Word]) -> bool {
 /// Add a word to a non-empty word sequence.
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
     let (word_0, words_hi) = words.split_first_mut().unwrap();
     let (a, overflow) = word_0.overflowing_add(rhs);
@@ -51,6 +54,7 @@ pub(crate) fn add_word_in_place(words: &mut [Word], rhs: Word) -> bool {
 /// Subtract a word from a non-empty word sequence.
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
     let (word_0, words_hi) = words.split_first_mut().unwrap();
     let (a, borrow) = word_0.overflowing_sub(rhs);
@@ -61,6 +65,7 @@ pub(crate) fn sub_word_in_place(words: &mut [Word], rhs: Word) -> bool {
 /// Add a word sequence of same length in place.
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(words.len() == rhs.len());
 
@@ -76,6 +81,7 @@ pub(crate) fn add_same_len_in_place(words: &mut [Word], rhs: &[Word]) -> bool {
 /// lhs -= rhs
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
@@ -90,6 +96,7 @@ pub(crate) fn sub_same_len_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
 /// lhs += rhs
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     let (lhs_lo, lhs_hi) = lhs.split_at_mut(rhs.len());
     let carry = add_same_len_in_place(lhs_lo, rhs);
@@ -99,6 +106,7 @@ pub(crate) fn add_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
 /// lhs -= rhs
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
     let (lhs_lo, lhs_hi) = lhs.split_at_mut(rhs.len());
     let borrow = sub_same_len_in_place(lhs_lo, rhs);
@@ -108,6 +116,7 @@ pub(crate) fn sub_in_place(lhs: &mut [Word], rhs: &[Word]) -> bool {
 /// rhs = lhs - rhs
 ///
 /// Returns borrow.
+#[must_use]
 pub(crate) fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool {
     debug_assert!(lhs.len() == rhs.len());
     let mut borrow = false;
@@ -120,6 +129,7 @@ pub(crate) fn sub_same_len_in_place_swap(lhs: &[Word], rhs: &mut [Word]) -> bool
 }
 
 /// (sign, lhs) = lhs - rhs
+#[must_use]
 pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
     assert!(lhs.len() >= rhs.len());
     let mut lhs_len = lhs.len();
@@ -174,6 +184,7 @@ pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
 /// Add a signed word to a non-empty word sequence.
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> SignedWord {
     if rhs == 0 || words.is_empty() {
         return rhs;
@@ -187,6 +198,7 @@ pub(crate) fn add_signed_word_in_place(words: &mut [Word], rhs: SignedWord) -> S
 /// words += sign * rhs
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_signed_same_len_in_place(
     words: &mut [Word],
     sign: Sign,
@@ -202,6 +214,7 @@ pub(crate) fn add_signed_same_len_in_place(
 /// words += sign * rhs
 ///
 /// Returns overflow.
+#[must_use]
 pub(crate) fn add_signed_in_place(words: &mut [Word], sign: Sign, rhs: &[Word]) -> SignedWord {
     debug_assert!(words.len() >= rhs.len());
     match sign {

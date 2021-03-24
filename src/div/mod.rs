@@ -29,6 +29,7 @@ pub(crate) fn normalize_large(words: &mut [Word]) -> (u32, FastDivideNormalized)
 /// rhs must be non-zero
 ///
 /// Returns words % rhs.
+#[must_use]
 pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
     debug_assert!(rhs != 0);
     if words.is_empty() {
@@ -47,6 +48,7 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
 /// words = words / rhs
 ///
 /// Returns words % rhs.
+#[must_use]
 pub(crate) fn fast_div_by_word_in_place(words: &mut [Word], fast_div_rhs: FastDivide) -> Word {
     let mut rem = shift::shl_in_place(words, fast_div_rhs.shift);
 
@@ -102,6 +104,7 @@ pub(crate) fn fast_rem_by_word(words: &[Word], fast_div_rhs: FastDivideNormalize
 /// lhs = [lhs / rhs, lhs % rhs]
 ///
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+#[must_use]
 pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],

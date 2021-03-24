@@ -18,6 +18,7 @@ use core::cmp::Ordering;
 /// lhs = [lhs / rhs, lhs % rhs]
 ///
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+#[must_use]
 pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],

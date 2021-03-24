@@ -4,9 +4,11 @@ use crate::{
     add,
     arch::word::{SignedWord, Word},
     math,
+    memory::Memory,
     mul::{self, helpers},
-    sign::Sign,
+    sign::Sign::{self, *},
 };
+use alloc::alloc::Layout;
 
 // We must have 3 * floor((n+1)/2) <= 2n.
 //
@@ -15,47 +17,52 @@ use crate::{
 /// Minimum supported length of the factors.
 pub(crate) const MIN_LEN: usize = 3;
 
-/// Temporary buffer length required for multiplication.
-/// n is the length of the smaller factor in words.
-pub(crate) fn temp_buffer_len(n: usize) -> usize {
-    // We prove by induction that f(n) <= 2n + 2 log_2 (n-1).
+/// Temporary memory required for multiplication.
+///
+/// n bounds the length of the smaller factor in words.
+pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
+    // We prove by induction that:
+    // f(n) <= 2n + 2 log_2 (n-1)
     //
-    // Base case: f(2) = 0.
+    // Base case: f(2) >= 0.
     // For n > 2:
-    // f(n) = 2ceil(n/2) + f(ceil(n/2))
-    //      <= n+1 + n+1 + 2log ((n+1)/2-1)
-    //       = 2n + 2log (n-1)
+    // f(n) = 2ceil(n/2) + f(ceil(n/2)) - Const
+    //      <= n+1 + n+1 + 2log ((n+1)/2-1) - Const
+    //       = 2n + 2log (n-1) - Const
     //
     // Use 2n + 2 ceil log_2 n.
-    2 * n + 2 * (math::ceil_log_2(n) as usize)
+    let num_words = 2 * n + 2 * (math::ceil_log_2(n) as usize);
+    Layout::array::<Word>(num_words).unwrap()
 }
 
 /// c += sign * a * b
 /// Karatsuba method: O(a.len() * b.len()^0.59).
 ///
 /// Returns carry.
+#[must_use]
 pub(crate) fn add_signed_mul(
     c: &mut [Word],
     sign: Sign,
     a: &[Word],
     b: &[Word],
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> SignedWord {
     debug_assert!(a.len() >= b.len() && b.len() >= MIN_LEN && c.len() == a.len() + b.len());
 
-    helpers::add_signed_mul_split_into_same_len(c, sign, a, b, temp, add_signed_mul_same_len)
+    helpers::add_signed_mul_split_into_same_len(c, sign, a, b, memory, add_signed_mul_same_len)
 }
 
 /// c += sign * a * b
 /// Karatsuba method: O(n^1.59).
 ///
 /// Returns carry.
+#[must_use]
 pub(crate) fn add_signed_mul_same_len(
     c: &mut [Word],
     sign: Sign,
     a: &[Word],
     b: &[Word],
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> SignedWord {
     let n = a.len();
     debug_assert!(b.len() == n && c.len() == 2 * n);
@@ -65,7 +72,6 @@ pub(crate) fn add_signed_mul_same_len(
 
     let (a_lo, a_hi) = a.split_at(mid);
     let (b_lo, b_hi) = b.split_at(mid);
-    let (my_temp, temp) = temp.split_at_mut(2 * mid);
     // Result = a_lo * b_lo + a_hi * b_hi * Word^(2mid)
     //        + (a_lo * b_lo + a_hi * b_hi - (a_lo-a_hi)*(b_lo-b_hi)) * Word^mid
     let mut carry: SignedWord = 0;
@@ -75,25 +81,26 @@ pub(crate) fn add_signed_mul_same_len(
     {
         // c_0 += a_lo * b_lo
         // c_1 += a_lo * b_lo
-        let c_lo = &mut my_temp[..];
-        mul::multiply_same_len(c_lo, a_lo, b_lo, temp);
+        let (c_lo, mut memory) = memory.allocate_slice_fill::<Word>(2 * mid, 0);
+        let overflow = mul::add_signed_mul_same_len(c_lo, Positive, a_lo, b_lo, &mut memory);
+        assert!(overflow == 0);
         carry_c0 += add::add_signed_same_len_in_place(&mut c[..2 * mid], sign, c_lo);
         carry_c1 += add::add_signed_same_len_in_place(&mut c[mid..3 * mid], sign, c_lo);
     }
     {
         // c_2 += a_hi * b_hi
         // c_1 += a_hi * b_hi
-        let c_hi = &mut my_temp[..2 * (n - mid)];
-        mul::multiply_same_len(c_hi, a_hi, b_hi, temp);
+        let (c_hi, mut memory) = memory.allocate_slice_fill::<Word>(2 * (n - mid), 0);
+        let overflow = mul::add_signed_mul_same_len(c_hi, Positive, a_hi, b_hi, &mut memory);
+        assert!(overflow == 0);
         carry += add::add_signed_same_len_in_place(&mut c[2 * mid..], sign, c_hi);
         carry_c1 += add::add_signed_in_place(&mut c[mid..3 * mid], sign, c_hi);
     }
     {
         // c1 -= (a_lo - a_hi) * (b_lo - b_hi)
-        let (a_diff, b_diff) = my_temp.split_at_mut(mid);
-        a_diff.copy_from_slice(a_lo);
+        let (a_diff, mut memory) = memory.allocate_slice_copy(a_lo);
         let mut diff_sign = add::sub_in_place_with_sign(a_diff, a_hi);
-        b_diff.copy_from_slice(b_lo);
+        let (b_diff, mut memory) = memory.allocate_slice_copy(b_lo);
         diff_sign *= add::sub_in_place_with_sign(b_diff, b_hi);
 
         carry_c1 += mul::add_signed_mul_same_len(
@@ -101,7 +108,7 @@ pub(crate) fn add_signed_mul_same_len(
             -sign * diff_sign,
             a_diff,
             b_diff,
-            temp,
+            &mut memory,
         );
     }
 

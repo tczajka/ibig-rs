@@ -5,6 +5,7 @@ use crate::{
     arch::word::{SignedWord, Word},
     div,
     fast_divide::FastDivideNormalized,
+    memory::{Memory, MemoryAllocation},
     mul,
     sign::Sign::*,
 };
@@ -18,6 +19,7 @@ use static_assertions::const_assert;
 /// lhs = [lhs / rhs, lhs % rhs]
 ///
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+#[must_use]
 pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],
@@ -27,30 +29,31 @@ pub(crate) fn div_rem_in_place(
 
     // We need space for multiplications summing up to rhs.len().
     // One of the factors will be at most floor(rhs.len()/2).
-    let mut temp = mul::allocate_temp_mul_buffer(rhs.len() / 2);
-
-    div_rem_in_place_any_len(lhs, rhs, fast_div_rhs_top, &mut temp)
+    let mut allocation = MemoryAllocation::new(mul::memory_requirement_up_to(rhs.len() / 2));
+    let mut memory = allocation.memory();
+    div_rem_in_place_any_len(lhs, rhs, fast_div_rhs_top, &mut memory)
 }
 
+#[must_use]
 fn div_rem_in_place_any_len(
     lhs: &mut [Word],
     rhs: &[Word],
     fast_div_rhs_top: FastDivideNormalized,
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> bool {
     let mut overflow = false;
     let n = rhs.len();
     let mut m = lhs.len();
     assert!(n > div::MAX_LEN_SIMPLE && m >= n);
     while m >= 2 * n {
-        let o = div_rem_in_place_same_len(&mut lhs[m - 2 * n..m], rhs, fast_div_rhs_top, temp);
+        let o = div_rem_in_place_same_len(&mut lhs[m - 2 * n..m], rhs, fast_div_rhs_top, memory);
         if o {
             assert!(m == lhs.len());
             overflow = true;
         }
         m -= n;
     }
-    let o = div_rem_in_place_small_quotient(&mut lhs[..m], rhs, fast_div_rhs_top, temp);
+    let o = div_rem_in_place_small_quotient(&mut lhs[..m], rhs, fast_div_rhs_top, memory);
     if o {
         assert!(m == lhs.len());
         overflow = true;
@@ -59,11 +62,12 @@ fn div_rem_in_place_any_len(
 }
 
 /// Quotient length = divisor length.
+#[must_use]
 fn div_rem_in_place_same_len(
     lhs: &mut [Word],
     rhs: &[Word],
     fast_div_rhs_top: FastDivideNormalized,
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> bool {
     let n = rhs.len();
     assert!(n > div::MAX_LEN_SIMPLE && lhs.len() == 2 * n);
@@ -72,12 +76,12 @@ fn div_rem_in_place_same_len(
     let n_lo = n / 2;
 
     // Divide lhs[n_lo..] by rhs, putting quotient in lhs[n+n_lo..] and remainder in lhs[n_lo..n+n_lo].
-    let overflow = div_rem_in_place_small_quotient(&mut lhs[n_lo..], rhs, fast_div_rhs_top, temp);
+    let overflow = div_rem_in_place_small_quotient(&mut lhs[n_lo..], rhs, fast_div_rhs_top, memory);
 
     // Divide lhs[..n+n_lo] by rhs, putting the rest of the quotient in lhs[n..n+n_lo] and remainder
     // in lhs[..n].
     let overflow_lo =
-        div_rem_in_place_small_quotient(&mut lhs[..n + n_lo], rhs, fast_div_rhs_top, temp);
+        div_rem_in_place_small_quotient(&mut lhs[..n + n_lo], rhs, fast_div_rhs_top, memory);
     assert!(!overflow_lo);
 
     overflow
@@ -92,11 +96,12 @@ fn div_rem_in_place_same_len(
 /// lhs = [lhs / rhs, lhs % rhs]
 ///
 /// Returns carry in the quotient. It is at most 1 because rhs is normalized.
+#[must_use]
 fn div_rem_in_place_small_quotient(
     lhs: &mut [Word],
     rhs: &[Word],
     fast_div_rhs_top: FastDivideNormalized,
-    temp: &mut [Word],
+    memory: &mut Memory,
 ) -> bool {
     let n = rhs.len();
     assert!(n >= 2 && lhs.len() >= n);
@@ -109,12 +114,13 @@ fn div_rem_in_place_small_quotient(
     // Quotient is in lhs[n..], remainder in lhs[..n].
     // This is 2m / m division.
     let mut q_overflow: SignedWord =
-        div_rem_in_place_same_len(&mut lhs[n - m..], &rhs[n - m..], fast_div_rhs_top, temp).into();
+        div_rem_in_place_same_len(&mut lhs[n - m..], &rhs[n - m..], fast_div_rhs_top, memory)
+            .into();
     let (rem, q) = lhs.split_at_mut(n);
 
     // Subtract q * (the rest of rhs) from rem.
     // The multiplication here is m words by * (n-m) words.
-    let mut rem_overflow: SignedWord = mul::add_signed_mul(rem, Negative, q, &rhs[..n - m], temp);
+    let mut rem_overflow: SignedWord = mul::add_signed_mul(rem, Negative, q, &rhs[..n - m], memory);
     if q_overflow != 0 {
         rem_overflow -= SignedWord::from(add::sub_same_len_in_place(&mut rem[m..], &rhs[..n - m]));
     }

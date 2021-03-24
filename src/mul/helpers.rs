@@ -3,6 +3,7 @@
 use crate::{
     add,
     arch::word::{SignedWord, Word},
+    memory::Memory,
     mul,
     sign::Sign,
 };
@@ -17,11 +18,11 @@ pub(crate) fn add_signed_mul_split_into_same_len<F>(
     sign: Sign,
     mut a: &[Word],
     b: &[Word],
-    temp: &mut [Word],
+    memory: &mut Memory,
     f_add_signed_mul_same_len: F,
 ) -> SignedWord
 where
-    F: Fn(&mut [Word], Sign, &[Word], &[Word], &mut [Word]) -> SignedWord,
+    F: Fn(&mut [Word], Sign, &[Word], &[Word], &mut Memory) -> SignedWord,
 {
     let mut carry: SignedWord = 0;
     let n = b.len();
@@ -30,12 +31,12 @@ where
         let (a_lo, a_hi) = a.split_at(n);
         // Propagate carry.
         carry_n = add::add_signed_word_in_place(&mut c[n..2 * n], carry_n);
-        carry_n += f_add_signed_mul_same_len(&mut c[..2 * n], sign, a_lo, b, temp);
+        carry_n += f_add_signed_mul_same_len(&mut c[..2 * n], sign, a_lo, b, memory);
         a = a_hi;
         c = &mut c[n..];
     }
     carry += add::add_signed_word_in_place(&mut c[n..], carry_n);
-    carry += mul::add_signed_mul(c, sign, b, a, temp);
+    carry += mul::add_signed_mul(c, sign, b, a, memory);
     debug_assert!(carry.abs() <= 1);
     carry
 }
