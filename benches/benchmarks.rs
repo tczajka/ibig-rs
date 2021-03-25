@@ -2,7 +2,7 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
-use ibig::prelude::*;
+use ibig::{modular::ModuloRing, prelude::*};
 use rand::prelude::*;
 use std::fmt::Write;
 
@@ -172,6 +172,25 @@ fn bench_pow(criterion: &mut Criterion) {
     group.finish();
 }
 
+fn bench_modulo_mul(criterion: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(1);
+    let mut group = criterion.benchmark_group("modulo_mul");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=6 {
+        let bits = 10usize.pow(log_bits);
+        let m = random_ubig(bits, &mut rng);
+        let ring = ModuloRing::new(&m);
+        let a = ring.from(&random_ubig(bits, &mut rng));
+        let b = ring.from(&random_ubig(bits, &mut rng));
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a) * black_box(&b))
+        });
+    }
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_add,
@@ -182,7 +201,8 @@ criterion_group!(
     bench_to_dec,
     bench_from_hex,
     bench_from_dec,
-    bench_pow
+    bench_pow,
+    bench_modulo_mul,
 );
 
 criterion_main!(benches);

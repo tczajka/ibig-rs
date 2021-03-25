@@ -4,7 +4,7 @@ use crate::{
     add,
     arch::word::{SignedWord, Word},
     div, math,
-    memory::Memory,
+    memory::{self, Memory},
     mul::{self, helpers},
     shift,
     sign::Sign::{self, *},
@@ -51,7 +51,7 @@ pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
     // Note: the recurence also works when we transition to Karatsuba, because
     // Karatsuba memory requirements are smaller.
     let num_words = 4 * n + 13 * (math::ceil_log_2(n) as usize);
-    Layout::array::<Word>(num_words).unwrap()
+    memory::array_layout::<Word>(num_words)
 }
 
 /// c += sign * a * b

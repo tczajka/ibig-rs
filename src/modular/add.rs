@@ -216,8 +216,8 @@ impl<'a> ModuloLarge<'a> {
     fn add_in_place(&mut self, rhs: &ModuloLarge<'a>) {
         self.check_same_ring(rhs);
         let rhs_words = rhs.normalized_value();
-        let modulus = rhs.ring().normalized_modulus();
-        self.modify_normalized_value(|words, _| {
+        self.modify_normalized_value(|words, ring| {
+            let modulus = ring.normalized_modulus();
             let overflow = add::add_same_len_in_place(words, rhs_words);
             if overflow || cmp::cmp_same_len(words, modulus) >= Ordering::Equal {
                 let overflow2 = add::sub_same_len_in_place(words, modulus);
@@ -230,8 +230,8 @@ impl<'a> ModuloLarge<'a> {
     fn sub_in_place(&mut self, rhs: &ModuloLarge<'a>) {
         self.check_same_ring(rhs);
         let rhs_words = rhs.normalized_value();
-        let modulus = rhs.ring().normalized_modulus();
-        self.modify_normalized_value(|words, _| {
+        self.modify_normalized_value(|words, ring| {
+            let modulus = ring.normalized_modulus();
             let overflow = add::sub_same_len_in_place(words, rhs_words);
             if overflow {
                 let overflow2 = add::add_same_len_in_place(words, modulus);
@@ -244,8 +244,8 @@ impl<'a> ModuloLarge<'a> {
     fn sub_in_place_swap(&self, rhs: &mut ModuloLarge<'a>) {
         self.check_same_ring(rhs);
         let words = self.normalized_value();
-        let modulus = self.ring().normalized_modulus();
-        rhs.modify_normalized_value(|rhs_words, _| {
+        rhs.modify_normalized_value(|rhs_words, ring| {
+            let modulus = ring.normalized_modulus();
             let overflow = add::sub_same_len_in_place_swap(words, rhs_words);
             if overflow {
                 let overflow2 = add::add_same_len_in_place(rhs_words, modulus);

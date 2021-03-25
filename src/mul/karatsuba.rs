@@ -4,7 +4,7 @@ use crate::{
     add,
     arch::word::{SignedWord, Word},
     math,
-    memory::Memory,
+    memory::{self, Memory},
     mul::{self, helpers},
     sign::Sign::{self, *},
 };
@@ -32,7 +32,7 @@ pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
     //
     // Use 2n + 2 ceil log_2 n.
     let num_words = 2 * n + 2 * (math::ceil_log_2(n) as usize);
-    Layout::array::<Word>(num_words).unwrap()
+    memory::array_layout::<Word>(num_words)
 }
 
 /// c += sign * a * b

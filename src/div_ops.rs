@@ -5,6 +5,7 @@ use crate::{
     buffer::Buffer,
     div,
     ibig::IBig,
+    memory::MemoryAllocation,
     shift,
     sign::{Abs, Sign::*},
     ubig::{Repr::*, UBig},
@@ -829,27 +830,14 @@ impl UBig {
 
     /// `lhs / rhs`
     fn div_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
-        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
-        if lhs_carry != 0 {
-            lhs.push_may_reallocate(lhs_carry);
-        }
-        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
-        if overflow {
-            lhs.push_may_reallocate(1);
-        }
+        let _shift = UBig::div_rem_in_lhs(&mut lhs, &mut rhs);
         lhs.erase_front(rhs.len());
         lhs.into()
     }
 
     /// `lhs % rhs`
     fn rem_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
-        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
-        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
-        if lhs_carry != 0 {
-            lhs.push_may_reallocate(lhs_carry);
-        }
-        let _overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
+        let shift = UBig::div_rem_in_lhs(&mut lhs, &mut rhs);
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
         let low_bits = shift::shr_in_place(&mut rhs, shift);
@@ -859,21 +847,32 @@ impl UBig {
 
     /// `(lhs / rhs, lhs % rhs)`
     fn div_rem_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, UBig) {
-        let (shift, fast_div_rhs_top) = div::normalize_large(&mut rhs);
-        let lhs_carry = shift::shl_in_place(&mut lhs, shift);
-        if lhs_carry != 0 {
-            lhs.push_may_reallocate(lhs_carry);
-        }
-        let overflow = div::div_rem_in_place(&mut lhs, &rhs, fast_div_rhs_top);
-        if overflow {
-            lhs.push_may_reallocate(1);
-        }
+        let shift = UBig::div_rem_in_lhs(&mut lhs, &mut rhs);
         let n = rhs.len();
         rhs.copy_from_slice(&lhs[..n]);
         let low_bits = shift::shr_in_place(&mut rhs, shift);
         debug_assert!(low_bits == 0);
         lhs.erase_front(n);
         (lhs.into(), rhs.into())
+    }
+
+    /// lhs = (lhs / rhs, lhs % rhs)
+    ///
+    /// Returns shift.
+    fn div_rem_in_lhs(lhs: &mut Buffer, rhs: &mut Buffer) -> u32 {
+        let (shift, fast_div_rhs_top) = div::normalize_large(rhs);
+        let lhs_carry = shift::shl_in_place(lhs, shift);
+        if lhs_carry != 0 {
+            lhs.push_may_reallocate(lhs_carry);
+        }
+        let mut allocation =
+            MemoryAllocation::new(div::memory_requirement_exact(lhs.len(), rhs.len()));
+        let mut memory = allocation.memory();
+        let overflow = div::div_rem_in_place(lhs, rhs, fast_div_rhs_top, &mut memory);
+        if overflow {
+            lhs.push_may_reallocate(1);
+        }
+        shift
     }
 }
 

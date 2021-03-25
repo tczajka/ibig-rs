@@ -5,11 +5,23 @@ use crate::{
     arch::word::{SignedWord, Word},
     div,
     fast_divide::FastDivideNormalized,
-    memory::{Memory, MemoryAllocation},
+    memory::Memory,
     mul,
     sign::Sign::*,
 };
+use alloc::alloc::Layout;
 use static_assertions::const_assert;
+
+/// Memory requirement for division.
+pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout {
+    assert!(lhs_len >= rhs_len);
+    // We need space for multiplications summing up to rhs.len(),
+    // and at most lhs_len - rhs_len long.
+    // One of the factors will be at most floor(rhs.len()/2),
+    // and one of the factors will be at most lhs_len - rhs_len long.
+    let n = (rhs_len / 2).min(lhs_len - rhs_len);
+    mul::memory_requirement_up_to(n)
+}
 
 /// Division in place using divide and conquer.
 ///
@@ -24,23 +36,10 @@ pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],
     fast_div_rhs_top: FastDivideNormalized,
+    memory: &mut Memory,
 ) -> bool {
     assert!(rhs.len() > div::MAX_LEN_SIMPLE);
 
-    // We need space for multiplications summing up to rhs.len().
-    // One of the factors will be at most floor(rhs.len()/2).
-    let mut allocation = MemoryAllocation::new(mul::memory_requirement_up_to(rhs.len() / 2));
-    let mut memory = allocation.memory();
-    div_rem_in_place_any_len(lhs, rhs, fast_div_rhs_top, &mut memory)
-}
-
-#[must_use]
-fn div_rem_in_place_any_len(
-    lhs: &mut [Word],
-    rhs: &[Word],
-    fast_div_rhs_top: FastDivideNormalized,
-    memory: &mut Memory,
-) -> bool {
     let mut overflow = false;
     let n = rhs.len();
     let mut m = lhs.len();

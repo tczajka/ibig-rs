@@ -3,9 +3,11 @@
 use crate::{
     arch::word::Word,
     fast_divide::FastDivideNormalized,
+    memory::{self, Memory},
     primitive::{double_word, extend_word},
     shift,
 };
+use alloc::alloc::Layout;
 
 mod divide_conquer;
 mod simple;
@@ -106,6 +108,16 @@ pub(crate) fn fast_rem_by_normalized_word(
     rem
 }
 
+/// Memory requirement for division.
+pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout {
+    assert!(lhs_len >= rhs_len && rhs_len >= 2);
+    if rhs_len <= MAX_LEN_SIMPLE || lhs_len - rhs_len <= MAX_LEN_SIMPLE {
+        memory::zero_layout()
+    } else {
+        divide_conquer::memory_requirement_exact(lhs_len, rhs_len)
+    }
+}
+
 /// Divide lhs by rhs, replacing the top words of lhs by the quotient and the
 /// bottom words of lhs by the remainder.
 ///
@@ -119,13 +131,14 @@ pub(crate) fn div_rem_in_place(
     lhs: &mut [Word],
     rhs: &[Word],
     fast_div_rhs_top: FastDivideNormalized,
+    memory: &mut Memory,
 ) -> bool {
     assert!(lhs.len() >= rhs.len() && rhs.len() >= 2);
 
     if rhs.len() <= MAX_LEN_SIMPLE || lhs.len() - rhs.len() <= MAX_LEN_SIMPLE {
         simple::div_rem_in_place(lhs, rhs, fast_div_rhs_top)
     } else {
-        divide_conquer::div_rem_in_place(lhs, rhs, fast_div_rhs_top)
+        divide_conquer::div_rem_in_place(lhs, rhs, fast_div_rhs_top, memory)
     }
 }
 

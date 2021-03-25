@@ -163,7 +163,25 @@ impl Memory<'_> {
     }
 }
 
-fn panic_out_of_memory() -> ! {
+pub(crate) fn zero_layout() -> Layout {
+    Layout::from_size_align(0, 1).unwrap()
+}
+
+pub(crate) fn array_layout<T>(n: usize) -> Layout {
+    Layout::array::<T>(n).unwrap_or_else(|_| panic_out_of_memory())
+}
+
+pub(crate) fn add_layout(a: Layout, b: Layout) -> Layout {
+    let (layout, _padding) = a.extend(b).unwrap_or_else(|_| panic_out_of_memory());
+    layout
+}
+
+pub(crate) fn max_layout(a: Layout, b: Layout) -> Layout {
+    Layout::from_size_align(a.size().max(b.size()), a.align().max(b.align()))
+        .unwrap_or_else(|_| panic_out_of_memory())
+}
+
+pub fn panic_out_of_memory() -> ! {
     panic!("out of memory")
 }
 
@@ -202,5 +220,25 @@ mod tests {
         let (a, mut new_memory) = memory.allocate_slice_fill::<u32>(1, 3);
         assert_eq!(a, &[3]);
         let _ = new_memory.allocate_slice_fill::<u32>(2, 4);
+    }
+
+    #[test]
+    fn test_add_layout() {
+        let layout = add_layout(
+            Layout::from_size_align(1, 1).unwrap(),
+            Layout::from_size_align(8, 4).unwrap(),
+        );
+        assert_eq!(layout.size(), 12);
+        assert_eq!(layout.align(), 4);
+    }
+
+    #[test]
+    fn test_max_layout() {
+        let layout = max_layout(
+            Layout::from_size_align(100, 1).unwrap(),
+            Layout::from_size_align(8, 4).unwrap(),
+        );
+        assert_eq!(layout.size(), 100);
+        assert_eq!(layout.align(), 4);
     }
 }

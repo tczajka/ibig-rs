@@ -3,7 +3,7 @@
 use crate::{
     add,
     arch::word::{SignedWord, Word},
-    memory::Memory,
+    memory::{self, Memory},
     primitive::{double_word, extend_word, split_double_word},
     sign::Sign,
 };
@@ -111,7 +111,7 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
 /// n bounds the length of the smaller factor in words.
 pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
     if n <= MAX_LEN_SIMPLE {
-        Layout::from_size_align(0, 1).unwrap()
+        memory::zero_layout()
     } else if n <= MAX_LEN_KARATSUBA {
         karatsuba::memory_requirement_up_to(n)
     } else {
@@ -156,7 +156,7 @@ pub(crate) fn add_signed_mul<'a>(
 ///
 /// Returns carry.
 #[must_use]
-fn add_signed_mul_same_len(
+pub(crate) fn add_signed_mul_same_len(
     c: &mut [Word],
     sign: Sign,
     a: &[Word],

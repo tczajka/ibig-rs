@@ -5,6 +5,7 @@ use crate::{
     buffer::Buffer,
     div,
     ibig::IBig,
+    memory::MemoryAllocation,
     modular::{
         modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
         modulo_ring::{ModuloRing, ModuloRingLarge, ModuloRingRepr, ModuloRingSmall},
@@ -172,8 +173,17 @@ impl<'a> ModuloLarge<'a> {
                 if words.len() < modulus.len() {
                     vec.extend(&*words);
                 } else {
-                    let _overflow =
-                        div::div_rem_in_place(&mut words, modulus, *ring.fast_div_top());
+                    let mut allocation = MemoryAllocation::new(div::memory_requirement_exact(
+                        words.len(),
+                        modulus.len(),
+                    ));
+                    let mut memory = allocation.memory();
+                    let _overflow = div::div_rem_in_place(
+                        &mut words,
+                        modulus,
+                        *ring.fast_div_top(),
+                        &mut memory,
+                    );
                     vec.extend(&words[..modulus.len()]);
                 }
             }

@@ -163,6 +163,45 @@ fn test_add_sub() {
 }
 
 #[test]
+fn test_mul() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
+    let big = ubig!(10).pow(100000);
+    let ring3 = ModuloRing::new(&big);
+    let test_cases = [
+        (ring1.from(23), ring1.from(96), ring1.from(8)),
+        (
+            ring2.from(ubig!(_46301564276035228370597101114)),
+            ring2.from(ubig!(_170100953649249045221461413048)),
+            ring2.from(ubig!(_399394418012748758198974935472)),
+        ),
+        (
+            ring3.from(&big - ubig!(1)),
+            ring3.from(&big - ubig!(1)),
+            ring3.from(1),
+        ),
+    ];
+
+    let all_test_cases = test_cases
+        .iter()
+        .map(|(a, b, c)| (a, b, c))
+        .chain(test_cases.iter().map(|(a, b, c)| (b, a, c)));
+
+    for (a, b, c) in all_test_cases {
+        assert_eq!(a * b, *c);
+        assert_eq!(a.clone() * b, *c);
+        assert_eq!(a * b.clone(), *c);
+        assert_eq!(a.clone() * b.clone(), *c);
+        let mut x = a.clone();
+        x *= b;
+        assert_eq!(x, *c);
+        let mut x = a.clone();
+        x *= b.clone();
+        assert_eq!(x, *c);
+    }
+}
+
+#[test]
 #[should_panic]
 fn test_add_different_rings() {
     let ring1 = ModuloRing::new(&ubig!(100));
