@@ -9,12 +9,13 @@ A big integer library with good performance.
 The library implements efficient large integer arithmetic in pure Rust.
 
 The two integer types are `UBig` (for unsigned integers) and `IBig` (for signed integers).
-Modular arithmetic is also supported by the module `modular`.
 
-## Example
+Modular arithmetic is supported by the module `modular`.
+
+## Examples
 
 ```rust
-use ibig::prelude::*;
+use ibig::{modular::ModuloRing, prelude::*};
 
 let a = ubig!(12345678);
 let b = ubig!(0x10ff);
@@ -30,6 +31,11 @@ assert_eq!(
     format!("hello {:#x}", d % ubig!(0xabcd1234134132451345)),
     "hello 0x1a7e7c487267d2658a93"
 );
+
+let ring = ModuloRing::new(&ubig!(10000));
+let x = ring.from(12345);
+let y = ring.from(55443);
+assert_eq!(format!("{}", x - y), "6902 (mod 10000)");
 ```
 
 ## Benchmarks

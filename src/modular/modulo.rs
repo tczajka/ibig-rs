@@ -12,9 +12,10 @@ use alloc::vec::Vec;
 ///
 /// ```
 /// # use ibig::{prelude::*, modular::ModuloRing};
-/// let ring = ModuloRing::new(&ubig!(100));
-/// let x = ring.from(-1234);
-/// assert_eq!(x.residue(), ubig!(66));
+/// let ring = ModuloRing::new(&ubig!(10000));
+/// let x = ring.from(12345);
+/// let y = ring.from(55443);
+/// assert_eq!((x - y).residue(), ubig!(6902));
 /// ```
 pub struct Modulo<'a>(ModuloRepr<'a>);
 
