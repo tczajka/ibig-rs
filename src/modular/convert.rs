@@ -51,13 +51,13 @@ impl ModuloRing {
 }
 
 impl ModuloRingSmall {
-    fn modulus(&self) -> Word {
+    pub(crate) fn modulus(&self) -> Word {
         self.normalized_modulus() >> self.shift()
     }
 }
 
 impl ModuloRingLarge {
-    fn modulus(&self) -> UBig {
+    pub(crate) fn modulus(&self) -> UBig {
         let normalized_modulus = self.normalized_modulus();
         let mut buffer = Buffer::allocate(normalized_modulus.len());
         buffer.extend(normalized_modulus);
@@ -87,13 +87,13 @@ impl Modulo<'_> {
 }
 
 impl ModuloSmall<'_> {
-    fn residue(&self) -> Word {
+    pub(crate) fn residue(&self) -> Word {
         self.normalized_value() >> self.ring().shift()
     }
 }
 
 impl ModuloLarge<'_> {
-    fn residue(&self) -> UBig {
+    pub(crate) fn residue(&self) -> UBig {
         let words = self.normalized_value();
         let mut buffer = Buffer::allocate(words.len());
         buffer.extend(words);
