@@ -5,4 +5,4 @@ export RUSTDOCFLAGS="-Cpanic=abort"
 cargo clean
 cargo +nightly build
 cargo +nightly test
-grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o coverage
+grcov . -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o target/coverage
