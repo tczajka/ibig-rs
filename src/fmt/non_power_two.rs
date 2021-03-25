@@ -104,6 +104,7 @@ impl PreparedMedium {
         while buffer_len > 1 {
             let rem = div::fast_div_by_word_in_place(
                 &mut buffer[..buffer_len],
+                radix_info.range_per_word,
                 radix_info.fast_div_range_per_word,
             );
             low_groups[num_low_groups] = rem;
@@ -230,6 +231,7 @@ impl PreparedLarge {
         for group in groups.iter_mut() {
             *group = div::fast_div_by_word_in_place(
                 &mut buffer[..buffer_len],
+                radix_info.range_per_word,
                 radix_info.fast_div_range_per_word,
             );
             while buffer_len != 0 && buffer[buffer_len - 1] == 0 {

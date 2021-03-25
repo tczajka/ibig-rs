@@ -3,7 +3,7 @@
 use crate::{
     arch::word::Word,
     cmp, div,
-    fast_divide::{FastDivide, FastDivideNormalized},
+    fast_divide::FastDivideNormalized,
     math,
     ubig::{Repr, UBig},
 };
@@ -72,11 +72,14 @@ impl ModuloRing {
 impl ModuloRingSmall {
     /// Create a new small ring of integers modulo `n`.
     fn new(n: Word) -> ModuloRingSmall {
-        let fast_div = FastDivide::new(n);
+        debug_assert!(n != 0);
+        let shift = n.leading_zeros();
+        let normalized_modulus = n << shift;
+        let fast_div = FastDivideNormalized::new(normalized_modulus);
         ModuloRingSmall {
-            normalized_modulus: n << fast_div.shift,
-            shift: fast_div.shift,
-            fast_div: fast_div.normalized,
+            normalized_modulus,
+            shift,
+            fast_div,
         }
     }
 

@@ -2,7 +2,7 @@
 
 use crate::{
     arch::word::Word,
-    fast_divide::{FastDivide, FastDivideNormalized},
+    fast_divide::FastDivideNormalized,
     primitive::{double_word, extend_word},
     shift,
 };
@@ -41,24 +41,29 @@ pub(crate) fn div_by_word_in_place(words: &mut [Word], rhs: Word) -> Word {
         return rem;
     }
 
-    let fast_div_rhs = FastDivide::new(rhs);
-    fast_div_by_word_in_place(words, fast_div_rhs)
+    let fast_div_rhs = FastDivideNormalized::new(rhs << rhs.leading_zeros());
+    fast_div_by_word_in_place(words, rhs, fast_div_rhs)
 }
 
 /// words = words / rhs
 ///
 /// Returns words % rhs.
 #[must_use]
-pub(crate) fn fast_div_by_word_in_place(words: &mut [Word], fast_div_rhs: FastDivide) -> Word {
-    let mut rem = shift::shl_in_place(words, fast_div_rhs.shift);
+pub(crate) fn fast_div_by_word_in_place(
+    words: &mut [Word],
+    rhs: Word,
+    fast_div_rhs: FastDivideNormalized,
+) -> Word {
+    let shift = rhs.leading_zeros();
+    let mut rem = shift::shl_in_place(words, shift);
 
     for word in words.iter_mut().rev() {
         let a = double_word(*word, rem);
-        let (q, r) = fast_div_rhs.normalized.div_rem(a);
+        let (q, r) = fast_div_rhs.div_rem(a);
         *word = q;
         rem = r;
     }
-    rem >> fast_div_rhs.shift
+    rem >> shift
 }
 
 /// words % rhs
@@ -71,15 +76,19 @@ pub(crate) fn rem_by_word(words: &[Word], rhs: Word) -> Word {
         return words[0] & (rhs - 1);
     }
 
-    let fast_div_rhs = FastDivide::new(rhs);
-    let rem = fast_rem_by_word(words, fast_div_rhs.normalized);
-    let a = extend_word(rem) << fast_div_rhs.shift;
-    let (_, rem) = fast_div_rhs.normalized.div_rem(a);
-    rem >> fast_div_rhs.shift
+    let shift = rhs.leading_zeros();
+    let fast_div_rhs = FastDivideNormalized::new(rhs << shift);
+    let rem = fast_rem_by_normalized_word(words, fast_div_rhs);
+    let a = extend_word(rem) << shift;
+    let (_, rem) = fast_div_rhs.div_rem(a);
+    rem >> shift
 }
 
 /// words % rhs
-pub(crate) fn fast_rem_by_word(words: &[Word], fast_div_rhs: FastDivideNormalized) -> Word {
+pub(crate) fn fast_rem_by_normalized_word(
+    words: &[Word],
+    fast_div_rhs: FastDivideNormalized,
+) -> Word {
     let mut iter = words.iter().rev();
 
     let mut rem: Word = 0;
@@ -93,6 +102,7 @@ pub(crate) fn fast_rem_by_word(words: &[Word], fast_div_rhs: FastDivideNormalize
         let (_, r) = fast_div_rhs.div_rem(a);
         rem = r;
     }
+
     rem
 }
 

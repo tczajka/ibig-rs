@@ -153,7 +153,7 @@ impl<'a> ModuloSmall<'a> {
     fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
         let rem = match x.repr() {
             Repr::Small(word) => ring.fast_div().div_rem_word(*word).1,
-            Repr::Large(words) => div::fast_rem_by_word(words, *ring.fast_div()),
+            Repr::Large(words) => div::fast_rem_by_normalized_word(words, *ring.fast_div()),
         };
         // Effectively shifts x left by ring.shift().
         let (_, rem) = ring.fast_div().div_rem(extend_word(rem) << ring.shift());

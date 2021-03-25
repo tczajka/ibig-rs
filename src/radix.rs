@@ -2,7 +2,7 @@
 
 use crate::{
     arch::word::Word,
-    fast_divide::{FastDivide, FastDivideSmall},
+    fast_divide::{FastDivideNormalized, FastDivideSmall},
     primitive::WORD_BITS,
 };
 use static_assertions::const_assert;
@@ -67,9 +67,9 @@ pub(crate) struct RadixInfo {
     /// Faster division by `radix`.
     pub(crate) fast_div_radix: FastDivideSmall,
 
-    /// Faster division by range_per_word.
+    /// Faster division by normalized range_per_word.
     /// Only for non-power-of-2 radixes.
-    pub(crate) fast_div_range_per_word: FastDivide,
+    pub(crate) fast_div_range_per_word: FastDivideNormalized,
 }
 
 /// RadixInfo for a given radix.
@@ -86,7 +86,7 @@ impl RadixInfo {
                 digits_per_word: (WORD_BITS / radix.trailing_zeros()) as usize,
                 range_per_word: 0,
                 fast_div_radix,
-                fast_div_range_per_word: FastDivide::dummy(),
+                fast_div_range_per_word: FastDivideNormalized::dummy(),
             }
         } else {
             let mut info = RadixInfo::for_radix_recursive(
@@ -95,10 +95,11 @@ impl RadixInfo {
                     digits_per_word: 0,
                     range_per_word: 1,
                     fast_div_radix,
-                    fast_div_range_per_word: FastDivide::dummy(),
+                    fast_div_range_per_word: FastDivideNormalized::dummy(),
                 },
             );
-            info.fast_div_range_per_word = FastDivide::new(info.range_per_word);
+            let shift = info.range_per_word.leading_zeros();
+            info.fast_div_range_per_word = FastDivideNormalized::new(info.range_per_word << shift);
             info
         }
     }
@@ -125,7 +126,7 @@ static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
         digits_per_word: 0,
         range_per_word: 0,
         fast_div_radix: FastDivideSmall::dummy(),
-        fast_div_range_per_word: FastDivide::dummy(),
+        fast_div_range_per_word: FastDivideNormalized::dummy(),
     }; MAX_RADIX as usize + 1],
     2,
 );

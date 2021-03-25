@@ -199,32 +199,6 @@ impl FastDivideNormalized {
     }
 }
 
-/// Fast repeated division by a given Word.
-#[derive(Clone, Copy)]
-pub(crate) struct FastDivide {
-    pub(crate) normalized: FastDivideNormalized,
-    pub(crate) shift: u32,
-}
-
-impl FastDivide {
-    /// Initialize from a given divisor.
-    pub(crate) const fn new(divisor: Word) -> Self {
-        let shift = divisor.leading_zeros();
-
-        FastDivide {
-            normalized: FastDivideNormalized::new(divisor << shift),
-            shift,
-        }
-    }
-
-    pub(crate) const fn dummy() -> Self {
-        FastDivide {
-            normalized: FastDivideNormalized::dummy(),
-            shift: 0,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
