@@ -151,7 +151,7 @@ impl IntoModulo for &IBig {
 }
 
 impl<'a> ModuloSmall<'a> {
-    fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
+    pub(crate) fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
         let rem = match x.repr() {
             Repr::Small(word) => ring.fast_div().div_rem_word(*word).1,
             Repr::Large(words) => div::fast_rem_by_normalized_word(words, *ring.fast_div()),
@@ -163,7 +163,7 @@ impl<'a> ModuloSmall<'a> {
 }
 
 impl<'a> ModuloLarge<'a> {
-    fn from_ubig(mut x: UBig, ring: &'a ModuloRingLarge) -> ModuloLarge<'a> {
+    pub(crate) fn from_ubig(mut x: UBig, ring: &'a ModuloRingLarge) -> ModuloLarge<'a> {
         x <<= ring.shift();
         let modulus = ring.normalized_modulus();
         let mut vec = Vec::with_capacity(modulus.len());

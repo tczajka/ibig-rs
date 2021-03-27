@@ -191,6 +191,27 @@ fn bench_modulo_mul(criterion: &mut Criterion) {
     group.finish();
 }
 
+fn bench_modulo_pow(criterion: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(1);
+    let mut group = criterion.benchmark_group("modulo_pow");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=4 {
+        if log_bits == 4 {
+            group.sample_size(10);
+        }
+        let bits = 10usize.pow(log_bits);
+        let m = random_ubig(bits, &mut rng);
+        let ring = ModuloRing::new(&m);
+        let a = ring.from(&random_ubig(bits, &mut rng));
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a).pow(&b))
+        });
+    }
+
+    group.finish();
+}
 criterion_group!(
     benches,
     bench_add,
@@ -203,6 +224,7 @@ criterion_group!(
     bench_from_dec,
     bench_pow,
     bench_modulo_mul,
+    bench_modulo_pow,
 );
 
 criterion_main!(benches);

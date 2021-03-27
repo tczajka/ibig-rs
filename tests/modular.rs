@@ -222,6 +222,31 @@ fn test_sub_different_rings() {
 }
 
 #[test]
+fn test_pow() {
+    let ring = ModuloRing::new(&ubig!(100));
+    assert_eq!(ring.from(0).pow(&ubig!(0)), ring.from(1));
+    assert_eq!(ring.from(13).pow(&ubig!(0)), ring.from(1));
+    assert_eq!(ring.from(13).pow(&ubig!(1)), ring.from(13));
+    assert_eq!(ring.from(13).pow(&ubig!(2)), ring.from(69));
+    assert_eq!(ring.from(13).pow(&ubig!(12837918273)), ring.from(53));
+
+    let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
+    let x = ring.from(ubig!(_658571505947767552546868380533));
+    assert_eq!(x.pow(&ubig!(0)), ring.from(1));
+    assert_eq!(x.pow(&ubig!(1)), x);
+    assert_eq!(
+        x.pow(&ubig!(_794990856522773482558337459018)),
+        ring.from(ubig!(_660533815789733011052086421209))
+    );
+
+    // A Mersenne prime.
+    let prime = ubig!(2).pow(4423) - ubig!(1);
+    let ring = ModuloRing::new(&prime);
+    // Fermat theorem: a^(p-1) = 1
+    assert_eq!(ring.from(13).pow(&(prime - ubig!(1))), ring.from(1));
+}
+
+#[test]
 fn test_format() {
     let ring = ModuloRing::new(&ubig!(100));
     let x = ring.from(105);
