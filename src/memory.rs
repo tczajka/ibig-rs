@@ -181,7 +181,7 @@ pub(crate) fn max_layout(a: Layout, b: Layout) -> Layout {
         .unwrap_or_else(|_| panic_out_of_memory())
 }
 
-pub fn panic_out_of_memory() -> ! {
+pub(crate) fn panic_out_of_memory() -> ! {
     panic!("out of memory")
 }
 

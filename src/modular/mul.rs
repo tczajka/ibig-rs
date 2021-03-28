@@ -103,47 +103,49 @@ impl ModuloRingLarge {
             ),
         )
     }
+
+    /// Returns a * b allocated in memory.
+    pub(crate) fn mul_normalized_values<'a>(
+        &self,
+        a: &[Word],
+        b: &[Word],
+        memory: &'a mut Memory,
+    ) -> &'a [Word] {
+        let modulus = self.normalized_modulus();
+        let n = modulus.len();
+        debug_assert!(a.len() == n && b.len() == n);
+
+        let (product, mut memory) = memory.allocate_slice_fill::<Word>(2 * n, 0);
+        let overflow = mul::add_signed_mul_same_len(product, Positive, a, b, &mut memory);
+        assert_eq!(overflow, 0);
+        shift::shr_in_place(product, self.shift());
+
+        let _overflow = div::div_rem_in_place(product, modulus, *self.fast_div_top(), &mut memory);
+        &product[..n]
+    }
 }
 
 impl<'a> ModuloLarge<'a> {
     /// self *= rhs
     pub(crate) fn mul_in_place(&mut self, rhs: &ModuloLarge<'a>, memory: &mut Memory) {
-        self.modify_normalized_value(|words, ring| {
-            let modulus = ring.normalized_modulus();
-            let n = modulus.len();
-
-            shift::shr_in_place(words, ring.shift());
-            let (product, mut memory) = memory.allocate_slice_fill::<Word>(2 * n, 0);
-            let overflow = mul::add_signed_mul_same_len(
-                product,
-                Positive,
-                words,
-                rhs.normalized_value(),
-                &mut memory,
-            );
-            assert_eq!(overflow, 0);
-
-            let _overflow =
-                div::div_rem_in_place(product, modulus, *ring.fast_div_top(), &mut memory);
-            words.copy_from_slice(&product[..n]);
-        });
+        self.mul_normalized_value_in_place(rhs.normalized_value(), memory);
     }
 
     /// self *= self
     pub(crate) fn square_in_place(&mut self, memory: &mut Memory) {
         self.modify_normalized_value(|words, ring| {
-            let modulus = ring.normalized_modulus();
-            let n = modulus.len();
+            words.copy_from_slice(ring.mul_normalized_values(words, words, memory));
+        });
+    }
 
-            let (product, mut memory) = memory.allocate_slice_fill::<Word>(2 * n, 0);
-            let overflow =
-                mul::add_signed_mul_same_len(product, Positive, words, words, &mut memory);
-            assert_eq!(overflow, 0);
-            shift::shr_in_place(product, ring.shift());
-
-            let _overflow =
-                div::div_rem_in_place(product, modulus, *ring.fast_div_top(), &mut memory);
-            words.copy_from_slice(&product[..n]);
+    /// self *= rhs
+    pub(crate) fn mul_normalized_value_in_place(
+        &mut self,
+        normalized_value: &[Word],
+        memory: &mut Memory,
+    ) {
+        self.modify_normalized_value(|words, ring| {
+            words.copy_from_slice(ring.mul_normalized_values(words, normalized_value, memory));
         });
     }
 }
