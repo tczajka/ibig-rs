@@ -9,14 +9,14 @@ pub(crate) struct MemoryAllocation {
     start: *mut u8,
 }
 
-/// Chunk of memory. Can be reused as a stack.
+/// Chunk of memory.
 pub(crate) struct Memory<'a> {
-    /// Start pointer as usize.
+    /// Start pointer.
     start: *mut u8,
-    /// End pointer as usize.
+    /// End pointer.
     end: *mut u8,
-    /// Lifetime of the chunk of memory.
-    phantom_data: PhantomData<&'a ()>,
+    /// Logically, Memory contains a reference to some data with lifetime 'a.
+    phantom_data: PhantomData<&'a mut ()>,
 }
 
 impl MemoryAllocation {
