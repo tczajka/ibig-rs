@@ -16,11 +16,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Shift left and right now only accepts `usize` for the number of bits, for consistency
   with other bit addressing operations and exponents.
 
-## 0.2.2 - unreleased
+## 0.2.2 - 2021-03-28
 
 ### Features
-* `ModuloRing`, modular addition and subtraction.
-* `to_f32`, `to_f64`. Round to nearest floating point number, breaking ties to even.
+* Modular arithmetic: `ModuloRing`, `Modulo`.
+* Conversions to floating point: `to_f32`, `to_f64`. Rounds to nearest, breaking ties to even.
 * `From<bool>` for `IBig`.
 
 ## 0.2.1 - 2021-03-14
