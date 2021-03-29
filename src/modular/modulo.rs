@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 /// # Examples
 ///
 /// ```
-/// # use ibig::{prelude::*, modular::ModuloRing};
+/// # use ibig::{modular::ModuloRing, ubig};
 /// let ring = ModuloRing::new(&ubig!(10000));
 /// let x = ring.from(12345);
 /// let y = ring.from(55443);

@@ -3,7 +3,7 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
-    parse::ParseError,
+    error::ParseError,
     primitive::{WORD_BITS, WORD_BITS_USIZE},
     radix::{self, Digit},
     ubig::UBig,

@@ -25,8 +25,8 @@
 //! # Examples
 //!
 //! ```
-//! # use ibig::ParseError;
-//! use ibig::{modular::ModuloRing, prelude::*};
+//! # use ibig::error::ParseError;
+//! use ibig::{ibig, modular::ModuloRing, ubig, UBig};
 //!
 //! let a = ubig!(12345678);
 //! let b = ubig!(0x10ff);
@@ -54,16 +54,7 @@
 
 extern crate alloc;
 
-pub use crate::{
-    bits::{AndNot, NextPowerOfTwo},
-    div_ops::{DivEuclid, DivRem, DivRemEuclid, RemEuclid},
-    fmt::InRadix,
-    ibig::IBig,
-    parse::ParseError,
-    primitive::OutOfBoundsError,
-    sign::{Abs, UnsignedAbs},
-    ubig::UBig,
-};
+pub use crate::{ibig::IBig, ubig::UBig};
 
 mod add;
 mod add_ops;
@@ -74,17 +65,18 @@ mod cmp;
 mod convert;
 mod div;
 mod div_ops;
+pub mod error;
 mod fast_divide;
-mod fmt;
+pub mod fmt;
 mod ibig;
 mod math;
 mod memory;
 pub mod modular;
 mod mul;
 mod mul_ops;
+pub mod ops;
 mod parse;
 mod pow;
-pub mod prelude;
 mod primitive;
 mod radix;
 mod shift;
@@ -96,9 +88,7 @@ mod ubig;
 mod macros;
 
 #[cfg(feature = "rand")]
-mod random;
-#[cfg(feature = "rand")]
-pub use crate::random::{UniformIBig, UniformUBig};
+pub mod rand;
 
 #[cfg(feature = "num-traits")]
 mod num_traits;

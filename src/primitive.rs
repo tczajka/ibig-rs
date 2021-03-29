@@ -2,27 +2,15 @@
 
 use crate::{
     arch::word::{DoubleWord, Word},
+    error::OutOfBoundsError,
     sign::Sign::{self, *},
 };
 use core::{
     convert::{TryFrom, TryInto},
-    fmt::{self, Debug, Display, Formatter},
+    fmt::Debug,
     mem,
     ops::{Add, Div, Mul, Shl, Shr, Sub},
 };
-
-/// Number out of bounds.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct OutOfBoundsError;
-
-impl Display for OutOfBoundsError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.write_str("number out of bounds")
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for OutOfBoundsError {}
 
 /// Cast `Word` to `DoubleWord`.
 pub(crate) const fn extend_word(word: Word) -> DoubleWord {

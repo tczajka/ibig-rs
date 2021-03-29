@@ -5,8 +5,9 @@ use crate::{
     buffer::Buffer,
     ibig::IBig,
     math,
+    ops::{AndNot, NextPowerOfTwo, UnsignedAbs},
     primitive::{double_word, WORD_BITS_USIZE},
-    sign::{Sign::*, UnsignedAbs},
+    sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 use core::{
@@ -20,7 +21,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(0b10010).bit(1), true);
     /// assert_eq!(ubig!(0b10010).bit(3), false);
     /// assert_eq!(ubig!(0b10010).bit(100), false);
@@ -40,7 +41,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// let mut a = ubig!(0b100);
     /// a.set_bit(0);
     /// assert_eq!(a, ubig!(0b101));
@@ -87,7 +88,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// let mut a = ubig!(0b101);
     /// a.clear_bit(0);
     /// assert_eq!(a, ubig!(0b100));
@@ -120,7 +121,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(17).trailing_zeros(), Some(0));
     /// assert_eq!(ubig!(48).trailing_zeros(), Some(4));
     /// assert_eq!(ubig!(0b101000000).trailing_zeros(), Some(6));
@@ -161,7 +162,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(17).bit_len(), 5);
     /// assert_eq!(ubig!(0b101000000).bit_len(), 9);
     /// assert_eq!(ubig!(0).bit_len(), 0);
@@ -182,7 +183,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(0).is_power_of_two(), false);
     /// assert_eq!(ubig!(8).is_power_of_two(), true);
     /// assert_eq!(ubig!(9).is_power_of_two(), false);
@@ -211,7 +212,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(ibig!(17).trailing_zeros(), Some(0));
     /// assert_eq!(ibig!(-48).trailing_zeros(), Some(4));
     /// assert_eq!(ibig!(-0b101000000).trailing_zeros(), Some(6));
@@ -220,19 +221,6 @@ impl IBig {
     pub fn trailing_zeros(&self) -> Option<usize> {
         self.magnitude().trailing_zeros()
     }
-}
-
-/// Next power of two.
-///
-/// # Examples
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ubig!(5).next_power_of_two(), ubig!(8));
-/// ```
-pub trait NextPowerOfTwo {
-    type Output;
-
-    fn next_power_of_two(self) -> Self::Output;
 }
 
 impl NextPowerOfTwo for UBig {
@@ -567,23 +555,6 @@ impl UBig {
         }
         buffer.into()
     }
-}
-
-/// Bitwise AND NOT operation.
-///
-/// `x.and_not(y)` is equivalent to `x & !y`. For `UBig` the latter is not a valid expression
-/// because the `!` operator is not defined.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ubig!(0xff).and_not(ubig!(0x1111)), ubig!(0xee));
-/// ```
-pub trait AndNot<Rhs = Self> {
-    type Output;
-
-    fn and_not(self, rhs: Rhs) -> Self::Output;
 }
 
 impl AndNot<UBig> for UBig {

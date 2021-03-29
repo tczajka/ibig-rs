@@ -1,4 +1,4 @@
-use ibig::{modular::ModuloRing, prelude::*};
+use ibig::{ibig, modular::ModuloRing, ubig};
 
 #[test]
 fn test_modulus() {

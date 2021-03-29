@@ -1,15 +1,13 @@
 //! Parsing numbers.
 
 use crate::{
+    error::ParseError,
     ibig::IBig,
     radix::{self, Digit},
     sign::Sign::*,
     ubig::UBig,
 };
-use core::{
-    fmt::{self, Display, Formatter},
-    str::FromStr,
-};
+use core::str::FromStr;
 
 mod non_power_two;
 mod power_two;
@@ -42,7 +40,7 @@ impl UBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{prelude::*, ParseError};
+    /// # use ibig::{error::ParseError, ubig, UBig};
     /// assert_eq!(UBig::from_str_radix("+7ab", 32)?, ubig!(7499));
     /// # Ok::<(), ParseError>(())
     /// ```
@@ -61,7 +59,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{prelude::*, ParseError};
+    /// # use ibig::{error::ParseError, ubig, UBig};
     /// assert_eq!(UBig::from_str_with_radix_prefix("+0o17")?, ubig!(0o17));
     /// assert_eq!(UBig::from_str_with_radix_prefix("0x1f")?, ubig!(0x1f));
     /// # Ok::<(), ParseError>(())
@@ -115,7 +113,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{prelude::*, ParseError};
+    /// # use ibig::{error::ParseError, ibig, IBig};
     /// assert_eq!(IBig::from_str_radix("-7ab", 32)?, ibig!(-7499));
     /// # Ok::<(), ParseError>(())
     /// ```
@@ -144,7 +142,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::{prelude::*, ParseError};
+    /// # use ibig::{error::ParseError, ibig, IBig};
     /// assert_eq!(IBig::from_str_with_radix_prefix("+0o17")?, ibig!(0o17));
     /// assert_eq!(IBig::from_str_with_radix_prefix("-0x1f")?, ibig!(-0x1f));
     /// # Ok::<(), ParseError>(())
@@ -165,24 +163,3 @@ impl IBig {
         Ok(IBig::from_sign_magnitude(sign, mag))
     }
 }
-
-/// Parse error when parsing `UBig` or `IBig`.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ParseError {
-    /// There were no digits in the string.
-    NoDigits,
-    /// Invalid digit for a given radix.
-    InvalidDigit,
-}
-
-impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            ParseError::NoDigits => f.write_str("no digits"),
-            ParseError::InvalidDigit => f.write_str("invalid digit"),
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for ParseError {}

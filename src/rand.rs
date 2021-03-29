@@ -4,7 +4,7 @@ use crate::{
     arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
-    sign::UnsignedAbs,
+    ops::UnsignedAbs,
     ubig::{Repr::*, UBig},
 };
 
@@ -82,9 +82,8 @@ where
 /// # Example
 ///
 /// ```
-/// use ibig::prelude::*;
-/// use rand::prelude::*;
-/// use rand::distributions::uniform::Uniform;
+/// use ibig::ubig;
+/// use rand::{distributions::uniform::Uniform, thread_rng, Rng};
 /// let a = thread_rng().gen_range(ubig!(3)..ubig!(10));
 /// let b = thread_rng().sample(Uniform::new(ubig!(0), &a));
 /// assert!(a >= ubig!(3) && a < ubig!(10));
@@ -138,9 +137,8 @@ impl UniformSampler for UniformUBig {
 /// # Example
 ///
 /// ```
-/// use ibig::prelude::*;
-/// use rand::prelude::*;
-/// use rand::distributions::uniform::Uniform;
+/// use ibig::ibig;
+/// use rand::{distributions::uniform::Uniform, thread_rng, Rng};
 /// let a = thread_rng().gen_range(ibig!(3)..ibig!(10));
 /// let b = thread_rng().sample(Uniform::new(ibig!(-5), &a));
 /// assert!(a >= ibig!(3) && a < ibig!(10));

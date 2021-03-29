@@ -1,4 +1,4 @@
-use ibig::{prelude::*, OutOfBoundsError};
+use ibig::{error::OutOfBoundsError, ibig, ubig, IBig, UBig};
 use std::convert::TryFrom;
 
 #[test]

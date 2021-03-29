@@ -3,8 +3,8 @@
 use crate::{
     arch::word::Word,
     div,
-    div_ops::DivRem,
     fmt::{digit_writer::DigitWriter, InRadixFull, PreparedForFormatting},
+    ops::DivRem,
     radix::{self, Digit},
     ubig::{Repr::*, UBig},
 };

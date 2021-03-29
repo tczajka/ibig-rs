@@ -13,7 +13,7 @@ impl UBig {
     /// # Example
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(3).pow(3), ubig!(27));
     /// ```
     pub fn pow(&self, exp: usize) -> UBig {
@@ -55,7 +55,7 @@ impl IBig {
     /// # Example
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(ibig!(-3).pow(3), ibig!(-27));
     /// ```
     pub fn pow(&self, exp: usize) -> IBig {

@@ -3,10 +3,9 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
+    error::OutOfBoundsError,
     ibig::IBig,
-    primitive::{
-        self, OutOfBoundsError, PrimitiveSigned, PrimitiveUnsigned, WORD_BITS, WORD_BYTES,
-    },
+    primitive::{self, PrimitiveSigned, PrimitiveUnsigned, WORD_BITS, WORD_BYTES},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -36,7 +35,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::{ubig, UBig};
     /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
     /// ```
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
@@ -66,7 +65,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::{ubig, UBig};
     /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), ubig!(0x010203));
     /// ```
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
@@ -96,7 +95,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert!(ubig!(0).to_le_bytes().is_empty());
     /// assert_eq!(ubig!(0x010203).to_le_bytes(), [3, 2, 1]);
     /// ```
@@ -127,7 +126,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert!(ubig!(0).to_be_bytes().is_empty());
     /// assert_eq!(ubig!(0x010203).to_be_bytes(), [1, 2, 3]);
     /// ```
@@ -160,7 +159,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(134).to_f32(), 134.0f32);
     /// ```
     pub fn to_f32(&self) -> f32 {
@@ -210,7 +209,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(ubig!(134).to_f64(), 134.0f64);
     /// ```
     pub fn to_f64(&self) -> f64 {
@@ -262,7 +261,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(ibig!(-134).to_f32(), -134.0f32);
     /// ```
     pub fn to_f32(&self) -> f32 {
@@ -280,7 +279,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(ibig!(-134).to_f64(), -134.0f64);
     /// ```
     pub fn to_f64(&self) -> f64 {

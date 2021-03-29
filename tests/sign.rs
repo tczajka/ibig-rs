@@ -1,4 +1,8 @@
-use ibig::prelude::*;
+use ibig::{
+    ibig,
+    ops::{Abs, UnsignedAbs},
+    ubig,
+};
 
 #[test]
 fn test_neg() {

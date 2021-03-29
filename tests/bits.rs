@@ -1,4 +1,8 @@
-use ibig::prelude::*;
+use ibig::{
+    ibig,
+    ops::{AndNot, NextPowerOfTwo},
+    ubig, IBig,
+};
 
 #[test]
 fn test_bit() {

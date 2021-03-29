@@ -1,6 +1,10 @@
 //! Operators on the sign of `IBig`.
 
-use crate::{ibig::IBig, ubig::UBig};
+use crate::{
+    ibig::IBig,
+    ops::{Abs, UnsignedAbs},
+    ubig::UBig,
+};
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -31,7 +35,7 @@ impl IBig {
     ///
     /// # Examples
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(ibig!(-500).signum(), ibig!(-1));
     /// ```
     pub fn signum(&self) -> IBig {
@@ -77,19 +81,6 @@ impl Neg for &IBig {
     }
 }
 
-/// Absolute value.
-///
-/// # Examples
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ibig!(-5).abs(), ibig!(5));
-/// ```
-pub trait Abs {
-    type Output;
-
-    fn abs(self) -> Self::Output;
-}
-
 impl Abs for IBig {
     type Output = IBig;
 
@@ -104,19 +95,6 @@ impl Abs for &IBig {
     fn abs(self) -> IBig {
         IBig::from(self.unsigned_abs())
     }
-}
-
-/// Unsigned absolute value.
-///
-/// # Examples
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ibig!(-5).unsigned_abs(), ubig!(5));
-/// ```
-pub trait UnsignedAbs {
-    type Output;
-
-    fn unsigned_abs(self) -> Self::Output;
 }
 
 impl UnsignedAbs for IBig {

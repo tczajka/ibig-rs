@@ -1,4 +1,4 @@
-use ibig::prelude::*;
+use ibig::{ibig, ubig};
 
 #[test]
 fn test_pow_ubig() {

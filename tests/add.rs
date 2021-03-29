@@ -2,7 +2,7 @@ use core::{
     fmt::Debug,
     ops::{Add, AddAssign, Sub, SubAssign},
 };
-use ibig::prelude::*;
+use ibig::{ibig, ubig};
 
 /// Test a + b = c in various ways.
 fn test_add_sub<'a, T>(a: &'a T, b: &'a T, c: &'a T)

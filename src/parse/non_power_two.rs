@@ -3,8 +3,8 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
+    error::ParseError,
     mul,
-    parse::ParseError,
     radix::{self, Digit},
     ubig::UBig,
 };

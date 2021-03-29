@@ -12,7 +12,7 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// # use ibig::{prelude::*, ParseError};
+/// # use ibig::{error::ParseError, ibig, IBig};
 /// let a = ibig!(a2a123bbb127779cccc123123ccc base 32);
 /// let b = ibig!(-0x1231abcd4134);
 /// let c = IBig::from_str_radix("a2a123bbb127779cccc123123ccc", 32)?;

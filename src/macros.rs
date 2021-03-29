@@ -5,7 +5,7 @@
 /// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
 /// prefixes:
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ubig;
 /// let a = ubig!(100);
 /// let b = ubig!(0b101);
 /// let c = ubig!(0o202);
@@ -14,7 +14,7 @@
 ///
 /// For an arbitrary base, add `base N`:
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ubig;
 /// let e = ubig!(a3gp1 base 32);
 /// ```
 ///
@@ -24,7 +24,7 @@
 ///   wouldn't fit in `u128`.
 /// * The first digit is decimal, but not all digits are decimal.
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ubig;
 /// let f = ubig!(_314159265358979323846264338327950288419716939937);
 /// let g = ubig!(_0b102 base 32);
 /// let h = ubig!(b102 base 32);
@@ -62,7 +62,7 @@ macro_rules! ubig {
 /// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
 /// prefixes:
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ibig;
 /// let a = ibig!(100);
 /// let b = ibig!(-0b101);
 /// let c = ibig!(0o202);
@@ -71,7 +71,7 @@ macro_rules! ubig {
 ///
 /// For an arbitrary base, add `base N`:
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ibig;
 /// let e = ibig!(-a3gp1 base 32);
 /// ```
 ///
@@ -81,7 +81,7 @@ macro_rules! ubig {
 ///   wouldn't fit in `u128`.
 /// * The first digit is decimal, but not all digits are decimal.
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::ibig;
 /// let f = ibig!(-_314159265358979323846264338327950288419716939937);
 /// let g = ibig!(_0b102 base 32);
 /// let h = ibig!(b102 base 32);

@@ -1,5 +1,5 @@
 use core::cmp::Ordering;
-use ibig::prelude::*;
+use ibig::{ibig, ubig};
 
 #[test]
 fn test_cmp() {

@@ -2,7 +2,7 @@ use core::{
     fmt::Debug,
     ops::{Mul, MulAssign},
 };
-use ibig::prelude::*;
+use ibig::{ibig, ubig};
 
 fn test_mul<'a, T>(a: &'a T, b: &'a T, c: &'a T)
 where

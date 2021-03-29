@@ -1,4 +1,8 @@
-use ibig::prelude::*;
+use ibig::{
+    ibig,
+    ops::{DivEuclid, DivRem, DivRemEuclid, RemEuclid},
+    ubig, IBig,
+};
 
 #[test]
 fn test_div_rem_ubig() {

@@ -13,7 +13,7 @@ impl Modulo<'_> {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{prelude::*, modular::ModuloRing};
+    /// # use ibig::{modular::ModuloRing, ubig};
     /// // A Mersenne prime.
     /// let p = ubig!(2).pow(607) - ubig!(1);
     /// let ring = ModuloRing::new(&p);

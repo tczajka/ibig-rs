@@ -167,7 +167,7 @@ impl UBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ubig;
     /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
     /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
     /// ```
@@ -191,7 +191,7 @@ impl IBig {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::prelude::*;
+    /// # use ibig::ibig;
     /// assert_eq!(format!("{}", ibig!(-83).in_radix(3)), "-10002");
     /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
     /// ```
@@ -215,7 +215,7 @@ impl IBig {
 /// # Examples
 ///
 /// ```
-/// # use ibig::prelude::*;
+/// # use ibig::{ibig, ubig};
 /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
 /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
 /// // For bases 2, 8, 10, 16 we don't have to use `InRadix`:

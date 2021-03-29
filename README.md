@@ -15,7 +15,7 @@ Modular arithmetic is supported by the module `modular`.
 ## Examples
 
 ```rust
-use ibig::{modular::ModuloRing, prelude::*};
+use ibig::{ibig, modular::ModuloRing, ubig, UBig};
 
 let a = ubig!(12345678);
 let b = ubig!(0x10ff);

@@ -1,6 +1,6 @@
 //! Implement num-traits traits.
 
-use crate::{ibig::IBig, parse::ParseError, sign::Abs, ubig::UBig};
+use crate::{error::ParseError, ibig::IBig, ops::Abs, ubig::UBig};
 
 impl num_traits::Zero for UBig {
     fn zero() -> Self {

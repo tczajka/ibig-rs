@@ -15,7 +15,7 @@ use core::cmp::Ordering;
 /// # Examples
 ///
 /// ```
-/// # use ibig::{prelude::*, modular::ModuloRing};
+/// # use ibig::{modular::ModuloRing, ubig};
 /// let ring = ModuloRing::new(&ubig!(100));
 /// assert_eq!(ring.modulus(), ubig!(100));
 /// ```
@@ -48,7 +48,7 @@ impl ModuloRing {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{prelude::*, modular::ModuloRing};
+    /// # use ibig::{modular::ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(100));
     /// assert_eq!(ring.modulus(), ubig!(100));
     /// ```

@@ -6,68 +6,15 @@ use crate::{
     div,
     ibig::IBig,
     memory::MemoryAllocation,
+    ops::{Abs, DivEuclid, DivRem, DivRemEuclid, RemEuclid},
     shift,
-    sign::{Abs, Sign::*},
+    sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 use core::{
     mem,
     ops::{Div, DivAssign, Rem, RemAssign},
 };
-
-/// Compute quotient and remainder at the same time.
-///
-/// # Example
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ubig!(23).div_rem(ubig!(10)), (ubig!(2), ubig!(3)));
-/// ```
-pub trait DivRem<Rhs = Self> {
-    type OutputDiv;
-    type OutputRem;
-
-    fn div_rem(self, rhs: Rhs) -> (Self::OutputDiv, Self::OutputRem);
-}
-
-/// Compute Euclidean quotient.
-///
-/// # Example
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ibig!(-23).div_euclid(ibig!(10)), ibig!(-3));
-/// ```
-pub trait DivEuclid<Rhs = Self> {
-    type Output;
-
-    fn div_euclid(self, rhs: Rhs) -> Self::Output;
-}
-
-/// Compute Euclidean remainder.
-///
-/// # Example
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ibig!(-23).rem_euclid(ibig!(10)), ibig!(7));
-/// ```
-pub trait RemEuclid<Rhs = Self> {
-    type Output;
-
-    fn rem_euclid(self, rhs: Rhs) -> Self::Output;
-}
-
-/// Compute Euclidean quotient and remainder at the same time.
-///
-/// # Example
-/// ```
-/// # use ibig::prelude::*;
-/// assert_eq!(ibig!(-23).div_rem_euclid(ibig!(10)), (ibig!(-3), ibig!(7)));
-/// ```
-pub trait DivRemEuclid<Rhs = Self> {
-    type OutputDiv;
-    type OutputRem;
-
-    fn div_rem_euclid(self, rhs: Rhs) -> (Self::OutputDiv, Self::OutputRem);
-}
 
 impl Div<UBig> for UBig {
     type Output = UBig;
