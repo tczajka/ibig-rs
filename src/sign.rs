@@ -50,18 +50,6 @@ impl IBig {
             Negative => IBig::from(-1i8),
         }
     }
-
-    /// Deprecated. Use `< ibig!(0)` instead.
-    #[deprecated(since = "0.2.1", note = "use `< ibig!(0)` instead")]
-    pub fn is_negative(&self) -> bool {
-        *self < IBig::from(0u8)
-    }
-
-    /// Deprecated. Use `> ibig!(0)` instead.
-    #[deprecated(since = "0.2.1", note = "use `> ibig!(0)` instead")]
-    pub fn is_positive(&self) -> bool {
-        *self > IBig::from(0u8)
-    }
 }
 
 impl Neg for IBig {
