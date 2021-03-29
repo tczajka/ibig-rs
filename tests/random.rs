@@ -49,11 +49,11 @@ fn test_random_arithmetic() {
     // 10^2 bits: 10^5 cases
     // 10^6 bits: 10 cases
     for log_num_bits in 2..=6 {
-        let num_bits = 10u32.pow(log_num_bits);
-        let num_cases = 10u32.pow(7 - log_num_bits);
+        let num_bits = 10usize.pow(log_num_bits);
+        let num_cases = 10usize.pow(7 - log_num_bits);
         for _ in 0..num_cases {
-            let len_a: u32 = (&mut rng).gen_range(10..num_bits);
-            let len_b: u32 = (&mut rng).gen_range(10..num_bits);
+            let len_a = (&mut rng).gen_range(10..num_bits);
+            let len_b = (&mut rng).gen_range(10..num_bits);
             let a = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_a);
             let b = (&mut rng).gen_range(ubig!(100)..ubig!(1) << len_b);
             let c = (&mut rng).sample(Uniform::new(ubig!(0), &a));

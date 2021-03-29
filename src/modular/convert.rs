@@ -164,7 +164,7 @@ impl<'a> ModuloSmall<'a> {
 
 impl<'a> ModuloLarge<'a> {
     pub(crate) fn from_ubig(mut x: UBig, ring: &'a ModuloRingLarge) -> ModuloLarge<'a> {
-        x <<= ring.shift();
+        x <<= ring.shift() as usize;
         let modulus = ring.normalized_modulus();
         let mut vec = Vec::with_capacity(modulus.len());
         match x.into_repr() {

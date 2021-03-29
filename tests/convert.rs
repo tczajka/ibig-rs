@@ -208,7 +208,7 @@ fn test_to_f32() {
     assert_eq!(ubig!(0x1000004).to_f32(), 16777220.0f32);
     assert_eq!(ubig!(0x1000005).to_f32(), 16777220.0f32);
 
-    for i in 10..80u32 {
+    for i in 10..80 {
         assert_eq!(
             (ubig!(0xfff3330) << i).to_f32(),
             (0xfff3330 as f32) * (i as f32).exp2()
@@ -251,15 +251,15 @@ fn test_to_f32() {
         );
     }
 
-    assert!((ubig!(0xffffff7) << 100u32).to_f32() < f32::INFINITY);
-    assert!((ubig!(0xffffff8) << 100u32).to_f32() == f32::INFINITY);
-    assert!((ubig!(1) << 1000u32).to_f32() == f32::INFINITY);
+    assert!((ubig!(0xffffff7) << 100).to_f32() < f32::INFINITY);
+    assert!((ubig!(0xffffff8) << 100).to_f32() == f32::INFINITY);
+    assert!((ubig!(1) << 1000).to_f32() == f32::INFINITY);
 
     assert_eq!(ibig!(0).to_f32(), 0.0f32);
     assert_eq!(ibig!(7).to_f32(), 7.0f32);
     assert_eq!(ibig!(-7).to_f32(), -7.0f32);
-    assert!((ibig!(-0xffffff7) << 100u32).to_f32() > -f32::INFINITY);
-    assert!((ibig!(-0xffffff8) << 100u32).to_f32() == -f32::INFINITY);
+    assert!((ibig!(-0xffffff7) << 100).to_f32() > -f32::INFINITY);
+    assert!((ibig!(-0xffffff8) << 100).to_f32() == -f32::INFINITY);
 }
 
 #[test]
@@ -276,7 +276,7 @@ fn test_to_f64() {
     assert_eq!(ubig!(0x20000000000004).to_f64(), 9007199254740996.0f64);
     assert_eq!(ubig!(0x20000000000005).to_f64(), 9007199254740996.0f64);
 
-    for i in 10..500u32 {
+    for i in 10..500 {
         assert_eq!(
             (ubig!(0x1ffffffffff3330) << i).to_f64(),
             (0x1ffffffffff3330u64 as f64) * (i as f64).exp2()
@@ -319,13 +319,13 @@ fn test_to_f64() {
         );
     }
 
-    assert!((ubig!(0x1fffffffffffff7) << 967u32).to_f64() < f64::INFINITY);
-    assert!((ubig!(0x1fffffffffffff8) << 967u32).to_f64() == f64::INFINITY);
-    assert!((ubig!(1) << 10000u32).to_f64() == f64::INFINITY);
+    assert!((ubig!(0x1fffffffffffff7) << 967).to_f64() < f64::INFINITY);
+    assert!((ubig!(0x1fffffffffffff8) << 967).to_f64() == f64::INFINITY);
+    assert!((ubig!(1) << 10000).to_f64() == f64::INFINITY);
 
     assert_eq!(ibig!(0).to_f64(), 0.0f64);
     assert_eq!(ibig!(7).to_f64(), 7.0f64);
     assert_eq!(ibig!(-7).to_f64(), -7.0f64);
-    assert!((ibig!(-0x1fffffffffffff7) << 967u32).to_f64() > -f64::INFINITY);
-    assert!((ibig!(-0x1fffffffffffff8) << 967u32).to_f64() == -f64::INFINITY);
+    assert!((ibig!(-0x1fffffffffffff7) << 967).to_f64() > -f64::INFINITY);
+    assert!((ibig!(-0x1fffffffffffff8) << 967).to_f64() == -f64::INFINITY);
 }
