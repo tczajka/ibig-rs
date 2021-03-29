@@ -10,6 +10,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/tczajka/ibig-rs"
 homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
+exclude = ["generate_coverage.sh"]
 
 [dependencies]
 static_assertions = "1.1"
