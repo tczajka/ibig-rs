@@ -2,7 +2,7 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.3.0 - unreleased
+## 0.3.0 - 2021-03-29
 
 ### Breaking changes
 * Removed `prelude`.

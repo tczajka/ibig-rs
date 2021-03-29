@@ -1,6 +1,6 @@
 [package]
 name = "ibig"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
 description = "A big integer library with good performance"
@@ -25,11 +25,6 @@ default = ["std", "rand", "num-traits"]
 
 # Interface with the std library.
 std = []
-
-# Deprecated. They don't do anything. Use --cfg force_bits=... instead.
-force-16-bit = []
-force-32-bit = []
-force-64-bit = []
 
 [lib]
 bench = false
