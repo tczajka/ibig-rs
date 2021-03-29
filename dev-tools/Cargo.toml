@@ -1,0 +1,9 @@
+[package]
+name = "dev-tools"
+version = "0.0.0"
+authors = ["Tomek Czajka <tczajka@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.8.3"
+ibig = { path = ".." }
