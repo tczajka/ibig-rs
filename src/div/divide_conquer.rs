@@ -38,7 +38,7 @@ pub(crate) fn div_rem_in_place(
     fast_div_rhs_top: FastDivideNormalized,
     memory: &mut Memory,
 ) -> bool {
-    assert!(rhs.len() > div::MAX_LEN_SIMPLE);
+    assert!(lhs.len() > rhs.len() + div::MAX_LEN_SIMPLE && rhs.len() > div::MAX_LEN_SIMPLE);
 
     let mut overflow = false;
     let n = rhs.len();
@@ -52,10 +52,12 @@ pub(crate) fn div_rem_in_place(
         }
         m -= n;
     }
-    let o = div_rem_in_place_small_quotient(&mut lhs[..m], rhs, fast_div_rhs_top, memory);
-    if o {
-        assert!(m == lhs.len());
-        overflow = true;
+    if m > n {
+        let o = div_rem_in_place_small_quotient(&mut lhs[..m], rhs, fast_div_rhs_top, memory);
+        if o {
+            assert!(m == lhs.len());
+            overflow = true;
+        }
     }
     overflow
 }
