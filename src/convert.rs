@@ -447,7 +447,7 @@ impl TryFrom<&IBig> for UBig {
     }
 }
 
-/// Convert an unsigned primitive to `UBig`.
+/// Convert an unsigned primitive to [UBig].
 fn ubig_from_unsigned<T>(x: T) -> UBig
 where
     T: PrimitiveUnsigned,
@@ -461,7 +461,7 @@ where
     }
 }
 
-/// Try to convert a signed primitive to `UBig`.
+/// Try to convert a signed primitive to [UBig].
 fn ubig_from_signed<T>(x: T) -> Result<UBig, OutOfBoundsError>
 where
     T: PrimitiveSigned,
@@ -472,7 +472,7 @@ where
     }
 }
 
-/// Try to convert `UBig` to an unsigned primitive.
+/// Try to convert [UBig] to an unsigned primitive.
 fn unsigned_from_ubig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveUnsigned,
@@ -511,7 +511,7 @@ where
     }
 }
 
-/// Try to convert `UBig` to a signed primitive.
+/// Try to convert [UBig] to a signed primitive.
 fn signed_from_ubig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveSigned,
@@ -526,7 +526,7 @@ where
     }
 }
 
-/// Convert an unsigned primitive to `IBig`.
+/// Convert an unsigned primitive to [IBig].
 fn ibig_from_unsigned<T>(x: T) -> IBig
 where
     T: PrimitiveUnsigned,
@@ -534,7 +534,7 @@ where
     IBig::from(ubig_from_unsigned(x))
 }
 
-/// Convert a signed primitive to `IBig`.
+/// Convert a signed primitive to [IBig].
 fn ibig_from_signed<T>(x: T) -> IBig
 where
     T: PrimitiveSigned,
@@ -543,7 +543,7 @@ where
     IBig::from_sign_magnitude(sign, ubig_from_unsigned(mag))
 }
 
-/// Try to convert `IBig` to an unsigned primitive.
+/// Try to convert [IBig] to an unsigned primitive.
 fn unsigned_from_ibig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveUnsigned,
@@ -556,7 +556,7 @@ where
     }
 }
 
-/// Try to convert `IBig` to an signed primitive.
+/// Try to convert [IBig] to an signed primitive.
 fn signed_from_ibig<T, B>(num: B) -> Result<T, OutOfBoundsError>
 where
     T: PrimitiveSigned,

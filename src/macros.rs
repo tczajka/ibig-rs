@@ -1,6 +1,6 @@
 //! Macros for big integer literals.
 
-/// Create a `UBig` value.
+/// Create a [UBig](crate::UBig) value.
 ///
 /// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
 /// prefixes:
@@ -57,7 +57,7 @@ macro_rules! ubig {
     }};
 }
 
-/// Create an `IBig` value.
+/// Create an [IBig](crate::IBig) value.
 ///
 /// Usually just pass use a numeric literal. This works for bases 2, 8, 10 or 16 using standard
 /// prefixes:

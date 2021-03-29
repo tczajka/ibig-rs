@@ -47,7 +47,7 @@ impl<'a> Modulo<'a> {
         &mut self.0
     }
 
-    /// Panics when trying to do operations on `Modulo` values from different rings.
+    /// Panics when trying to do operations on [Modulo] values from different rings.
     pub(crate) fn panic_different_rings() -> ! {
         panic!("Modulo values from different rings")
     }

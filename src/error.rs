@@ -1,3 +1,5 @@
+//! Error types.
+
 use core::fmt::{self, Display, Formatter};
 
 /// Number out of bounds.
@@ -13,10 +15,10 @@ impl Display for OutOfBoundsError {
 #[cfg(feature = "std")]
 impl std::error::Error for OutOfBoundsError {}
 
-/// Parse error when parsing `UBig` or `IBig`.
+/// Error parsing a number.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ParseError {
-    /// There were no digits in the string.
+    /// No digits in the string.
     NoDigits,
     /// Invalid digit for a given radix.
     InvalidDigit,

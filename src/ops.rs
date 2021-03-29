@@ -1,7 +1,9 @@
+//! Traits for number operations.
+
 /// Bitwise AND NOT operation.
 ///
-/// `x.and_not(y)` is equivalent to `x & !y`. For `UBig` the latter is not a valid expression
-/// because the `!` operator is not defined.
+/// `x.and_not(y)` is equivalent to `x & !y`. For [UBig](crate::UBig) the latter is not a
+/// valid expression because the `!` operator is not defined.
 ///
 /// # Examples
 ///

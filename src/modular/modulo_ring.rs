@@ -41,8 +41,9 @@ pub(crate) struct ModuloRingLarge {
 impl ModuloRing {
     /// Create a new ring of integers modulo `n`.
     ///
-    /// For two `Modulo` numbers to be compatible, they must come from the same
-    /// `ModuloRing`. Two different `ModuloRing`s are not compatible even if
+    /// For two [Modulo](crate::modular::Modulo) numbers to be compatible,
+    /// they must come from the same [ModuloRing].
+    /// Two different [ModuloRing]s are not compatible even if
     /// they have the same modulus `n`.
     ///
     /// # Examples

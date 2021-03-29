@@ -1,4 +1,4 @@
-//! Operators on the sign of `IBig`.
+//! Operators on the sign of [IBig].
 
 use crate::{
     ibig::IBig,

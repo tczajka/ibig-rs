@@ -17,10 +17,9 @@
 //!
 //! The library implements efficient large integer arithmetic in pure Rust.
 //!
-//! The two main integer types are [UBig](struct.UBig.html) (for unsigned integers)
-//! and [IBig](struct.IBig.html) (for signed integers).
+//! The two main integer types are [UBig] (for unsigned integers) and [IBig] (for signed integers).
 //!
-//! Modular arithmetic is supported by the module [modular](modular/index.html).
+//! Modular arithmetic is supported by the module [modular].
 //!
 //! # Examples
 //!

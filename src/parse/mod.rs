@@ -29,7 +29,7 @@ impl FromStr for IBig {
 }
 
 impl UBig {
-    /// Convert a string in a given base to `UBig`.
+    /// Convert a string in a given base to [UBig].
     ///
     /// `src` may contain an optional `+` prefix.
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
@@ -50,9 +50,9 @@ impl UBig {
         UBig::from_str_radix_no_sign(src, radix)
     }
 
-    /// Convert a string with an optional radix prefix to `UBig`.
+    /// Convert a string with an optional radix prefix to [UBig].
     ///
-    /// `src` may contain an optional `+` prefix.
+    /// `src` may contain an optional `+` after the radix prefix.
     ///
     /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
     ///
@@ -69,7 +69,7 @@ impl UBig {
         UBig::from_str_with_radix_prefix_no_sign(src)
     }
 
-    /// Convert an unsigned string with an optional radix prefix to `UBig`.
+    /// Convert an unsigned string with an optional radix prefix to [UBig].
     fn from_str_with_radix_prefix_no_sign(src: &str) -> Result<UBig, ParseError> {
         if let Some(bin) = src.strip_prefix("0b") {
             UBig::from_str_radix_no_sign(bin, 2)
@@ -82,7 +82,7 @@ impl UBig {
         }
     }
 
-    /// Convert an unsigned string to `UBig`.
+    /// Convert an unsigned string to [UBig].
     fn from_str_radix_no_sign(mut src: &str, radix: Digit) -> Result<UBig, ParseError> {
         debug_assert!(radix::is_radix_valid(radix));
         if src.is_empty() {
@@ -102,7 +102,7 @@ impl UBig {
 }
 
 impl IBig {
-    /// Convert a string in a given base to `IBig`.
+    /// Convert a string in a given base to [IBig].
     ///
     /// The string may contain a `+` or `-` prefix.
     /// Digits 10-35 are represented by `a-z` or `A-Z`.
@@ -134,9 +134,9 @@ impl IBig {
         Ok(IBig::from_sign_magnitude(sign, mag))
     }
 
-    /// Convert a string with an optional radix prefix to `IBig`.
+    /// Convert a string with an optional radix prefix to [IBig].
     ///
-    /// `src` may contain an '+' or `-` prefix..
+    /// `src` may contain an '+' or `-` prefix after the radix prefix.
     ///
     /// Allowed prefixes: `0b` for binary, `0o` for octal, `0x` for hexadecimal.
     ///

@@ -1,7 +1,6 @@
 //! Modular arithmetic.
 //!
-//! Modular arithmetic is performed on values `Modulo` attached to a modular ring of integers,
-//! `ModuloRing`.
+//! Modular arithmetic is performed on [Modulo] values attached to a [ModuloRing].
 //!
 //! Trying to mix different rings (even with the same modulus!) will cause a panic.
 //!

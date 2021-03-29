@@ -1,4 +1,4 @@
-//! Formatting numbers.
+//! Formatting helpers.
 
 use crate::{
     ibig::IBig,
@@ -205,7 +205,7 @@ impl IBig {
     }
 }
 
-/// Representation of a `UBig` or `IBig` in any radix between 2 and 36 inclusive.
+/// Representation of a [UBig] or [IBig] in any radix between 2 and 36 inclusive.
 ///
 /// This can be used to format a number in a non-standard radix.
 ///
@@ -335,7 +335,7 @@ impl InRadixFull<'_> {
     }
 }
 
-/// Trait for state of a partially-formatted `UBig`.
+/// Trait for state of a partially-formatted [UBig].
 ///
 /// The state must be such the width (number of digits) is already known.
 trait PreparedForFormatting {

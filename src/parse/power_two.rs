@@ -9,7 +9,7 @@ use crate::{
     ubig::UBig,
 };
 
-/// Parse an unsigned string to `UBig`.
+/// Parse an unsigned string to [UBig].
 pub(crate) fn parse(src: &str, radix: Digit) -> Result<UBig, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
     let radix_info = radix::radix_info(radix);
@@ -40,7 +40,7 @@ fn parse_word(src: &str, radix: Digit) -> Result<Word, ParseError> {
     Ok(word)
 }
 
-/// Parse an unsigned string to `UBig`.
+/// Parse an unsigned string to [UBig].
 ///
 /// The result will usually not fit in a single word.
 fn parse_large(src: &str, radix: Digit) -> Result<UBig, ParseError> {

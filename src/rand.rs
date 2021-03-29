@@ -1,4 +1,4 @@
-//! Random distributions on big integers.
+//! Random distributions.
 
 use crate::{
     arch::word::Word,
@@ -77,7 +77,7 @@ where
     true
 }
 
-/// Uniform `UBig` distribution.
+/// Uniform [UBig] distribution.
 ///
 /// # Example
 ///
@@ -132,7 +132,7 @@ impl UniformSampler for UniformUBig {
     }
 }
 
-/// Uniform `IBig` distribution.
+/// Uniform [IBig] distribution.
 ///
 /// # Example
 ///

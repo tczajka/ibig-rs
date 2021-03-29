@@ -104,7 +104,7 @@ impl ModuloLarge<'_> {
     }
 }
 
-/// Trait for types that can be converted into `Modulo` in a `ModuloRing`.
+/// Trait for types that can be converted into [Modulo] in a [ModuloRing].
 pub trait IntoModulo {
     fn into_modulo(self, ring: &ModuloRing) -> Modulo;
 }

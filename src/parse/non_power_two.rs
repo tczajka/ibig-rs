@@ -13,7 +13,7 @@ use alloc::vec;
 /// Parse in chunks of CHUNK_LEN * digits_per_word.
 const CHUNK_LEN: usize = 256;
 
-/// Parse an unsigned string to `UBig`.
+/// Parse an unsigned string to [UBig].
 pub(crate) fn parse(src: &str, radix: Digit) -> Result<UBig, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && !radix.is_power_of_two());
     let radix_info = radix::radix_info(radix);
@@ -44,7 +44,7 @@ fn parse_word(src: &[u8], radix: Digit) -> Result<Word, ParseError> {
     Ok(word)
 }
 
-/// Parse an unsigned string to `UBig`.
+/// Parse an unsigned string to [UBig].
 ///
 /// The length of input is limited to `CHUNK_LEN * digits_per_word`.
 fn parse_chunk(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
@@ -64,7 +64,7 @@ fn parse_chunk(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
     Ok(buffer.into())
 }
 
-/// Parse an unsigned string to `UBig`.
+/// Parse an unsigned string to [UBig].
 ///
 /// This result will usually not fit in CHUNK_LEN words.
 fn parse_large(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
@@ -87,7 +87,7 @@ fn parse_large(bytes: &[u8], radix: Digit) -> Result<UBig, ParseError> {
     parse_large_divide_conquer(bytes, radix, chunk_bytes, &radix_powers)
 }
 
-/// Convert an unsigned string to `UBig`.
+/// Convert an unsigned string to [UBig].
 ///
 /// `radix_powers` contains radix^n for n = chunk digits << i
 fn parse_large_divide_conquer(
