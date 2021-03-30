@@ -1,3 +1,7 @@
+//! Benchmarks.
+//!
+//! Note: these don't work on 16-bit machines.
+
 use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,

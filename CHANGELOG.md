@@ -2,6 +2,9 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.1 - unreleased
+* Maximum supported length in bits: `UBig::MAX_BIT_LEN`.
+
 ## 0.3.0 - 2021-03-29
 
 ### Breaking changes

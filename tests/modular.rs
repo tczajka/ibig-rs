@@ -166,7 +166,7 @@ fn test_add_sub() {
 fn test_mul() {
     let ring1 = ModuloRing::new(&ubig!(100));
     let ring2 = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
-    let big = ubig!(10).pow(100000);
+    let big = ubig!(10).pow(10000);
     let ring3 = ModuloRing::new(&big);
     let test_cases = [
         (ring1.from(23), ring1.from(96), ring1.from(8)),

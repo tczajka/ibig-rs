@@ -22,6 +22,7 @@ const_assert!(MAX_LEN_KARATSUBA + 1 >= toom_3::MIN_LEN);
 
 mod helpers;
 mod karatsuba;
+pub(crate) mod ntt;
 mod simple;
 mod toom_3;
 

@@ -49,8 +49,12 @@ fn test_random_arithmetic() {
     // 10^2 bits: 10^5 cases
     // 10^6 bits: 10 cases
     for log_num_bits in 2..=6 {
-        let num_bits = 10usize.pow(log_num_bits);
-        let num_cases = 10usize.pow(7 - log_num_bits);
+        let num_bits = match 10usize.checked_pow(log_num_bits) {
+            None => continue,
+            Some(x) if x > UBig::MAX_BIT_LEN / 2 - 10 => continue,
+            Some(x) => x,
+        };
+        let num_cases = 10u32.pow(7 - log_num_bits);
         for _ in 0..num_cases {
             let len_a = (&mut rng).gen_range(10..num_bits);
             let len_b = (&mut rng).gen_range(10..num_bits);

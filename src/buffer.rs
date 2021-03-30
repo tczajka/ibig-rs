@@ -1,10 +1,9 @@
 //! Word buffer.
 
-use crate::{arch::word::Word, primitive::WORD_BITS_USIZE};
+use crate::{arch::word::Word, ubig::UBig};
 
 use alloc::vec::Vec;
 use core::{
-    cmp::min,
     iter,
     ops::{Deref, DerefMut},
 };
@@ -24,16 +23,9 @@ impl Buffer {
     /// It leaves some extra space for future growth.
     pub(crate) fn allocate(num_words: usize) -> Buffer {
         if num_words > Buffer::MAX_CAPACITY {
-            Buffer::panic_too_large();
+            UBig::panic_number_too_large();
         }
         Buffer(Vec::with_capacity(Buffer::default_capacity(num_words)))
-    }
-
-    pub(crate) fn panic_too_large() -> ! {
-        panic!(
-            "number too large, maximum is {} bits",
-            Buffer::MAX_CAPACITY * WORD_BITS_USIZE
-        )
     }
 
     /// Ensure there is enough capacity in the buffer for `num_words`. Will reallocate if there is
@@ -151,11 +143,9 @@ impl Buffer {
 
     /// Maximum number of `Word`s.
     ///
-    /// It ensures that the number of bits fits in `usize`, which is useful for bit count
-    /// operations, and for radix conversions (even base 2 can be represented).
-    ///
-    /// It also ensures that we can add two lengths without overflow.
-    pub(crate) const MAX_CAPACITY: usize = usize::MAX / WORD_BITS_USIZE;
+    /// We allow 1 extra word beyond `UBig::MAX_LEN` to allow a leading zero
+    /// in operations.
+    pub(crate) const MAX_CAPACITY: usize = UBig::MAX_LEN + 1;
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).
@@ -165,7 +155,7 @@ impl Buffer {
     /// Provides `2 + 0.125 * num_words` extra space.
     fn default_capacity(num_words: usize) -> usize {
         debug_assert!(num_words <= Buffer::MAX_CAPACITY);
-        min(num_words + num_words / 8 + 2, Buffer::MAX_CAPACITY)
+        (num_words + num_words / 8 + 2).min(Buffer::MAX_CAPACITY)
     }
 
     /// Maximum compact capacity for a given number of `Word`s.
@@ -175,7 +165,7 @@ impl Buffer {
     /// Allows `4 + 0.25 * num_words` overhead.
     fn max_compact_capacity(num_words: usize) -> usize {
         debug_assert!(num_words <= Buffer::MAX_CAPACITY);
-        min(num_words + num_words / 4 + 4, Buffer::MAX_CAPACITY)
+        (num_words + num_words / 4 + 4).min(Buffer::MAX_CAPACITY)
     }
 }
 

@@ -76,6 +76,14 @@ pub(crate) const fn const_ones_word(n: u32) -> Word {
     }
 }
 
+pub(crate) const fn const_min_usize(a: usize, b: usize) -> usize {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

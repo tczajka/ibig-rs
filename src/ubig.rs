@@ -1,7 +1,12 @@
 //! Unsigned big integer.
 
 use self::Repr::*;
-use crate::{arch::word::Word, buffer::Buffer};
+use crate::{
+    arch::{ntt, word::Word},
+    buffer::Buffer,
+    math,
+    primitive::WORD_BITS_USIZE,
+};
 use core::slice;
 
 /// Internal representation of UBig.
@@ -69,6 +74,41 @@ impl UBig {
             Large(buffer) => &buffer,
         }
     }
+
+    /// Maximum length in `Word`s.
+    ///
+    /// Ensures that the number of bits fits in `usize`, which is useful for bit count
+    /// operations, and for radix conversions (even base 2 can be represented).
+    ///
+    /// This also guarantees that up to 16 * length will not overflow.
+    ///
+    /// We also make sure that any multiplication whose result fits in `MAX_LEN` can fit
+    /// within the largest possible number-theoretic transform.
+    pub(crate) const MAX_LEN: usize = math::const_min_usize(
+        usize::MAX / WORD_BITS_USIZE,
+        match 1usize.checked_shl(ntt::MAX_ORDER) {
+            Some(ntt_len) => ntt_len,
+            None => usize::MAX,
+        },
+    );
+
+    /// Maximum length in bits.
+    ///
+    /// [UBig]s up to this length are supported. Creating a longer number
+    /// will panic.
+    ///
+    /// This does not guarantee that there is sufficient memory to store numbers
+    /// up to this length. Memory allocation may fail even for smaller numbers.
+    ///
+    /// The fact that this limit fits in `usize` guarantees that all bit
+    /// addressing operations can be performed using `usize`.
+    ///
+    /// It is typically close to `usize::MAX`, but the exact value is platform-dependent.
+    pub const MAX_BIT_LEN: usize = UBig::MAX_LEN * WORD_BITS_USIZE;
+
+    pub(crate) fn panic_number_too_large() -> ! {
+        panic!("number too large, maximum is {} bits", UBig::MAX_BIT_LEN)
+    }
 }
 
 impl Clone for UBig {
@@ -97,9 +137,11 @@ impl From<Buffer> for UBig {
     /// there will be no reallocation here.
     fn from(mut buffer: Buffer) -> UBig {
         buffer.pop_leading_zeros();
+
         match buffer.len() {
             0 => UBig::from_word(0),
             1 => UBig::from_word(buffer[0]),
+            _ if buffer.len() > UBig::MAX_LEN => UBig::panic_number_too_large(),
             _ => {
                 buffer.shrink();
                 UBig(Large(buffer))
