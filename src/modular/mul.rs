@@ -4,7 +4,7 @@ use crate::{
     memory::{self, Memory, MemoryAllocation},
     modular::{
         modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
-        modulo_ring::ModuloRingLarge,
+        modulo_ring::{ModuloRingLarge, ModuloRingSmall},
     },
     mul,
     primitive::extend_word,
@@ -72,6 +72,14 @@ impl<'a> MulAssign<&Modulo<'a>> for Modulo<'a> {
     }
 }
 
+impl ModuloRingSmall {
+    pub(crate) const fn mul_normalized(&self, a: Word, b: Word) -> Word {
+        let product = extend_word(a >> self.shift()) * extend_word(b);
+        let (_, rem) = self.fast_div().div_rem(product);
+        rem
+    }
+}
+
 impl<'a> ModuloSmall<'a> {
     /// self *= rhs
     pub(crate) fn mul_in_place(&mut self, rhs: &ModuloSmall<'a>) {
@@ -84,11 +92,10 @@ impl<'a> ModuloSmall<'a> {
     }
 
     fn mul_by_normalized_value_in_place(&mut self, normalized_value: Word) {
-        let ring = self.ring();
-        let self_val = self.normalized_value() >> ring.shift();
-        let product = extend_word(self_val) * extend_word(normalized_value);
-        let (_, product) = ring.fast_div().div_rem(product);
-        self.set_normalized_value(product);
+        let val = self
+            .ring()
+            .mul_normalized(self.normalized_value(), normalized_value);
+        self.set_normalized_value(val);
     }
 }
 
@@ -105,7 +112,7 @@ impl ModuloRingLarge {
     }
 
     /// Returns a * b allocated in memory.
-    pub(crate) fn mul_normalized_values<'a>(
+    pub(crate) fn mul_normalized<'a>(
         &self,
         a: &[Word],
         b: &[Word],
@@ -128,24 +135,24 @@ impl ModuloRingLarge {
 impl<'a> ModuloLarge<'a> {
     /// self *= rhs
     pub(crate) fn mul_in_place(&mut self, rhs: &ModuloLarge<'a>, memory: &mut Memory) {
-        self.mul_normalized_value_in_place(rhs.normalized_value(), memory);
+        self.mul_normalized_in_place(rhs.normalized_value(), memory);
     }
 
     /// self *= self
     pub(crate) fn square_in_place(&mut self, memory: &mut Memory) {
         self.modify_normalized_value(|words, ring| {
-            words.copy_from_slice(ring.mul_normalized_values(words, words, memory));
+            words.copy_from_slice(ring.mul_normalized(words, words, memory));
         });
     }
 
     /// self *= rhs
-    pub(crate) fn mul_normalized_value_in_place(
+    pub(crate) fn mul_normalized_in_place(
         &mut self,
         normalized_value: &[Word],
         memory: &mut Memory,
     ) {
         self.modify_normalized_value(|words, ring| {
-            words.copy_from_slice(ring.mul_normalized_values(words, normalized_value, memory));
+            words.copy_from_slice(ring.mul_normalized(words, normalized_value, memory));
         });
     }
 }

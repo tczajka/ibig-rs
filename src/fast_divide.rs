@@ -121,7 +121,7 @@ impl FastDivideNormalized {
         FastDivideNormalized { divisor, m }
     }
 
-    pub(crate) fn div_rem_word(&self, a: Word) -> (Word, Word) {
+    pub(crate) const fn div_rem_word(&self, a: Word) -> (Word, Word) {
         if a < self.divisor {
             (0, a)
         } else {
@@ -131,9 +131,9 @@ impl FastDivideNormalized {
 
     /// (a / divisor, a % divisor)
     /// The result must fit in a single word.
-    pub(crate) fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
+    pub(crate) const fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
         let (a_lo, a_hi) = split_double_word(a);
-        debug_assert!(a_hi < self.divisor);
+        // debug_assert!(a_hi < self.divisor);
 
         // Approximate quotient is (m + B) * a / B^2 ~= (m * a/B + a)/B.
         // This is q1 below.

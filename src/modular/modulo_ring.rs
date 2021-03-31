@@ -72,8 +72,8 @@ impl ModuloRing {
 
 impl ModuloRingSmall {
     /// Create a new small ring of integers modulo `n`.
-    fn new(n: Word) -> ModuloRingSmall {
-        debug_assert!(n != 0);
+    pub(crate) const fn new(n: Word) -> ModuloRingSmall {
+        // debug_assert!(n != 0);
         let shift = n.leading_zeros();
         let normalized_modulus = n << shift;
         let fast_div = FastDivideNormalized::new(normalized_modulus);
@@ -84,15 +84,15 @@ impl ModuloRingSmall {
         }
     }
 
-    pub(crate) fn normalized_modulus(&self) -> Word {
+    pub(crate) const fn normalized_modulus(&self) -> Word {
         self.normalized_modulus
     }
 
-    pub(crate) fn shift(&self) -> u32 {
+    pub(crate) const fn shift(&self) -> u32 {
         self.shift
     }
 
-    pub(crate) fn fast_div(&self) -> &FastDivideNormalized {
+    pub(crate) const fn fast_div(&self) -> &FastDivideNormalized {
         &self.fast_div
     }
 

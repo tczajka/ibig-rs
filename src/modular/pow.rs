@@ -2,7 +2,10 @@ use crate::{
     arch::word::Word,
     math,
     memory::{self, MemoryAllocation},
-    modular::modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+    modular::{
+        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+        modulo_ring::ModuloRingSmall,
+    },
     primitive::{double_word, split_double_word, PrimitiveUnsigned, WORD_BITS, WORD_BITS_USIZE},
     ubig::{Repr::*, UBig},
 };
@@ -25,6 +28,23 @@ impl Modulo<'_> {
         match self.repr() {
             ModuloRepr::Small(self_small) => self_small.pow(exp).into(),
             ModuloRepr::Large(self_large) => self_large.pow(exp).into(),
+        }
+    }
+}
+
+impl ModuloRingSmall {
+    /// Constant exponentatiation.
+    pub(crate) const fn const_pow_normalized(&self, normalized_value: Word, exp: Word) -> Word {
+        if exp == 0 {
+            self.normalize_word(1)
+        } else {
+            let a = self.const_pow_normalized(normalized_value, exp / 2);
+            let a = self.mul_normalized(a, a);
+            if exp % 2 == 0 {
+                a
+            } else {
+                self.mul_normalized(a, normalized_value)
+            }
         }
     }
 }
@@ -106,7 +126,7 @@ impl ModuloLarge<'_> {
                 let (prev, cur) = (&mut table[(i - 2) * n..i * n]).split_at_mut(n);
                 (&*prev, cur)
             };
-            cur.copy_from_slice(self.ring().mul_normalized_values(
+            cur.copy_from_slice(self.ring().mul_normalized(
                 prev,
                 val.normalized_value(),
                 &mut memory,
@@ -151,7 +171,7 @@ impl ModuloLarge<'_> {
                 } else {
                     &table[(entry_idx - 1) * n..entry_idx * n]
                 };
-                val.mul_normalized_value_in_place(entry, &mut memory);
+                val.mul_normalized_in_place(entry, &mut memory);
             }
             // val = self ^ exp[bit..]
             if bit == 0 {

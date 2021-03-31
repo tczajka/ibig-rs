@@ -55,6 +55,23 @@ impl ModuloRingSmall {
     pub(crate) fn modulus(&self) -> Word {
         self.normalized_modulus() >> self.shift()
     }
+
+    pub(crate) const fn normalize_word(&self, word: Word) -> Word {
+        if self.shift() == 0 {
+            self.fast_div().div_rem_word(word).1
+        } else {
+            self.fast_div().div_rem(extend_word(word) << self.shift()).1
+        }
+    }
+
+    pub(crate) fn normalize_large(&self, words: &[Word]) -> Word {
+        let rem = div::fast_rem_by_normalized_word(words, *self.fast_div());
+        if self.shift() == 0 {
+            rem
+        } else {
+            self.fast_div().div_rem(extend_word(rem) << self.shift()).1
+        }
+    }
 }
 
 impl ModuloRingLarge {
@@ -152,13 +169,11 @@ impl IntoModulo for &IBig {
 
 impl<'a> ModuloSmall<'a> {
     pub(crate) fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
-        let rem = match x.repr() {
-            Repr::Small(word) => ring.fast_div().div_rem_word(*word).1,
-            Repr::Large(words) => div::fast_rem_by_normalized_word(words, *ring.fast_div()),
+        let normalized_value = match x.repr() {
+            Repr::Small(word) => ring.normalize_word(*word),
+            Repr::Large(words) => ring.normalize_large(words),
         };
-        // Effectively shifts x left by ring.shift().
-        let (_, rem) = ring.fast_div().div_rem(extend_word(rem) << ring.shift());
-        ModuloSmall::new(rem, ring)
+        ModuloSmall::new(normalized_value, ring)
     }
 }
 

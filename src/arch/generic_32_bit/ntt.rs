@@ -1,4 +1,4 @@
-use crate::mul::ntt::Prime;
+use crate::mul::ntt::{Prime, NUM_PRIMES};
 
 /// Maximum order of the number-theoretic transform.
 ///
@@ -6,8 +6,7 @@ use crate::mul::ntt::Prime;
 pub(crate) const MAX_ORDER: u32 = 27;
 
 /// Primes to be used for the number-theoretic transform.
-#[allow(dead_code)]
-pub(crate) static PRIMES: [Prime; 3] = [
+pub(crate) const PRIMES: [Prime; NUM_PRIMES] = [
     Prime {
         prime: 0xc0000001,
         max_order_root: 0x3,
