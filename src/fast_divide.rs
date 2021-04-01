@@ -5,6 +5,7 @@ use crate::{
     math,
     primitive::{double_word, extend_word, split_double_word},
 };
+use const_fn_assert::{cfn_assert, cfn_debug_assert};
 
 /// Divide a Word by a prearranged divisor.
 ///
@@ -26,8 +27,7 @@ pub(crate) struct FastDivideSmall {
 
 impl FastDivideSmall {
     pub(crate) const fn new(divisor: Word) -> Self {
-        // assert!(divisor > 1);
-        // Asserts don't work in const functions.
+        cfn_assert!(divisor > 1);
         let n = math::const_ceil_log_2_word(divisor);
 
         // Calculate:
@@ -109,10 +109,9 @@ impl FastDivideNormalized {
     ///
     /// divisor must have top bit of 1
     pub(crate) const fn new(divisor: Word) -> Self {
-        // assert!(divisor.leading_zeros() == 0);
-        // Asserts don't work in const functions.
+        cfn_assert!(divisor.leading_zeros() == 0);
         let (m, _hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
-        // assert!(_hi == 1);
+        cfn_assert!(_hi == 1);
 
         // Note:
         // m > 0
@@ -133,7 +132,7 @@ impl FastDivideNormalized {
     /// The result must fit in a single word.
     pub(crate) const fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
         let (a_lo, a_hi) = split_double_word(a);
-        // debug_assert!(a_hi < self.divisor);
+        cfn_debug_assert!(a_hi < self.divisor);
 
         // Approximate quotient is (m + B) * a / B^2 ~= (m * a/B + a)/B.
         // This is q1 below.

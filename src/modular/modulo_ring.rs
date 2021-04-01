@@ -7,6 +7,7 @@ use crate::{
     math,
     ubig::{Repr, UBig},
 };
+use const_fn_assert::cfn_debug_assert;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
 
@@ -73,7 +74,7 @@ impl ModuloRing {
 impl ModuloRingSmall {
     /// Create a new small ring of integers modulo `n`.
     pub(crate) const fn new(n: Word) -> ModuloRingSmall {
-        // debug_assert!(n != 0);
+        cfn_debug_assert!(n != 0);
         let shift = n.leading_zeros();
         let normalized_modulus = n << shift;
         let fast_div = FastDivideNormalized::new(normalized_modulus);

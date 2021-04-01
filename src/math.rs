@@ -1,6 +1,7 @@
 //! Mathematical functions.
 
 use crate::{arch::word::Word, primitive::PrimitiveUnsigned};
+use const_fn_assert::cfn_debug_assert;
 
 /// The length of an integer in bits.
 /// 0 for 0.
@@ -24,6 +25,7 @@ pub(crate) fn ceil_log_2<T: PrimitiveUnsigned>(x: T) -> u32 {
 /// Ceiling of log_2(x).
 /// x must be non-zero.
 pub(crate) const fn const_ceil_log_2_word(x: Word) -> u32 {
+    cfn_debug_assert!(x != 0);
     const_bit_len_word(x - 1)
 }
 
