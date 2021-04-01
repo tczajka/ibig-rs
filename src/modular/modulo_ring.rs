@@ -7,8 +7,8 @@ use crate::{
     math,
     ubig::{Repr, UBig},
 };
-use const_fn_assert::cfn_debug_assert;
 use alloc::vec::Vec;
+use const_fn_assert::cfn_debug_assert;
 use core::cmp::Ordering;
 
 /// A ring of integers modulo a positive integer.
