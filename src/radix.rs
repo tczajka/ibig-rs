@@ -121,23 +121,22 @@ impl RadixInfo {
 
 type RadixInfoTable = [RadixInfo; MAX_RADIX as usize + 1];
 
-static RADIX_INFO_TABLE: RadixInfoTable = fill_radix_info_table(
-    [RadixInfo {
+static RADIX_INFO_TABLE: RadixInfoTable = generate_radix_info_table();
+
+const fn generate_radix_info_table() -> RadixInfoTable {
+    let mut table = [RadixInfo {
         digits_per_word: 0,
         range_per_word: 0,
         fast_div_radix: FastDivideSmall::dummy(),
         fast_div_range_per_word: FastDivideNormalized::dummy(),
-    }; MAX_RADIX as usize + 1],
-    2,
-);
+    }; MAX_RADIX as usize + 1];
 
-const fn fill_radix_info_table(mut table: RadixInfoTable, next_radix: Digit) -> RadixInfoTable {
-    if next_radix > MAX_RADIX {
-        table
-    } else {
-        table[next_radix as usize] = RadixInfo::for_radix(next_radix);
-        fill_radix_info_table(table, next_radix + 1)
+    let mut radix = 2;
+    while radix <= MAX_RADIX {
+        table[radix as usize] = RadixInfo::for_radix(radix);
+        radix += 1;
     }
+    table
 }
 
 #[cfg(test)]

@@ -94,17 +94,13 @@ static INVERSE_ROOTS: RootTable = generate_roots(MAX_ORDER_ROOT.inverse());
 
 const fn generate_roots(max_order_root: RingElement) -> RootTable {
     let mut table = [RingElement::zero(); MAX_ORDER as usize + 1];
-    table[MAX_ORDER as usize] = max_order_root;
-    generate_roots_prefix(MAX_ORDER as usize, table)
-}
-
-const fn generate_roots_prefix(n: usize, mut table: RootTable) -> RootTable {
-    if n == 0 {
-        table
-    } else {
-        table[n - 1] = table[n].mul(&table[n]);
-        generate_roots_prefix(n - 1, table)
+    let mut order = MAX_ORDER as usize;
+    table[order] = max_order_root;
+    while order > 0 {
+        table[order - 1] = table[order].mul(&table[order]);
+        order -= 1;
     }
+    table
 }
 
 #[cfg(test)]
