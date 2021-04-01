@@ -89,32 +89,20 @@ impl RadixInfo {
                 fast_div_range_per_word: FastDivideNormalized::dummy(),
             }
         } else {
-            let mut info = RadixInfo::for_radix_recursive(
-                radix,
-                RadixInfo {
-                    digits_per_word: 0,
-                    range_per_word: 1,
-                    fast_div_radix,
-                    fast_div_range_per_word: FastDivideNormalized::dummy(),
-                },
-            );
-            let shift = info.range_per_word.leading_zeros();
-            info.fast_div_range_per_word = FastDivideNormalized::new(info.range_per_word << shift);
-            info
-        }
-    }
-
-    const fn for_radix_recursive(radix: Digit, info: RadixInfo) -> RadixInfo {
-        match info.range_per_word.checked_mul(radix as Word) {
-            None => info,
-            Some(range_per_word) => RadixInfo::for_radix_recursive(
-                radix,
-                RadixInfo {
-                    digits_per_word: info.digits_per_word + 1,
-                    range_per_word,
-                    ..info
-                },
-            ),
+            let mut digits_per_word = 0;
+            let mut range_per_word: Word = 1;
+            while let Some(range) = range_per_word.checked_mul(radix as Word) {
+                digits_per_word += 1;
+                range_per_word = range;
+            }
+            let shift = range_per_word.leading_zeros();
+            let fast_div_range_per_word = FastDivideNormalized::new(range_per_word << shift);
+            RadixInfo {
+                digits_per_word,
+                range_per_word,
+                fast_div_radix,
+                fast_div_range_per_word,
+            }
         }
     }
 }
