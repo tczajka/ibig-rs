@@ -44,9 +44,11 @@ pub(crate) use arch_impl::word;
 )]
 #[cfg_attr(
     all(
-        target_arch = "aarch64",
-        target_arch = "mips64",
-        target_arch = "powerpc64",
+        any(
+            target_arch = "aarch64",
+            target_arch = "mips64",
+            target_arch = "powerpc64",
+        ),
         not(any(force_bits = "16", force_bits = "32", force_bits = "64"))
     ),
     path = "generic_64_bit/mod.rs"
