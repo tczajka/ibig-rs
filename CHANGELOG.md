@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Features
 * Maximum supported length in bits: `UBig::MAX_BIT_LEN`.
 
+### Fixes
+* Fixed broken build for `aarch64`, `mips64` and` powerpc64`.
+
 ### Dependencies
 * Added a dependency on `const_fn_assert`.
 
