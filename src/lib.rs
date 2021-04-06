@@ -68,6 +68,7 @@ pub mod error;
 mod fast_divide;
 pub mod fmt;
 mod ibig;
+mod macros;
 mod math;
 mod memory;
 pub mod modular;
@@ -82,9 +83,6 @@ mod shift;
 mod shift_ops;
 mod sign;
 mod ubig;
-
-#[macro_use]
-mod macros;
 
 #[cfg(feature = "rand")]
 pub mod rand;
