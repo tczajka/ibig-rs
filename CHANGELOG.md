@@ -2,6 +2,11 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.2 - unreleased
+
+### Dependencies
+* Added a dependency on `cfg-if`.
+
 ## 0.3.1 - 2021-04-03
 
 ### Features

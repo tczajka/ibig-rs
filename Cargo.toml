@@ -18,6 +18,7 @@ members = ["dev-tools"]
 [dependencies]
 static_assertions = "1.1"
 const_fn_assert = "0.1.2"
+cfg-if = "1.0.0"
 rand = { version = "0.8.3", default-features = false, optional = true }
 num-traits = { version = "0.2.14", default-features = false, optional = true }
 
