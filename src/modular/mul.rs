@@ -3,7 +3,7 @@ use crate::{
     div,
     memory::{self, Memory, MemoryAllocation},
     modular::{
-        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
         modulo_ring::{ModuloRingLarge, ModuloRingSmall},
     },
     mul,
@@ -12,6 +12,7 @@ use crate::{
     sign::Sign::Positive,
 };
 use alloc::alloc::Layout;
+use const_fn_assert::cfn_debug_assert;
 use core::ops::{Mul, MulAssign};
 
 impl<'a> Mul<Modulo<'a>> for Modulo<'a> {
@@ -72,30 +73,22 @@ impl<'a> MulAssign<&Modulo<'a>> for Modulo<'a> {
     }
 }
 
-impl ModuloRingSmall {
-    pub(crate) const fn mul_normalized(&self, a: Word, b: Word) -> Word {
-        let product = extend_word(a >> self.shift()) * extend_word(b);
-        let (_, rem) = self.fast_div().div_rem(product);
-        rem
+impl ModuloSmallRaw {
+    pub(crate) const fn mul(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        cfn_debug_assert!(self.is_valid(ring) && other.is_valid(ring));
+        let a = self.normalized();
+        let b = other.normalized();
+        let product = extend_word(a >> ring.shift()) * extend_word(b);
+        let (_, rem) = ring.fast_div().div_rem(product);
+        ModuloSmallRaw::from_normalized(rem)
     }
 }
 
 impl<'a> ModuloSmall<'a> {
     /// self *= rhs
     pub(crate) fn mul_in_place(&mut self, rhs: &ModuloSmall<'a>) {
-        self.mul_by_normalized_value_in_place(rhs.normalized_value());
-    }
-
-    /// self *= self
-    pub(crate) fn square_in_place(&mut self) {
-        self.mul_by_normalized_value_in_place(self.normalized_value());
-    }
-
-    fn mul_by_normalized_value_in_place(&mut self, normalized_value: Word) {
-        let val = self
-            .ring()
-            .mul_normalized(self.normalized_value(), normalized_value);
-        self.set_normalized_value(val);
+        self.check_same_ring(rhs);
+        self.set_raw(self.raw().mul(rhs.raw(), self.ring()));
     }
 }
 

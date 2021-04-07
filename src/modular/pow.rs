@@ -3,7 +3,7 @@ use crate::{
     math,
     memory::{self, MemoryAllocation},
     modular::{
-        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
         modulo_ring::ModuloRingSmall,
     },
     primitive::{double_word, split_double_word, PrimitiveUnsigned, WORD_BITS, WORD_BITS_USIZE},
@@ -32,19 +32,18 @@ impl Modulo<'_> {
     }
 }
 
-impl ModuloRingSmall {
+impl ModuloSmallRaw {
     /// Constant exponentatiation.
-    pub(crate) const fn const_pow_normalized(&self, normalized_value: Word, exp: Word) -> Word {
+    pub(crate) const fn const_pow(self, exp: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         if exp == 0 {
-            self.normalize_word(1)
+            ModuloSmallRaw::from_word(1, ring)
         } else {
-            let a = self.const_pow_normalized(normalized_value, exp / 2);
-            let a = self.mul_normalized(a, a);
-            if exp % 2 == 0 {
-                a
-            } else {
-                self.mul_normalized(a, normalized_value)
+            let a = self.const_pow(exp / 2, ring);
+            let mut a = a.mul(a, ring);
+            if exp % 2 != 0 {
+                a = a.mul(self, ring);
             }
+            a
         }
     }
 }
@@ -59,9 +58,8 @@ impl ModuloSmall<'_> {
             Small(1) => self.clone(),
             // self^2 == self * self
             Small(2) => {
-                let mut a = self.clone();
-                a.mul_in_place(self);
-                a
+                let res = self.raw().mul(self.raw(), self.ring());
+                ModuloSmall::new(res, self.ring())
             }
             _ => self.pow_nontrivial(exp),
         }
@@ -71,16 +69,16 @@ impl ModuloSmall<'_> {
         debug_assert!(*exp >= UBig::from_word(3));
 
         let exp_words = exp.as_words();
-        let mut val = self.clone();
+        let mut val = self.raw();
         let mut bit = exp.bit_len() - 1;
         while bit != 0 {
             bit -= 1;
-            val.square_in_place();
+            val = val.mul(val, self.ring());
             if exp_words[bit / WORD_BITS_USIZE] & (1 << (bit % WORD_BITS_USIZE)) != 0 {
-                val.mul_in_place(self);
+                val = val.mul(self.raw(), self.ring());
             }
         }
-        val
+        ModuloSmall::new(val, self.ring())
     }
 }
 

@@ -5,7 +5,7 @@ use crate::{
         ntt::{MAX_ORDER, PRIMES},
         word::Word,
     },
-    modular::modulo_ring::ModuloRingSmall,
+    modular::{modulo::ModuloSmallRaw, modulo_ring::ModuloRingSmall},
 };
 
 /// The number of prime factors in the ring.
@@ -29,18 +29,17 @@ const FIELDS: [ModuloRingSmall; NUM_PRIMES] = [
 /// An element of the three-prime ring.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct RingElement {
-    normalized: [Word; NUM_PRIMES],
+    val: [ModuloSmallRaw; NUM_PRIMES],
 }
 
 impl From<Word> for RingElement {
     /// Convert a `Word` to `RingElement`.
-
     fn from(x: Word) -> RingElement {
         RingElement {
-            normalized: [
-                FIELDS[0].normalize_word(x),
-                FIELDS[1].normalize_word(x),
-                FIELDS[2].normalize_word(x),
+            val: [
+                ModuloSmallRaw::from_word(x, &FIELDS[0]),
+                ModuloSmallRaw::from_word(x, &FIELDS[1]),
+                ModuloSmallRaw::from_word(x, &FIELDS[2]),
             ],
         }
     }
@@ -49,36 +48,36 @@ impl From<Word> for RingElement {
 impl RingElement {
     const fn zero() -> RingElement {
         RingElement {
-            normalized: [0; NUM_PRIMES],
+            val: [ModuloSmallRaw::from_normalized(0); NUM_PRIMES],
         }
     }
 
     const fn mul(&self, rhs: &RingElement) -> RingElement {
         RingElement {
-            normalized: [
-                FIELDS[0].mul_normalized(self.normalized[0], rhs.normalized[0]),
-                FIELDS[1].mul_normalized(self.normalized[1], rhs.normalized[1]),
-                FIELDS[2].mul_normalized(self.normalized[2], rhs.normalized[2]),
+            val: [
+                self.val[0].mul(rhs.val[0], &FIELDS[0]),
+                self.val[1].mul(rhs.val[1], &FIELDS[1]),
+                self.val[2].mul(rhs.val[2], &FIELDS[2]),
             ],
         }
     }
 
     const fn inverse(&self) -> RingElement {
         RingElement {
-            normalized: [
-                FIELDS[0].const_pow_normalized(self.normalized[0], PRIMES[0].prime - 2),
-                FIELDS[1].const_pow_normalized(self.normalized[1], PRIMES[1].prime - 2),
-                FIELDS[2].const_pow_normalized(self.normalized[2], PRIMES[2].prime - 2),
+            val: [
+                self.val[0].const_pow(PRIMES[0].prime - 2, &FIELDS[0]),
+                self.val[1].const_pow(PRIMES[1].prime - 2, &FIELDS[1]),
+                self.val[2].const_pow(PRIMES[2].prime - 2, &FIELDS[2]),
             ],
         }
     }
 }
 
 const MAX_ORDER_ROOT: RingElement = RingElement {
-    normalized: [
-        FIELDS[0].normalize_word(PRIMES[0].max_order_root),
-        FIELDS[1].normalize_word(PRIMES[1].max_order_root),
-        FIELDS[2].normalize_word(PRIMES[2].max_order_root),
+    val: [
+        ModuloSmallRaw::from_word(PRIMES[0].max_order_root, &FIELDS[0]),
+        ModuloSmallRaw::from_word(PRIMES[1].max_order_root, &FIELDS[1]),
+        ModuloSmallRaw::from_word(PRIMES[2].max_order_root, &FIELDS[2]),
     ],
 };
 

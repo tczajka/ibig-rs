@@ -2,7 +2,10 @@
 
 use crate::{
     add, cmp,
-    modular::modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+    modular::{
+        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
+        modulo_ring::ModuloRingSmall,
+    },
 };
 use core::{
     cmp::Ordering,
@@ -144,60 +147,67 @@ impl<'a> SubAssign<&Modulo<'a>> for Modulo<'a> {
     }
 }
 
-impl<'a> ModuloSmall<'a> {
-    /// self = -self
-    fn negate_in_place(&mut self) {
-        let ring = self.ring();
-        let val = match self.normalized_value() {
+impl ModuloSmallRaw {
+    /// -self
+    fn negate(self, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        debug_assert!(self.is_valid(ring));
+        let normalized_val = match self.normalized() {
             0 => 0,
             x => ring.normalized_modulus() - x,
         };
-        self.set_normalized_value(val)
+        ModuloSmallRaw::from_normalized(normalized_val)
     }
 
-    /// self += rhs
-    fn add_in_place(&mut self, rhs: &ModuloSmall<'a>) {
-        self.check_same_ring(rhs);
-        let (mut val, overflow) = self
-            .normalized_value()
-            .overflowing_add(rhs.normalized_value());
-        let m = self.ring().normalized_modulus();
+    /// self + other
+    fn add(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        debug_assert!(self.is_valid(ring) && other.is_valid(ring));
+        let (mut val, overflow) = self.normalized().overflowing_add(other.normalized());
+        let m = ring.normalized_modulus();
         if overflow || val >= m {
             let (v, overflow2) = val.overflowing_sub(m);
             debug_assert_eq!(overflow, overflow2);
             val = v;
         }
-        self.set_normalized_value(val)
+        ModuloSmallRaw::from_normalized(val)
+    }
+
+    /// self - other
+    fn sub(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        debug_assert!(self.is_valid(ring) && other.is_valid(ring));
+        let (mut val, overflow) = self.normalized().overflowing_sub(other.normalized());
+        if overflow {
+            let m = ring.normalized_modulus();
+            let (v, overflow2) = val.overflowing_add(m);
+            debug_assert!(overflow2);
+            val = v;
+        }
+        ModuloSmallRaw::from_normalized(val)
+    }
+}
+
+impl<'a> ModuloSmall<'a> {
+    /// self = -self
+    fn negate_in_place(&mut self) {
+        let ring = self.ring();
+        self.set_raw(self.raw().negate(ring));
+    }
+
+    /// self += rhs
+    fn add_in_place(&mut self, rhs: &ModuloSmall<'a>) {
+        self.check_same_ring(rhs);
+        self.set_raw(self.raw().add(rhs.raw(), self.ring()));
     }
 
     /// self -= rhs
     fn sub_in_place(&mut self, rhs: &ModuloSmall<'a>) {
         self.check_same_ring(rhs);
-        let (mut val, overflow) = self
-            .normalized_value()
-            .overflowing_sub(rhs.normalized_value());
-        if overflow {
-            let m = self.ring().normalized_modulus();
-            let (v, overflow2) = val.overflowing_add(m);
-            debug_assert!(overflow2);
-            val = v;
-        }
-        self.set_normalized_value(val)
+        self.set_raw(self.raw().sub(rhs.raw(), self.ring()));
     }
 
     /// rhs = self - rhs
     fn sub_in_place_swap(&self, rhs: &mut ModuloSmall<'a>) {
         self.check_same_ring(rhs);
-        let (mut val, overflow) = self
-            .normalized_value()
-            .overflowing_sub(rhs.normalized_value());
-        if overflow {
-            let m = self.ring().normalized_modulus();
-            let (v, overflow2) = val.overflowing_add(m);
-            debug_assert!(overflow2);
-            val = v;
-        }
-        rhs.set_normalized_value(val)
+        rhs.set_raw(self.raw().sub(rhs.raw(), self.ring()));
     }
 }
 

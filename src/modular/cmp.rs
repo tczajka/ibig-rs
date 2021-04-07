@@ -57,7 +57,7 @@ impl Eq for Modulo<'_> {}
 impl PartialEq for ModuloSmall<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.check_same_ring(other);
-        self.normalized_value() == other.normalized_value()
+        self.raw() == other.raw()
     }
 }
 

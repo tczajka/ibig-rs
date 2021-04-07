@@ -96,10 +96,6 @@ impl ModuloRingSmall {
     pub(crate) const fn fast_div(&self) -> &FastDivideNormalized {
         &self.fast_div
     }
-
-    pub(crate) fn is_valid(&self, val: Word) -> bool {
-        val < self.normalized_modulus && val & math::ones::<Word>(self.shift) == 0
-    }
 }
 
 impl ModuloRingLarge {

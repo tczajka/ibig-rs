@@ -7,7 +7,7 @@ use crate::{
     ibig::IBig,
     memory::MemoryAllocation,
     modular::{
-        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall},
+        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
         modulo_ring::{ModuloRing, ModuloRingLarge, ModuloRingRepr, ModuloRingSmall},
     },
     primitive::extend_word,
@@ -55,23 +55,6 @@ impl ModuloRingSmall {
     pub(crate) fn modulus(&self) -> Word {
         self.normalized_modulus() >> self.shift()
     }
-
-    pub(crate) const fn normalize_word(&self, word: Word) -> Word {
-        if self.shift() == 0 {
-            self.fast_div().div_rem_word(word).1
-        } else {
-            self.fast_div().div_rem(extend_word(word) << self.shift()).1
-        }
-    }
-
-    pub(crate) fn normalize_large(&self, words: &[Word]) -> Word {
-        let rem = div::fast_rem_by_normalized_word(words, *self.fast_div());
-        if self.shift() == 0 {
-            rem
-        } else {
-            self.fast_div().div_rem(extend_word(rem) << self.shift()).1
-        }
-    }
 }
 
 impl ModuloRingLarge {
@@ -104,9 +87,33 @@ impl Modulo<'_> {
     }
 }
 
+impl ModuloSmallRaw {
+    fn residue(self, ring: &ModuloRingSmall) -> Word {
+        debug_assert!(self.is_valid(ring));
+        self.normalized() >> ring.shift()
+    }
+
+    pub(crate) const fn from_word(word: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        let rem = if ring.shift() == 0 {
+            ring.fast_div().div_rem_word(word).1
+        } else {
+            ring.fast_div().div_rem(extend_word(word) << ring.shift()).1
+        };
+        ModuloSmallRaw::from_normalized(rem)
+    }
+
+    fn from_large(words: &[Word], ring: &ModuloRingSmall) -> ModuloSmallRaw {
+        let mut rem = div::fast_rem_by_normalized_word(words, *ring.fast_div());
+        if ring.shift() != 0 {
+            rem = ring.fast_div().div_rem(extend_word(rem) << ring.shift()).1
+        }
+        ModuloSmallRaw::from_normalized(rem)
+    }
+}
+
 impl ModuloSmall<'_> {
     pub(crate) fn residue(&self) -> Word {
-        self.normalized_value() >> self.ring().shift()
+        self.raw().residue(self.ring())
     }
 }
 
@@ -169,11 +176,11 @@ impl IntoModulo for &IBig {
 
 impl<'a> ModuloSmall<'a> {
     pub(crate) fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
-        let normalized_value = match x.repr() {
-            Repr::Small(word) => ring.normalize_word(*word),
-            Repr::Large(words) => ring.normalize_large(words),
+        let raw = match x.repr() {
+            Repr::Small(word) => ModuloSmallRaw::from_word(*word, ring),
+            Repr::Large(words) => ModuloSmallRaw::from_large(words, ring),
         };
-        ModuloSmall::new(normalized_value, ring)
+        ModuloSmall::new(raw, ring)
     }
 }
 
