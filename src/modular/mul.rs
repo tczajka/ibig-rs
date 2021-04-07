@@ -120,7 +120,7 @@ impl ModuloRingLarge {
         assert_eq!(overflow, 0);
         shift::shr_in_place(product, self.shift());
 
-        let _overflow = div::div_rem_in_place(product, modulus, *self.fast_div_top(), &mut memory);
+        let _overflow = div::div_rem_in_place(product, modulus, self.fast_div_top(), &mut memory);
         &product[..n]
     }
 }

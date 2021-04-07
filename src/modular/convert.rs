@@ -103,7 +103,7 @@ impl ModuloSmallRaw {
     }
 
     fn from_large(words: &[Word], ring: &ModuloRingSmall) -> ModuloSmallRaw {
-        let mut rem = div::fast_rem_by_normalized_word(words, *ring.fast_div());
+        let mut rem = div::fast_rem_by_normalized_word(words, ring.fast_div());
         if ring.shift() != 0 {
             rem = ring.fast_div().div_rem(extend_word(rem) << ring.shift()).1
         }
@@ -203,7 +203,7 @@ impl<'a> ModuloLarge<'a> {
                     let _overflow = div::div_rem_in_place(
                         &mut words,
                         modulus,
-                        *ring.fast_div_top(),
+                        ring.fast_div_top(),
                         &mut memory,
                     );
                     vec.extend(&words[..modulus.len()]);
