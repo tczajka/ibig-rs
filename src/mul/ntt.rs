@@ -65,9 +65,9 @@ impl RingElement {
     const fn inverse(&self) -> RingElement {
         RingElement {
             val: [
-                self.val[0].const_pow(PRIMES[0].prime - 2, &FIELDS[0]),
-                self.val[1].const_pow(PRIMES[1].prime - 2, &FIELDS[1]),
-                self.val[2].const_pow(PRIMES[2].prime - 2, &FIELDS[2]),
+                self.val[0].pow_word(PRIMES[0].prime - 2, &FIELDS[0]),
+                self.val[1].pow_word(PRIMES[1].prime - 2, &FIELDS[1]),
+                self.val[2].pow_word(PRIMES[2].prime - 2, &FIELDS[2]),
             ],
         }
     }

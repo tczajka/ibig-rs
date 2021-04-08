@@ -33,18 +33,33 @@ impl Modulo<'_> {
 }
 
 impl ModuloSmallRaw {
-    /// Constant exponentatiation.
-    pub(crate) const fn const_pow(self, exp: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
+    /// self^exp
+    pub(crate) const fn pow_word(self, exp: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         if exp == 0 {
-            ModuloSmallRaw::from_word(1, ring)
-        } else {
-            let a = self.const_pow(exp / 2, ring);
-            let mut a = a.mul(a, ring);
-            if exp % 2 != 0 {
-                a = a.mul(self, ring);
-            }
-            a
+            return ModuloSmallRaw::from_word(1, ring);
         }
+
+        let bits = WORD_BITS - 1 - exp.leading_zeros();
+        self.pow_helper(bits, self, exp, ring)
+    }
+
+    /// self^2^bits * base^exp[..bits]
+    const fn pow_helper(
+        self,
+        mut bits: u32,
+        base: ModuloSmallRaw,
+        exp: Word,
+        ring: &ModuloRingSmall,
+    ) -> ModuloSmallRaw {
+        let mut res = self;
+        while bits > 0 {
+            res = res.mul(res, ring);
+            bits -= 1;
+            if exp & (1 << bits) != 0 {
+                res = res.mul(base, ring);
+            }
+        }
+        res
     }
 }
 
@@ -69,14 +84,11 @@ impl ModuloSmall<'_> {
         debug_assert!(*exp >= UBig::from_word(3));
 
         let exp_words = exp.as_words();
-        let mut val = self.raw();
-        let mut bit = exp.bit_len() - 1;
-        while bit != 0 {
-            bit -= 1;
-            val = val.mul(val, self.ring());
-            if exp_words[bit / WORD_BITS_USIZE] & (1 << (bit % WORD_BITS_USIZE)) != 0 {
-                val = val.mul(self.raw(), self.ring());
-            }
+        let mut n = exp_words.len() - 1;
+        let mut val = self.raw().pow_word(exp_words[n], self.ring());
+        while n != 0 {
+            n -= 1;
+            val = val.pow_helper(WORD_BITS, self.raw(), exp_words[n], self.ring());
         }
         ModuloSmall::new(val, self.ring())
     }
@@ -198,5 +210,17 @@ impl ModuloLarge<'_> {
             c = c2;
         }
         window_size
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pow_word() {
+        let ring = ModuloRingSmall::new(100);
+        let a = ModuloSmallRaw::from_word(17, &ring);
+        assert_eq!(a.pow_word(15, &ring).residue(&ring), 93);
     }
 }

@@ -88,7 +88,7 @@ impl Modulo<'_> {
 }
 
 impl ModuloSmallRaw {
-    fn residue(self, ring: &ModuloRingSmall) -> Word {
+    pub(crate) fn residue(self, ring: &ModuloRingSmall) -> Word {
         debug_assert!(self.is_valid(ring));
         self.normalized() >> ring.shift()
     }
