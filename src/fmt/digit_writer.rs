@@ -6,7 +6,7 @@ use core::{convert::TryInto, fmt, str};
 /// Minimum buffer length.
 const BUFFER_LEN_MIN: usize = 32;
 
-const BUFFER_LEN: usize = math::const_round_up_usize(BUFFER_LEN_MIN, arch::digits::DIGIT_CHUNK_LEN);
+const BUFFER_LEN: usize = math::round_up_usize(BUFFER_LEN_MIN, arch::digits::DIGIT_CHUNK_LEN);
 
 /// DigitWriter allows writing raw digits and turns them into ASCII.
 pub(crate) struct DigitWriter<'a> {

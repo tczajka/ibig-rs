@@ -84,7 +84,7 @@ impl ModuloSmallRaw {
 
     pub(crate) const fn is_valid(&self, ring: &ModuloRingSmall) -> bool {
         self.normalized_value < ring.normalized_modulus()
-            && self.normalized_value & math::const_ones_word(ring.shift()) == 0
+            && self.normalized_value & math::ones_word(ring.shift()) == 0
     }
 }
 

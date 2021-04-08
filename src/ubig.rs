@@ -84,7 +84,7 @@ impl UBig {
     ///
     /// We also make sure that any multiplication whose result fits in `MAX_LEN` can fit
     /// within the largest possible number-theoretic transform.
-    pub(crate) const MAX_LEN: usize = math::const_min_usize(
+    pub(crate) const MAX_LEN: usize = math::min_usize(
         usize::MAX / WORD_BITS_USIZE,
         match 1usize.checked_shl(ntt::MAX_ORDER) {
             Some(ntt_len) => ntt_len,

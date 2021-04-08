@@ -28,7 +28,7 @@ pub(crate) struct FastDivideSmall {
 impl FastDivideSmall {
     pub(crate) const fn new(divisor: Word) -> Self {
         cfn_assert!(divisor > 1);
-        let n = math::const_ceil_log_2_word(divisor);
+        let n = math::ceil_log_2_word(divisor);
 
         // Calculate:
         // m = floor(B * 2^n / divisor) + 1 - B
@@ -46,7 +46,7 @@ impl FastDivideSmall {
 
         // m = floor(B * (2^n-1 - (divisor-1)) / divisor) + 1
         let (lo, _hi) = split_double_word(
-            double_word(0, math::const_ones_word(n) - (divisor - 1)) / extend_word(divisor),
+            double_word(0, math::ones_word(n) - (divisor - 1)) / extend_word(divisor),
         );
         // assert!(_hi == 0);
         FastDivideSmall {
