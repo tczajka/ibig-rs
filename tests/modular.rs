@@ -69,6 +69,36 @@ fn test_convert() {
 
     assert_eq!(ring.from(0), ring.from(false));
     assert_eq!(ring.from(1), ring.from(true));
+
+    let ring = ModuloRing::new(&ubig!(
+        _1000000000000000000000000000000000000000000000000000000000000
+    ));
+    let x = ring.from(6);
+    let y = ring.from(ubig!(_333333333333333333333333333333));
+    assert_eq!(
+        x,
+        ring.from(ubig!(
+            _1000000000000000000000000000000000000000000000000000000000006
+        ))
+    );
+    assert_eq!(
+        x,
+        ring.from(&ubig!(
+            _1000000000000000000000000000000000000000000000000000000000006
+        ))
+    );
+    assert_ne!(
+        x,
+        ring.from(ubig!(
+            _1000000000000000000000000000000000000000000000000000000000007
+        ))
+    );
+    assert_eq!(
+        y,
+        ring.from(ubig!(
+            _7000000000000000000000000000000333333333333333333333333333333
+        ))
+    );
 }
 
 #[test]
@@ -229,6 +259,11 @@ fn test_pow() {
     assert_eq!(ring.from(13).pow(&ubig!(1)), ring.from(13));
     assert_eq!(ring.from(13).pow(&ubig!(2)), ring.from(69));
     assert_eq!(ring.from(13).pow(&ubig!(12837918273)), ring.from(53));
+    assert_eq!(
+        ring.from(13)
+            .pow(&((ubig!(1) << 10000) * ubig!(40) + ubig!(3))),
+        ring.from(97)
+    );
 
     let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
     let x = ring.from(ubig!(_658571505947767552546868380533));
