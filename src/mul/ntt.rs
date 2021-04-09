@@ -3,10 +3,55 @@
 use crate::{
     arch::{
         ntt::{MAX_ORDER, PRIMES},
-        word::Word,
+        word::{SignedWord, Word},
     },
+    memory::Memory,
     modular::{modulo::ModuloSmallRaw, modulo_ring::ModuloRingSmall},
+    sign::Sign,
 };
+use alloc::alloc::Layout;
+
+/// Memory requirement for multiplication.
+#[allow(dead_code)]
+pub(crate) fn memory_requirement_up_to(_total_len: usize, _small_len: usize) -> Layout {
+    // FIXME
+    todo!()
+}
+
+/// Memory requirement for multiplication.
+#[allow(dead_code)]
+pub(crate) fn memory_requirement_exact(_total_len: usize, _small_len: usize) -> Layout {
+    // FIXME
+    todo!()
+}
+
+/// c += sign * a * b
+/// Number-theoretic method. O(a.len() * log(b.len())).
+///
+/// Returns carry.
+#[allow(dead_code)]
+#[must_use]
+pub(crate) fn add_signed_mul(
+    c: &mut [Word],
+    _sign: Sign,
+    a: &[Word],
+    b: &[Word],
+    _memory: &mut Memory,
+) -> SignedWord {
+    assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
+
+    let order = select_order(a.len(), b.len());
+    let _max_chunk_len = (1usize << order) + 1 - b.len();
+    // FIXME
+    todo!()
+}
+
+/// Select NTT order, between 0 and MAX_ORDER inclusive.
+fn select_order(a_len: usize, b_len: usize) -> u32 {
+    assert!(a_len >= b_len);
+    // FIXME
+    todo!()
+}
 
 /// The number of prime factors in the ring.
 pub(crate) const NUM_PRIMES: usize = 3;
