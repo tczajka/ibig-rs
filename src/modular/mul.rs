@@ -98,7 +98,7 @@ impl ModuloRingLarge {
         memory::add_layout(
             memory::array_layout::<Word>(2 * n),
             memory::max_layout(
-                mul::memory_requirement_exact(n),
+                mul::memory_requirement_exact(2 * n, n),
                 div::memory_requirement_exact(2 * n, n),
             ),
         )

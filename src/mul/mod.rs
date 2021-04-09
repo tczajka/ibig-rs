@@ -108,23 +108,19 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
 }
 
 /// Temporary scratch space required for multiplication.
-///
-/// n bounds the length of the smaller factor in words.
-pub(crate) fn memory_requirement_up_to(n: usize) -> Layout {
-    if n <= MAX_LEN_SIMPLE {
+pub(crate) fn memory_requirement_up_to(_total_len: usize, smaller_len: usize) -> Layout {
+    if smaller_len <= MAX_LEN_SIMPLE {
         memory::zero_layout()
-    } else if n <= MAX_LEN_KARATSUBA {
-        karatsuba::memory_requirement_up_to(n)
+    } else if smaller_len <= MAX_LEN_KARATSUBA {
+        karatsuba::memory_requirement_up_to(smaller_len)
     } else {
-        toom_3::memory_requirement_up_to(n)
+        toom_3::memory_requirement_up_to(smaller_len)
     }
 }
 
 /// Temporary scratch space required for multiplication.
-///
-/// n is the exact length of the smaller factor in words.
-pub(crate) fn memory_requirement_exact(n: usize) -> Layout {
-    memory_requirement_up_to(n)
+pub(crate) fn memory_requirement_exact(total_len: usize, smaller_len: usize) -> Layout {
+    memory_requirement_up_to(total_len, smaller_len)
 }
 
 /// c += sign * a * b

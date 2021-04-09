@@ -172,11 +172,14 @@ impl UBig {
     fn mul_large(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= 2 && rhs.len() >= 2);
 
-        let mut buffer = Buffer::allocate(lhs.len() + rhs.len());
-        buffer.push_zeros(lhs.len() + rhs.len());
+        let res_len = lhs.len() + rhs.len();
+        let mut buffer = Buffer::allocate(res_len);
+        buffer.push_zeros(res_len);
 
-        let mut allocation =
-            MemoryAllocation::new(mul::memory_requirement_exact(lhs.len().min(rhs.len())));
+        let mut allocation = MemoryAllocation::new(mul::memory_requirement_exact(
+            res_len,
+            lhs.len().min(rhs.len()),
+        ));
         let mut memory = allocation.memory();
         let overflow = mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut memory);
         assert!(overflow == 0);

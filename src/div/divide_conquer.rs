@@ -19,8 +19,8 @@ pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout
     // and at most lhs_len - rhs_len long.
     // One of the factors will be at most floor(rhs.len()/2),
     // and one of the factors will be at most lhs_len - rhs_len long.
-    let n = (rhs_len / 2).min(lhs_len - rhs_len);
-    mul::memory_requirement_up_to(n)
+    let smaller_len = (rhs_len / 2).min(lhs_len - rhs_len);
+    mul::memory_requirement_up_to(rhs_len, smaller_len)
 }
 
 /// Division in place using divide and conquer.
