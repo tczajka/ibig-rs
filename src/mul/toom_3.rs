@@ -68,7 +68,15 @@ pub(crate) fn add_signed_mul(
 ) -> SignedWord {
     assert!(a.len() >= b.len() && b.len() >= MIN_LEN && c.len() == a.len() + b.len());
 
-    helpers::add_signed_mul_split_into_same_len(c, sign, a, b, memory, add_signed_mul_same_len)
+    helpers::add_signed_mul_split_into_chunks(
+        c,
+        sign,
+        a,
+        b,
+        b.len(),
+        memory,
+        add_signed_mul_same_len,
+    )
 }
 
 /// c += sign * a * b

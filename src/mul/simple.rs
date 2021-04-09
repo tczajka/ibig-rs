@@ -5,9 +5,11 @@ use crate::{
         self,
         word::{SignedWord, Word},
     },
+    memory::{self, Memory},
     mul::{self, helpers},
     sign::Sign::{self, *},
 };
+use alloc::alloc::Layout;
 
 /// Split larger length into chunks of CHUNK_LEN..2 * CHUNK_LEN for memory locality.
 const CHUNK_LEN: usize = 1024;
@@ -15,14 +17,39 @@ const CHUNK_LEN: usize = 1024;
 /// Max supported smaller factor length.
 pub(crate) const MAX_SMALLER_LEN: usize = CHUNK_LEN;
 
+/// Temporary memory required for multiplication.
+///
+/// n bounds the length of the smaller factor in words.
+pub(crate) fn memory_requirement_up_to(_n: usize) -> Layout {
+    memory::zero_layout()
+}
+
 /// c += sign * a * b
 /// Simple method: O(a.len() * b.len()).
 ///
 /// Returns carry.
-pub(crate) fn add_signed_mul(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> SignedWord {
+pub(crate) fn add_signed_mul(
+    c: &mut [Word],
+    sign: Sign,
+    a: &[Word],
+    b: &[Word],
+    memory: &mut Memory,
+) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_SMALLER_LEN);
-    helpers::add_signed_mul_split_into_chunks(c, sign, a, b, CHUNK_LEN, add_signed_mul_chunk)
+    if a.len() <= CHUNK_LEN {
+        add_signed_mul_chunk(c, sign, a, b, memory)
+    } else {
+        helpers::add_signed_mul_split_into_chunks(
+            c,
+            sign,
+            a,
+            b,
+            CHUNK_LEN,
+            memory,
+            add_signed_mul_chunk,
+        )
+    }
 }
 
 /// c += sign * a * b
@@ -34,19 +61,26 @@ pub(crate) fn add_signed_mul_same_len(
     sign: Sign,
     a: &[Word],
     b: &[Word],
+    memory: &mut Memory,
 ) -> SignedWord {
     debug_assert!(a.len() == b.len() && c.len() == a.len() + b.len());
     debug_assert!(b.len() <= MAX_SMALLER_LEN);
-    add_signed_mul_chunk(c, sign, a, b)
+    add_signed_mul_chunk(c, sign, a, b, memory)
 }
 
 /// c += sign * a * b
 /// Simple method: O(a.len() * b.len()).
 ///
 /// Returns carry.
-fn add_signed_mul_chunk(c: &mut [Word], sign: Sign, a: &[Word], b: &[Word]) -> SignedWord {
+fn add_signed_mul_chunk(
+    c: &mut [Word],
+    sign: Sign,
+    a: &[Word],
+    b: &[Word],
+    _memory: &mut Memory,
+) -> SignedWord {
     debug_assert!(a.len() >= b.len() && c.len() == a.len() + b.len());
-    debug_assert!(a.len() < 2 * CHUNK_LEN);
+    debug_assert!(a.len() <= CHUNK_LEN);
 
     match sign {
         Positive => SignedWord::from(add_mul_chunk(c, a, b)),

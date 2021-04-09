@@ -3,7 +3,7 @@
 use crate::{
     add,
     arch::word::{SignedWord, Word},
-    memory::{self, Memory},
+    memory::Memory,
     primitive::{double_word, extend_word, split_double_word},
     sign::Sign,
 };
@@ -110,7 +110,7 @@ pub(crate) fn sub_mul_word_same_len_in_place(words: &mut [Word], mult: Word, rhs
 /// Temporary scratch space required for multiplication.
 pub(crate) fn memory_requirement_up_to(_total_len: usize, smaller_len: usize) -> Layout {
     if smaller_len <= MAX_LEN_SIMPLE {
-        memory::zero_layout()
+        simple::memory_requirement_up_to(smaller_len)
     } else if smaller_len <= MAX_LEN_KARATSUBA {
         karatsuba::memory_requirement_up_to(smaller_len)
     } else {
@@ -141,7 +141,7 @@ pub(crate) fn add_signed_mul<'a>(
     }
 
     if b.len() <= MAX_LEN_SIMPLE {
-        simple::add_signed_mul(c, sign, a, b)
+        simple::add_signed_mul(c, sign, a, b, memory)
     } else if b.len() <= MAX_LEN_KARATSUBA {
         karatsuba::add_signed_mul(c, sign, a, b, memory)
     } else {
@@ -164,7 +164,7 @@ pub(crate) fn add_signed_mul_same_len(
     debug_assert!(b.len() == n && c.len() == 2 * n);
 
     if n <= MAX_LEN_SIMPLE {
-        simple::add_signed_mul_same_len(c, sign, a, b)
+        simple::add_signed_mul_same_len(c, sign, a, b, memory)
     } else if n <= MAX_LEN_KARATSUBA {
         karatsuba::add_signed_mul_same_len(c, sign, a, b, memory)
     } else {
