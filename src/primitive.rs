@@ -70,7 +70,8 @@ where
 macro_rules! impl_primitive_unsigned {
     ($t:ty) => {
         impl PrimitiveUnsigned for $t {
-            type ByteRepr = [u8; Self::BYTE_SIZE];
+            // LEGACY: In Rust 1.49 this could be [u8; Self::BYTE_SIZE].
+            type ByteRepr = [u8; mem::size_of::<Self>()];
             const MAX: Self = Self::MAX;
 
             fn to_le_bytes(self) -> Self::ByteRepr {
