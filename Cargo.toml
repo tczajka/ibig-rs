@@ -2,7 +2,7 @@
 name = "ibig"
 version = "0.3.2"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
-edition = "2021"
+edition = "2018"
 description = "A big integer library with good performance"
 keywords = ["bigint", "bignum", "mathematics"]
 categories = ["mathematics", "no-std"]
