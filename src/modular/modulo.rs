@@ -104,7 +104,7 @@ impl<'a> ModuloSmall<'a> {
     }
 
     pub(crate) fn set_raw(&mut self, raw: ModuloSmallRaw) {
-        debug_assert!(raw.is_valid(&self.ring));
+        debug_assert!(raw.is_valid(self.ring));
         self.raw = raw;
     }
 
@@ -144,7 +144,7 @@ impl<'a> ModuloLarge<'a> {
     where
         F: FnOnce(&mut [Word], &ModuloRingLarge),
     {
-        f(&mut self.normalized_value, &self.ring);
+        f(&mut self.normalized_value, self.ring);
         debug_assert!(self.ring.is_valid(&self.normalized_value));
     }
 

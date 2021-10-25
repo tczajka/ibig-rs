@@ -71,7 +71,7 @@ impl UBig {
         match self.repr() {
             Small(0) => &[],
             Small(word) => slice::from_ref(word),
-            Large(buffer) => &buffer,
+            Large(buffer) => buffer,
         }
     }
 

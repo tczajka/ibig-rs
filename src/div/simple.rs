@@ -34,9 +34,9 @@ pub(crate) fn div_rem_in_place(
     let mut lhs_len = lhs.len();
     assert!(lhs_len >= n);
 
-    let quotient_carry = cmp::cmp_same_len(&lhs[lhs_len - n..], &rhs) >= Ordering::Equal;
+    let quotient_carry = cmp::cmp_same_len(&lhs[lhs_len - n..], rhs) >= Ordering::Equal;
     if quotient_carry {
-        let overflow = add::sub_same_len_in_place(&mut lhs[lhs_len - n..], &rhs);
+        let overflow = add::sub_same_len_in_place(&mut lhs[lhs_len - n..], rhs);
         assert!(!overflow);
     }
 
@@ -77,13 +77,13 @@ pub(crate) fn div_rem_in_place(
 
         // Subtract a multiple of rhs.
         let mut borrow =
-            mul::sub_mul_word_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], q, &rhs);
+            mul::sub_mul_word_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], q, rhs);
 
         if borrow > lhs0 {
             // Rare case: q is too large (by 1).
             // Add a correction.
             q -= 1;
-            let carry = add::add_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], &rhs);
+            let carry = add::add_same_len_in_place(&mut lhs[lhs_len - 1 - n..lhs_len - 1], rhs);
             debug_assert!(carry);
             borrow -= 1;
         }

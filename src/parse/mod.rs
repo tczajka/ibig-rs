@@ -46,7 +46,7 @@ impl UBig {
     /// ```
     pub fn from_str_radix(src: &str, radix: u32) -> Result<UBig, ParseError> {
         radix::check_radix_valid(radix);
-        let src = src.strip_prefix("+").unwrap_or(src);
+        let src = src.strip_prefix('+').unwrap_or(src);
         UBig::from_str_radix_no_sign(src, radix)
     }
 
@@ -65,7 +65,7 @@ impl UBig {
     /// # Ok::<(), ParseError>(())
     /// ```
     pub fn from_str_with_radix_prefix(src: &str) -> Result<UBig, ParseError> {
-        let src = src.strip_prefix("+").unwrap_or(src);
+        let src = src.strip_prefix('+').unwrap_or(src);
         UBig::from_str_with_radix_prefix_no_sign(src)
     }
 
@@ -89,7 +89,7 @@ impl UBig {
             return Err(ParseError::NoDigits);
         }
 
-        while let Some(src2) = src.strip_prefix("0") {
+        while let Some(src2) = src.strip_prefix('0') {
             src = src2;
         }
 
@@ -120,14 +120,14 @@ impl IBig {
     pub fn from_str_radix(mut src: &str, radix: u32) -> Result<IBig, ParseError> {
         radix::check_radix_valid(radix);
         let sign;
-        match src.strip_prefix("-") {
+        match src.strip_prefix('-') {
             Some(s) => {
                 sign = Negative;
                 src = s;
             }
             None => {
                 sign = Positive;
-                src = src.strip_prefix("+").unwrap_or(src);
+                src = src.strip_prefix('+').unwrap_or(src);
             }
         }
         let mag = UBig::from_str_radix_no_sign(src, radix)?;
@@ -149,14 +149,14 @@ impl IBig {
     /// ```
     pub fn from_str_with_radix_prefix(mut src: &str) -> Result<IBig, ParseError> {
         let sign;
-        match src.strip_prefix("-") {
+        match src.strip_prefix('-') {
             Some(s) => {
                 sign = Negative;
                 src = s;
             }
             None => {
                 sign = Positive;
-                src = src.strip_prefix("+").unwrap_or(src);
+                src = src.strip_prefix('+').unwrap_or(src);
             }
         }
         let mag = UBig::from_str_with_radix_prefix_no_sign(src)?;

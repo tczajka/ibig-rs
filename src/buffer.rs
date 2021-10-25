@@ -135,7 +135,7 @@ impl Buffer {
         let cap = self.capacity();
         let n = source.len();
         if cap >= n && cap <= Buffer::max_compact_capacity(n) {
-            self.clone_from(&source);
+            self.clone_from(source);
         } else {
             *self = source.clone();
         }

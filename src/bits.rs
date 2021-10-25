@@ -310,7 +310,7 @@ impl BitAnd<&UBig> for UBig {
             },
             Large(buffer0) => match rhs.repr() {
                 Small(word1) => UBig::from_word(buffer0.first().unwrap() & word1),
-                Large(buffer1) => UBig::bitand_large(buffer0, &buffer1),
+                Large(buffer1) => UBig::bitand_large(buffer0, buffer1),
             },
         }
     }
