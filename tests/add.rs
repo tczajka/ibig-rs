@@ -156,8 +156,8 @@ fn test_add_sub_ubig_primitive() {
     let mut x = ubig!(3);
     x += 3u8;
     x += &3u8;
-
     assert_eq!(x, ubig!(9));
+
     assert_eq!(ubig!(7) - 5u16, ubig!(2));
     assert_eq!(ubig!(7) - &5u16, ubig!(2));
     assert_eq!(&ubig!(7) - 5u16, ubig!(2));
@@ -200,4 +200,60 @@ fn test_add_ubig_primitive_overflow() {
 #[should_panic]
 fn test_sub_ubig_primitive_overflow() {
     let _ = ubig!(3) - 5u16;
+}
+
+#[test]
+fn test_add_sub_ibig_primitive() {
+    assert_eq!(ibig!(-3) + 7u16, ibig!(4));
+    assert_eq!(ibig!(-3) + &7u16, ibig!(4));
+    assert_eq!(&ibig!(-3) + 7u16, ibig!(4));
+    assert_eq!(&ibig!(-3) + &7u16, ibig!(4));
+    assert_eq!(7u16 + ibig!(-3), ibig!(4));
+    assert_eq!(7u16 + &ibig!(-3), ibig!(4));
+    assert_eq!(&7u16 + ibig!(-3), ibig!(4));
+    assert_eq!(&7u16 + &ibig!(-3), ibig!(4));
+    let mut x = ibig!(-3);
+    x += 3u8;
+    x += &3u8;
+    assert_eq!(x, ibig!(3));
+
+    assert_eq!(ibig!(7) - 5u16, ibig!(2));
+    assert_eq!(ibig!(7) - &5u16, ibig!(2));
+    assert_eq!(&ibig!(7) - 5u16, ibig!(2));
+    assert_eq!(&ibig!(7) - &5u16, ibig!(2));
+    assert_eq!(5u16 - ibig!(7), ibig!(-2));
+    assert_eq!(5u16 - &ibig!(7), ibig!(-2));
+    assert_eq!(&5u16 - ibig!(7), ibig!(-2));
+    assert_eq!(&5u16 - &ibig!(7), ibig!(-2));
+
+    let mut x = ibig!(10);
+    x -= 7u8;
+    x -= &7u8;
+    assert_eq!(x, ibig!(-4));
+
+    assert_eq!(ibig!(3) + (-1i8), ibig!(2));
+    assert_eq!(ibig!(3) + &(-1i8), ibig!(2));
+    assert_eq!(&ibig!(3) + (-1i8), ibig!(2));
+    assert_eq!(&ibig!(3) + &(-1i8), ibig!(2));
+    assert_eq!((-1i8) + ibig!(3), ibig!(2));
+    assert_eq!((-1i8) + &ibig!(3), ibig!(2));
+    assert_eq!(&(-1i8) + ibig!(3), ibig!(2));
+    assert_eq!(&(-1i8) + &ibig!(3), ibig!(2));
+    let mut x = ibig!(3);
+    x += -10i8;
+    x += &20i8;
+    assert_eq!(x, ibig!(13));
+
+    assert_eq!(ibig!(3) - (-1i8), ibig!(4));
+    assert_eq!(ibig!(3) - &(-1i8), ibig!(4));
+    assert_eq!(&ibig!(3) - (-1i8), ibig!(4));
+    assert_eq!(&ibig!(3) - &(-1i8), ibig!(4));
+    assert_eq!(3i8 - ibig!(4), ibig!(-1));
+    assert_eq!(3i8 - &ibig!(4), ibig!(-1));
+    assert_eq!(&3i8 - ibig!(4), ibig!(-1));
+    assert_eq!(&3i8 - &ibig!(4), ibig!(-1));
+    let mut x = ibig!(3);
+    x -= -1i8;
+    x -= &10i8;
+    assert_eq!(x, ibig!(-6));
 }

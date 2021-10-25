@@ -512,6 +512,175 @@ impl_ubig_with_signed!(i64);
 impl_ubig_with_signed!(i128);
 impl_ubig_with_signed!(isize);
 
+macro_rules! impl_ibig_with_primitive {
+    ($t:ty) => {
+        impl Add<$t> for IBig {
+            type Output = IBig;
+
+            fn add(self, rhs: $t) -> IBig {
+                self.add_primitive(rhs)
+            }
+        }
+
+        impl Add<&$t> for IBig {
+            type Output = IBig;
+
+            fn add(self, rhs: &$t) -> IBig {
+                self.add_primitive(*rhs)
+            }
+        }
+
+        impl Add<$t> for &IBig {
+            type Output = IBig;
+
+            fn add(self, rhs: $t) -> IBig {
+                self.ref_add_primitive(rhs)
+            }
+        }
+
+        impl Add<&$t> for &IBig {
+            type Output = IBig;
+
+            fn add(self, rhs: &$t) -> IBig {
+                self.ref_add_primitive(*rhs)
+            }
+        }
+
+        impl AddAssign<$t> for IBig {
+            fn add_assign(&mut self, rhs: $t) {
+                self.add_assign_primitive(rhs)
+            }
+        }
+
+        impl AddAssign<&$t> for IBig {
+            fn add_assign(&mut self, rhs: &$t) {
+                self.add_assign_primitive(*rhs)
+            }
+        }
+
+        impl Add<IBig> for $t {
+            type Output = IBig;
+
+            fn add(self, rhs: IBig) -> IBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&IBig> for $t {
+            type Output = IBig;
+
+            fn add(self, rhs: &IBig) -> IBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<IBig> for &$t {
+            type Output = IBig;
+
+            fn add(self, rhs: IBig) -> IBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&IBig> for &$t {
+            type Output = IBig;
+
+            fn add(self, rhs: &IBig) -> IBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Sub<$t> for IBig {
+            type Output = IBig;
+
+            fn sub(self, rhs: $t) -> IBig {
+                self.sub_primitive(rhs)
+            }
+        }
+
+        impl Sub<&$t> for IBig {
+            type Output = IBig;
+
+            fn sub(self, rhs: &$t) -> IBig {
+                self.sub_primitive(*rhs)
+            }
+        }
+
+        impl Sub<$t> for &IBig {
+            type Output = IBig;
+
+            fn sub(self, rhs: $t) -> IBig {
+                self.ref_sub_primitive(rhs)
+            }
+        }
+
+        impl Sub<&$t> for &IBig {
+            type Output = IBig;
+
+            fn sub(self, rhs: &$t) -> IBig {
+                self.ref_sub_primitive(*rhs)
+            }
+        }
+
+        impl SubAssign<$t> for IBig {
+            fn sub_assign(&mut self, rhs: $t) {
+                self.sub_assign_primitive(rhs)
+            }
+        }
+
+        impl SubAssign<&$t> for IBig {
+            fn sub_assign(&mut self, rhs: &$t) {
+                self.sub_assign_primitive(*rhs)
+            }
+        }
+
+        impl Sub<IBig> for $t {
+            type Output = IBig;
+
+            fn sub(self, rhs: IBig) -> IBig {
+                rhs.sub_from_primitive(self)
+            }
+        }
+
+        impl Sub<&IBig> for $t {
+            type Output = IBig;
+
+            fn sub(self, rhs: &IBig) -> IBig {
+                rhs.ref_sub_from_primitive(self)
+            }
+        }
+
+        impl Sub<IBig> for &$t {
+            type Output = IBig;
+
+            fn sub(self, rhs: IBig) -> IBig {
+                rhs.sub_from_primitive(*self)
+            }
+        }
+
+        impl Sub<&IBig> for &$t {
+            type Output = IBig;
+
+            fn sub(self, rhs: &IBig) -> IBig {
+                rhs.ref_sub_from_primitive(*self)
+            }
+        }
+    };
+}
+
+impl_ibig_with_primitive!(u8);
+impl_ibig_with_primitive!(u16);
+impl_ibig_with_primitive!(u32);
+impl_ibig_with_primitive!(u64);
+impl_ibig_with_primitive!(u128);
+impl_ibig_with_primitive!(usize);
+impl_ibig_with_primitive!(i8);
+impl_ibig_with_primitive!(i16);
+impl_ibig_with_primitive!(i32);
+impl_ibig_with_primitive!(i64);
+impl_ibig_with_primitive!(i128);
+impl_ibig_with_primitive!(isize);
+
 impl UBig {
     /// Add two `Word`s.
     fn add_word(a: Word, b: Word) -> UBig {
@@ -718,5 +887,61 @@ impl IBig {
             }
             IBig::from_sign_magnitude(Negative, lhs.into())
         }
+    }
+
+    fn add_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self + IBig::from(rhs)
+    }
+
+    fn ref_add_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self + IBig::from(rhs)
+    }
+
+    fn add_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        *self += IBig::from(rhs)
+    }
+
+    fn sub_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self - IBig::from(rhs)
+    }
+
+    fn ref_sub_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self - IBig::from(rhs)
+    }
+
+    fn sub_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        *self -= IBig::from(rhs)
+    }
+
+    fn sub_from_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        IBig::from(rhs) - self
+    }
+
+    fn ref_sub_from_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        IBig::from(rhs) - self
     }
 }
