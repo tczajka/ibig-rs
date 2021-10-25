@@ -93,7 +93,7 @@ impl Sub<UBig> for UBig {
     type Output = UBig;
 
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig_after_sub(IBig::sub_ubig_val_val(self, rhs))
+        UBig::from_ibig(IBig::sub_ubig_val_val(self, rhs))
     }
 }
 
@@ -101,7 +101,7 @@ impl Sub<&UBig> for UBig {
     type Output = UBig;
 
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig_after_sub(IBig::sub_ubig_val_ref(self, rhs))
+        UBig::from_ibig(IBig::sub_ubig_val_ref(self, rhs))
     }
 }
 
@@ -109,7 +109,7 @@ impl Sub<UBig> for &UBig {
     type Output = UBig;
 
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig_after_sub(-IBig::sub_ubig_val_ref(rhs, self))
+        UBig::from_ibig(-IBig::sub_ubig_val_ref(rhs, self))
     }
 }
 
@@ -117,7 +117,7 @@ impl Sub<&UBig> for &UBig {
     type Output = UBig;
 
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig_after_sub(IBig::sub_ubig_ref_ref(self, rhs))
+        UBig::from_ibig(IBig::sub_ubig_ref_ref(self, rhs))
     }
 }
 
@@ -249,6 +249,137 @@ impl SubAssign<&IBig> for IBig {
     }
 }
 
+macro_rules! impl_ubig_with_unsigned {
+    ($t:ty) => {
+        impl Add<$t> for UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: $t) -> UBig {
+                self.add(UBig::from(rhs))
+            }
+        }
+
+        impl Add<&$t> for UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: &$t) -> UBig {
+                self.add(*rhs)
+            }
+        }
+
+        impl Add<$t> for &UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: $t) -> UBig {
+                self.add(UBig::from(rhs))
+            }
+        }
+
+        impl Add<&$t> for &UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: &$t) -> UBig {
+                self.add(*rhs)
+            }
+        }
+
+        impl AddAssign<$t> for UBig {
+            fn add_assign(&mut self, rhs: $t) {
+                self.add_assign(UBig::from(rhs))
+            }
+        }
+
+        impl AddAssign<&$t> for UBig {
+            fn add_assign(&mut self, rhs: &$t) {
+                self.add_assign(*rhs)
+            }
+        }
+
+        impl Add<UBig> for $t {
+            type Output = UBig;
+
+            fn add(self, rhs: UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&UBig> for $t {
+            type Output = UBig;
+
+            fn add(self, rhs: &UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<UBig> for &$t {
+            type Output = UBig;
+
+            fn add(self, rhs: UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&UBig> for &$t {
+            type Output = UBig;
+
+            fn add(self, rhs: &UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Sub<$t> for UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: $t) -> UBig {
+                self.sub(UBig::from(rhs))
+            }
+        }
+
+        impl Sub<&$t> for UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: &$t) -> UBig {
+                self.sub(*rhs)
+            }
+        }
+
+        impl Sub<$t> for &UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: $t) -> UBig {
+                self.sub(UBig::from(rhs))
+            }
+        }
+
+        impl Sub<&$t> for &UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: &$t) -> UBig {
+                self.sub(*rhs)
+            }
+        }
+
+        impl SubAssign<$t> for UBig {
+            fn sub_assign(&mut self, rhs: $t) {
+                self.sub_assign(UBig::from(rhs))
+            }
+        }
+
+        impl SubAssign<&$t> for UBig {
+            fn sub_assign(&mut self, rhs: &$t) {
+                self.sub_assign(*rhs)
+            }
+        }
+    };
+}
+
+impl_ubig_with_unsigned!(u8);
+impl_ubig_with_unsigned!(u16);
+impl_ubig_with_unsigned!(u32);
+impl_ubig_with_unsigned!(u64);
+impl_ubig_with_unsigned!(u128);
+impl_ubig_with_unsigned!(usize);
+
 impl UBig {
     /// Add two `Word`s.
     fn add_word(a: Word, b: Word) -> UBig {
@@ -286,10 +417,10 @@ impl UBig {
         buffer.into()
     }
 
-    fn from_ibig_after_sub(x: IBig) -> UBig {
+    fn from_ibig(x: IBig) -> UBig {
         match UBig::try_from(x) {
             Ok(v) => v,
-            Err(_) => panic!("UBig subtraction overflow"),
+            Err(_) => panic!("UBig overflow"),
         }
     }
 

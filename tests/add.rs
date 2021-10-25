@@ -142,3 +142,33 @@ fn test_add_sub_ibig() {
         test_add_sub(b, a, c);
     }
 }
+
+#[test]
+fn test_add_sub_ubig_primitive() {
+    assert_eq!(ubig!(3) + 7u16, ubig!(10));
+    assert_eq!(ubig!(3) + &7u16, ubig!(10));
+    assert_eq!(&ubig!(3) + 7u16, ubig!(10));
+    assert_eq!(&ubig!(3) + &7u16, ubig!(10));
+    assert_eq!(7u16 + ubig!(3), ubig!(10));
+    assert_eq!(7u16 + &ubig!(3), ubig!(10));
+    assert_eq!(&7u16 + ubig!(3), ubig!(10));
+    assert_eq!(&7u16 + &ubig!(3), ubig!(10));
+    let mut x = ubig!(3);
+    x += 3u8;
+    x += &3u8;
+    assert_eq!(x, ubig!(9));
+    assert_eq!(ubig!(7) - 5u16, ubig!(2));
+    assert_eq!(ubig!(7) - &5u16, ubig!(2));
+    assert_eq!(&ubig!(7) - 5u16, ubig!(2));
+    assert_eq!(&ubig!(7) - &5u16, ubig!(2));
+    let mut x = ubig!(10);
+    x -= 1u8;
+    x -= &2u8;
+    assert_eq!(x, ubig!(7));
+}
+
+#[test]
+#[should_panic]
+fn test_sub_ubig_primitive_overflow() {
+    let _ = ubig!(3) - 5u16;
+}
