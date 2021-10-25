@@ -563,7 +563,7 @@ impl IBig {
     }
 
     /// Convert a signed primitive to [IBig].
-    fn from_signed<T>(x: T) -> IBig
+    pub(crate) fn from_signed<T>(x: T) -> IBig
     where
         T: PrimitiveSigned,
     {

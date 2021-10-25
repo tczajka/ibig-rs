@@ -156,6 +156,7 @@ fn test_add_sub_ubig_primitive() {
     let mut x = ubig!(3);
     x += 3u8;
     x += &3u8;
+
     assert_eq!(x, ubig!(9));
     assert_eq!(ubig!(7) - 5u16, ubig!(2));
     assert_eq!(ubig!(7) - &5u16, ubig!(2));
@@ -165,6 +166,34 @@ fn test_add_sub_ubig_primitive() {
     x -= 1u8;
     x -= &2u8;
     assert_eq!(x, ubig!(7));
+
+    assert_eq!(ubig!(3) + (-1i8), ubig!(2));
+    assert_eq!(ubig!(3) + &(-1i8), ubig!(2));
+    assert_eq!(&ubig!(3) + (-1i8), ubig!(2));
+    assert_eq!(&ubig!(3) + &(-1i8), ubig!(2));
+    assert_eq!((-1i8) + ubig!(3), ubig!(2));
+    assert_eq!((-1i8) + &ubig!(3), ubig!(2));
+    assert_eq!(&(-1i8) + ubig!(3), ubig!(2));
+    assert_eq!(&(-1i8) + &ubig!(3), ubig!(2));
+    let mut x = ubig!(3);
+    x += -1i8;
+    x += &2i8;
+    assert_eq!(x, ubig!(4));
+
+    assert_eq!(ubig!(3) - (-1i8), ubig!(4));
+    assert_eq!(ubig!(3) - &(-1i8), ubig!(4));
+    assert_eq!(&ubig!(3) - (-1i8), ubig!(4));
+    assert_eq!(&ubig!(3) - &(-1i8), ubig!(4));
+    let mut x = ubig!(3);
+    x -= -1i8;
+    x -= &2i8;
+    assert_eq!(x, ubig!(2));
+}
+
+#[test]
+#[should_panic]
+fn test_add_ubig_primitive_overflow() {
+    let _ = ubig!(3) + (-5i16);
 }
 
 #[test]

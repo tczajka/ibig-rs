@@ -5,7 +5,7 @@ use crate::{
     arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
-    primitive::PrimitiveUnsigned,
+    primitive::{PrimitiveSigned, PrimitiveUnsigned},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -94,7 +94,7 @@ impl Sub<UBig> for UBig {
     type Output = UBig;
 
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig(IBig::sub_ubig_val_val(self, rhs))
+        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_val(self, rhs))
     }
 }
 
@@ -102,7 +102,7 @@ impl Sub<&UBig> for UBig {
     type Output = UBig;
 
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig(IBig::sub_ubig_val_ref(self, rhs))
+        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_ref(self, rhs))
     }
 }
 
@@ -110,7 +110,7 @@ impl Sub<UBig> for &UBig {
     type Output = UBig;
 
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig(-IBig::sub_ubig_val_ref(rhs, self))
+        UBig::from_ibig_panic_on_overflow(-IBig::sub_ubig_val_ref(rhs, self))
     }
 }
 
@@ -118,7 +118,7 @@ impl Sub<&UBig> for &UBig {
     type Output = UBig;
 
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig(IBig::sub_ubig_ref_ref(self, rhs))
+        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_ref_ref(self, rhs))
     }
 }
 
@@ -381,6 +381,137 @@ impl_ubig_with_unsigned!(u64);
 impl_ubig_with_unsigned!(u128);
 impl_ubig_with_unsigned!(usize);
 
+macro_rules! impl_ubig_with_signed {
+    ($t:ty) => {
+        impl Add<$t> for UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: $t) -> UBig {
+                self.add_signed(rhs)
+            }
+        }
+
+        impl Add<&$t> for UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: &$t) -> UBig {
+                self.add_signed(*rhs)
+            }
+        }
+
+        impl Add<$t> for &UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: $t) -> UBig {
+                self.ref_add_signed(rhs)
+            }
+        }
+
+        impl Add<&$t> for &UBig {
+            type Output = UBig;
+
+            fn add(self, rhs: &$t) -> UBig {
+                self.ref_add_signed(*rhs)
+            }
+        }
+
+        impl AddAssign<$t> for UBig {
+            fn add_assign(&mut self, rhs: $t) {
+                self.add_assign_signed(rhs)
+            }
+        }
+
+        impl AddAssign<&$t> for UBig {
+            fn add_assign(&mut self, rhs: &$t) {
+                self.add_assign_signed(*rhs)
+            }
+        }
+
+        impl Add<UBig> for $t {
+            type Output = UBig;
+
+            fn add(self, rhs: UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&UBig> for $t {
+            type Output = UBig;
+
+            fn add(self, rhs: &UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<UBig> for &$t {
+            type Output = UBig;
+
+            fn add(self, rhs: UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Add<&UBig> for &$t {
+            type Output = UBig;
+
+            fn add(self, rhs: &UBig) -> UBig {
+                rhs.add(self)
+            }
+        }
+
+        impl Sub<$t> for UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: $t) -> UBig {
+                self.sub_signed(rhs)
+            }
+        }
+
+        impl Sub<&$t> for UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: &$t) -> UBig {
+                self.sub_signed(*rhs)
+            }
+        }
+
+        impl Sub<$t> for &UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: $t) -> UBig {
+                self.ref_sub_signed(rhs)
+            }
+        }
+
+        impl Sub<&$t> for &UBig {
+            type Output = UBig;
+
+            fn sub(self, rhs: &$t) -> UBig {
+                self.ref_sub_signed(*rhs)
+            }
+        }
+
+        impl SubAssign<$t> for UBig {
+            fn sub_assign(&mut self, rhs: $t) {
+                self.sub_assign_signed(rhs)
+            }
+        }
+
+        impl SubAssign<&$t> for UBig {
+            fn sub_assign(&mut self, rhs: &$t) {
+                self.sub_assign_signed(*rhs)
+            }
+        }
+    };
+}
+
+impl_ubig_with_signed!(i8);
+impl_ubig_with_signed!(i16);
+impl_ubig_with_signed!(i32);
+impl_ubig_with_signed!(i64);
+impl_ubig_with_signed!(i128);
+impl_ubig_with_signed!(isize);
+
 impl UBig {
     /// Add two `Word`s.
     fn add_word(a: Word, b: Word) -> UBig {
@@ -418,7 +549,7 @@ impl UBig {
         buffer.into()
     }
 
-    fn from_ibig(x: IBig) -> UBig {
+    fn from_ibig_panic_on_overflow(x: IBig) -> UBig {
         match UBig::try_from(x) {
             Ok(v) => v,
             Err(_) => panic!("UBig overflow"),
@@ -471,6 +602,48 @@ impl UBig {
         T: PrimitiveUnsigned,
     {
         *self -= UBig::from_unsigned(rhs)
+    }
+
+    fn add_signed<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
+    }
+
+    fn ref_add_signed<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
+    }
+
+    fn add_assign_signed<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveSigned,
+    {
+        *self = mem::take(self).add_signed(rhs)
+    }
+
+    fn sub_signed<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
+    }
+
+    fn ref_sub_signed<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
+    }
+
+    fn sub_assign_signed<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveSigned,
+    {
+        *self = mem::take(self).sub_signed(rhs)
     }
 }
 
