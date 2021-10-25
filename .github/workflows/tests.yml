@@ -19,6 +19,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
+          args: --all-features
 
   test:
     name: Test
@@ -38,6 +39,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --all-features
 
   test-x86:
     name: Test x86
@@ -55,6 +57,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --all-features
 
   test-x86_64:
     name: Test x86_64
@@ -71,6 +74,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --all-features
 
   build-no-std:
     name: Build no-std
