@@ -5,6 +5,7 @@ use crate::{
     arch::word::Word,
     buffer::Buffer,
     ibig::IBig,
+    primitive::PrimitiveUnsigned,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -255,7 +256,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: $t) -> UBig {
-                self.add(UBig::from(rhs))
+                self.add_unsigned(rhs)
             }
         }
 
@@ -263,7 +264,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: &$t) -> UBig {
-                self.add(*rhs)
+                self.add_unsigned(*rhs)
             }
         }
 
@@ -271,7 +272,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: $t) -> UBig {
-                self.add(UBig::from(rhs))
+                self.ref_add_unsigned(rhs)
             }
         }
 
@@ -279,19 +280,19 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: &$t) -> UBig {
-                self.add(*rhs)
+                self.ref_add_unsigned(*rhs)
             }
         }
 
         impl AddAssign<$t> for UBig {
             fn add_assign(&mut self, rhs: $t) {
-                self.add_assign(UBig::from(rhs))
+                self.add_assign_unsigned(rhs)
             }
         }
 
         impl AddAssign<&$t> for UBig {
             fn add_assign(&mut self, rhs: &$t) {
-                self.add_assign(*rhs)
+                self.add_assign_unsigned(*rhs)
             }
         }
 
@@ -331,7 +332,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: $t) -> UBig {
-                self.sub(UBig::from(rhs))
+                self.sub_unsigned(rhs)
             }
         }
 
@@ -339,7 +340,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: &$t) -> UBig {
-                self.sub(*rhs)
+                self.sub_unsigned(*rhs)
             }
         }
 
@@ -347,7 +348,7 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: $t) -> UBig {
-                self.sub(UBig::from(rhs))
+                self.ref_sub_unsigned(rhs)
             }
         }
 
@@ -355,19 +356,19 @@ macro_rules! impl_ubig_with_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: &$t) -> UBig {
-                self.sub(*rhs)
+                self.ref_sub_unsigned(*rhs)
             }
         }
 
         impl SubAssign<$t> for UBig {
             fn sub_assign(&mut self, rhs: $t) {
-                self.sub_assign(UBig::from(rhs))
+                self.sub_assign_unsigned(rhs)
             }
         }
 
         impl SubAssign<&$t> for UBig {
             fn sub_assign(&mut self, rhs: &$t) {
-                self.sub_assign(*rhs)
+                self.sub_assign_unsigned(*rhs)
             }
         }
     };
@@ -428,6 +429,48 @@ impl UBig {
         let overflow = add::sub_word_in_place(&mut lhs, rhs);
         assert!(!overflow);
         lhs.into()
+    }
+
+    fn add_unsigned<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self + UBig::from_unsigned(rhs)
+    }
+
+    fn ref_add_unsigned<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self + UBig::from_unsigned(rhs)
+    }
+
+    fn add_assign_unsigned<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveUnsigned,
+    {
+        *self += UBig::from_unsigned(rhs)
+    }
+
+    fn sub_unsigned<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self - UBig::from_unsigned(rhs)
+    }
+
+    fn ref_sub_unsigned<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self - UBig::from_unsigned(rhs)
+    }
+
+    fn sub_assign_unsigned<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveUnsigned,
+    {
+        *self -= UBig::from_unsigned(rhs)
     }
 }
 
