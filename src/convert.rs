@@ -527,6 +527,13 @@ impl UBig {
             }
         }
     }
+
+    pub(crate) fn from_ibig_panic_on_overflow(x: IBig) -> UBig {
+        match UBig::try_from(x) {
+            Ok(v) => v,
+            Err(_) => panic!("UBig overflow"),
+        }
+    }
 }
 
 /// Try to convert `Word`s to an unsigned primitive.

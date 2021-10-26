@@ -10,7 +10,6 @@ use crate::{
     ubig::{Repr::*, UBig},
 };
 use core::{
-    convert::TryFrom,
     mem,
     ops::{Add, AddAssign, Sub, SubAssign},
 };
@@ -716,13 +715,6 @@ impl UBig {
             buffer.push_may_reallocate(1);
         }
         buffer.into()
-    }
-
-    fn from_ibig_panic_on_overflow(x: IBig) -> UBig {
-        match UBig::try_from(x) {
-            Ok(v) => v,
-            Err(_) => panic!("UBig overflow"),
-        }
     }
 
     fn sub_large_word(mut lhs: Buffer, rhs: Word) -> UBig {

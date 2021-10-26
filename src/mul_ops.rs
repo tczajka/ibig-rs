@@ -6,7 +6,7 @@ use crate::{
     ibig::IBig,
     memory::MemoryAllocation,
     mul,
-    primitive::extend_word,
+    primitive::{extend_word, PrimitiveSigned, PrimitiveUnsigned},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
@@ -147,6 +147,273 @@ impl MulAssign<Sign> for Sign {
     }
 }
 
+macro_rules! impl_mul_ubig_unsigned {
+    ($t:ty) => {
+        impl Mul<$t> for UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: $t) -> UBig {
+                self.mul_unsigned(rhs)
+            }
+        }
+
+        impl Mul<&$t> for UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: &$t) -> UBig {
+                self.mul_unsigned(*rhs)
+            }
+        }
+
+        impl Mul<$t> for &UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: $t) -> UBig {
+                self.ref_mul_unsigned(rhs)
+            }
+        }
+
+        impl Mul<&$t> for &UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: &$t) -> UBig {
+                self.ref_mul_unsigned(*rhs)
+            }
+        }
+
+        impl MulAssign<$t> for UBig {
+            fn mul_assign(&mut self, rhs: $t) {
+                self.mul_assign_unsigned(rhs)
+            }
+        }
+
+        impl MulAssign<&$t> for UBig {
+            fn mul_assign(&mut self, rhs: &$t) {
+                self.mul_assign_unsigned(*rhs)
+            }
+        }
+
+        impl Mul<UBig> for $t {
+            type Output = UBig;
+
+            fn mul(self, rhs: UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&UBig> for $t {
+            type Output = UBig;
+
+            fn mul(self, rhs: &UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<UBig> for &$t {
+            type Output = UBig;
+
+            fn mul(self, rhs: UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&UBig> for &$t {
+            type Output = UBig;
+
+            fn mul(self, rhs: &UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+    };
+}
+
+impl_mul_ubig_unsigned!(u8);
+impl_mul_ubig_unsigned!(u16);
+impl_mul_ubig_unsigned!(u32);
+impl_mul_ubig_unsigned!(u64);
+impl_mul_ubig_unsigned!(u128);
+impl_mul_ubig_unsigned!(usize);
+
+macro_rules! impl_mul_ubig_signed {
+    ($t:ty) => {
+        impl Mul<$t> for UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: $t) -> UBig {
+                self.mul_signed(rhs)
+            }
+        }
+
+        impl Mul<&$t> for UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: &$t) -> UBig {
+                self.mul_signed(*rhs)
+            }
+        }
+
+        impl Mul<$t> for &UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: $t) -> UBig {
+                self.ref_mul_signed(rhs)
+            }
+        }
+
+        impl Mul<&$t> for &UBig {
+            type Output = UBig;
+
+            fn mul(self, rhs: &$t) -> UBig {
+                self.ref_mul_signed(*rhs)
+            }
+        }
+
+        impl MulAssign<$t> for UBig {
+            fn mul_assign(&mut self, rhs: $t) {
+                self.mul_assign_signed(rhs)
+            }
+        }
+
+        impl MulAssign<&$t> for UBig {
+            fn mul_assign(&mut self, rhs: &$t) {
+                self.mul_assign_signed(*rhs)
+            }
+        }
+
+        impl Mul<UBig> for $t {
+            type Output = UBig;
+
+            fn mul(self, rhs: UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&UBig> for $t {
+            type Output = UBig;
+
+            fn mul(self, rhs: &UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<UBig> for &$t {
+            type Output = UBig;
+
+            fn mul(self, rhs: UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&UBig> for &$t {
+            type Output = UBig;
+
+            fn mul(self, rhs: &UBig) -> UBig {
+                rhs.mul(self)
+            }
+        }
+    };
+}
+
+impl_mul_ubig_signed!(i8);
+impl_mul_ubig_signed!(i16);
+impl_mul_ubig_signed!(i32);
+impl_mul_ubig_signed!(i64);
+impl_mul_ubig_signed!(i128);
+impl_mul_ubig_signed!(isize);
+
+macro_rules! impl_mul_ibig_primitive {
+    ($t:ty) => {
+        impl Mul<$t> for IBig {
+            type Output = IBig;
+
+            fn mul(self, rhs: $t) -> IBig {
+                self.mul_primitive(rhs)
+            }
+        }
+
+        impl Mul<&$t> for IBig {
+            type Output = IBig;
+
+            fn mul(self, rhs: &$t) -> IBig {
+                self.mul_primitive(*rhs)
+            }
+        }
+
+        impl Mul<$t> for &IBig {
+            type Output = IBig;
+
+            fn mul(self, rhs: $t) -> IBig {
+                self.ref_mul_primitive(rhs)
+            }
+        }
+
+        impl Mul<&$t> for &IBig {
+            type Output = IBig;
+
+            fn mul(self, rhs: &$t) -> IBig {
+                self.ref_mul_primitive(*rhs)
+            }
+        }
+
+        impl MulAssign<$t> for IBig {
+            fn mul_assign(&mut self, rhs: $t) {
+                self.mul_assign_primitive(rhs)
+            }
+        }
+
+        impl MulAssign<&$t> for IBig {
+            fn mul_assign(&mut self, rhs: &$t) {
+                self.mul_assign_primitive(*rhs)
+            }
+        }
+
+        impl Mul<IBig> for $t {
+            type Output = IBig;
+
+            fn mul(self, rhs: IBig) -> IBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&IBig> for $t {
+            type Output = IBig;
+
+            fn mul(self, rhs: &IBig) -> IBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<IBig> for &$t {
+            type Output = IBig;
+
+            fn mul(self, rhs: IBig) -> IBig {
+                rhs.mul(self)
+            }
+        }
+
+        impl Mul<&IBig> for &$t {
+            type Output = IBig;
+
+            fn mul(self, rhs: &IBig) -> IBig {
+                rhs.mul(self)
+            }
+        }
+    };
+}
+
+impl_mul_ibig_primitive!(u8);
+impl_mul_ibig_primitive!(u16);
+impl_mul_ibig_primitive!(u32);
+impl_mul_ibig_primitive!(u64);
+impl_mul_ibig_primitive!(u128);
+impl_mul_ibig_primitive!(usize);
+impl_mul_ibig_primitive!(i8);
+impl_mul_ibig_primitive!(i16);
+impl_mul_ibig_primitive!(i32);
+impl_mul_ibig_primitive!(i64);
+impl_mul_ibig_primitive!(i128);
+impl_mul_ibig_primitive!(isize);
+
 impl UBig {
     /// Multiply two `Word`s.
     fn mul_word(a: Word, b: Word) -> UBig {
@@ -184,5 +451,70 @@ impl UBig {
         let overflow = mul::add_signed_mul(&mut buffer, Positive, lhs, rhs, &mut memory);
         assert!(overflow == 0);
         buffer.into()
+    }
+
+    fn mul_unsigned<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self * UBig::from_unsigned(rhs)
+    }
+
+    fn ref_mul_unsigned<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveUnsigned,
+    {
+        self * UBig::from_unsigned(rhs)
+    }
+
+    fn mul_assign_unsigned<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveUnsigned,
+    {
+        *self *= UBig::from_unsigned(rhs)
+    }
+
+    fn mul_signed<T>(self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
+    }
+
+    fn ref_mul_signed<T>(&self, rhs: T) -> UBig
+    where
+        T: PrimitiveSigned,
+    {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
+    }
+
+    fn mul_assign_signed<T>(&mut self, rhs: T)
+    where
+        T: PrimitiveSigned,
+    {
+        *self = mem::take(self).mul_signed(rhs)
+    }
+}
+
+impl IBig {
+    fn mul_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self * IBig::from(rhs)
+    }
+
+    fn ref_mul_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self * IBig::from(rhs)
+    }
+
+    fn mul_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        *self *= IBig::from(rhs)
     }
 }
