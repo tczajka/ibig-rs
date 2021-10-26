@@ -7,6 +7,7 @@ use crate::{
     ibig::IBig,
     memory::MemoryAllocation,
     ops::{Abs, DivEuclid, DivRem, DivRemEuclid, RemEuclid},
+    primitive::PrimitiveUnsigned,
     shift,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
@@ -726,6 +727,141 @@ impl DivRemEuclid<&IBig> for &IBig {
     }
 }
 
+macro_rules! impl_div_ubig_unsigned {
+    ($t:ty) => {
+        impl Div<$t> for UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: $t) -> UBig {
+                self.div_unsigned(rhs)
+            }
+        }
+
+        impl Div<&$t> for UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: &$t) -> UBig {
+                self.div_unsigned(*rhs)
+            }
+        }
+
+        impl Div<$t> for &UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: $t) -> UBig {
+                self.ref_div_unsigned(rhs)
+            }
+        }
+
+        impl Div<&$t> for &UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: &$t) -> UBig {
+                self.ref_div_unsigned(*rhs)
+            }
+        }
+
+        impl DivAssign<$t> for UBig {
+            fn div_assign(&mut self, rhs: $t) {
+                self.div_assign_unsigned(rhs)
+            }
+        }
+
+        impl DivAssign<&$t> for UBig {
+            fn div_assign(&mut self, rhs: &$t) {
+                self.div_assign_unsigned(*rhs)
+            }
+        }
+
+        impl Rem<$t> for UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: $t) -> $t {
+                self.rem_unsigned(rhs)
+            }
+        }
+
+        impl Rem<&$t> for UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: &$t) -> $t {
+                self.rem_unsigned(*rhs)
+            }
+        }
+
+        impl Rem<$t> for &UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: $t) -> $t {
+                self.ref_rem_unsigned(rhs)
+            }
+        }
+
+        impl Rem<&$t> for &UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: &$t) -> $t {
+                self.ref_rem_unsigned(*rhs)
+            }
+        }
+
+        impl RemAssign<$t> for UBig {
+            fn rem_assign(&mut self, rhs: $t) {
+                self.rem_assign_unsigned(rhs)
+            }
+        }
+
+        impl RemAssign<&$t> for UBig {
+            fn rem_assign(&mut self, rhs: &$t) {
+                self.rem_assign_unsigned(*rhs)
+            }
+        }
+
+        impl DivRem<$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: $t) -> (UBig, $t) {
+                self.div_rem_unsigned(rhs)
+            }
+        }
+
+        impl DivRem<&$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: &$t) -> (UBig, $t) {
+                self.div_rem_unsigned(*rhs)
+            }
+        }
+
+        impl DivRem<$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: $t) -> (UBig, $t) {
+                self.ref_div_rem_unsigned(rhs)
+            }
+        }
+
+        impl DivRem<&$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: &$t) -> (UBig, $t) {
+                self.ref_div_rem_unsigned(*rhs)
+            }
+        }
+    };
+}
+
+impl_div_ubig_unsigned!(u8);
+impl_div_ubig_unsigned!(u16);
+impl_div_ubig_unsigned!(u32);
+impl_div_ubig_unsigned!(u64);
+impl_div_ubig_unsigned!(u128);
+impl_div_ubig_unsigned!(usize);
+
 impl UBig {
     /// `lhs / rhs`
     fn div_word(lhs: Word, rhs: Word) -> UBig {
@@ -820,6 +956,40 @@ impl UBig {
             lhs.push_may_reallocate(1);
         }
         shift
+    }
+
+    fn div_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
+        self / UBig::from_unsigned(rhs)
+    }
+
+    fn ref_div_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+        self / UBig::from_unsigned(rhs)
+    }
+
+    fn div_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
+        self.div_assign(UBig::from_unsigned(rhs))
+    }
+
+    fn rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
+        (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
+    }
+
+    fn ref_rem_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
+        (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
+    }
+
+    fn rem_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
+        self.rem_assign(UBig::from_unsigned(rhs))
+    }
+
+    fn div_rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> (UBig, T) {
+        let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
+        (q, r.try_to_unsigned().unwrap())
+    }
+
+    fn ref_div_rem_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (UBig, T) {
+        let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
+        (q, r.try_to_unsigned().unwrap())
     }
 }
 

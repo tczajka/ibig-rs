@@ -232,3 +232,33 @@ fn test_div_rem_euclid_ibig() {
 fn test_divide_by_0_ibig() {
     let _ = ibig!(5) / ibig!(0);
 }
+
+#[test]
+fn test_div_rem_ubig_unsigned() {
+    assert_eq!(ubig!(23) / 10u8, ubig!(2));
+    assert_eq!(ubig!(23) / &10u8, ubig!(2));
+    assert_eq!(&ubig!(23) / 10u8, ubig!(2));
+    assert_eq!(&ubig!(23) / &10u8, ubig!(2));
+    let mut x = ubig!(23);
+    x /= 10u8;
+    assert_eq!(x, ubig!(2));
+    let mut x = ubig!(23);
+    x /= &10u8;
+    assert_eq!(x, ubig!(2));
+
+    assert_eq!(ubig!(23) % 10u8, 3u8);
+    assert_eq!(ubig!(23) % &10u8, 3u8);
+    assert_eq!(&ubig!(23) % 10u8, 3u8);
+    assert_eq!(&ubig!(23) % &10u8, 3u8);
+    let mut x = ubig!(23);
+    x %= 10u8;
+    assert_eq!(x, ubig!(3));
+    let mut x = ubig!(23);
+    x %= &10u8;
+    assert_eq!(x, ubig!(3));
+
+    assert_eq!(ubig!(23).div_rem(10u8), (ubig!(2), 3u8));
+    assert_eq!(ubig!(23).div_rem(&10u8), (ubig!(2), 3u8));
+    assert_eq!((&ubig!(23)).div_rem(10u8), (ubig!(2), 3u8));
+    assert_eq!((&ubig!(23)).div_rem(&10u8), (ubig!(2), 3u8));
+}

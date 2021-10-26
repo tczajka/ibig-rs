@@ -249,7 +249,7 @@ impl SubAssign<&IBig> for IBig {
     }
 }
 
-macro_rules! impl_ubig_with_unsigned {
+macro_rules! impl_add_ubig_unsigned {
     ($t:ty) => {
         impl Add<$t> for UBig {
             type Output = UBig;
@@ -373,14 +373,14 @@ macro_rules! impl_ubig_with_unsigned {
     };
 }
 
-impl_ubig_with_unsigned!(u8);
-impl_ubig_with_unsigned!(u16);
-impl_ubig_with_unsigned!(u32);
-impl_ubig_with_unsigned!(u64);
-impl_ubig_with_unsigned!(u128);
-impl_ubig_with_unsigned!(usize);
+impl_add_ubig_unsigned!(u8);
+impl_add_ubig_unsigned!(u16);
+impl_add_ubig_unsigned!(u32);
+impl_add_ubig_unsigned!(u64);
+impl_add_ubig_unsigned!(u128);
+impl_add_ubig_unsigned!(usize);
 
-macro_rules! impl_ubig_with_signed {
+macro_rules! impl_add_ubig_signed {
     ($t:ty) => {
         impl Add<$t> for UBig {
             type Output = UBig;
@@ -504,14 +504,14 @@ macro_rules! impl_ubig_with_signed {
     };
 }
 
-impl_ubig_with_signed!(i8);
-impl_ubig_with_signed!(i16);
-impl_ubig_with_signed!(i32);
-impl_ubig_with_signed!(i64);
-impl_ubig_with_signed!(i128);
-impl_ubig_with_signed!(isize);
+impl_add_ubig_signed!(i8);
+impl_add_ubig_signed!(i16);
+impl_add_ubig_signed!(i32);
+impl_add_ubig_signed!(i64);
+impl_add_ubig_signed!(i128);
+impl_add_ubig_signed!(isize);
 
-macro_rules! impl_ibig_with_primitive {
+macro_rules! impl_add_ibig_primitive {
     ($t:ty) => {
         impl Add<$t> for IBig {
             type Output = IBig;
@@ -667,18 +667,18 @@ macro_rules! impl_ibig_with_primitive {
     };
 }
 
-impl_ibig_with_primitive!(u8);
-impl_ibig_with_primitive!(u16);
-impl_ibig_with_primitive!(u32);
-impl_ibig_with_primitive!(u64);
-impl_ibig_with_primitive!(u128);
-impl_ibig_with_primitive!(usize);
-impl_ibig_with_primitive!(i8);
-impl_ibig_with_primitive!(i16);
-impl_ibig_with_primitive!(i32);
-impl_ibig_with_primitive!(i64);
-impl_ibig_with_primitive!(i128);
-impl_ibig_with_primitive!(isize);
+impl_add_ibig_primitive!(u8);
+impl_add_ibig_primitive!(u16);
+impl_add_ibig_primitive!(u32);
+impl_add_ibig_primitive!(u64);
+impl_add_ibig_primitive!(u128);
+impl_add_ibig_primitive!(usize);
+impl_add_ibig_primitive!(i8);
+impl_add_ibig_primitive!(i16);
+impl_add_ibig_primitive!(i32);
+impl_add_ibig_primitive!(i64);
+impl_add_ibig_primitive!(i128);
+impl_add_ibig_primitive!(isize);
 
 impl UBig {
     /// Add two `Word`s.
