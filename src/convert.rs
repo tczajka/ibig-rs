@@ -590,7 +590,7 @@ impl IBig {
     }
 
     /// Try to convert [IBig] to an signed primitive.
-    fn try_to_signed<T>(&self) -> Result<T, OutOfBoundsError>
+    pub(crate) fn try_to_signed<T>(&self) -> Result<T, OutOfBoundsError>
     where
         T: PrimitiveSigned,
     {

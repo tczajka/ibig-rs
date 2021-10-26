@@ -280,3 +280,83 @@ fn test_div_rem_euclid_ubig_unsigned() {
     assert_eq!((&ubig!(23)).div_rem_euclid(10u8), (ubig!(2), 3u8));
     assert_eq!((&ubig!(23)).div_rem_euclid(&10u8), (ubig!(2), 3u8));
 }
+
+#[test]
+fn test_div_rem_ubig_signed() {
+    assert_eq!(ubig!(23) / 10, ubig!(2));
+    assert_eq!(ubig!(23) / &10, ubig!(2));
+    assert_eq!(&ubig!(23) / 10, ubig!(2));
+    assert_eq!(&ubig!(23) / &10, ubig!(2));
+    let mut x = ubig!(23);
+    x /= 10;
+    assert_eq!(x, ubig!(2));
+    let mut x = ubig!(23);
+    x /= &10;
+    assert_eq!(x, ubig!(2));
+
+    assert_eq!(ubig!(23) % 10, 3);
+    assert_eq!(ubig!(23) % &10, 3);
+    assert_eq!(&ubig!(23) % 10, 3);
+    assert_eq!(&ubig!(23) % &10, 3);
+    let mut x = ubig!(23);
+    x %= 10;
+    assert_eq!(x, ubig!(3));
+    let mut x = ubig!(23);
+    x %= &10;
+    assert_eq!(x, ubig!(3));
+
+    assert_eq!(ubig!(23).div_rem(10), (ubig!(2), 3));
+    assert_eq!(ubig!(23).div_rem(&10), (ubig!(2), 3));
+    assert_eq!((&ubig!(23)).div_rem(10), (ubig!(2), 3));
+    assert_eq!((&ubig!(23)).div_rem(&10), (ubig!(2), 3));
+
+    assert_eq!(ubig!(3) / (-100), ubig!(0));
+    assert_eq!(ubig!(21) % (-10), 1);
+    assert_eq!(ubig!(1).div_rem(-10), (ubig!(0), 1));
+}
+
+#[test]
+#[should_panic]
+fn test_div_ubig_signed_overflow() {
+    let _ = ubig!(100) / (-10);
+}
+
+#[test]
+#[should_panic]
+fn test_div_rem_ubig_signed_overflow() {
+    let _ = ubig!(101).div_rem(-10);
+}
+
+#[test]
+fn test_div_rem_euclid_ubig_signed() {
+    assert_eq!(ubig!(23).div_euclid(10), ubig!(2));
+    assert_eq!(ubig!(23).div_euclid(&10), ubig!(2));
+    assert_eq!((&ubig!(23)).div_euclid(10), ubig!(2));
+    assert_eq!((&ubig!(23)).div_euclid(&10), ubig!(2));
+
+    assert_eq!(ubig!(23).rem_euclid(10), 3);
+    assert_eq!(ubig!(23).rem_euclid(&10), 3);
+    assert_eq!((&ubig!(23)).rem_euclid(10), 3);
+    assert_eq!((&ubig!(23)).rem_euclid(&10), 3);
+
+    assert_eq!(ubig!(23).div_rem_euclid(10), (ubig!(2), 3));
+    assert_eq!(ubig!(23).div_rem_euclid(&10), (ubig!(2), 3));
+    assert_eq!((&ubig!(23)).div_rem_euclid(10), (ubig!(2), 3));
+    assert_eq!((&ubig!(23)).div_rem_euclid(&10), (ubig!(2), 3));
+
+    assert_eq!(ubig!(1).div_euclid(-10), ubig!(0));
+    assert_eq!(ubig!(21).rem_euclid(-10), 1);
+    assert_eq!(ubig!(1).div_rem_euclid(-10), (ubig!(0), 1));
+}
+
+#[test]
+#[should_panic]
+fn test_div_euclid_ubig_signed_overflow() {
+    let _ = ubig!(11).div_euclid(-10);
+}
+
+#[test]
+#[should_panic]
+fn test_div_rem_euclid_ubig_signed_overflow() {
+    let _ = ubig!(11).div_rem_euclid(-10);
+}

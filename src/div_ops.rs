@@ -7,7 +7,7 @@ use crate::{
     ibig::IBig,
     memory::MemoryAllocation,
     ops::{Abs, DivEuclid, DivRem, DivRemEuclid, RemEuclid},
-    primitive::PrimitiveUnsigned,
+    primitive::{PrimitiveSigned, PrimitiveUnsigned},
     shift,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
@@ -962,6 +962,241 @@ impl_div_ubig_unsigned!(u64);
 impl_div_ubig_unsigned!(u128);
 impl_div_ubig_unsigned!(usize);
 
+macro_rules! impl_div_ubig_signed {
+    ($t:ty) => {
+        impl Div<$t> for UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: $t) -> UBig {
+                self.div_signed(rhs)
+            }
+        }
+
+        impl Div<&$t> for UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: &$t) -> UBig {
+                self.div_signed(*rhs)
+            }
+        }
+
+        impl Div<$t> for &UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: $t) -> UBig {
+                self.ref_div_signed(rhs)
+            }
+        }
+
+        impl Div<&$t> for &UBig {
+            type Output = UBig;
+
+            fn div(self, rhs: &$t) -> UBig {
+                self.ref_div_signed(*rhs)
+            }
+        }
+
+        impl DivAssign<$t> for UBig {
+            fn div_assign(&mut self, rhs: $t) {
+                self.div_assign_signed(rhs)
+            }
+        }
+
+        impl DivAssign<&$t> for UBig {
+            fn div_assign(&mut self, rhs: &$t) {
+                self.div_assign_signed(*rhs)
+            }
+        }
+
+        impl Rem<$t> for UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: $t) -> $t {
+                self.rem_signed(rhs)
+            }
+        }
+
+        impl Rem<&$t> for UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: &$t) -> $t {
+                self.rem_signed(*rhs)
+            }
+        }
+
+        impl Rem<$t> for &UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: $t) -> $t {
+                self.ref_rem_signed(rhs)
+            }
+        }
+
+        impl Rem<&$t> for &UBig {
+            type Output = $t;
+
+            fn rem(self, rhs: &$t) -> $t {
+                self.ref_rem_signed(*rhs)
+            }
+        }
+
+        impl RemAssign<$t> for UBig {
+            fn rem_assign(&mut self, rhs: $t) {
+                self.rem_assign_signed(rhs)
+            }
+        }
+
+        impl RemAssign<&$t> for UBig {
+            fn rem_assign(&mut self, rhs: &$t) {
+                self.rem_assign_signed(*rhs)
+            }
+        }
+
+        impl DivRem<$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: $t) -> (UBig, $t) {
+                self.div_rem_signed(rhs)
+            }
+        }
+
+        impl DivRem<&$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: &$t) -> (UBig, $t) {
+                self.div_rem_signed(*rhs)
+            }
+        }
+
+        impl DivRem<$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: $t) -> (UBig, $t) {
+                self.ref_div_rem_signed(rhs)
+            }
+        }
+
+        impl DivRem<&$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem(self, rhs: &$t) -> (UBig, $t) {
+                self.ref_div_rem_signed(*rhs)
+            }
+        }
+
+        impl DivEuclid<$t> for UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: $t) -> UBig {
+                self.div_euclid_signed(rhs)
+            }
+        }
+
+        impl DivEuclid<&$t> for UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: &$t) -> UBig {
+                self.div_euclid_signed(*rhs)
+            }
+        }
+
+        impl DivEuclid<$t> for &UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: $t) -> UBig {
+                self.ref_div_euclid_signed(rhs)
+            }
+        }
+
+        impl DivEuclid<&$t> for &UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: &$t) -> UBig {
+                self.ref_div_euclid_signed(*rhs)
+            }
+        }
+
+        impl RemEuclid<$t> for UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: $t) -> $t {
+                self.rem_euclid_signed(rhs)
+            }
+        }
+
+        impl RemEuclid<&$t> for UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: &$t) -> $t {
+                self.rem_euclid_signed(*rhs)
+            }
+        }
+
+        impl RemEuclid<$t> for &UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: $t) -> $t {
+                self.ref_rem_euclid_signed(rhs)
+            }
+        }
+
+        impl RemEuclid<&$t> for &UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: &$t) -> $t {
+                self.ref_rem_euclid_signed(*rhs)
+            }
+        }
+
+        impl DivRemEuclid<$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
+                self.div_rem_euclid_signed(rhs)
+            }
+        }
+
+        impl DivRemEuclid<&$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
+                self.div_rem_euclid_signed(*rhs)
+            }
+        }
+
+        impl DivRemEuclid<$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
+                self.ref_div_rem_euclid_signed(rhs)
+            }
+        }
+
+        impl DivRemEuclid<&$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
+                self.ref_div_rem_euclid_signed(*rhs)
+            }
+        }
+    };
+}
+
+impl_div_ubig_signed!(i8);
+impl_div_ubig_signed!(i16);
+impl_div_ubig_signed!(i32);
+impl_div_ubig_signed!(i64);
+impl_div_ubig_signed!(i128);
+impl_div_ubig_signed!(isize);
+
 impl UBig {
     /// `lhs / rhs`
     fn div_word(lhs: Word, rhs: Word) -> UBig {
@@ -1090,6 +1325,91 @@ impl UBig {
     fn ref_div_rem_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
         (q, r.try_to_unsigned().unwrap())
+    }
+
+    fn div_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
+    }
+
+    fn ref_div_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
+    }
+
+    fn div_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
+        *self = mem::take(self).div_signed(rhs)
+    }
+
+    fn rem_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
+        (IBig::from(self) % IBig::from_signed(rhs))
+            .try_to_signed()
+            .unwrap()
+    }
+
+    // TODO: Make this run without allocation.
+    fn ref_rem_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
+        (IBig::from(self) % IBig::from_signed(rhs))
+            .try_to_signed()
+            .unwrap()
+    }
+
+    fn rem_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
+        let res = IBig::from(mem::take(self)) % IBig::from_signed(rhs);
+        *self = UBig::from_ibig_panic_on_overflow(res);
+    }
+
+    fn div_rem_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
+        let (q, r) = IBig::from(self).div_rem(IBig::from_signed(rhs));
+        (
+            UBig::from_ibig_panic_on_overflow(q),
+            r.try_to_signed().unwrap(),
+        )
+    }
+
+    fn ref_div_rem_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
+        let (q, r) = IBig::from(self).div_rem(IBig::from_signed(rhs));
+        (
+            UBig::from_ibig_panic_on_overflow(q),
+            r.try_to_signed().unwrap(),
+        )
+    }
+
+    fn div_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
+    }
+
+    fn ref_div_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
+    }
+
+    fn rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
+        IBig::from(self)
+            .rem_euclid(IBig::from_signed(rhs))
+            .try_to_signed()
+            .unwrap()
+    }
+
+    // TODO: Make this run without allocation.
+    fn ref_rem_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
+        IBig::from(self)
+            .rem_euclid(IBig::from_signed(rhs))
+            .try_to_signed()
+            .unwrap()
+    }
+
+    fn div_rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
+        let (q, r) = IBig::from(self).div_rem_euclid(IBig::from_signed(rhs));
+        (
+            UBig::from_ibig_panic_on_overflow(q),
+            r.try_to_signed().unwrap(),
+        )
+    }
+
+    fn ref_div_rem_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
+        let (q, r) = IBig::from(self).div_rem_euclid(IBig::from_signed(rhs));
+        (
+            UBig::from_ibig_panic_on_overflow(q),
+            r.try_to_signed().unwrap(),
+        )
     }
 }
 
