@@ -262,3 +262,21 @@ fn test_div_rem_ubig_unsigned() {
     assert_eq!((&ubig!(23)).div_rem(10u8), (ubig!(2), 3u8));
     assert_eq!((&ubig!(23)).div_rem(&10u8), (ubig!(2), 3u8));
 }
+
+#[test]
+fn test_div_rem_euclid_ubig_unsigned() {
+    assert_eq!(ubig!(23).div_euclid(10u8), ubig!(2));
+    assert_eq!(ubig!(23).div_euclid(&10u8), ubig!(2));
+    assert_eq!((&ubig!(23)).div_euclid(10u8), ubig!(2));
+    assert_eq!((&ubig!(23)).div_euclid(&10u8), ubig!(2));
+
+    assert_eq!(ubig!(23).rem_euclid(10u8), 3u8);
+    assert_eq!(ubig!(23).rem_euclid(&10u8), 3u8);
+    assert_eq!((&ubig!(23)).rem_euclid(10u8), 3u8);
+    assert_eq!((&ubig!(23)).rem_euclid(&10u8), 3u8);
+
+    assert_eq!(ubig!(23).div_rem_euclid(10u8), (ubig!(2), 3u8));
+    assert_eq!(ubig!(23).div_rem_euclid(&10u8), (ubig!(2), 3u8));
+    assert_eq!((&ubig!(23)).div_rem_euclid(10u8), (ubig!(2), 3u8));
+    assert_eq!((&ubig!(23)).div_rem_euclid(&10u8), (ubig!(2), 3u8));
+}

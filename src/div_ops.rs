@@ -852,6 +852,106 @@ macro_rules! impl_div_ubig_unsigned {
                 self.ref_div_rem_unsigned(*rhs)
             }
         }
+
+        impl DivEuclid<$t> for UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: $t) -> UBig {
+                self.div_unsigned(rhs)
+            }
+        }
+
+        impl DivEuclid<&$t> for UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: &$t) -> UBig {
+                self.div_unsigned(*rhs)
+            }
+        }
+
+        impl DivEuclid<$t> for &UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: $t) -> UBig {
+                self.ref_div_unsigned(rhs)
+            }
+        }
+
+        impl DivEuclid<&$t> for &UBig {
+            type Output = UBig;
+
+            fn div_euclid(self, rhs: &$t) -> UBig {
+                self.ref_div_unsigned(*rhs)
+            }
+        }
+
+        impl RemEuclid<$t> for UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: $t) -> $t {
+                self.rem_unsigned(rhs)
+            }
+        }
+
+        impl RemEuclid<&$t> for UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: &$t) -> $t {
+                self.rem_unsigned(*rhs)
+            }
+        }
+
+        impl RemEuclid<$t> for &UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: $t) -> $t {
+                self.ref_rem_unsigned(rhs)
+            }
+        }
+
+        impl RemEuclid<&$t> for &UBig {
+            type Output = $t;
+
+            fn rem_euclid(self, rhs: &$t) -> $t {
+                self.ref_rem_unsigned(*rhs)
+            }
+        }
+
+        impl DivRemEuclid<$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
+                self.div_rem_unsigned(rhs)
+            }
+        }
+
+        impl DivRemEuclid<&$t> for UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
+                self.div_rem_unsigned(*rhs)
+            }
+        }
+
+        impl DivRemEuclid<$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
+                self.ref_div_rem_unsigned(rhs)
+            }
+        }
+
+        impl DivRemEuclid<&$t> for &UBig {
+            type OutputDiv = UBig;
+            type OutputRem = $t;
+
+            fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
+                self.ref_div_rem_unsigned(*rhs)
+            }
+        }
     };
 }
 
