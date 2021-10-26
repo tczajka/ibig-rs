@@ -453,45 +453,27 @@ impl UBig {
         buffer.into()
     }
 
-    fn mul_unsigned<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn mul_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self * UBig::from_unsigned(rhs)
     }
 
-    fn ref_mul_unsigned<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn ref_mul_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self * UBig::from_unsigned(rhs)
     }
 
-    fn mul_assign_unsigned<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn mul_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self *= UBig::from_unsigned(rhs)
     }
 
-    fn mul_signed<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn mul_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
-    fn ref_mul_signed<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn ref_mul_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
-    fn mul_assign_signed<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveSigned,
-    {
+    fn mul_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).mul_signed(rhs)
     }
 }

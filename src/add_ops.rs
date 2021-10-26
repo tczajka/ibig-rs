@@ -723,87 +723,51 @@ impl UBig {
         lhs.into()
     }
 
-    fn add_unsigned<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn add_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self + UBig::from_unsigned(rhs)
     }
 
-    fn ref_add_unsigned<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn ref_add_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self + UBig::from_unsigned(rhs)
     }
 
-    fn add_assign_unsigned<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn add_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self += UBig::from_unsigned(rhs)
     }
 
-    fn sub_unsigned<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn sub_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self - UBig::from_unsigned(rhs)
     }
 
-    fn ref_sub_unsigned<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn ref_sub_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self - UBig::from_unsigned(rhs)
     }
 
-    fn sub_assign_unsigned<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveUnsigned,
-    {
+    fn sub_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self -= UBig::from_unsigned(rhs)
     }
 
-    fn add_signed<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn add_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
-    fn ref_add_signed<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn ref_add_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
-    fn add_assign_signed<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveSigned,
-    {
+    fn add_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).add_signed(rhs)
     }
 
-    fn sub_signed<T>(self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn sub_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
-    fn ref_sub_signed<T>(&self, rhs: T) -> UBig
-    where
-        T: PrimitiveSigned,
-    {
+    fn ref_sub_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
-    fn sub_assign_signed<T>(&mut self, rhs: T)
-    where
-        T: PrimitiveSigned,
-    {
+    fn sub_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).sub_signed(rhs)
     }
 }

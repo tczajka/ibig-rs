@@ -1340,16 +1340,15 @@ impl UBig {
     }
 
     fn rem_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
-        (IBig::from(self) % IBig::from_signed(rhs))
-            .try_to_signed()
-            .unwrap()
+        let (_, rhs_unsigned) = rhs.to_sign_magnitude();
+        let res = self.rem_unsigned(rhs_unsigned);
+        T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
-    // TODO: Make this run without allocation.
     fn ref_rem_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
-        (IBig::from(self) % IBig::from_signed(rhs))
-            .try_to_signed()
-            .unwrap()
+        let (_, rhs_unsigned) = rhs.to_sign_magnitude();
+        let res = self.ref_rem_unsigned(rhs_unsigned);
+        T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
     fn rem_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
@@ -1382,18 +1381,11 @@ impl UBig {
     }
 
     fn rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
-        IBig::from(self)
-            .rem_euclid(IBig::from_signed(rhs))
-            .try_to_signed()
-            .unwrap()
+        self.rem_signed(rhs)
     }
 
-    // TODO: Make this run without allocation.
     fn ref_rem_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
-        IBig::from(self)
-            .rem_euclid(IBig::from_signed(rhs))
-            .try_to_signed()
-            .unwrap()
+        self.ref_rem_signed(rhs)
     }
 
     fn div_rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
