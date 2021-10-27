@@ -2,6 +2,15 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.3 - unreleased
+
+### Features
+* Mixed-type arithmetic with primitive integer types.
+
+  Allows `x + 1` instead of `x + ubig!(1)`.
+  
+  This breaks with the convention that arithmetic operators require same type on both sides. A better alternative would be user-defined custom integer literals, so that `1` could be inferred to have type `UBig`. But Rust does not support this yet. So this is a workaround for the sake of ergonomics.
+
 ## 0.3.2 - 2021-05-02
 
 ### Toolchain
