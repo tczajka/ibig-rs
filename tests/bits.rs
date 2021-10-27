@@ -413,3 +413,61 @@ fn test_and_not_ibig() {
         }
     }
 }
+
+#[test]
+#[allow(clippy::identity_op, clippy::op_ref)]
+fn test_bit_ops_ubig_unsigned() {
+    assert_eq!(ubig!(0xf0f) & 0xffu8, 0xfu8);
+    assert_eq!(ubig!(0xf0f) & (&0xffu8), 0xfu8);
+    assert_eq!((&ubig!(0xf0f)) & 0xffu8, 0xfu8);
+    assert_eq!((&ubig!(0xf0f)) & (&0xffu8), 0xfu8);
+
+    assert_eq!(0xffu8 & ubig!(0xf0f), 0xfu8);
+    assert_eq!(0xffu8 & (&ubig!(0xf0f)), 0xfu8);
+    assert_eq!((&0xffu8) & ubig!(0xf0f), 0xfu8);
+    assert_eq!((&0xffu8) & (&ubig!(0xf0f)), 0xfu8);
+
+    let mut x = ubig!(0xf0f);
+    x &= 0xffu8;
+    assert_eq!(x, ubig!(0xf));
+
+    let mut x = ubig!(0xf0f);
+    x &= &0xffu8;
+    assert_eq!(x, ubig!(0xf));
+
+    assert_eq!(ubig!(0xf0f) | 0xffu8, ubig!(0xfff));
+    assert_eq!(ubig!(0xf0f) | (&0xffu8), ubig!(0xfff));
+    assert_eq!((&ubig!(0xf0f)) | 0xffu8, ubig!(0xfff));
+    assert_eq!((&ubig!(0xf0f)) | (&0xffu8), ubig!(0xfff));
+
+    assert_eq!(0xffu8 | ubig!(0xf0f), ubig!(0xfff));
+    assert_eq!(0xffu8 | (&ubig!(0xf0f)), ubig!(0xfff));
+    assert_eq!((&0xffu8) | ubig!(0xf0f), ubig!(0xfff));
+    assert_eq!((&0xffu8) | (&ubig!(0xf0f)), ubig!(0xfff));
+
+    let mut x = ubig!(0xf0f);
+    x |= 0xffu8;
+    assert_eq!(x, ubig!(0xfff));
+
+    let mut x = ubig!(0xf0f);
+    x |= &0xffu8;
+    assert_eq!(x, ubig!(0xfff));
+
+    assert_eq!(ubig!(0xf0f) ^ 0xffu8, ubig!(0xff0));
+    assert_eq!(ubig!(0xf0f) ^ (&0xffu8), ubig!(0xff0));
+    assert_eq!((&ubig!(0xf0f)) ^ 0xffu8, ubig!(0xff0));
+    assert_eq!((&ubig!(0xf0f)) ^ (&0xffu8), ubig!(0xff0));
+
+    assert_eq!(0xffu8 ^ ubig!(0xf0f), ubig!(0xff0));
+    assert_eq!(0xffu8 ^ (&ubig!(0xf0f)), ubig!(0xff0));
+    assert_eq!((&0xffu8) ^ ubig!(0xf0f), ubig!(0xff0));
+    assert_eq!((&0xffu8) ^ (&ubig!(0xf0f)), ubig!(0xff0));
+
+    let mut x = ubig!(0xf0f);
+    x ^= 0xffu8;
+    assert_eq!(x, ubig!(0xff0));
+
+    let mut x = ubig!(0xf0f);
+    x ^= &0xffu8;
+    assert_eq!(x, ubig!(0xff0));
+}

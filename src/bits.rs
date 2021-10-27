@@ -6,7 +6,7 @@ use crate::{
     ibig::IBig,
     math,
     ops::{AndNot, NextPowerOfTwo, UnsignedAbs},
-    primitive::{double_word, WORD_BITS_USIZE},
+    primitive::{double_word, PrimitiveUnsigned, WORD_BITS_USIZE},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -905,5 +905,286 @@ impl UBig {
                 }
             }
         }
+    }
+}
+
+macro_rules! impl_bit_ops_ubig_unsigned {
+    ($t:ty) => {
+        impl BitAnd<$t> for UBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: $t) -> $t {
+                self.bitand_unsigned(rhs)
+            }
+        }
+
+        impl BitAnd<&$t> for UBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: &$t) -> $t {
+                self.bitand_unsigned(*rhs)
+            }
+        }
+
+        impl BitAnd<$t> for &UBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: $t) -> $t {
+                self.bitand_ref_unsigned(rhs)
+            }
+        }
+
+        impl BitAnd<&$t> for &UBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: &$t) -> $t {
+                self.bitand_ref_unsigned(*rhs)
+            }
+        }
+
+        impl BitAnd<UBig> for $t {
+            type Output = $t;
+
+            fn bitand(self, rhs: UBig) -> $t {
+                rhs.bitand(self)
+            }
+        }
+
+        impl BitAnd<&UBig> for $t {
+            type Output = $t;
+
+            fn bitand(self, rhs: &UBig) -> $t {
+                rhs.bitand(self)
+            }
+        }
+
+        impl BitAnd<UBig> for &$t {
+            type Output = $t;
+
+            fn bitand(self, rhs: UBig) -> $t {
+                rhs.bitand(self)
+            }
+        }
+
+        impl BitAnd<&UBig> for &$t {
+            type Output = $t;
+
+            fn bitand(self, rhs: &UBig) -> $t {
+                rhs.bitand(self)
+            }
+        }
+
+        impl BitAndAssign<$t> for UBig {
+            fn bitand_assign(&mut self, rhs: $t) {
+                self.bitand_assign_unsigned(rhs)
+            }
+        }
+
+        impl BitAndAssign<&$t> for UBig {
+            fn bitand_assign(&mut self, rhs: &$t) {
+                self.bitand_assign_unsigned(*rhs)
+            }
+        }
+
+        impl BitOr<$t> for UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: $t) -> UBig {
+                self.bitor_unsigned(rhs)
+            }
+        }
+
+        impl BitOr<&$t> for UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: &$t) -> UBig {
+                self.bitor_unsigned(*rhs)
+            }
+        }
+
+        impl BitOr<$t> for &UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: $t) -> UBig {
+                self.bitor_ref_unsigned(rhs)
+            }
+        }
+
+        impl BitOr<&$t> for &UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: &$t) -> UBig {
+                self.bitor_ref_unsigned(*rhs)
+            }
+        }
+
+        impl BitOr<UBig> for $t {
+            type Output = UBig;
+
+            fn bitor(self, rhs: UBig) -> UBig {
+                rhs.bitor(self)
+            }
+        }
+
+        impl BitOr<&UBig> for $t {
+            type Output = UBig;
+
+            fn bitor(self, rhs: &UBig) -> UBig {
+                rhs.bitor(self)
+            }
+        }
+
+        impl BitOr<UBig> for &$t {
+            type Output = UBig;
+
+            fn bitor(self, rhs: UBig) -> UBig {
+                rhs.bitor(self)
+            }
+        }
+
+        impl BitOr<&UBig> for &$t {
+            type Output = UBig;
+
+            fn bitor(self, rhs: &UBig) -> UBig {
+                rhs.bitor(self)
+            }
+        }
+
+        impl BitOrAssign<$t> for UBig {
+            fn bitor_assign(&mut self, rhs: $t) {
+                self.bitor_assign_unsigned(rhs)
+            }
+        }
+
+        impl BitOrAssign<&$t> for UBig {
+            fn bitor_assign(&mut self, rhs: &$t) {
+                self.bitor_assign_unsigned(*rhs)
+            }
+        }
+
+        impl BitXor<$t> for UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: $t) -> UBig {
+                self.bitxor_unsigned(rhs)
+            }
+        }
+
+        impl BitXor<&$t> for UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: &$t) -> UBig {
+                self.bitxor_unsigned(*rhs)
+            }
+        }
+
+        impl BitXor<$t> for &UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: $t) -> UBig {
+                self.bitxor_ref_unsigned(rhs)
+            }
+        }
+
+        impl BitXor<&$t> for &UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: &$t) -> UBig {
+                self.bitxor_ref_unsigned(*rhs)
+            }
+        }
+
+        impl BitXor<UBig> for $t {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: UBig) -> UBig {
+                rhs.bitxor(self)
+            }
+        }
+
+        impl BitXor<&UBig> for $t {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: &UBig) -> UBig {
+                rhs.bitxor(self)
+            }
+        }
+
+        impl BitXor<UBig> for &$t {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: UBig) -> UBig {
+                rhs.bitxor(self)
+            }
+        }
+
+        impl BitXor<&UBig> for &$t {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: &UBig) -> UBig {
+                rhs.bitxor(self)
+            }
+        }
+
+        impl BitXorAssign<$t> for UBig {
+            fn bitxor_assign(&mut self, rhs: $t) {
+                self.bitxor_assign_unsigned(rhs)
+            }
+        }
+
+        impl BitXorAssign<&$t> for UBig {
+            fn bitxor_assign(&mut self, rhs: &$t) {
+                self.bitxor_assign_unsigned(*rhs)
+            }
+        }
+    };
+}
+
+impl_bit_ops_ubig_unsigned!(u8);
+impl_bit_ops_ubig_unsigned!(u16);
+impl_bit_ops_ubig_unsigned!(u32);
+impl_bit_ops_ubig_unsigned!(u64);
+impl_bit_ops_ubig_unsigned!(u128);
+impl_bit_ops_ubig_unsigned!(usize);
+
+impl UBig {
+    fn bitand_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
+        self.bitand(UBig::from_unsigned(rhs))
+            .try_to_unsigned()
+            .unwrap()
+    }
+
+    fn bitand_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
+        self.bitand(UBig::from_unsigned(rhs))
+            .try_to_unsigned()
+            .unwrap()
+    }
+
+    fn bitand_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
+        self.bitand_assign(UBig::from_unsigned(rhs))
+    }
+
+    fn bitor_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
+        self.bitor(UBig::from_unsigned(rhs))
+    }
+
+    fn bitor_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+        self.bitor(UBig::from_unsigned(rhs))
+    }
+
+    fn bitor_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
+        self.bitor_assign(UBig::from_unsigned(rhs))
+    }
+
+    fn bitxor_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
+        self.bitxor(UBig::from_unsigned(rhs))
+    }
+
+    fn bitxor_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+        self.bitxor(UBig::from_unsigned(rhs))
+    }
+
+    fn bitxor_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
+        self.bitxor_assign(UBig::from_unsigned(rhs))
     }
 }
