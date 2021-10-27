@@ -470,4 +470,9 @@ fn test_bit_ops_ubig_unsigned() {
     let mut x = ubig!(0xf0f);
     x ^= &0xffu8;
     assert_eq!(x, ubig!(0xff0));
+
+    assert_eq!(ubig!(0xf0f).and_not(0xffu8), ubig!(0xf00));
+    assert_eq!(ubig!(0xf0f).and_not(&0xffu8), ubig!(0xf00));
+    assert_eq!((&ubig!(0xf0f)).and_not(0xffu8), ubig!(0xf00));
+    assert_eq!((&ubig!(0xf0f)).and_not(&0xffu8), ubig!(0xf00));
 }

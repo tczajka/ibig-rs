@@ -991,6 +991,24 @@ macro_rules! impl_bit_ops_ubig_unsigned {
         }
 
         helper_macros::forward_binop_assign_arg_by_value!(impl BitXorAssign<$t> for UBig, bitxor_assign);
+
+        impl AndNot<$t> for UBig {
+            type Output = UBig;
+
+            fn and_not(self, rhs: $t) -> UBig {
+                self.and_not_unsigned(rhs)
+            }
+        }
+
+        impl AndNot<$t> for &UBig {
+            type Output = UBig;
+
+            fn and_not(self, rhs: $t) -> UBig {
+                self.and_not_ref_unsigned(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl AndNot<$t> for UBig, and_not);
     };
 }
 
@@ -1040,5 +1058,13 @@ impl UBig {
 
     fn bitxor_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         self.bitxor_assign(UBig::from_unsigned(rhs))
+    }
+
+    fn and_not_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
+        self.and_not(UBig::from_unsigned(rhs))
+    }
+
+    fn and_not_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+        self.and_not(UBig::from_unsigned(rhs))
     }
 }
