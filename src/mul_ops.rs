@@ -169,7 +169,7 @@ macro_rules! impl_mul_ubig_unsigned {
             type Output = UBig;
 
             fn mul(self, rhs: $t) -> UBig {
-                self.ref_mul_unsigned(rhs)
+                self.mul_ref_unsigned(rhs)
             }
         }
 
@@ -177,7 +177,7 @@ macro_rules! impl_mul_ubig_unsigned {
             type Output = UBig;
 
             fn mul(self, rhs: &$t) -> UBig {
-                self.ref_mul_unsigned(*rhs)
+                self.mul_ref_unsigned(*rhs)
             }
         }
 
@@ -256,7 +256,7 @@ macro_rules! impl_mul_ubig_signed {
             type Output = UBig;
 
             fn mul(self, rhs: $t) -> UBig {
-                self.ref_mul_signed(rhs)
+                self.mul_ref_signed(rhs)
             }
         }
 
@@ -264,7 +264,7 @@ macro_rules! impl_mul_ubig_signed {
             type Output = UBig;
 
             fn mul(self, rhs: &$t) -> UBig {
-                self.ref_mul_signed(*rhs)
+                self.mul_ref_signed(*rhs)
             }
         }
 
@@ -343,7 +343,7 @@ macro_rules! impl_mul_ibig_primitive {
             type Output = IBig;
 
             fn mul(self, rhs: $t) -> IBig {
-                self.ref_mul_primitive(rhs)
+                self.mul_ref_primitive(rhs)
             }
         }
 
@@ -351,7 +351,7 @@ macro_rules! impl_mul_ibig_primitive {
             type Output = IBig;
 
             fn mul(self, rhs: &$t) -> IBig {
-                self.ref_mul_primitive(*rhs)
+                self.mul_ref_primitive(*rhs)
             }
         }
 
@@ -457,7 +457,7 @@ impl UBig {
         self * UBig::from_unsigned(rhs)
     }
 
-    fn ref_mul_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+    fn mul_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self * UBig::from_unsigned(rhs)
     }
 
@@ -469,7 +469,7 @@ impl UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
-    fn ref_mul_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+    fn mul_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
@@ -486,7 +486,7 @@ impl IBig {
         self * IBig::from(rhs)
     }
 
-    fn ref_mul_primitive<T>(&self, rhs: T) -> IBig
+    fn mul_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
     {

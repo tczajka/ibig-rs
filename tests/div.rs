@@ -234,6 +234,7 @@ fn test_divide_by_0_ibig() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_div_rem_ubig_unsigned() {
     assert_eq!(ubig!(23) / 10u8, ubig!(2));
     assert_eq!(ubig!(23) / &10u8, ubig!(2));
@@ -282,6 +283,7 @@ fn test_div_rem_euclid_ubig_unsigned() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_div_rem_ubig_signed() {
     assert_eq!(ubig!(23) / 10, ubig!(2));
     assert_eq!(ubig!(23) / &10, ubig!(2));

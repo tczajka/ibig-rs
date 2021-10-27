@@ -749,7 +749,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = UBig;
 
             fn div(self, rhs: $t) -> UBig {
-                self.ref_div_unsigned(rhs)
+                self.div_ref_unsigned(rhs)
             }
         }
 
@@ -757,7 +757,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = UBig;
 
             fn div(self, rhs: &$t) -> UBig {
-                self.ref_div_unsigned(*rhs)
+                self.div_ref_unsigned(*rhs)
             }
         }
 
@@ -793,7 +793,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = $t;
 
             fn rem(self, rhs: $t) -> $t {
-                self.ref_rem_unsigned(rhs)
+                self.rem_ref_unsigned(rhs)
             }
         }
 
@@ -801,7 +801,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = $t;
 
             fn rem(self, rhs: &$t) -> $t {
-                self.ref_rem_unsigned(*rhs)
+                self.rem_ref_unsigned(*rhs)
             }
         }
 
@@ -840,7 +840,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputRem = $t;
 
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
-                self.ref_div_rem_unsigned(rhs)
+                self.div_rem_ref_unsigned(rhs)
             }
         }
 
@@ -849,7 +849,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputRem = $t;
 
             fn div_rem(self, rhs: &$t) -> (UBig, $t) {
-                self.ref_div_rem_unsigned(*rhs)
+                self.div_rem_ref_unsigned(*rhs)
             }
         }
 
@@ -873,7 +873,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = UBig;
 
             fn div_euclid(self, rhs: $t) -> UBig {
-                self.ref_div_unsigned(rhs)
+                self.div_ref_unsigned(rhs)
             }
         }
 
@@ -881,7 +881,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = UBig;
 
             fn div_euclid(self, rhs: &$t) -> UBig {
-                self.ref_div_unsigned(*rhs)
+                self.div_ref_unsigned(*rhs)
             }
         }
 
@@ -905,7 +905,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = $t;
 
             fn rem_euclid(self, rhs: $t) -> $t {
-                self.ref_rem_unsigned(rhs)
+                self.rem_ref_unsigned(rhs)
             }
         }
 
@@ -913,7 +913,7 @@ macro_rules! impl_div_ubig_unsigned {
             type Output = $t;
 
             fn rem_euclid(self, rhs: &$t) -> $t {
-                self.ref_rem_unsigned(*rhs)
+                self.rem_ref_unsigned(*rhs)
             }
         }
 
@@ -940,7 +940,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputRem = $t;
 
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
-                self.ref_div_rem_unsigned(rhs)
+                self.div_rem_ref_unsigned(rhs)
             }
         }
 
@@ -949,7 +949,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputRem = $t;
 
             fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
-                self.ref_div_rem_unsigned(*rhs)
+                self.div_rem_ref_unsigned(*rhs)
             }
         }
     };
@@ -984,7 +984,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = UBig;
 
             fn div(self, rhs: $t) -> UBig {
-                self.ref_div_signed(rhs)
+                self.div_ref_signed(rhs)
             }
         }
 
@@ -992,7 +992,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = UBig;
 
             fn div(self, rhs: &$t) -> UBig {
-                self.ref_div_signed(*rhs)
+                self.div_ref_signed(*rhs)
             }
         }
 
@@ -1028,7 +1028,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = $t;
 
             fn rem(self, rhs: $t) -> $t {
-                self.ref_rem_signed(rhs)
+                self.rem_ref_signed(rhs)
             }
         }
 
@@ -1036,7 +1036,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = $t;
 
             fn rem(self, rhs: &$t) -> $t {
-                self.ref_rem_signed(*rhs)
+                self.rem_ref_signed(*rhs)
             }
         }
 
@@ -1075,7 +1075,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputRem = $t;
 
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
-                self.ref_div_rem_signed(rhs)
+                self.div_rem_ref_signed(rhs)
             }
         }
 
@@ -1084,7 +1084,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputRem = $t;
 
             fn div_rem(self, rhs: &$t) -> (UBig, $t) {
-                self.ref_div_rem_signed(*rhs)
+                self.div_rem_ref_signed(*rhs)
             }
         }
 
@@ -1108,7 +1108,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = UBig;
 
             fn div_euclid(self, rhs: $t) -> UBig {
-                self.ref_div_euclid_signed(rhs)
+                self.div_euclid_ref_signed(rhs)
             }
         }
 
@@ -1116,7 +1116,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = UBig;
 
             fn div_euclid(self, rhs: &$t) -> UBig {
-                self.ref_div_euclid_signed(*rhs)
+                self.div_euclid_ref_signed(*rhs)
             }
         }
 
@@ -1140,7 +1140,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = $t;
 
             fn rem_euclid(self, rhs: $t) -> $t {
-                self.ref_rem_euclid_signed(rhs)
+                self.rem_euclid_ref_signed(rhs)
             }
         }
 
@@ -1148,7 +1148,7 @@ macro_rules! impl_div_ubig_signed {
             type Output = $t;
 
             fn rem_euclid(self, rhs: &$t) -> $t {
-                self.ref_rem_euclid_signed(*rhs)
+                self.rem_euclid_ref_signed(*rhs)
             }
         }
 
@@ -1175,7 +1175,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputRem = $t;
 
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
-                self.ref_div_rem_euclid_signed(rhs)
+                self.div_rem_euclid_ref_signed(rhs)
             }
         }
 
@@ -1184,7 +1184,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputRem = $t;
 
             fn div_rem_euclid(self, rhs: &$t) -> (UBig, $t) {
-                self.ref_div_rem_euclid_signed(*rhs)
+                self.div_rem_euclid_ref_signed(*rhs)
             }
         }
     };
@@ -1297,7 +1297,7 @@ impl UBig {
         self / UBig::from_unsigned(rhs)
     }
 
-    fn ref_div_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+    fn div_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self / UBig::from_unsigned(rhs)
     }
 
@@ -1309,7 +1309,7 @@ impl UBig {
         (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
     }
 
-    fn ref_rem_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
+    fn rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
         (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
     }
 
@@ -1322,7 +1322,7 @@ impl UBig {
         (q, r.try_to_unsigned().unwrap())
     }
 
-    fn ref_div_rem_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (UBig, T) {
+    fn div_rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
         (q, r.try_to_unsigned().unwrap())
     }
@@ -1331,7 +1331,7 @@ impl UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
     }
 
-    fn ref_div_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+    fn div_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
     }
 
@@ -1345,9 +1345,9 @@ impl UBig {
         T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
-    fn ref_rem_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
+    fn rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
         let (_, rhs_unsigned) = rhs.to_sign_magnitude();
-        let res = self.ref_rem_unsigned(rhs_unsigned);
+        let res = self.rem_ref_unsigned(rhs_unsigned);
         T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
@@ -1364,7 +1364,7 @@ impl UBig {
         )
     }
 
-    fn ref_div_rem_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
+    fn div_rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem(IBig::from_signed(rhs));
         (
             UBig::from_ibig_panic_on_overflow(q),
@@ -1376,7 +1376,7 @@ impl UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
     }
 
-    fn ref_div_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+    fn div_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
     }
 
@@ -1384,8 +1384,8 @@ impl UBig {
         self.rem_signed(rhs)
     }
 
-    fn ref_rem_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
-        self.ref_rem_signed(rhs)
+    fn rem_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
+        self.rem_ref_signed(rhs)
     }
 
     fn div_rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
@@ -1396,7 +1396,7 @@ impl UBig {
         )
     }
 
-    fn ref_div_rem_euclid_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
+    fn div_rem_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem_euclid(IBig::from_signed(rhs));
         (
             UBig::from_ibig_panic_on_overflow(q),

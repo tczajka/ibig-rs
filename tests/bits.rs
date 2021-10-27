@@ -5,6 +5,7 @@ use ibig::{
 };
 
 #[test]
+#[allow(clippy::bool_assert_comparison)]
 fn test_bit() {
     assert_eq!(ubig!(0).bit(0), false);
     assert_eq!(ubig!(0).bit(1000), false);
@@ -84,6 +85,7 @@ fn test_bit_len() {
 }
 
 #[test]
+#[allow(clippy::bool_assert_comparison)]
 fn test_is_power_of_two() {
     assert_eq!(ubig!(0).is_power_of_two(), false);
     assert_eq!(ubig!(1).is_power_of_two(), true);

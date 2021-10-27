@@ -144,6 +144,7 @@ fn test_add_sub_ibig() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_add_sub_ubig_primitive() {
     assert_eq!(ubig!(3) + 7u16, ubig!(10));
     assert_eq!(ubig!(3) + &7u16, ubig!(10));
@@ -203,6 +204,7 @@ fn test_sub_ubig_primitive_overflow() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_add_sub_ibig_primitive() {
     assert_eq!(ibig!(-3) + 7u16, ibig!(4));
     assert_eq!(ibig!(-3) + &7u16, ibig!(4));

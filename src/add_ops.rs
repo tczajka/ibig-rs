@@ -271,7 +271,7 @@ macro_rules! impl_add_ubig_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: $t) -> UBig {
-                self.ref_add_unsigned(rhs)
+                self.add_ref_unsigned(rhs)
             }
         }
 
@@ -279,7 +279,7 @@ macro_rules! impl_add_ubig_unsigned {
             type Output = UBig;
 
             fn add(self, rhs: &$t) -> UBig {
-                self.ref_add_unsigned(*rhs)
+                self.add_ref_unsigned(*rhs)
             }
         }
 
@@ -347,7 +347,7 @@ macro_rules! impl_add_ubig_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: $t) -> UBig {
-                self.ref_sub_unsigned(rhs)
+                self.sub_ref_unsigned(rhs)
             }
         }
 
@@ -355,7 +355,7 @@ macro_rules! impl_add_ubig_unsigned {
             type Output = UBig;
 
             fn sub(self, rhs: &$t) -> UBig {
-                self.ref_sub_unsigned(*rhs)
+                self.sub_ref_unsigned(*rhs)
             }
         }
 
@@ -402,7 +402,7 @@ macro_rules! impl_add_ubig_signed {
             type Output = UBig;
 
             fn add(self, rhs: $t) -> UBig {
-                self.ref_add_signed(rhs)
+                self.add_ref_signed(rhs)
             }
         }
 
@@ -410,7 +410,7 @@ macro_rules! impl_add_ubig_signed {
             type Output = UBig;
 
             fn add(self, rhs: &$t) -> UBig {
-                self.ref_add_signed(*rhs)
+                self.add_ref_signed(*rhs)
             }
         }
 
@@ -478,7 +478,7 @@ macro_rules! impl_add_ubig_signed {
             type Output = UBig;
 
             fn sub(self, rhs: $t) -> UBig {
-                self.ref_sub_signed(rhs)
+                self.sub_ref_signed(rhs)
             }
         }
 
@@ -486,7 +486,7 @@ macro_rules! impl_add_ubig_signed {
             type Output = UBig;
 
             fn sub(self, rhs: &$t) -> UBig {
-                self.ref_sub_signed(*rhs)
+                self.sub_ref_signed(*rhs)
             }
         }
 
@@ -533,7 +533,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn add(self, rhs: $t) -> IBig {
-                self.ref_add_primitive(rhs)
+                self.add_ref_primitive(rhs)
             }
         }
 
@@ -541,7 +541,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn add(self, rhs: &$t) -> IBig {
-                self.ref_add_primitive(*rhs)
+                self.add_ref_primitive(*rhs)
             }
         }
 
@@ -609,7 +609,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn sub(self, rhs: $t) -> IBig {
-                self.ref_sub_primitive(rhs)
+                self.sub_ref_primitive(rhs)
             }
         }
 
@@ -617,7 +617,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn sub(self, rhs: &$t) -> IBig {
-                self.ref_sub_primitive(*rhs)
+                self.sub_ref_primitive(*rhs)
             }
         }
 
@@ -645,7 +645,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn sub(self, rhs: &IBig) -> IBig {
-                rhs.ref_sub_from_primitive(self)
+                rhs.sub_ref_from_primitive(self)
             }
         }
 
@@ -661,7 +661,7 @@ macro_rules! impl_add_ibig_primitive {
             type Output = IBig;
 
             fn sub(self, rhs: &IBig) -> IBig {
-                rhs.ref_sub_from_primitive(*self)
+                rhs.sub_ref_from_primitive(*self)
             }
         }
     };
@@ -727,7 +727,7 @@ impl UBig {
         self + UBig::from_unsigned(rhs)
     }
 
-    fn ref_add_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+    fn add_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self + UBig::from_unsigned(rhs)
     }
 
@@ -739,7 +739,7 @@ impl UBig {
         self - UBig::from_unsigned(rhs)
     }
 
-    fn ref_sub_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
+    fn sub_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self - UBig::from_unsigned(rhs)
     }
 
@@ -751,7 +751,7 @@ impl UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
-    fn ref_add_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+    fn add_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
@@ -763,7 +763,7 @@ impl UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
-    fn ref_sub_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+    fn sub_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
@@ -852,7 +852,7 @@ impl IBig {
         self + IBig::from(rhs)
     }
 
-    fn ref_add_primitive<T>(&self, rhs: T) -> IBig
+    fn add_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
     {
@@ -873,7 +873,7 @@ impl IBig {
         self - IBig::from(rhs)
     }
 
-    fn ref_sub_primitive<T>(&self, rhs: T) -> IBig
+    fn sub_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
     {
@@ -894,7 +894,7 @@ impl IBig {
         IBig::from(rhs) - self
     }
 
-    fn ref_sub_from_primitive<T>(&self, rhs: T) -> IBig
+    fn sub_ref_from_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
     {

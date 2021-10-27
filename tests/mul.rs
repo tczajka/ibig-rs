@@ -80,6 +80,7 @@ fn test_mul_ibig() {
 }
 
 #[test]
+#[allow(clippy::op_ref, clippy::erasing_op)]
 fn test_mul_ubig_primitive() {
     assert_eq!(ubig!(3) * 4u8, ubig!(12));
     assert_eq!(ubig!(3) * &4u8, ubig!(12));
@@ -118,6 +119,7 @@ fn test_mul_ubig_primitive_overflow() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_mul_ibig_primitive() {
     assert_eq!(ibig!(-3) * 4u8, ibig!(-12));
     assert_eq!(ibig!(-3) * &4u8, ibig!(-12));

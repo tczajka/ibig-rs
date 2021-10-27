@@ -231,39 +231,39 @@ mod tests {
     fn test_add_one_in_place() {
         let mut a = [1, 2, 3];
         let overflow = add_one_in_place(&mut a);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [2, 2, 3]);
 
         let mut a = [Word::MAX, Word::MAX, 3];
         let overflow = add_one_in_place(&mut a);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [0, 0, 4]);
 
         let mut a = [Word::MAX, Word::MAX, Word::MAX];
         let overflow = add_one_in_place(&mut a);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [0, 0, 0]);
 
         let mut a = [];
         let overflow = add_one_in_place(&mut a);
-        assert_eq!(overflow, true);
+        assert!(overflow);
     }
 
     #[test]
     fn test_add_word_in_place() {
         let mut a = [1, 2, 3];
         let overflow = add_word_in_place(&mut a, 7);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [8, 2, 3]);
 
         let mut a = [Word::MAX / 2, Word::MAX, 3];
         let overflow = add_word_in_place(&mut a, Word::MAX / 2 + 3);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [1, 0, 4]);
 
         let mut a = [Word::MAX / 2, Word::MAX, Word::MAX];
         let overflow = add_word_in_place(&mut a, Word::MAX / 2 + 3);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [1, 0, 0]);
     }
 
@@ -288,12 +288,12 @@ mod tests {
     fn test_add_in_place() {
         let mut a = [1, 2, 3];
         let overflow = add_in_place(&mut a, &[3, 7]);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [4, 9, 3]);
 
         let mut a = [Word::MAX / 2, 1, Word::MAX];
         let overflow = add_in_place(&mut a, &[Word::MAX / 2 + 3, Word::MAX]);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [1, 1, 0]);
     }
 
@@ -301,39 +301,39 @@ mod tests {
     fn test_sub_one_in_place() {
         let mut a = [2, 2, 3];
         let overflow = sub_one_in_place(&mut a);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [1, 2, 3]);
 
         let mut a = [0, 0, 4];
         let overflow = sub_one_in_place(&mut a);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [Word::MAX, Word::MAX, 3]);
 
         let mut a = [0, 0, 0];
         let overflow = sub_one_in_place(&mut a);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [Word::MAX, Word::MAX, Word::MAX]);
 
         let mut a = [];
         let overflow = sub_one_in_place(&mut a);
-        assert_eq!(overflow, true);
+        assert!(overflow);
     }
 
     #[test]
     fn test_sub_word_in_place() {
         let mut a = [8, 2, 3];
         let overflow = sub_word_in_place(&mut a, 7);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [1, 2, 3]);
 
         let mut a = [1, 0, 4];
         let overflow = sub_word_in_place(&mut a, Word::MAX / 2 + 3);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [Word::MAX / 2, Word::MAX, 3]);
 
         let mut a = [1, 0, 0];
         let overflow = sub_word_in_place(&mut a, Word::MAX / 2 + 3);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [Word::MAX / 2, Word::MAX, Word::MAX]);
     }
 
@@ -341,12 +341,12 @@ mod tests {
     fn test_sub_in_place() {
         let mut a = [4, 9, 3];
         let overflow = sub_in_place(&mut a, &[3, 7]);
-        assert_eq!(overflow, false);
+        assert!(!overflow);
         assert_eq!(a, [1, 2, 3]);
 
         let mut a = [1, 1, 0];
         let overflow = sub_in_place(&mut a, &[Word::MAX / 2 + 3, Word::MAX]);
-        assert_eq!(overflow, true);
+        assert!(overflow);
         assert_eq!(a, [Word::MAX / 2, 1, Word::MAX]);
     }
 

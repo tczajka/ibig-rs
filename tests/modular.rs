@@ -120,6 +120,7 @@ fn test_negate() {
 }
 
 #[test]
+#[allow(clippy::eq_op)]
 fn test_different_rings() {
     let ring1 = ModuloRing::new(&ubig!(100));
     let ring2 = ModuloRing::new(&ubig!(100));

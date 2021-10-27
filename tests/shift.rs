@@ -1,6 +1,7 @@
 use ibig::{ibig, ubig};
 
 #[test]
+#[allow(clippy::identity_op, clippy::op_ref)]
 fn test_ubig_shl() {
     assert_eq!(ubig!(0) << 17, ubig!(0));
     assert_eq!(&ubig!(0) << 17, ubig!(0));
@@ -59,6 +60,7 @@ fn test_ubig_shl_too_large() {
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_ibig_shl() {
     assert_eq!(ibig!(0) << 4, ibig!(0));
     assert_eq!(ibig!(0) << usize::MAX, ibig!(0));
@@ -79,6 +81,7 @@ fn test_shl_assign() {
 }
 
 #[test]
+#[allow(clippy::identity_op, clippy::op_ref)]
 fn test_ubig_shr() {
     assert_eq!(ubig!(0xef) >> 4, ubig!(0xe));
     assert_eq!(ubig!(0xef) >> &4, ubig!(0xe));
