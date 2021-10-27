@@ -362,3 +362,52 @@ fn test_div_euclid_ubig_signed_overflow() {
 fn test_div_rem_euclid_ubig_signed_overflow() {
     let _ = ubig!(11).div_rem_euclid(-10);
 }
+
+#[test]
+#[allow(clippy::op_ref)]
+fn test_div_rem_ibig_unsigned() {
+    assert_eq!(ibig!(-23) / 10u8, ibig!(-2));
+    assert_eq!(ibig!(-23) / &10u8, ibig!(-2));
+    assert_eq!(&ibig!(-23) / 10u8, ibig!(-2));
+    assert_eq!(&ibig!(-23) / &10u8, ibig!(-2));
+    let mut x = ibig!(-23);
+    x /= 10u8;
+    assert_eq!(x, ibig!(-2));
+    let mut x = ibig!(-23);
+    x /= &10u8;
+    assert_eq!(x, ibig!(-2));
+
+    assert_eq!(ibig!(-23) % 10u8, ibig!(-3));
+    assert_eq!(ibig!(-23) % &10u8, ibig!(-3));
+    assert_eq!(&ibig!(-23) % 10u8, ibig!(-3));
+    assert_eq!(&ibig!(-23) % &10u8, ibig!(-3));
+    let mut x = ibig!(-23);
+    x %= 10u8;
+    assert_eq!(x, ibig!(-3));
+    let mut x = ibig!(-23);
+    x %= &10u8;
+    assert_eq!(x, ibig!(-3));
+
+    assert_eq!(ibig!(-23).div_rem(10u8), (ibig!(-2), ibig!(-3)));
+    assert_eq!(ibig!(-23).div_rem(&10u8), (ibig!(-2), ibig!(-3)));
+    assert_eq!((&ibig!(-23)).div_rem(10u8), (ibig!(-2), ibig!(-3)));
+    assert_eq!((&ibig!(-23)).div_rem(&10u8), (ibig!(-2), ibig!(-3)));
+}
+
+#[test]
+fn test_div_rem_euclid_ibig_unsigned() {
+    assert_eq!(ibig!(-23).div_euclid(10u8), ibig!(-3));
+    assert_eq!(ibig!(-23).div_euclid(&10u8), ibig!(-3));
+    assert_eq!((&ibig!(-23)).div_euclid(10u8), ibig!(-3));
+    assert_eq!((&ibig!(-23)).div_euclid(&10u8), ibig!(-3));
+
+    assert_eq!(ibig!(-23).rem_euclid(10u8), 7u8);
+    assert_eq!(ibig!(-23).rem_euclid(&10u8), 7u8);
+    assert_eq!((&ibig!(-23)).rem_euclid(10u8), 7u8);
+    assert_eq!((&ibig!(-23)).rem_euclid(&10u8), 7u8);
+
+    assert_eq!(ibig!(-23).div_rem_euclid(10u8), (ibig!(-3), 7u8));
+    assert_eq!(ibig!(-23).div_rem_euclid(&10u8), (ibig!(-3), 7u8));
+    assert_eq!((&ibig!(-23)).div_rem_euclid(10u8), (ibig!(-3), 7u8));
+    assert_eq!((&ibig!(-23)).div_rem_euclid(&10u8), (ibig!(-3), 7u8));
+}

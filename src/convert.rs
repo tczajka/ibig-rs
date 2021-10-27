@@ -562,27 +562,18 @@ where
 
 impl IBig {
     /// Convert an unsigned primitive to [IBig].
-    fn from_unsigned<T>(x: T) -> IBig
-    where
-        T: PrimitiveUnsigned,
-    {
+    pub(crate) fn from_unsigned<T: PrimitiveUnsigned>(x: T) -> IBig {
         IBig::from(UBig::from_unsigned(x))
     }
 
     /// Convert a signed primitive to [IBig].
-    pub(crate) fn from_signed<T>(x: T) -> IBig
-    where
-        T: PrimitiveSigned,
-    {
+    pub(crate) fn from_signed<T: PrimitiveSigned>(x: T) -> IBig {
         let (sign, mag) = x.to_sign_magnitude();
         IBig::from_sign_magnitude(sign, UBig::from_unsigned(mag))
     }
 
     /// Try to convert [IBig] to an unsigned primitive.
-    fn try_to_unsigned<T>(&self) -> Result<T, OutOfBoundsError>
-    where
-        T: PrimitiveUnsigned,
-    {
+    pub(crate) fn try_to_unsigned<T: PrimitiveUnsigned>(&self) -> Result<T, OutOfBoundsError> {
         match self.sign() {
             Positive => self.magnitude().try_to_unsigned(),
             Negative => Err(OutOfBoundsError),
@@ -590,10 +581,7 @@ impl IBig {
     }
 
     /// Try to convert [IBig] to an signed primitive.
-    pub(crate) fn try_to_signed<T>(&self) -> Result<T, OutOfBoundsError>
-    where
-        T: PrimitiveSigned,
-    {
+    pub(crate) fn try_to_signed<T: PrimitiveSigned>(&self) -> Result<T, OutOfBoundsError> {
         let u: T::Unsigned = self.magnitude().try_to_unsigned()?;
         T::try_from_sign_magnitude(self.sign(), u)
     }
