@@ -195,6 +195,7 @@ fn test_display_out_of_bounds_error() {
 }
 
 #[test]
+#[allow(clippy::float_cmp)]
 fn test_to_f32() {
     assert_eq!(ubig!(0).to_f32(), 0.0f32);
     assert_eq!(ubig!(7).to_f32(), 7.0f32);
@@ -263,6 +264,7 @@ fn test_to_f32() {
 }
 
 #[test]
+#[allow(clippy::float_cmp)]
 fn test_to_f64() {
     assert_eq!(ubig!(0).to_f64(), 0.0f64);
     assert_eq!(ubig!(7).to_f64(), 7.0f64);
