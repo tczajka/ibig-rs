@@ -3,6 +3,7 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
+    helper_macros,
     ibig::IBig,
     memory::MemoryAllocation,
     mul,
@@ -157,14 +158,6 @@ macro_rules! impl_mul_ubig_unsigned {
             }
         }
 
-        impl Mul<&$t> for UBig {
-            type Output = UBig;
-
-            fn mul(self, rhs: &$t) -> UBig {
-                self.mul_unsigned(*rhs)
-            }
-        }
-
         impl Mul<$t> for &UBig {
             type Output = UBig;
 
@@ -173,13 +166,8 @@ macro_rules! impl_mul_ubig_unsigned {
             }
         }
 
-        impl Mul<&$t> for &UBig {
-            type Output = UBig;
-
-            fn mul(self, rhs: &$t) -> UBig {
-                self.mul_ref_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Mul<$t> for UBig, mul);
+        helper_macros::forward_binop_swap_args!(impl Mul<UBig> for $t, mul);
 
         impl MulAssign<$t> for UBig {
             fn mul_assign(&mut self, rhs: $t) {
@@ -187,43 +175,7 @@ macro_rules! impl_mul_ubig_unsigned {
             }
         }
 
-        impl MulAssign<&$t> for UBig {
-            fn mul_assign(&mut self, rhs: &$t) {
-                self.mul_assign_unsigned(*rhs)
-            }
-        }
-
-        impl Mul<UBig> for $t {
-            type Output = UBig;
-
-            fn mul(self, rhs: UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&UBig> for $t {
-            type Output = UBig;
-
-            fn mul(self, rhs: &UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<UBig> for &$t {
-            type Output = UBig;
-
-            fn mul(self, rhs: UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&UBig> for &$t {
-            type Output = UBig;
-
-            fn mul(self, rhs: &UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl MulAssign<$t> for UBig, mul_assign);
     };
 }
 
@@ -244,14 +196,6 @@ macro_rules! impl_mul_ubig_signed {
             }
         }
 
-        impl Mul<&$t> for UBig {
-            type Output = UBig;
-
-            fn mul(self, rhs: &$t) -> UBig {
-                self.mul_signed(*rhs)
-            }
-        }
-
         impl Mul<$t> for &UBig {
             type Output = UBig;
 
@@ -260,13 +204,8 @@ macro_rules! impl_mul_ubig_signed {
             }
         }
 
-        impl Mul<&$t> for &UBig {
-            type Output = UBig;
-
-            fn mul(self, rhs: &$t) -> UBig {
-                self.mul_ref_signed(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Mul<$t> for UBig, mul);
+        helper_macros::forward_binop_swap_args!(impl Mul<UBig> for $t, mul);
 
         impl MulAssign<$t> for UBig {
             fn mul_assign(&mut self, rhs: $t) {
@@ -274,43 +213,7 @@ macro_rules! impl_mul_ubig_signed {
             }
         }
 
-        impl MulAssign<&$t> for UBig {
-            fn mul_assign(&mut self, rhs: &$t) {
-                self.mul_assign_signed(*rhs)
-            }
-        }
-
-        impl Mul<UBig> for $t {
-            type Output = UBig;
-
-            fn mul(self, rhs: UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&UBig> for $t {
-            type Output = UBig;
-
-            fn mul(self, rhs: &UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<UBig> for &$t {
-            type Output = UBig;
-
-            fn mul(self, rhs: UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&UBig> for &$t {
-            type Output = UBig;
-
-            fn mul(self, rhs: &UBig) -> UBig {
-                rhs.mul(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl MulAssign<$t> for UBig, mul_assign);
     };
 }
 
@@ -331,14 +234,6 @@ macro_rules! impl_mul_ibig_primitive {
             }
         }
 
-        impl Mul<&$t> for IBig {
-            type Output = IBig;
-
-            fn mul(self, rhs: &$t) -> IBig {
-                self.mul_primitive(*rhs)
-            }
-        }
-
         impl Mul<$t> for &IBig {
             type Output = IBig;
 
@@ -347,13 +242,8 @@ macro_rules! impl_mul_ibig_primitive {
             }
         }
 
-        impl Mul<&$t> for &IBig {
-            type Output = IBig;
-
-            fn mul(self, rhs: &$t) -> IBig {
-                self.mul_ref_primitive(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Mul<$t> for IBig, mul);
+        helper_macros::forward_binop_swap_args!(impl Mul<IBig> for $t, mul);
 
         impl MulAssign<$t> for IBig {
             fn mul_assign(&mut self, rhs: $t) {
@@ -361,43 +251,7 @@ macro_rules! impl_mul_ibig_primitive {
             }
         }
 
-        impl MulAssign<&$t> for IBig {
-            fn mul_assign(&mut self, rhs: &$t) {
-                self.mul_assign_primitive(*rhs)
-            }
-        }
-
-        impl Mul<IBig> for $t {
-            type Output = IBig;
-
-            fn mul(self, rhs: IBig) -> IBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&IBig> for $t {
-            type Output = IBig;
-
-            fn mul(self, rhs: &IBig) -> IBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<IBig> for &$t {
-            type Output = IBig;
-
-            fn mul(self, rhs: IBig) -> IBig {
-                rhs.mul(self)
-            }
-        }
-
-        impl Mul<&IBig> for &$t {
-            type Output = IBig;
-
-            fn mul(self, rhs: &IBig) -> IBig {
-                rhs.mul(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl MulAssign<$t> for IBig, mul_assign);
     };
 }
 

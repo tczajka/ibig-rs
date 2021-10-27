@@ -4,6 +4,7 @@ use crate::{
     add,
     arch::word::Word,
     buffer::Buffer,
+    helper_macros,
     ibig::IBig,
     primitive::{PrimitiveSigned, PrimitiveUnsigned},
     sign::Sign::*,
@@ -259,14 +260,6 @@ macro_rules! impl_add_ubig_unsigned {
             }
         }
 
-        impl Add<&$t> for UBig {
-            type Output = UBig;
-
-            fn add(self, rhs: &$t) -> UBig {
-                self.add_unsigned(*rhs)
-            }
-        }
-
         impl Add<$t> for &UBig {
             type Output = UBig;
 
@@ -275,13 +268,8 @@ macro_rules! impl_add_ubig_unsigned {
             }
         }
 
-        impl Add<&$t> for &UBig {
-            type Output = UBig;
-
-            fn add(self, rhs: &$t) -> UBig {
-                self.add_ref_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Add<$t> for UBig, add);
+        helper_macros::forward_binop_swap_args!(impl Add<UBig> for $t, add);
 
         impl AddAssign<$t> for UBig {
             fn add_assign(&mut self, rhs: $t) {
@@ -289,57 +277,13 @@ macro_rules! impl_add_ubig_unsigned {
             }
         }
 
-        impl AddAssign<&$t> for UBig {
-            fn add_assign(&mut self, rhs: &$t) {
-                self.add_assign_unsigned(*rhs)
-            }
-        }
-
-        impl Add<UBig> for $t {
-            type Output = UBig;
-
-            fn add(self, rhs: UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&UBig> for $t {
-            type Output = UBig;
-
-            fn add(self, rhs: &UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<UBig> for &$t {
-            type Output = UBig;
-
-            fn add(self, rhs: UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&UBig> for &$t {
-            type Output = UBig;
-
-            fn add(self, rhs: &UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl AddAssign<$t> for UBig, add_assign);
 
         impl Sub<$t> for UBig {
             type Output = UBig;
 
             fn sub(self, rhs: $t) -> UBig {
                 self.sub_unsigned(rhs)
-            }
-        }
-
-        impl Sub<&$t> for UBig {
-            type Output = UBig;
-
-            fn sub(self, rhs: &$t) -> UBig {
-                self.sub_unsigned(*rhs)
             }
         }
 
@@ -351,13 +295,7 @@ macro_rules! impl_add_ubig_unsigned {
             }
         }
 
-        impl Sub<&$t> for &UBig {
-            type Output = UBig;
-
-            fn sub(self, rhs: &$t) -> UBig {
-                self.sub_ref_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Sub<$t> for UBig, sub);
 
         impl SubAssign<$t> for UBig {
             fn sub_assign(&mut self, rhs: $t) {
@@ -365,11 +303,7 @@ macro_rules! impl_add_ubig_unsigned {
             }
         }
 
-        impl SubAssign<&$t> for UBig {
-            fn sub_assign(&mut self, rhs: &$t) {
-                self.sub_assign_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl SubAssign<$t> for UBig, sub_assign);
     };
 }
 
@@ -390,14 +324,6 @@ macro_rules! impl_add_ubig_signed {
             }
         }
 
-        impl Add<&$t> for UBig {
-            type Output = UBig;
-
-            fn add(self, rhs: &$t) -> UBig {
-                self.add_signed(*rhs)
-            }
-        }
-
         impl Add<$t> for &UBig {
             type Output = UBig;
 
@@ -406,13 +332,8 @@ macro_rules! impl_add_ubig_signed {
             }
         }
 
-        impl Add<&$t> for &UBig {
-            type Output = UBig;
-
-            fn add(self, rhs: &$t) -> UBig {
-                self.add_ref_signed(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Add<$t> for UBig, add);
+        helper_macros::forward_binop_swap_args!(impl Add<UBig> for $t, add);
 
         impl AddAssign<$t> for UBig {
             fn add_assign(&mut self, rhs: $t) {
@@ -420,43 +341,7 @@ macro_rules! impl_add_ubig_signed {
             }
         }
 
-        impl AddAssign<&$t> for UBig {
-            fn add_assign(&mut self, rhs: &$t) {
-                self.add_assign_signed(*rhs)
-            }
-        }
-
-        impl Add<UBig> for $t {
-            type Output = UBig;
-
-            fn add(self, rhs: UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&UBig> for $t {
-            type Output = UBig;
-
-            fn add(self, rhs: &UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<UBig> for &$t {
-            type Output = UBig;
-
-            fn add(self, rhs: UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&UBig> for &$t {
-            type Output = UBig;
-
-            fn add(self, rhs: &UBig) -> UBig {
-                rhs.add(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl AddAssign<$t> for UBig, add_assign);
 
         impl Sub<$t> for UBig {
             type Output = UBig;
@@ -465,15 +350,6 @@ macro_rules! impl_add_ubig_signed {
                 self.sub_signed(rhs)
             }
         }
-
-        impl Sub<&$t> for UBig {
-            type Output = UBig;
-
-            fn sub(self, rhs: &$t) -> UBig {
-                self.sub_signed(*rhs)
-            }
-        }
-
         impl Sub<$t> for &UBig {
             type Output = UBig;
 
@@ -482,13 +358,7 @@ macro_rules! impl_add_ubig_signed {
             }
         }
 
-        impl Sub<&$t> for &UBig {
-            type Output = UBig;
-
-            fn sub(self, rhs: &$t) -> UBig {
-                self.sub_ref_signed(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Sub<$t> for UBig, sub);
 
         impl SubAssign<$t> for UBig {
             fn sub_assign(&mut self, rhs: $t) {
@@ -496,11 +366,7 @@ macro_rules! impl_add_ubig_signed {
             }
         }
 
-        impl SubAssign<&$t> for UBig {
-            fn sub_assign(&mut self, rhs: &$t) {
-                self.sub_assign_signed(*rhs)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl SubAssign<$t> for UBig, sub_assign);
     };
 }
 
@@ -521,14 +387,6 @@ macro_rules! impl_add_ibig_primitive {
             }
         }
 
-        impl Add<&$t> for IBig {
-            type Output = IBig;
-
-            fn add(self, rhs: &$t) -> IBig {
-                self.add_primitive(*rhs)
-            }
-        }
-
         impl Add<$t> for &IBig {
             type Output = IBig;
 
@@ -537,13 +395,8 @@ macro_rules! impl_add_ibig_primitive {
             }
         }
 
-        impl Add<&$t> for &IBig {
-            type Output = IBig;
-
-            fn add(self, rhs: &$t) -> IBig {
-                self.add_ref_primitive(*rhs)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl Add<$t> for IBig, add);
+        helper_macros::forward_binop_swap_args!(impl Add<IBig> for $t, add);
 
         impl AddAssign<$t> for IBig {
             fn add_assign(&mut self, rhs: $t) {
@@ -551,43 +404,7 @@ macro_rules! impl_add_ibig_primitive {
             }
         }
 
-        impl AddAssign<&$t> for IBig {
-            fn add_assign(&mut self, rhs: &$t) {
-                self.add_assign_primitive(*rhs)
-            }
-        }
-
-        impl Add<IBig> for $t {
-            type Output = IBig;
-
-            fn add(self, rhs: IBig) -> IBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&IBig> for $t {
-            type Output = IBig;
-
-            fn add(self, rhs: &IBig) -> IBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<IBig> for &$t {
-            type Output = IBig;
-
-            fn add(self, rhs: IBig) -> IBig {
-                rhs.add(self)
-            }
-        }
-
-        impl Add<&IBig> for &$t {
-            type Output = IBig;
-
-            fn add(self, rhs: &IBig) -> IBig {
-                rhs.add(self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl AddAssign<$t> for IBig, add_assign);
 
         impl Sub<$t> for IBig {
             type Output = IBig;
@@ -597,39 +414,11 @@ macro_rules! impl_add_ibig_primitive {
             }
         }
 
-        impl Sub<&$t> for IBig {
-            type Output = IBig;
-
-            fn sub(self, rhs: &$t) -> IBig {
-                self.sub_primitive(*rhs)
-            }
-        }
-
         impl Sub<$t> for &IBig {
             type Output = IBig;
 
             fn sub(self, rhs: $t) -> IBig {
                 self.sub_ref_primitive(rhs)
-            }
-        }
-
-        impl Sub<&$t> for &IBig {
-            type Output = IBig;
-
-            fn sub(self, rhs: &$t) -> IBig {
-                self.sub_ref_primitive(*rhs)
-            }
-        }
-
-        impl SubAssign<$t> for IBig {
-            fn sub_assign(&mut self, rhs: $t) {
-                self.sub_assign_primitive(rhs)
-            }
-        }
-
-        impl SubAssign<&$t> for IBig {
-            fn sub_assign(&mut self, rhs: &$t) {
-                self.sub_assign_primitive(*rhs)
             }
         }
 
@@ -649,21 +438,16 @@ macro_rules! impl_add_ibig_primitive {
             }
         }
 
-        impl Sub<IBig> for &$t {
-            type Output = IBig;
+        helper_macros::forward_binop_second_arg_by_value!(impl Sub<$t> for IBig, sub);
+        helper_macros::forward_binop_first_arg_by_value!(impl Sub<IBig> for $t, sub);
 
-            fn sub(self, rhs: IBig) -> IBig {
-                rhs.sub_from_primitive(*self)
+        impl SubAssign<$t> for IBig {
+            fn sub_assign(&mut self, rhs: $t) {
+                self.sub_assign_primitive(rhs)
             }
         }
 
-        impl Sub<&IBig> for &$t {
-            type Output = IBig;
-
-            fn sub(self, rhs: &IBig) -> IBig {
-                rhs.sub_ref_from_primitive(*self)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl SubAssign<$t> for IBig, sub_assign);
     };
 }
 

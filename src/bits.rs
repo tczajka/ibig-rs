@@ -3,6 +3,7 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
+    helper_macros,
     ibig::IBig,
     math,
     ops::{AndNot, NextPowerOfTwo, UnsignedAbs},
@@ -918,14 +919,6 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitAnd<&$t> for UBig {
-            type Output = $t;
-
-            fn bitand(self, rhs: &$t) -> $t {
-                self.bitand_unsigned(*rhs)
-            }
-        }
-
         impl BitAnd<$t> for &UBig {
             type Output = $t;
 
@@ -934,45 +927,8 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitAnd<&$t> for &UBig {
-            type Output = $t;
-
-            fn bitand(self, rhs: &$t) -> $t {
-                self.bitand_ref_unsigned(*rhs)
-            }
-        }
-
-        impl BitAnd<UBig> for $t {
-            type Output = $t;
-
-            fn bitand(self, rhs: UBig) -> $t {
-                rhs.bitand(self)
-            }
-        }
-
-        impl BitAnd<&UBig> for $t {
-            type Output = $t;
-
-            fn bitand(self, rhs: &UBig) -> $t {
-                rhs.bitand(self)
-            }
-        }
-
-        impl BitAnd<UBig> for &$t {
-            type Output = $t;
-
-            fn bitand(self, rhs: UBig) -> $t {
-                rhs.bitand(self)
-            }
-        }
-
-        impl BitAnd<&UBig> for &$t {
-            type Output = $t;
-
-            fn bitand(self, rhs: &UBig) -> $t {
-                rhs.bitand(self)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl BitAnd<$t> for UBig, bitand);
+        helper_macros::forward_binop_swap_args!(impl BitAnd<UBig> for $t, bitand);
 
         impl BitAndAssign<$t> for UBig {
             fn bitand_assign(&mut self, rhs: $t) {
@@ -980,25 +936,13 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitAndAssign<&$t> for UBig {
-            fn bitand_assign(&mut self, rhs: &$t) {
-                self.bitand_assign_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitAndAssign<$t> for UBig, bitand_assign);
 
         impl BitOr<$t> for UBig {
             type Output = UBig;
 
             fn bitor(self, rhs: $t) -> UBig {
                 self.bitor_unsigned(rhs)
-            }
-        }
-
-        impl BitOr<&$t> for UBig {
-            type Output = UBig;
-
-            fn bitor(self, rhs: &$t) -> UBig {
-                self.bitor_unsigned(*rhs)
             }
         }
 
@@ -1010,45 +954,8 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitOr<&$t> for &UBig {
-            type Output = UBig;
-
-            fn bitor(self, rhs: &$t) -> UBig {
-                self.bitor_ref_unsigned(*rhs)
-            }
-        }
-
-        impl BitOr<UBig> for $t {
-            type Output = UBig;
-
-            fn bitor(self, rhs: UBig) -> UBig {
-                rhs.bitor(self)
-            }
-        }
-
-        impl BitOr<&UBig> for $t {
-            type Output = UBig;
-
-            fn bitor(self, rhs: &UBig) -> UBig {
-                rhs.bitor(self)
-            }
-        }
-
-        impl BitOr<UBig> for &$t {
-            type Output = UBig;
-
-            fn bitor(self, rhs: UBig) -> UBig {
-                rhs.bitor(self)
-            }
-        }
-
-        impl BitOr<&UBig> for &$t {
-            type Output = UBig;
-
-            fn bitor(self, rhs: &UBig) -> UBig {
-                rhs.bitor(self)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl BitOr<$t> for UBig, bitor);
+        helper_macros::forward_binop_swap_args!(impl BitOr<UBig> for $t, bitor);
 
         impl BitOrAssign<$t> for UBig {
             fn bitor_assign(&mut self, rhs: $t) {
@@ -1056,25 +963,13 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitOrAssign<&$t> for UBig {
-            fn bitor_assign(&mut self, rhs: &$t) {
-                self.bitor_assign_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitOrAssign<$t> for UBig, bitor_assign);
 
         impl BitXor<$t> for UBig {
             type Output = UBig;
 
             fn bitxor(self, rhs: $t) -> UBig {
                 self.bitxor_unsigned(rhs)
-            }
-        }
-
-        impl BitXor<&$t> for UBig {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: &$t) -> UBig {
-                self.bitxor_unsigned(*rhs)
             }
         }
 
@@ -1086,45 +981,8 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitXor<&$t> for &UBig {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: &$t) -> UBig {
-                self.bitxor_ref_unsigned(*rhs)
-            }
-        }
-
-        impl BitXor<UBig> for $t {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: UBig) -> UBig {
-                rhs.bitxor(self)
-            }
-        }
-
-        impl BitXor<&UBig> for $t {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: &UBig) -> UBig {
-                rhs.bitxor(self)
-            }
-        }
-
-        impl BitXor<UBig> for &$t {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: UBig) -> UBig {
-                rhs.bitxor(self)
-            }
-        }
-
-        impl BitXor<&UBig> for &$t {
-            type Output = UBig;
-
-            fn bitxor(self, rhs: &UBig) -> UBig {
-                rhs.bitxor(self)
-            }
-        }
+        helper_macros::forward_binop_second_arg_by_value!(impl BitXor<$t> for UBig, bitxor);
+        helper_macros::forward_binop_swap_args!(impl BitXor<UBig> for $t, bitxor);
 
         impl BitXorAssign<$t> for UBig {
             fn bitxor_assign(&mut self, rhs: $t) {
@@ -1132,11 +990,7 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
-        impl BitXorAssign<&$t> for UBig {
-            fn bitxor_assign(&mut self, rhs: &$t) {
-                self.bitxor_assign_unsigned(*rhs)
-            }
-        }
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitXorAssign<$t> for UBig, bitxor_assign);
     };
 }
 
