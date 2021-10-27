@@ -7,7 +7,7 @@ use crate::{
     ibig::IBig,
     math,
     ops::{AndNot, NextPowerOfTwo, UnsignedAbs},
-    primitive::{double_word, PrimitiveUnsigned, WORD_BITS_USIZE},
+    primitive::{double_word, PrimitiveSigned, PrimitiveUnsigned, WORD_BITS_USIZE},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -1019,6 +1019,270 @@ impl_bit_ops_ubig_unsigned!(u64);
 impl_bit_ops_ubig_unsigned!(u128);
 impl_bit_ops_ubig_unsigned!(usize);
 
+macro_rules! impl_bit_ops_ubig_signed {
+    ($t:ty) => {
+        impl BitAnd<$t> for UBig {
+            type Output = UBig;
+
+            fn bitand(self, rhs: $t) -> UBig {
+                self.bitand_signed(rhs)
+            }
+        }
+
+        impl BitAnd<$t> for &UBig {
+            type Output = UBig;
+
+            fn bitand(self, rhs: $t) -> UBig {
+                self.bitand_ref_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl BitAnd<$t> for UBig, bitand);
+        helper_macros::forward_binop_swap_args!(impl BitAnd<UBig> for $t, bitand);
+
+        impl BitAndAssign<$t> for UBig {
+            fn bitand_assign(&mut self, rhs: $t) {
+                self.bitand_assign_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitAndAssign<$t> for UBig, bitand_assign);
+
+        impl BitOr<$t> for UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: $t) -> UBig {
+                self.bitor_signed(rhs)
+            }
+        }
+
+        impl BitOr<$t> for &UBig {
+            type Output = UBig;
+
+            fn bitor(self, rhs: $t) -> UBig {
+                self.bitor_ref_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl BitOr<$t> for UBig, bitor);
+        helper_macros::forward_binop_swap_args!(impl BitOr<UBig> for $t, bitor);
+
+        impl BitOrAssign<$t> for UBig {
+            fn bitor_assign(&mut self, rhs: $t) {
+                self.bitor_assign_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitOrAssign<$t> for UBig, bitor_assign);
+
+        impl BitXor<$t> for UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: $t) -> UBig {
+                self.bitxor_signed(rhs)
+            }
+        }
+
+        impl BitXor<$t> for &UBig {
+            type Output = UBig;
+
+            fn bitxor(self, rhs: $t) -> UBig {
+                self.bitxor_ref_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl BitXor<$t> for UBig, bitxor);
+        helper_macros::forward_binop_swap_args!(impl BitXor<UBig> for $t, bitxor);
+
+        impl BitXorAssign<$t> for UBig {
+            fn bitxor_assign(&mut self, rhs: $t) {
+                self.bitxor_assign_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitXorAssign<$t> for UBig, bitxor_assign);
+
+        impl AndNot<$t> for UBig {
+            type Output = UBig;
+
+            fn and_not(self, rhs: $t) -> UBig {
+                self.and_not_signed(rhs)
+            }
+        }
+
+        impl AndNot<$t> for &UBig {
+            type Output = UBig;
+
+            fn and_not(self, rhs: $t) -> UBig {
+                self.and_not_ref_signed(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl AndNot<$t> for UBig, and_not);
+    };
+}
+
+impl_bit_ops_ubig_signed!(i8);
+impl_bit_ops_ubig_signed!(i16);
+impl_bit_ops_ubig_signed!(i32);
+impl_bit_ops_ubig_signed!(i64);
+impl_bit_ops_ubig_signed!(i128);
+impl_bit_ops_ubig_signed!(isize);
+
+macro_rules! impl_bit_ops_ibig_unsigned {
+    ($t:ty) => {
+        impl BitAnd<$t> for IBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: $t) -> $t {
+                self.bitand_unsigned(rhs)
+            }
+        }
+
+        impl BitAnd<$t> for &IBig {
+            type Output = $t;
+
+            fn bitand(self, rhs: $t) -> $t {
+                self.bitand_ref_unsigned(rhs)
+            }
+        }
+    };
+}
+
+impl_bit_ops_ibig_unsigned!(u8);
+impl_bit_ops_ibig_unsigned!(u16);
+impl_bit_ops_ibig_unsigned!(u32);
+impl_bit_ops_ibig_unsigned!(u64);
+impl_bit_ops_ibig_unsigned!(u128);
+impl_bit_ops_ibig_unsigned!(usize);
+
+macro_rules! impl_bit_ops_ibig_signed {
+    ($t:ty) => {
+        impl BitAnd<$t> for IBig {
+            type Output = IBig;
+
+            fn bitand(self, rhs: $t) -> IBig {
+                self.bitand_signed(rhs)
+            }
+        }
+
+        impl BitAnd<$t> for &IBig {
+            type Output = IBig;
+
+            fn bitand(self, rhs: $t) -> IBig {
+                self.bitand_ref_signed(rhs)
+            }
+        }
+    };
+}
+
+impl_bit_ops_ibig_signed!(i8);
+impl_bit_ops_ibig_signed!(i16);
+impl_bit_ops_ibig_signed!(i32);
+impl_bit_ops_ibig_signed!(i64);
+impl_bit_ops_ibig_signed!(i128);
+impl_bit_ops_ibig_signed!(isize);
+
+macro_rules! impl_bit_ops_ibig_primitive {
+    ($t:ty) => {
+        helper_macros::forward_binop_second_arg_by_value!(impl BitAnd<$t> for IBig, bitand);
+        helper_macros::forward_binop_swap_args!(impl BitAnd<IBig> for $t, bitand);
+
+        impl BitAndAssign<$t> for IBig {
+            fn bitand_assign(&mut self, rhs: $t) {
+                self.bitand_assign_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitAndAssign<$t> for IBig, bitand_assign);
+
+        impl BitOr<$t> for IBig {
+            type Output = IBig;
+
+            fn bitor(self, rhs: $t) -> IBig {
+                self.bitor_primitive(rhs)
+            }
+        }
+
+        impl BitOr<$t> for &IBig {
+            type Output = IBig;
+
+            fn bitor(self, rhs: $t) -> IBig {
+                self.bitor_ref_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl BitOr<$t> for IBig, bitor);
+        helper_macros::forward_binop_swap_args!(impl BitOr<IBig> for $t, bitor);
+
+        impl BitOrAssign<$t> for IBig {
+            fn bitor_assign(&mut self, rhs: $t) {
+                self.bitor_assign_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitOrAssign<$t> for IBig, bitor_assign);
+
+        impl BitXor<$t> for IBig {
+            type Output = IBig;
+
+            fn bitxor(self, rhs: $t) -> IBig {
+                self.bitxor_primitive(rhs)
+            }
+        }
+
+        impl BitXor<$t> for &IBig {
+            type Output = IBig;
+
+            fn bitxor(self, rhs: $t) -> IBig {
+                self.bitxor_ref_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl BitXor<$t> for IBig, bitxor);
+        helper_macros::forward_binop_swap_args!(impl BitXor<IBig> for $t, bitxor);
+
+        impl BitXorAssign<$t> for IBig {
+            fn bitxor_assign(&mut self, rhs: $t) {
+                self.bitxor_assign_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_assign_arg_by_value!(impl BitXorAssign<$t> for IBig, bitxor_assign);
+
+        impl AndNot<$t> for IBig {
+            type Output = IBig;
+
+            fn and_not(self, rhs: $t) -> IBig {
+                self.and_not_primitive(rhs)
+            }
+        }
+
+        impl AndNot<$t> for &IBig {
+            type Output = IBig;
+
+            fn and_not(self, rhs: $t) -> IBig {
+                self.and_not_ref_primitive(rhs)
+            }
+        }
+
+        helper_macros::forward_binop_second_arg_by_value!(impl AndNot<$t> for IBig, and_not);
+    };
+}
+
+impl_bit_ops_ibig_primitive!(u8);
+impl_bit_ops_ibig_primitive!(u16);
+impl_bit_ops_ibig_primitive!(u32);
+impl_bit_ops_ibig_primitive!(u64);
+impl_bit_ops_ibig_primitive!(u128);
+impl_bit_ops_ibig_primitive!(usize);
+impl_bit_ops_ibig_primitive!(i8);
+impl_bit_ops_ibig_primitive!(i16);
+impl_bit_ops_ibig_primitive!(i32);
+impl_bit_ops_ibig_primitive!(i64);
+impl_bit_ops_ibig_primitive!(i128);
+impl_bit_ops_ibig_primitive!(isize);
+
 impl UBig {
     fn bitand_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
         self.bitand(UBig::from_unsigned(rhs))
@@ -1066,5 +1330,139 @@ impl UBig {
 
     fn and_not_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self.and_not(UBig::from_unsigned(rhs))
+    }
+
+    fn bitand_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) & IBig::from_signed(rhs))
+    }
+
+    fn bitand_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        // Avoid big copy if rhs positive.
+        let rhs_signed = IBig::from_signed(rhs);
+        match rhs_signed.sign() {
+            Positive => self & rhs_signed.unsigned_abs(),
+            Negative => UBig::from_ibig_panic_on_overflow(IBig::from(self) & rhs_signed),
+        }
+    }
+
+    fn bitand_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
+        *self = mem::take(self).bitand_signed(rhs)
+    }
+
+    fn bitor_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) | IBig::from_signed(rhs))
+    }
+
+    fn bitor_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) | IBig::from_signed(rhs))
+    }
+
+    fn bitor_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
+        *self = mem::take(self).bitor_signed(rhs)
+    }
+
+    fn bitxor_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) ^ IBig::from_signed(rhs))
+    }
+
+    fn bitxor_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self) ^ IBig::from_signed(rhs))
+    }
+
+    fn bitxor_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
+        *self = mem::take(self).bitxor_signed(rhs)
+    }
+
+    fn and_not_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self).and_not(IBig::from_signed(rhs)))
+    }
+
+    fn and_not_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
+        UBig::from_ibig_panic_on_overflow(IBig::from(self).and_not(IBig::from_signed(rhs)))
+    }
+}
+
+impl IBig {
+    fn bitand_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
+        self.bitand(IBig::from_unsigned(rhs))
+            .try_to_unsigned()
+            .unwrap()
+    }
+
+    fn bitand_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
+        self.bitand(IBig::from_unsigned(rhs))
+            .try_to_unsigned()
+            .unwrap()
+    }
+
+    fn bitand_signed<T: PrimitiveSigned>(self, rhs: T) -> IBig {
+        self.bitand(IBig::from_signed(rhs))
+    }
+
+    fn bitand_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> IBig {
+        self.bitand(IBig::from_signed(rhs))
+    }
+
+    fn bitand_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        self.bitand_assign(IBig::from(rhs))
+    }
+
+    fn bitor_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.bitor(IBig::from(rhs))
+    }
+
+    fn bitor_ref_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.bitor(IBig::from(rhs))
+    }
+
+    fn bitor_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        self.bitor_assign(IBig::from(rhs))
+    }
+
+    fn bitxor_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.bitxor(IBig::from(rhs))
+    }
+
+    fn bitxor_ref_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.bitxor(IBig::from(rhs))
+    }
+
+    fn bitxor_assign_primitive<T>(&mut self, rhs: T)
+    where
+        IBig: From<T>,
+    {
+        self.bitxor_assign(IBig::from(rhs))
+    }
+
+    fn and_not_primitive<T>(self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.and_not(IBig::from(rhs))
+    }
+
+    fn and_not_ref_primitive<T>(&self, rhs: T) -> IBig
+    where
+        IBig: From<T>,
+    {
+        self.and_not(IBig::from(rhs))
     }
 }

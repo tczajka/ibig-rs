@@ -108,7 +108,7 @@ fn test_mul_ubig_primitive() {
     x *= &2;
     assert_eq!(x, ubig!(12));
 
-    assert_eq!(ubig!(0) * (-1), ubig!(0));
+    assert_eq!(ubig!(0) * -1, ubig!(0));
     assert_eq!(ubig!(5) * 0, ubig!(0));
 }
 
@@ -134,16 +134,16 @@ fn test_mul_ibig_primitive() {
     x *= &2u8;
     assert_eq!(x, ibig!(-12));
 
-    assert_eq!(ibig!(-3) * (-4), ibig!(12));
-    assert_eq!(ibig!(-3) * &(-4), ibig!(12));
-    assert_eq!(&ibig!(-3) * (-4), ibig!(12));
-    assert_eq!(&ibig!(-3) * &(-4), ibig!(12));
-    assert_eq!((-4) * ibig!(-3), ibig!(12));
-    assert_eq!((-4) * &ibig!(-3), ibig!(12));
-    assert_eq!(&(-4) * ibig!(-3), ibig!(12));
-    assert_eq!(&(-4) * &ibig!(-3), ibig!(12));
+    assert_eq!(ibig!(-3) * -4, ibig!(12));
+    assert_eq!(ibig!(-3) * &-4, ibig!(12));
+    assert_eq!(&ibig!(-3) * -4, ibig!(12));
+    assert_eq!(&ibig!(-3) * &-4, ibig!(12));
+    assert_eq!(-4 * ibig!(-3), ibig!(12));
+    assert_eq!(-4 * &ibig!(-3), ibig!(12));
+    assert_eq!(&-4 * ibig!(-3), ibig!(12));
+    assert_eq!(&-4 * &ibig!(-3), ibig!(12));
     let mut x = ibig!(-3);
     x *= 2;
-    x *= &(-2);
+    x *= &-2;
     assert_eq!(x, ibig!(12));
 }
