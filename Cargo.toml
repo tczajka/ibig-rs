@@ -1,6 +1,6 @@
 [package]
 name = "ibig"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
 description = "A big integer library with good performance"
