@@ -52,7 +52,7 @@ pub(crate) fn digit_from_utf8_byte(byte: u8, radix: Digit) -> Option<Digit> {
 }
 
 /// Maximum number of digits that a `Word` can ever have for any non-power-of-2 radix.
-pub(crate) const MAX_WORD_DIGITS_NON_POW_2: usize = RADIX_INFO_TABLE[3].digits_per_word + 1;
+pub(crate) const MAX_WORD_DIGITS_NON_POW_2: usize = RadixInfo::for_radix(3).digits_per_word + 1;
 
 /// Properties of a given radix.
 #[derive(Clone, Copy)]
@@ -109,7 +109,7 @@ impl RadixInfo {
 
 type RadixInfoTable = [RadixInfo; MAX_RADIX as usize + 1];
 
-const RADIX_INFO_TABLE: &RadixInfoTable = &generate_radix_info_table();
+static RADIX_INFO_TABLE: RadixInfoTable = generate_radix_info_table();
 
 const fn generate_radix_info_table() -> RadixInfoTable {
     let mut table = [RadixInfo {

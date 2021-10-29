@@ -52,7 +52,7 @@ impl RingElement {
         }
     }
 
-    const fn mul(&self, rhs: &RingElement) -> RingElement {
+    const fn mul(self, rhs: RingElement) -> RingElement {
         RingElement {
             val: [
                 self.val[0].mul(rhs.val[0], &FIELDS[0]),
@@ -62,7 +62,7 @@ impl RingElement {
         }
     }
 
-    const fn inverse(&self) -> RingElement {
+    const fn inverse(self) -> RingElement {
         RingElement {
             val: [
                 self.val[0].pow_word(PRIMES[0].prime - 2, &FIELDS[0]),
@@ -85,18 +85,18 @@ type RootTable = [RingElement; MAX_ORDER as usize + 1];
 
 /// ROOTS[order]^(2^order) = 1
 #[allow(dead_code)]
-const ROOTS: &RootTable = &generate_roots(MAX_ORDER_ROOT);
+static ROOTS: RootTable = generate_roots(MAX_ORDER_ROOT);
 
 /// INVERSE_ROOTS[order]^(2^order) = 1
 #[allow(dead_code)]
-const INVERSE_ROOTS: &RootTable = &generate_roots(MAX_ORDER_ROOT.inverse());
+static INVERSE_ROOTS: RootTable = generate_roots(MAX_ORDER_ROOT.inverse());
 
 const fn generate_roots(max_order_root: RingElement) -> RootTable {
     let mut table = [RingElement::zero(); MAX_ORDER as usize + 1];
     let mut order = MAX_ORDER as usize;
     table[order] = max_order_root;
     while order > 0 {
-        table[order - 1] = table[order].mul(&table[order]);
+        table[order - 1] = table[order].mul(table[order]);
         order -= 1;
     }
     table
@@ -110,7 +110,7 @@ mod tests {
     fn test_inverse() {
         let one: Word = 1;
         let one = RingElement::from(one);
-        assert_eq!(MAX_ORDER_ROOT.inverse().mul(&MAX_ORDER_ROOT), one);
+        assert_eq!(MAX_ORDER_ROOT.inverse().mul(MAX_ORDER_ROOT), one);
         assert_eq!(MAX_ORDER_ROOT.inverse().inverse(), MAX_ORDER_ROOT);
     }
 
