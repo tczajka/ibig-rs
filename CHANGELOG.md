@@ -2,6 +2,15 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.4 - Unreleased
+
+### Performance
+* Various small performance improvements.
+* Many small functions now marked `#[inline]`, previously wouldn't be optimized well in user code without LTO.
+
+### Toolchain
+* Rust 1.49+ is now required.
+
 ## 0.3.3 - 2021-10-28
 
 ### Features

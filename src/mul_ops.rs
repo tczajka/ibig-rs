@@ -35,15 +35,11 @@ impl Mul<&UBig> for UBig {
 
     #[inline]
     fn mul(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::mul_word(word0, *word1),
-                Large(buffer1) => UBig::mul_large_word(buffer1.clone(), word0),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::mul_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::mul_large(&buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::mul_word(word0, *word1),
+            (Small(word0), Large(buffer1)) => UBig::mul_large_word(buffer1.clone(), word0),
+            (Large(buffer0), Small(word1)) => UBig::mul_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::mul_large(&buffer0, buffer1),
         }
     }
 }

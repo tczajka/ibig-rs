@@ -315,15 +315,11 @@ impl BitAnd<&UBig> for UBig {
 
     #[inline]
     fn bitand(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::from_word(word0 & word1),
-                Large(buffer1) => UBig::from_word(word0 & buffer1.first().unwrap()),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::from_word(buffer0.first().unwrap() & word1),
-                Large(buffer1) => UBig::bitand_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::from_word(buffer0.first().unwrap() & word1),
+            (Large(buffer0), Large(buffer1)) => UBig::bitand_large(buffer0, buffer1),
         }
     }
 }
@@ -408,15 +404,11 @@ impl BitOr<&UBig> for UBig {
 
     #[inline]
     fn bitor(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::from_word(word0 | word1),
-                Large(buffer1) => UBig::bitor_large_word(buffer1.clone(), word0),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::bitor_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::bitor_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 | word1),
+            (Small(word0), Large(buffer1)) => UBig::bitor_large_word(buffer1.clone(), word0),
+            (Large(buffer0), Small(word1)) => UBig::bitor_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::bitor_large(buffer0, buffer1),
         }
     }
 }
@@ -509,15 +501,11 @@ impl BitXor<&UBig> for UBig {
 
     #[inline]
     fn bitxor(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::from_word(word0 ^ word1),
-                Large(buffer1) => UBig::bitxor_large_word(buffer1.clone(), word0),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::bitxor_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::bitxor_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 ^ word1),
+            (Small(word0), Large(buffer1)) => UBig::bitxor_large_word(buffer1.clone(), word0),
+            (Large(buffer0), Small(word1)) => UBig::bitxor_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::bitxor_large(buffer0, buffer1),
         }
     }
 }
@@ -604,15 +592,11 @@ impl AndNot<&UBig> for UBig {
 
     #[inline]
     fn and_not(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::from_word(word0 & !word1),
-                Large(buffer1) => UBig::from_word(word0 & !buffer1.first().unwrap()),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::and_not_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::and_not_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::and_not_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::and_not_large(buffer0, buffer1),
         }
     }
 }
@@ -622,15 +606,12 @@ impl AndNot<UBig> for &UBig {
 
     #[inline]
     fn and_not(self, rhs: UBig) -> UBig {
-        match self.repr() {
-            Small(word0) => match rhs.into_repr() {
-                Small(word1) => UBig::from_word(word0 & !word1),
-                Large(buffer1) => UBig::from_word(word0 & !buffer1.first().unwrap()),
-            },
-            Large(buffer0) => match rhs.into_repr() {
-                Small(word1) => UBig::and_not_large_word(buffer0.clone(), word1),
-                Large(buffer1) => UBig::and_not_large(buffer0.clone(), &buffer1),
-            },
+        match (self.repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::from_word(word0 & !word1),
+            (Small(word0), Large(buffer1)) => UBig::from_word(word0 & !buffer1.first().unwrap()),
+            (Large(buffer0), Small(word1)) => UBig::and_not_large_word(buffer0.clone(), word1),
+            // TODO: Could reuse buffer1 in some cases.
+            (Large(buffer0), Large(buffer1)) => UBig::and_not_large(buffer0.clone(), &buffer1),
         }
     }
 }

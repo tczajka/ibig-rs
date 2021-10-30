@@ -40,15 +40,11 @@ impl Add<&UBig> for UBig {
 
     #[inline]
     fn add(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::add_word(word0, *word1),
-                Large(buffer1) => UBig::add_large_word(buffer1.clone(), word0),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::add_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::add_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::add_word(word0, *word1),
+            (Small(word0), Large(buffer1)) => UBig::add_large_word(buffer1.clone(), word0),
+            (Large(buffer0), Small(word1)) => UBig::add_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::add_large(buffer0, buffer1),
         }
     }
 }
@@ -115,15 +111,11 @@ impl Sub<&UBig> for UBig {
 
     #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
-        match self.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => UBig::sub_word(word0, *word1),
-                Large(_) => UBig::panic_negative(),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => UBig::sub_large_word(buffer0, *word1),
-                Large(buffer1) => UBig::sub_large(buffer0, buffer1),
-            },
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::sub_word(word0, *word1),
+            (Small(_), Large(_)) => UBig::panic_negative(),
+            (Large(buffer0), Small(word1)) => UBig::sub_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::sub_large(buffer0, buffer1),
         }
     }
 }
@@ -133,15 +125,11 @@ impl Sub<UBig> for &UBig {
 
     #[inline]
     fn sub(self, rhs: UBig) -> UBig {
-        match self.repr() {
-            Small(word0) => match rhs.into_repr() {
-                Small(word1) => UBig::sub_word(*word0, word1),
-                Large(_) => UBig::panic_negative(),
-            },
-            Large(buffer0) => match rhs.into_repr() {
-                Small(word1) => UBig::sub_large_word(buffer0.clone(), word1),
-                Large(buffer1) => UBig::sub_large_ref_val(buffer0, buffer1),
-            },
+        match (self.repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::sub_word(*word0, word1),
+            (Small(_), Large(_)) => UBig::panic_negative(),
+            (Large(buffer0), Small(word1)) => UBig::sub_large_word(buffer0.clone(), word1),
+            (Large(buffer0), Large(buffer1)) => UBig::sub_large_ref_val(buffer0, buffer1),
         }
     }
 }
@@ -691,15 +679,11 @@ impl IBig {
 
     #[inline]
     fn sub_ubig_val_ref(lhs: UBig, rhs: &UBig) -> IBig {
-        match lhs.into_repr() {
-            Small(word0) => match rhs.repr() {
-                Small(word1) => IBig::sub_word_word(word0, *word1),
-                Large(buffer1) => -IBig::sub_large_word(buffer1.clone(), word0),
-            },
-            Large(buffer0) => match rhs.repr() {
-                Small(word1) => IBig::sub_large_word(buffer0, *word1),
-                Large(buffer1) => IBig::sub_large(buffer0, buffer1),
-            },
+        match (lhs.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => IBig::sub_word_word(word0, *word1),
+            (Small(word0), Large(buffer1)) => -IBig::sub_large_word(buffer1.clone(), word0),
+            (Large(buffer0), Small(word1)) => IBig::sub_large_word(buffer0, *word1),
+            (Large(buffer0), Large(buffer1)) => IBig::sub_large(buffer0, buffer1),
         }
     }
 
