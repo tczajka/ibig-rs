@@ -3,6 +3,7 @@ name = "ibig"
 version = "0.3.3"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2018"
+rust-version = "1.49"
 description = "A big integer library with good performance"
 keywords = ["bigint", "bignum", "mathematics"]
 categories = ["mathematics", "no-std"]
