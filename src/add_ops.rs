@@ -663,10 +663,11 @@ impl IBig {
 
     #[inline]
     fn sub_word_word(lhs: Word, rhs: Word) -> IBig {
-        if lhs >= rhs {
-            IBig::from(lhs - rhs)
+        let (val, overflow) = lhs.overflowing_sub(rhs);
+        if !overflow {
+            IBig::from(val)
         } else {
-            -IBig::from(rhs - lhs)
+            -IBig::from(val.wrapping_neg())
         }
     }
 
