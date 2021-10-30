@@ -18,6 +18,7 @@ use Sign::*;
 impl Neg for Sign {
     type Output = Sign;
 
+    #[inline]
     fn neg(self) -> Sign {
         match self {
             Positive => Negative,
@@ -38,6 +39,7 @@ impl IBig {
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-500).signum(), ibig!(-1));
     /// ```
+    #[inline]
     pub fn signum(&self) -> IBig {
         match self.sign() {
             Positive => {
@@ -55,6 +57,7 @@ impl IBig {
 impl Neg for IBig {
     type Output = IBig;
 
+    #[inline]
     fn neg(self) -> IBig {
         let (sign, mag) = self.into_sign_magnitude();
         IBig::from_sign_magnitude(-sign, mag)
@@ -64,6 +67,7 @@ impl Neg for IBig {
 impl Neg for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn neg(self) -> IBig {
         self.clone().neg()
     }
@@ -72,6 +76,7 @@ impl Neg for &IBig {
 impl Abs for IBig {
     type Output = IBig;
 
+    #[inline]
     fn abs(self) -> IBig {
         IBig::from(self.unsigned_abs())
     }
@@ -80,6 +85,7 @@ impl Abs for IBig {
 impl Abs for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn abs(self) -> IBig {
         IBig::from(self.unsigned_abs())
     }
@@ -88,6 +94,7 @@ impl Abs for &IBig {
 impl UnsignedAbs for IBig {
     type Output = UBig;
 
+    #[inline]
     fn unsigned_abs(self) -> UBig {
         let (_, mag) = self.into_sign_magnitude();
         mag
@@ -97,6 +104,7 @@ impl UnsignedAbs for IBig {
 impl UnsignedAbs for &IBig {
     type Output = UBig;
 
+    #[inline]
     fn unsigned_abs(self) -> UBig {
         self.magnitude().clone()
     }

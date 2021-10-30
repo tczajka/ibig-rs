@@ -28,6 +28,7 @@ pub struct IBig {
 }
 
 impl IBig {
+    #[inline]
     pub(crate) fn from_sign_magnitude(mut sign: Sign, magnitude: UBig) -> IBig {
         if magnitude == UBig::from_word(0) {
             sign = Positive;
@@ -35,14 +36,17 @@ impl IBig {
         IBig { sign, magnitude }
     }
 
+    #[inline]
     pub(crate) fn sign(&self) -> Sign {
         self.sign
     }
 
+    #[inline]
     pub(crate) fn magnitude(&self) -> &UBig {
         &self.magnitude
     }
 
+    #[inline]
     pub(crate) fn into_sign_magnitude(self) -> (Sign, UBig) {
         (self.sign, self.magnitude)
     }

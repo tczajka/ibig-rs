@@ -30,6 +30,7 @@ impl Buffer {
 
     /// Ensure there is enough capacity in the buffer for `num_words`. Will reallocate if there is
     /// not enough.
+    #[inline]
     pub(crate) fn ensure_capacity(&mut self, num_words: usize) {
         if num_words > self.capacity() {
             self.reallocate(num_words);
@@ -37,6 +38,7 @@ impl Buffer {
     }
 
     /// Makes sure that the capacity is compact.
+    #[inline]
     pub(crate) fn shrink(&mut self) {
         if self.capacity() > Buffer::max_compact_capacity(self.len()) {
             self.reallocate(self.len());
@@ -56,6 +58,7 @@ impl Buffer {
     }
 
     /// Return buffer capacity.
+    #[inline]
     pub(crate) fn capacity(&self) -> usize {
         self.0.capacity()
     }
@@ -65,12 +68,14 @@ impl Buffer {
     /// # Panics
     ///
     /// Panics if there is not enough capacity.
+    #[inline]
     pub(crate) fn push(&mut self, word: Word) {
         assert!(self.len() < self.capacity());
         self.0.push(word);
     }
 
     /// Append a Word and reallocate if necessary.
+    #[inline]
     pub(crate) fn push_may_reallocate(&mut self, word: Word) {
         self.ensure_capacity(self.len() + 1);
         self.push(word);
@@ -97,17 +102,20 @@ impl Buffer {
     }
 
     /// Pop the most significant `Word`.
+    #[inline]
     pub(crate) fn pop(&mut self) -> Option<Word> {
         self.0.pop()
     }
 
     /// Pop leading zero words.
+    #[inline]
     pub(crate) fn pop_leading_zeros(&mut self) {
         while let Some(0) = self.last() {
             self.pop();
         }
     }
 
+    #[inline]
     /// Truncate length to `len`.
     pub(crate) fn truncate(&mut self, len: usize) {
         assert!(self.len() >= len);
@@ -153,6 +161,7 @@ impl Buffer {
     /// Requires that `num_words <= MAX_CAPACITY`.
     ///
     /// Provides `2 + 0.125 * num_words` extra space.
+    #[inline]
     fn default_capacity(num_words: usize) -> usize {
         debug_assert!(num_words <= Buffer::MAX_CAPACITY);
         (num_words + num_words / 8 + 2).min(Buffer::MAX_CAPACITY)
@@ -163,6 +172,7 @@ impl Buffer {
     /// Requires that `num_words <= Buffer::MAX_CAPACITY`.
     ///
     /// Allows `4 + 0.25 * num_words` overhead.
+    #[inline]
     fn max_compact_capacity(num_words: usize) -> usize {
         debug_assert!(num_words <= Buffer::MAX_CAPACITY);
         (num_words + num_words / 4 + 4).min(Buffer::MAX_CAPACITY)
@@ -178,6 +188,7 @@ impl Clone for Buffer {
     }
 
     /// If capacity is exceeded, panic.
+    #[inline]
     fn clone_from(&mut self, source: &Buffer) {
         assert!(self.capacity() >= source.len());
         self.0.clone_from(&source.0);
@@ -187,12 +198,14 @@ impl Clone for Buffer {
 impl Deref for Buffer {
     type Target = [Word];
 
+    #[inline]
     fn deref(&self) -> &[Word] {
         &self.0
     }
 }
 
 impl DerefMut for Buffer {
+    #[inline]
     fn deref_mut(&mut self) -> &mut [Word] {
         &mut self.0
     }

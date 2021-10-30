@@ -171,6 +171,7 @@ impl UBig {
     /// assert_eq!(format!("{}", ubig!(83).in_radix(3)), "10002");
     /// assert_eq!(format!("{:+010}", ubig!(35).in_radix(36)), "+00000000z");
     /// ```
+    #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
         radix::check_radix_valid(radix);
         InRadix {
@@ -195,6 +196,7 @@ impl IBig {
     /// assert_eq!(format!("{}", ibig!(-83).in_radix(3)), "-10002");
     /// assert_eq!(format!("{:010}", ibig!(-35).in_radix(36)), "-00000000z");
     /// ```
+    #[inline]
     pub fn in_radix(&self, radix: u32) -> InRadix {
         radix::check_radix_valid(radix);
         InRadix {

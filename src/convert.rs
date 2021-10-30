@@ -14,6 +14,7 @@ use core::convert::{TryFrom, TryInto};
 
 impl Default for UBig {
     /// Default value: 0.
+    #[inline]
     fn default() -> UBig {
         UBig::from_word(0)
     }
@@ -21,6 +22,7 @@ impl Default for UBig {
 
 impl Default for IBig {
     /// Default value: 0.
+    #[inline]
     fn default() -> IBig {
         IBig::from(0u8)
     }
@@ -35,6 +37,7 @@ impl UBig {
     /// # use ibig::{ubig, UBig};
     /// assert_eq!(UBig::from_le_bytes(&[3, 2, 1]), ubig!(0x010203));
     /// ```
+    #[inline]
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
@@ -65,6 +68,7 @@ impl UBig {
     /// # use ibig::{ubig, UBig};
     /// assert_eq!(UBig::from_be_bytes(&[1, 2, 3]), ubig!(0x010203));
     /// ```
+    #[inline]
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
         if bytes.len() <= WORD_BYTES {
             // fast path
@@ -159,6 +163,7 @@ impl UBig {
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(134).to_f32(), 134.0f32);
     /// ```
+    #[inline]
     pub fn to_f32(&self) -> f32 {
         match self.repr() {
             Small(word) => *word as f32,
@@ -209,6 +214,7 @@ impl UBig {
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(134).to_f64(), 134.0f64);
     /// ```
+    #[inline]
     pub fn to_f64(&self) -> f64 {
         match self.repr() {
             Small(word) => *word as f64,
@@ -261,6 +267,7 @@ impl IBig {
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-134).to_f32(), -134.0f32);
     /// ```
+    #[inline]
     pub fn to_f32(&self) -> f32 {
         let val = self.magnitude().to_f32();
         match self.sign() {
@@ -279,6 +286,7 @@ impl IBig {
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-134).to_f64(), -134.0f64);
     /// ```
+    #[inline]
     pub fn to_f64(&self) -> f64 {
         let val = self.magnitude().to_f64();
         match self.sign() {
@@ -290,6 +298,7 @@ impl IBig {
 
 /// Round to even floating point adjustment, based on the bottom
 /// bit of mantissa and additional 2 bits (i.e. 3 bits in units of ULP/4).
+#[inline]
 fn round_to_even_adjustment(bits: u32) -> bool {
     bits >= 0b110 || bits == 0b011
 }
@@ -297,6 +306,7 @@ fn round_to_even_adjustment(bits: u32) -> bool {
 macro_rules! ubig_unsigned_conversions {
     ($t:ty) => {
         impl From<$t> for UBig {
+            #[inline]
             fn from(value: $t) -> UBig {
                 UBig::from_unsigned(value)
             }
@@ -305,6 +315,7 @@ macro_rules! ubig_unsigned_conversions {
         impl TryFrom<UBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: UBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_unsigned()
             }
@@ -313,6 +324,7 @@ macro_rules! ubig_unsigned_conversions {
         impl TryFrom<&UBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: &UBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_unsigned()
             }
@@ -328,6 +340,7 @@ ubig_unsigned_conversions!(u128);
 ubig_unsigned_conversions!(usize);
 
 impl From<bool> for UBig {
+    #[inline]
     fn from(b: bool) -> UBig {
         u8::from(b).into()
     }
@@ -338,6 +351,7 @@ macro_rules! ubig_signed_conversions {
         impl TryFrom<$t> for UBig {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: $t) -> Result<UBig, OutOfBoundsError> {
                 UBig::try_from_signed(value)
             }
@@ -346,6 +360,7 @@ macro_rules! ubig_signed_conversions {
         impl TryFrom<UBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: UBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_signed()
             }
@@ -354,6 +369,7 @@ macro_rules! ubig_signed_conversions {
         impl TryFrom<&UBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: &UBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_signed()
             }
@@ -371,6 +387,7 @@ ubig_signed_conversions!(isize);
 macro_rules! ibig_unsigned_conversions {
     ($t:ty) => {
         impl From<$t> for IBig {
+            #[inline]
             fn from(value: $t) -> IBig {
                 IBig::from_unsigned(value)
             }
@@ -379,6 +396,7 @@ macro_rules! ibig_unsigned_conversions {
         impl TryFrom<IBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: IBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_unsigned()
             }
@@ -387,6 +405,7 @@ macro_rules! ibig_unsigned_conversions {
         impl TryFrom<&IBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: &IBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_unsigned()
             }
@@ -402,6 +421,7 @@ ibig_unsigned_conversions!(u128);
 ibig_unsigned_conversions!(usize);
 
 impl From<bool> for IBig {
+    #[inline]
     fn from(b: bool) -> IBig {
         u8::from(b).into()
     }
@@ -410,6 +430,7 @@ impl From<bool> for IBig {
 macro_rules! ibig_signed_conversions {
     ($t:ty) => {
         impl From<$t> for IBig {
+            #[inline]
             fn from(value: $t) -> IBig {
                 IBig::from_signed(value)
             }
@@ -418,6 +439,7 @@ macro_rules! ibig_signed_conversions {
         impl TryFrom<IBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: IBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_signed()
             }
@@ -426,6 +448,7 @@ macro_rules! ibig_signed_conversions {
         impl TryFrom<&IBig> for $t {
             type Error = OutOfBoundsError;
 
+            #[inline]
             fn try_from(value: &IBig) -> Result<$t, OutOfBoundsError> {
                 value.try_to_signed()
             }
@@ -441,12 +464,14 @@ ibig_signed_conversions!(i128);
 ibig_signed_conversions!(isize);
 
 impl From<UBig> for IBig {
+    #[inline]
     fn from(x: UBig) -> IBig {
         IBig::from_sign_magnitude(Positive, x)
     }
 }
 
 impl From<&UBig> for IBig {
+    #[inline]
     fn from(x: &UBig) -> IBig {
         IBig::from(x.clone())
     }
@@ -455,6 +480,7 @@ impl From<&UBig> for IBig {
 impl TryFrom<IBig> for UBig {
     type Error = OutOfBoundsError;
 
+    #[inline]
     fn try_from(x: IBig) -> Result<UBig, OutOfBoundsError> {
         match x.into_sign_magnitude() {
             (Positive, mag) => Ok(mag),
@@ -466,6 +492,7 @@ impl TryFrom<IBig> for UBig {
 impl TryFrom<&IBig> for UBig {
     type Error = OutOfBoundsError;
 
+    #[inline]
     fn try_from(x: &IBig) -> Result<UBig, OutOfBoundsError> {
         match x.sign() {
             Positive => Ok(x.magnitude().clone()),
@@ -476,6 +503,7 @@ impl TryFrom<&IBig> for UBig {
 
 impl UBig {
     /// Convert an unsigned primitive to [UBig].
+    #[inline]
     pub(crate) fn from_unsigned<T>(x: T) -> UBig
     where
         T: PrimitiveUnsigned,
@@ -490,6 +518,7 @@ impl UBig {
     }
 
     /// Try to convert a signed primitive to [UBig].
+    #[inline]
     fn try_from_signed<T>(x: T) -> Result<UBig, OutOfBoundsError>
     where
         T: PrimitiveSigned,
@@ -501,6 +530,7 @@ impl UBig {
     }
 
     /// Try to convert [UBig] to an unsigned primitive.
+    #[inline]
     pub(crate) fn try_to_unsigned<T>(&self) -> Result<T, OutOfBoundsError>
     where
         T: PrimitiveUnsigned,
@@ -515,6 +545,7 @@ impl UBig {
     }
 
     /// Try to convert [UBig] to a signed primitive.
+    #[inline]
     fn try_to_signed<T>(&self) -> Result<T, OutOfBoundsError>
     where
         T: PrimitiveSigned,
@@ -528,6 +559,7 @@ impl UBig {
         }
     }
 
+    #[inline]
     pub(crate) fn from_ibig_panic_on_overflow(x: IBig) -> UBig {
         match UBig::try_from(x) {
             Ok(v) => v,
@@ -562,17 +594,20 @@ where
 
 impl IBig {
     /// Convert an unsigned primitive to [IBig].
+    #[inline]
     pub(crate) fn from_unsigned<T: PrimitiveUnsigned>(x: T) -> IBig {
         IBig::from(UBig::from_unsigned(x))
     }
 
     /// Convert a signed primitive to [IBig].
+    #[inline]
     pub(crate) fn from_signed<T: PrimitiveSigned>(x: T) -> IBig {
         let (sign, mag) = x.to_sign_magnitude();
         IBig::from_sign_magnitude(sign, UBig::from_unsigned(mag))
     }
 
     /// Try to convert [IBig] to an unsigned primitive.
+    #[inline]
     pub(crate) fn try_to_unsigned<T: PrimitiveUnsigned>(&self) -> Result<T, OutOfBoundsError> {
         match self.sign() {
             Positive => self.magnitude().try_to_unsigned(),
@@ -581,6 +616,7 @@ impl IBig {
     }
 
     /// Try to convert [IBig] to an signed primitive.
+    #[inline]
     pub(crate) fn try_to_signed<T: PrimitiveSigned>(&self) -> Result<T, OutOfBoundsError> {
         let u: T::Unsigned = self.magnitude().try_to_unsigned()?;
         T::try_from_sign_magnitude(self.sign(), u)

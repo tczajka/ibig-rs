@@ -18,6 +18,7 @@ use core::ops::{Mul, MulAssign};
 impl<'a> Mul<Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn mul(self, rhs: Modulo<'a>) -> Modulo<'a> {
         self.mul(&rhs)
     }
@@ -26,6 +27,7 @@ impl<'a> Mul<Modulo<'a>> for Modulo<'a> {
 impl<'a> Mul<&Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn mul(mut self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.mul_assign(rhs);
         self
@@ -35,6 +37,7 @@ impl<'a> Mul<&Modulo<'a>> for Modulo<'a> {
 impl<'a> Mul<Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn mul(self, rhs: Modulo<'a>) -> Modulo<'a> {
         rhs.mul(self)
     }
@@ -43,18 +46,21 @@ impl<'a> Mul<Modulo<'a>> for &Modulo<'a> {
 impl<'a> Mul<&Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn mul(self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.clone().mul(rhs)
     }
 }
 
 impl<'a> MulAssign<Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn mul_assign(&mut self, rhs: Modulo<'a>) {
         self.mul_assign(&rhs)
     }
 }
 
 impl<'a> MulAssign<&Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn mul_assign(&mut self, rhs: &Modulo<'a>) {
         match (self.repr_mut(), rhs.repr()) {
             (ModuloRepr::Small(self_small), ModuloRepr::Small(rhs_small)) => {
@@ -74,6 +80,7 @@ impl<'a> MulAssign<&Modulo<'a>> for Modulo<'a> {
 }
 
 impl ModuloSmallRaw {
+    #[inline]
     pub(crate) const fn mul(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         cfn_debug_assert!(self.is_valid(ring) && other.is_valid(ring));
         let a = self.normalized();
@@ -86,6 +93,7 @@ impl ModuloSmallRaw {
 
 impl<'a> ModuloSmall<'a> {
     /// self *= rhs
+    #[inline]
     pub(crate) fn mul_in_place(&mut self, rhs: &ModuloSmall<'a>) {
         self.check_same_ring(rhs);
         self.set_raw(self.raw().mul(rhs.raw(), self.ring()));

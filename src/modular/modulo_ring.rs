@@ -58,6 +58,7 @@ impl ModuloRing {
     /// # Panics
     ///
     /// Panics if `n` is zero.
+    #[inline]
     pub fn new(n: &UBig) -> ModuloRing {
         match n.repr() {
             Repr::Small(0) => panic!("ModuloRing::new(0)"),
@@ -66,6 +67,7 @@ impl ModuloRing {
         }
     }
 
+    #[inline]
     pub(crate) fn repr(&self) -> &ModuloRingRepr {
         &self.0
     }
@@ -73,6 +75,7 @@ impl ModuloRing {
 
 impl ModuloRingSmall {
     /// Create a new small ring of integers modulo `n`.
+    #[inline]
     pub(crate) const fn new(n: Word) -> ModuloRingSmall {
         cfn_debug_assert!(n != 0);
         let shift = n.leading_zeros();
@@ -85,14 +88,17 @@ impl ModuloRingSmall {
         }
     }
 
+    #[inline]
     pub(crate) const fn normalized_modulus(&self) -> Word {
         self.normalized_modulus
     }
 
+    #[inline]
     pub(crate) const fn shift(&self) -> u32 {
         self.shift
     }
 
+    #[inline]
     pub(crate) const fn fast_div(&self) -> FastDivideNormalized {
         self.fast_div
     }

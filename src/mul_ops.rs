@@ -19,6 +19,7 @@ use core::{
 impl Mul<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn mul(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::mul_word(word0, word1),
@@ -32,6 +33,7 @@ impl Mul<UBig> for UBig {
 impl Mul<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn mul(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -49,6 +51,7 @@ impl Mul<&UBig> for UBig {
 impl Mul<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn mul(self, rhs: UBig) -> UBig {
         rhs.mul(self)
     }
@@ -57,6 +60,7 @@ impl Mul<UBig> for &UBig {
 impl Mul<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn mul(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::mul_word(*word0, *word1),
@@ -68,12 +72,14 @@ impl Mul<&UBig> for &UBig {
 }
 
 impl MulAssign<UBig> for UBig {
+    #[inline]
     fn mul_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) * rhs;
     }
 }
 
 impl MulAssign<&UBig> for UBig {
+    #[inline]
     fn mul_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) * rhs;
     }
@@ -82,6 +88,7 @@ impl MulAssign<&UBig> for UBig {
 impl Mul<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn mul(self, rhs: IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = rhs.into_sign_magnitude();
@@ -92,6 +99,7 @@ impl Mul<IBig> for IBig {
 impl Mul<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn mul(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -102,6 +110,7 @@ impl Mul<&IBig> for IBig {
 impl Mul<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn mul(self, rhs: IBig) -> IBig {
         rhs.mul(self)
     }
@@ -110,6 +119,7 @@ impl Mul<IBig> for &IBig {
 impl Mul<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn mul(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -118,12 +128,14 @@ impl Mul<&IBig> for &IBig {
 }
 
 impl MulAssign<IBig> for IBig {
+    #[inline]
     fn mul_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) * rhs;
     }
 }
 
 impl MulAssign<&IBig> for IBig {
+    #[inline]
     fn mul_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) * rhs;
     }
@@ -132,6 +144,7 @@ impl MulAssign<&IBig> for IBig {
 impl Mul<Sign> for Sign {
     type Output = Sign;
 
+    #[inline]
     fn mul(self, rhs: Sign) -> Sign {
         match (self, rhs) {
             (Positive, Positive) => Positive,
@@ -143,6 +156,7 @@ impl Mul<Sign> for Sign {
 }
 
 impl MulAssign<Sign> for Sign {
+    #[inline]
     fn mul_assign(&mut self, rhs: Sign) {
         *self = *self * rhs;
     }
@@ -153,6 +167,7 @@ macro_rules! impl_mul_ubig_unsigned {
         impl Mul<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> UBig {
                 self.mul_unsigned(rhs)
             }
@@ -161,6 +176,7 @@ macro_rules! impl_mul_ubig_unsigned {
         impl Mul<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> UBig {
                 self.mul_ref_unsigned(rhs)
             }
@@ -170,6 +186,7 @@ macro_rules! impl_mul_ubig_unsigned {
         helper_macros::forward_binop_swap_args!(impl Mul<UBig> for $t, mul);
 
         impl MulAssign<$t> for UBig {
+            #[inline]
             fn mul_assign(&mut self, rhs: $t) {
                 self.mul_assign_unsigned(rhs)
             }
@@ -191,6 +208,7 @@ macro_rules! impl_mul_ubig_signed {
         impl Mul<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> UBig {
                 self.mul_signed(rhs)
             }
@@ -199,6 +217,7 @@ macro_rules! impl_mul_ubig_signed {
         impl Mul<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> UBig {
                 self.mul_ref_signed(rhs)
             }
@@ -208,6 +227,7 @@ macro_rules! impl_mul_ubig_signed {
         helper_macros::forward_binop_swap_args!(impl Mul<UBig> for $t, mul);
 
         impl MulAssign<$t> for UBig {
+            #[inline]
             fn mul_assign(&mut self, rhs: $t) {
                 self.mul_assign_signed(rhs)
             }
@@ -229,6 +249,7 @@ macro_rules! impl_mul_ibig_primitive {
         impl Mul<$t> for IBig {
             type Output = IBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> IBig {
                 self.mul_primitive(rhs)
             }
@@ -237,6 +258,7 @@ macro_rules! impl_mul_ibig_primitive {
         impl Mul<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn mul(self, rhs: $t) -> IBig {
                 self.mul_ref_primitive(rhs)
             }
@@ -246,6 +268,7 @@ macro_rules! impl_mul_ibig_primitive {
         helper_macros::forward_binop_swap_args!(impl Mul<IBig> for $t, mul);
 
         impl MulAssign<$t> for IBig {
+            #[inline]
             fn mul_assign(&mut self, rhs: $t) {
                 self.mul_assign_primitive(rhs)
             }
@@ -270,6 +293,7 @@ impl_mul_ibig_primitive!(isize);
 
 impl UBig {
     /// Multiply two `Word`s.
+    #[inline]
     fn mul_word(a: Word, b: Word) -> UBig {
         UBig::from(extend_word(a) * extend_word(b))
     }
@@ -307,32 +331,39 @@ impl UBig {
         buffer.into()
     }
 
+    #[inline]
     fn mul_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self * UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn mul_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self * UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn mul_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self *= UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn mul_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn mul_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) * IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn mul_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).mul_signed(rhs)
     }
 }
 
 impl IBig {
+    #[inline]
     fn mul_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -340,6 +371,7 @@ impl IBig {
         self * IBig::from(rhs)
     }
 
+    #[inline]
     fn mul_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -347,6 +379,7 @@ impl IBig {
         self * IBig::from(rhs)
     }
 
+    #[inline]
     fn mul_assign_primitive<T>(&mut self, rhs: T)
     where
         IBig: From<T>,

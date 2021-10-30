@@ -24,6 +24,7 @@ impl Modulo<'_> {
     /// let a = ring.from(123);
     /// assert_eq!(a.pow(&(p - ubig!(1))), ring.from(1));
     /// ```
+    #[inline]
     pub fn pow(&self, exp: &UBig) -> Modulo {
         match self.repr() {
             ModuloRepr::Small(self_small) => self_small.pow(exp).into(),
@@ -34,6 +35,7 @@ impl Modulo<'_> {
 
 impl ModuloSmallRaw {
     /// self^exp
+    #[inline]
     pub(crate) const fn pow_word(self, exp: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         if exp == 0 {
             return ModuloSmallRaw::from_word(1, ring);
@@ -44,6 +46,7 @@ impl ModuloSmallRaw {
     }
 
     /// self^2^bits * base^exp[..bits]
+    #[inline]
     const fn pow_helper(
         self,
         mut bits: u32,
@@ -65,6 +68,7 @@ impl ModuloSmallRaw {
 
 impl ModuloSmall<'_> {
     /// Exponentiation.
+    #[inline]
     fn pow(&self, exp: &UBig) -> ModuloSmall {
         match exp.repr() {
             // self^0 == 1

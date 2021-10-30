@@ -6,6 +6,7 @@ pub(crate) const DIGIT_CHUNK_LEN: usize = WORD_BYTES;
 /// Convert raw digits to ASCII.
 ///
 /// digits must be valid
+#[inline]
 pub(crate) fn digit_chunk_raw_to_ascii(digits: &mut [u8; DIGIT_CHUNK_LEN], digit_case: DigitCase) {
     let mut word = Word::from_ne_bytes(*digits);
 

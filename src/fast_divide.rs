@@ -26,6 +26,7 @@ pub(crate) struct FastDivideSmall {
 }
 
 impl FastDivideSmall {
+    #[inline]
     pub(crate) const fn new(divisor: Word) -> Self {
         cfn_assert!(divisor > 1);
         let n = math::ceil_log_2_word(divisor);
@@ -57,6 +58,7 @@ impl FastDivideSmall {
     }
 
     /// ( a / divisor, a % divisor)
+    #[inline]
     pub(crate) fn div_rem(&self, a: Word) -> (Word, Word) {
         // q = floor( (B + m) * a / (B * 2^n) )
         //
@@ -80,6 +82,7 @@ impl FastDivideSmall {
         (q, r)
     }
 
+    #[inline]
     pub(crate) const fn dummy() -> Self {
         FastDivideSmall {
             divisor: 0,
@@ -108,6 +111,7 @@ impl FastDivideNormalized {
     /// Initialize from a given normalized divisor.
     ///
     /// divisor must have top bit of 1
+    #[inline]
     pub(crate) const fn new(divisor: Word) -> Self {
         cfn_assert!(divisor.leading_zeros() == 0);
         let (m, _hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
@@ -120,6 +124,7 @@ impl FastDivideNormalized {
         FastDivideNormalized { divisor, m }
     }
 
+    #[inline]
     pub(crate) const fn div_rem_word(&self, a: Word) -> (Word, Word) {
         if a < self.divisor {
             (0, a)
@@ -130,6 +135,7 @@ impl FastDivideNormalized {
 
     /// (a / divisor, a % divisor)
     /// The result must fit in a single word.
+    #[inline]
     pub(crate) const fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
         let (a_lo, a_hi) = split_double_word(a);
         cfn_debug_assert!(a_hi < self.divisor);
@@ -193,6 +199,7 @@ impl FastDivideNormalized {
         (q, r)
     }
 
+    #[inline]
     pub(crate) const fn dummy() -> Self {
         FastDivideNormalized { divisor: 0, m: 0 }
     }

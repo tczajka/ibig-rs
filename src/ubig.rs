@@ -44,21 +44,25 @@ pub struct UBig(Repr);
 
 impl UBig {
     /// Construct from one word.
+    #[inline]
     pub(crate) fn from_word(word: Word) -> UBig {
         UBig(Small(word))
     }
 
     /// Get the representation of UBig.
+    #[inline]
     pub(crate) fn repr(&self) -> &Repr {
         &self.0
     }
 
     /// Convert into representation.
+    #[inline]
     pub(crate) fn into_repr(self) -> Repr {
         self.0
     }
 
     /// Length in Words.
+    #[inline]
     pub(crate) fn len(&self) -> usize {
         match self.repr() {
             Small(_) => 1,
@@ -67,6 +71,7 @@ impl UBig {
     }
 
     /// Representation in Words.
+    #[inline]
     pub(crate) fn as_words(&self) -> &[Word] {
         match self.repr() {
             Small(0) => &[],
@@ -112,6 +117,7 @@ impl UBig {
 }
 
 impl Clone for UBig {
+    #[inline]
     fn clone(&self) -> UBig {
         match self.repr() {
             Small(x) => UBig(Small(*x)),
@@ -119,6 +125,7 @@ impl Clone for UBig {
         }
     }
 
+    #[inline]
     fn clone_from(&mut self, source: &UBig) {
         if let Large(buffer) = &mut self.0 {
             if let Large(source_buffer) = source.repr() {

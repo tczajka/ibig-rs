@@ -46,11 +46,13 @@ pub(crate) struct ModuloLarge<'a> {
 
 impl<'a> Modulo<'a> {
     /// Get representation.
+    #[inline]
     pub(crate) fn repr(&self) -> &ModuloRepr<'a> {
         &self.0
     }
 
     /// Get mutable representation.
+    #[inline]
     pub(crate) fn repr_mut(&mut self) -> &mut ModuloRepr<'a> {
         &mut self.0
     }
@@ -62,6 +64,7 @@ impl<'a> Modulo<'a> {
 }
 
 impl<'a> From<ModuloSmall<'a>> for Modulo<'a> {
+    #[inline]
     fn from(a: ModuloSmall<'a>) -> Self {
         Modulo(ModuloRepr::Small(a))
     }
@@ -74,14 +77,17 @@ impl<'a> From<ModuloLarge<'a>> for Modulo<'a> {
 }
 
 impl ModuloSmallRaw {
+    #[inline]
     pub(crate) const fn normalized(self) -> Word {
         self.normalized_value
     }
 
+    #[inline]
     pub(crate) const fn from_normalized(normalized_value: Word) -> Self {
         ModuloSmallRaw { normalized_value }
     }
 
+    #[inline]
     pub(crate) const fn is_valid(&self, ring: &ModuloRingSmall) -> bool {
         self.normalized_value < ring.normalized_modulus()
             && self.normalized_value & math::ones_word(ring.shift()) == 0
@@ -89,26 +95,31 @@ impl ModuloSmallRaw {
 }
 
 impl<'a> ModuloSmall<'a> {
+    #[inline]
     pub(crate) fn new(raw: ModuloSmallRaw, ring: &'a ModuloRingSmall) -> Self {
         debug_assert!(raw.is_valid(ring));
         ModuloSmall { ring, raw }
     }
 
     /// Get the ring.
+    #[inline]
     pub(crate) fn ring(&self) -> &'a ModuloRingSmall {
         self.ring
     }
 
+    #[inline]
     pub(crate) fn raw(&self) -> ModuloSmallRaw {
         self.raw
     }
 
+    #[inline]
     pub(crate) fn set_raw(&mut self, raw: ModuloSmallRaw) {
         debug_assert!(raw.is_valid(self.ring));
         self.raw = raw;
     }
 
     /// Checks that two values are from the same ring.
+    #[inline]
     pub(crate) fn check_same_ring(&self, other: &ModuloSmall) {
         if self.ring() != other.ring() {
             Modulo::panic_different_rings();
@@ -157,16 +168,19 @@ impl<'a> ModuloLarge<'a> {
 }
 
 impl Clone for Modulo<'_> {
+    #[inline]
     fn clone(&self) -> Self {
         Modulo(self.0.clone())
     }
 
+    #[inline]
     fn clone_from(&mut self, source: &Self) {
         self.0.clone_from(&source.0);
     }
 }
 
 impl Clone for ModuloRepr<'_> {
+    #[inline]
     fn clone(&self) -> Self {
         match self {
             ModuloRepr::Small(modulo_small) => ModuloRepr::Small(modulo_small.clone()),
@@ -174,6 +188,7 @@ impl Clone for ModuloRepr<'_> {
         }
     }
 
+    #[inline]
     fn clone_from(&mut self, source: &Self) {
         if let (ModuloRepr::Large(modulo_large), ModuloRepr::Large(source_large)) =
             (&mut *self, source)

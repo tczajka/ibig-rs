@@ -19,6 +19,7 @@ macro_rules! impl_shifts {
         impl Shl<&usize> for $t {
             type Output = $t;
 
+            #[inline]
             fn shl(self, rhs: &usize) -> $t {
                 self.shl(*rhs)
             }
@@ -27,18 +28,21 @@ macro_rules! impl_shifts {
         impl Shl<&usize> for &$t {
             type Output = $t;
 
+            #[inline]
             fn shl(self, rhs: &usize) -> $t {
                 self.shl(*rhs)
             }
         }
 
         impl ShlAssign<usize> for $t {
+            #[inline]
             fn shl_assign(&mut self, rhs: usize) {
                 *self = mem::take(self) << rhs;
             }
         }
 
         impl ShlAssign<&usize> for $t {
+            #[inline]
             fn shl_assign(&mut self, rhs: &usize) {
                 *self = mem::take(self) << rhs;
             }
@@ -47,6 +51,7 @@ macro_rules! impl_shifts {
         impl Shr<&usize> for $t {
             type Output = $t;
 
+            #[inline]
             fn shr(self, rhs: &usize) -> $t {
                 self.shr(*rhs)
             }
@@ -55,18 +60,21 @@ macro_rules! impl_shifts {
         impl Shr<&usize> for &$t {
             type Output = $t;
 
+            #[inline]
             fn shr(self, rhs: &usize) -> $t {
                 self.shr(*rhs)
             }
         }
 
         impl ShrAssign<usize> for $t {
+            #[inline]
             fn shr_assign(&mut self, rhs: usize) {
                 *self = mem::take(self).shr(rhs);
             }
         }
 
         impl ShrAssign<&usize> for $t {
+            #[inline]
             fn shr_assign(&mut self, rhs: &usize) {
                 *self = mem::take(self).shr(rhs);
             }
@@ -80,6 +88,7 @@ impl_shifts!(IBig);
 impl Shl<usize> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn shl(self, rhs: usize) -> UBig {
         match self.into_repr() {
             Small(0) => UBig::from_word(0),
@@ -92,6 +101,7 @@ impl Shl<usize> for UBig {
 impl Shl<usize> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn shl(self, rhs: usize) -> UBig {
         match self.repr() {
             Small(0) => UBig::from_word(0),
@@ -104,6 +114,7 @@ impl Shl<usize> for &UBig {
 impl Shr<usize> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn shr(self, rhs: usize) -> UBig {
         match self.into_repr() {
             Small(word) => UBig::shr_word(word, rhs),
@@ -115,6 +126,7 @@ impl Shr<usize> for UBig {
 impl Shr<usize> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn shr(self, rhs: usize) -> UBig {
         match self.repr() {
             Small(word) => UBig::shr_word(*word, rhs),
@@ -126,6 +138,7 @@ impl Shr<usize> for &UBig {
 impl Shl<usize> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn shl(self, rhs: usize) -> IBig {
         let (sign, mag) = self.into_sign_magnitude();
         IBig::from_sign_magnitude(sign, mag.shl(rhs))
@@ -135,6 +148,7 @@ impl Shl<usize> for IBig {
 impl Shl<usize> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn shl(self, rhs: usize) -> IBig {
         let (sign, mag) = (self.sign(), self.magnitude());
         IBig::from_sign_magnitude(sign, mag.shl(rhs))
@@ -144,6 +158,7 @@ impl Shl<usize> for &IBig {
 impl Shr<usize> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn shr(self, rhs: usize) -> IBig {
         let (sign, mag) = self.into_sign_magnitude();
         match sign {
@@ -159,6 +174,7 @@ impl Shr<usize> for IBig {
 impl Shr<usize> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn shr(self, rhs: usize) -> IBig {
         let (sign, mag) = (self.sign(), self.magnitude());
         match sign {
@@ -173,6 +189,7 @@ impl Shr<usize> for &IBig {
 
 impl UBig {
     /// Shift left one non-zero `Word` by `rhs` bits.
+    #[inline]
     fn shl_word(word: Word, rhs: usize) -> UBig {
         debug_assert!(word != 0);
 
@@ -224,6 +241,7 @@ impl UBig {
     }
 
     /// Shift right one `Word` by `rhs` bits.
+    #[inline]
     fn shr_word(word: Word, rhs: usize) -> UBig {
         let word = if rhs < WORD_BITS_USIZE {
             word >> rhs

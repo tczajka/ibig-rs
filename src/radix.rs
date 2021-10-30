@@ -14,11 +14,13 @@ pub(crate) type Digit = u32;
 pub(crate) const MAX_RADIX: Digit = 36;
 
 /// Is a radix in valid range?
+#[inline]
 pub(crate) fn is_radix_valid(radix: Digit) -> bool {
     (2..=MAX_RADIX).contains(&radix)
 }
 
 /// Panics if `radix` is not in valid range.
+#[inline]
 pub(crate) fn check_radix_valid(radix: Digit) {
     if !is_radix_valid(radix) {
         panic!("Invalid radix: {}", radix);
@@ -73,6 +75,7 @@ pub(crate) struct RadixInfo {
 }
 
 /// RadixInfo for a given radix.
+#[inline]
 pub(crate) fn radix_info(radix: Digit) -> &'static RadixInfo {
     debug_assert!(is_radix_valid(radix));
     &RADIX_INFO_TABLE[radix as usize]

@@ -15,6 +15,7 @@ use core::{
 impl<'a> Neg for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn neg(mut self) -> Modulo<'a> {
         match self.repr_mut() {
             ModuloRepr::Small(self_small) => self_small.negate_in_place(),
@@ -27,6 +28,7 @@ impl<'a> Neg for Modulo<'a> {
 impl<'a> Neg for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn neg(self) -> Modulo<'a> {
         self.clone().neg()
     }
@@ -35,6 +37,7 @@ impl<'a> Neg for &Modulo<'a> {
 impl<'a> Add<Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn add(self, rhs: Modulo<'a>) -> Modulo<'a> {
         self.add(&rhs)
     }
@@ -43,6 +46,7 @@ impl<'a> Add<Modulo<'a>> for Modulo<'a> {
 impl<'a> Add<&Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn add(mut self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.add_assign(rhs);
         self
@@ -52,6 +56,7 @@ impl<'a> Add<&Modulo<'a>> for Modulo<'a> {
 impl<'a> Add<Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn add(self, rhs: Modulo<'a>) -> Modulo<'a> {
         rhs.add(self)
     }
@@ -60,18 +65,21 @@ impl<'a> Add<Modulo<'a>> for &Modulo<'a> {
 impl<'a> Add<&Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn add(self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.clone().add(rhs)
     }
 }
 
 impl<'a> AddAssign<Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn add_assign(&mut self, rhs: Modulo<'a>) {
         self.add_assign(&rhs)
     }
 }
 
 impl<'a> AddAssign<&Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn add_assign(&mut self, rhs: &Modulo<'a>) {
         match (self.repr_mut(), rhs.repr()) {
             (ModuloRepr::Small(self_small), ModuloRepr::Small(rhs_small)) => {
@@ -88,6 +96,7 @@ impl<'a> AddAssign<&Modulo<'a>> for Modulo<'a> {
 impl<'a> Sub<Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn sub(self, rhs: Modulo<'a>) -> Modulo<'a> {
         self.sub(&rhs)
     }
@@ -96,6 +105,7 @@ impl<'a> Sub<Modulo<'a>> for Modulo<'a> {
 impl<'a> Sub<&Modulo<'a>> for Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn sub(mut self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.sub_assign(rhs);
         self
@@ -105,6 +115,7 @@ impl<'a> Sub<&Modulo<'a>> for Modulo<'a> {
 impl<'a> Sub<Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn sub(self, mut rhs: Modulo<'a>) -> Modulo<'a> {
         match (self.repr(), rhs.repr_mut()) {
             (ModuloRepr::Small(self_small), ModuloRepr::Small(rhs_small)) => {
@@ -122,18 +133,21 @@ impl<'a> Sub<Modulo<'a>> for &Modulo<'a> {
 impl<'a> Sub<&Modulo<'a>> for &Modulo<'a> {
     type Output = Modulo<'a>;
 
+    #[inline]
     fn sub(self, rhs: &Modulo<'a>) -> Modulo<'a> {
         self.clone().sub(rhs)
     }
 }
 
 impl<'a> SubAssign<Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn sub_assign(&mut self, rhs: Modulo<'a>) {
         self.sub_assign(&rhs)
     }
 }
 
 impl<'a> SubAssign<&Modulo<'a>> for Modulo<'a> {
+    #[inline]
     fn sub_assign(&mut self, rhs: &Modulo<'a>) {
         match (self.repr_mut(), rhs.repr()) {
             (ModuloRepr::Small(self_small), ModuloRepr::Small(rhs_small)) => {
@@ -149,6 +163,7 @@ impl<'a> SubAssign<&Modulo<'a>> for Modulo<'a> {
 
 impl ModuloSmallRaw {
     /// -self
+    #[inline]
     fn negate(self, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         debug_assert!(self.is_valid(ring));
         let normalized_val = match self.normalized() {
@@ -159,6 +174,7 @@ impl ModuloSmallRaw {
     }
 
     /// self + other
+    #[inline]
     fn add(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         debug_assert!(self.is_valid(ring) && other.is_valid(ring));
         let (mut val, overflow) = self.normalized().overflowing_add(other.normalized());
@@ -172,6 +188,7 @@ impl ModuloSmallRaw {
     }
 
     /// self - other
+    #[inline]
     fn sub(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         debug_assert!(self.is_valid(ring) && other.is_valid(ring));
         let (mut val, overflow) = self.normalized().overflowing_sub(other.normalized());
@@ -187,24 +204,28 @@ impl ModuloSmallRaw {
 
 impl<'a> ModuloSmall<'a> {
     /// self = -self
+    #[inline]
     fn negate_in_place(&mut self) {
         let ring = self.ring();
         self.set_raw(self.raw().negate(ring));
     }
 
     /// self += rhs
+    #[inline]
     fn add_in_place(&mut self, rhs: &ModuloSmall<'a>) {
         self.check_same_ring(rhs);
         self.set_raw(self.raw().add(rhs.raw(), self.ring()));
     }
 
     /// self -= rhs
+    #[inline]
     fn sub_in_place(&mut self, rhs: &ModuloSmall<'a>) {
         self.check_same_ring(rhs);
         self.set_raw(self.raw().sub(rhs.raw(), self.ring()));
     }
 
     /// rhs = self - rhs
+    #[inline]
     fn sub_in_place_swap(&self, rhs: &mut ModuloSmall<'a>) {
         self.check_same_ring(rhs);
         rhs.set_raw(self.raw().sub(rhs.raw(), self.ring()));

@@ -22,6 +22,7 @@ use core::{
 impl Div<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn div(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::div_word(word0, word1),
@@ -41,6 +42,7 @@ impl Div<UBig> for UBig {
 impl Div<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn div(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -64,6 +66,7 @@ impl Div<&UBig> for UBig {
 impl Div<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn div(self, rhs: UBig) -> UBig {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -87,6 +90,7 @@ impl Div<UBig> for &UBig {
 impl Div<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn div(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::div_word(*word0, *word1),
@@ -104,12 +108,14 @@ impl Div<&UBig> for &UBig {
 }
 
 impl DivAssign<UBig> for UBig {
+    #[inline]
     fn div_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) / rhs;
     }
 }
 
 impl DivAssign<&UBig> for UBig {
+    #[inline]
     fn div_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) / rhs;
     }
@@ -118,6 +124,7 @@ impl DivAssign<&UBig> for UBig {
 impl Rem<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::rem_word(word0, word1),
@@ -137,6 +144,7 @@ impl Rem<UBig> for UBig {
 impl Rem<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -160,6 +168,7 @@ impl Rem<&UBig> for UBig {
 impl Rem<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem(self, rhs: UBig) -> UBig {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -185,6 +194,7 @@ impl Rem<UBig> for &UBig {
 impl Rem<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::rem_word(*word0, *word1),
@@ -202,12 +212,14 @@ impl Rem<&UBig> for &UBig {
 }
 
 impl RemAssign<UBig> for UBig {
+    #[inline]
     fn rem_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) % rhs;
     }
 }
 
 impl RemAssign<&UBig> for UBig {
+    #[inline]
     fn rem_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) % rhs;
     }
@@ -217,6 +229,7 @@ impl DivRem<UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem(self, rhs: UBig) -> (UBig, UBig) {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::div_rem_word(word0, word1),
@@ -237,6 +250,7 @@ impl DivRem<&UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem(self, rhs: &UBig) -> (UBig, UBig) {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -261,6 +275,7 @@ impl DivRem<UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem(self, rhs: UBig) -> (UBig, UBig) {
         match self.repr() {
             Small(word0) => match rhs.into_repr() {
@@ -287,6 +302,7 @@ impl DivRem<&UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem(self, rhs: &UBig) -> (UBig, UBig) {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::div_rem_word(*word0, *word1),
@@ -306,6 +322,7 @@ impl DivRem<&UBig> for &UBig {
 impl DivEuclid<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn div_euclid(self, rhs: UBig) -> UBig {
         self / rhs
     }
@@ -314,6 +331,7 @@ impl DivEuclid<UBig> for UBig {
 impl DivEuclid<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn div_euclid(self, rhs: &UBig) -> UBig {
         self / rhs
     }
@@ -322,6 +340,7 @@ impl DivEuclid<&UBig> for UBig {
 impl DivEuclid<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn div_euclid(self, rhs: UBig) -> UBig {
         self / rhs
     }
@@ -330,6 +349,7 @@ impl DivEuclid<UBig> for &UBig {
 impl DivEuclid<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn div_euclid(self, rhs: &UBig) -> UBig {
         self / rhs
     }
@@ -338,6 +358,7 @@ impl DivEuclid<&UBig> for &UBig {
 impl RemEuclid<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: UBig) -> UBig {
         self % rhs
     }
@@ -346,6 +367,7 @@ impl RemEuclid<UBig> for UBig {
 impl RemEuclid<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: &UBig) -> UBig {
         self % rhs
     }
@@ -354,6 +376,7 @@ impl RemEuclid<&UBig> for UBig {
 impl RemEuclid<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: UBig) -> UBig {
         self % rhs
     }
@@ -362,6 +385,7 @@ impl RemEuclid<UBig> for &UBig {
 impl RemEuclid<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: &UBig) -> UBig {
         self % rhs
     }
@@ -371,6 +395,7 @@ impl DivRemEuclid<UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -380,6 +405,7 @@ impl DivRemEuclid<&UBig> for UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: &UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -389,6 +415,7 @@ impl DivRemEuclid<UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -398,6 +425,7 @@ impl DivRemEuclid<&UBig> for &UBig {
     type OutputDiv = UBig;
     type OutputRem = UBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: &UBig) -> (UBig, UBig) {
         self.div_rem(rhs)
     }
@@ -406,6 +434,7 @@ impl DivRemEuclid<&UBig> for &UBig {
 impl Div<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn div(self, rhs: IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -417,6 +446,7 @@ impl Div<IBig> for IBig {
 impl Div<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn div(self, rhs: &IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -428,6 +458,7 @@ impl Div<&IBig> for IBig {
 impl Div<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn div(self, rhs: IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -439,6 +470,7 @@ impl Div<IBig> for &IBig {
 impl Div<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn div(self, rhs: &IBig) -> IBig {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -448,12 +480,14 @@ impl Div<&IBig> for &IBig {
 }
 
 impl DivAssign<IBig> for IBig {
+    #[inline]
     fn div_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) / rhs;
     }
 }
 
 impl DivAssign<&IBig> for IBig {
+    #[inline]
     fn div_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) / rhs;
     }
@@ -462,6 +496,7 @@ impl DivAssign<&IBig> for IBig {
 impl Rem<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem(self, rhs: IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -473,6 +508,7 @@ impl Rem<IBig> for IBig {
 impl Rem<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem(self, rhs: &IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -484,6 +520,7 @@ impl Rem<&IBig> for IBig {
 impl Rem<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem(self, rhs: IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -495,6 +532,7 @@ impl Rem<IBig> for &IBig {
 impl Rem<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem(self, rhs: &IBig) -> IBig {
         // Remainder with truncating division has same sign as lhs.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -504,12 +542,14 @@ impl Rem<&IBig> for &IBig {
 }
 
 impl RemAssign<IBig> for IBig {
+    #[inline]
     fn rem_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) % rhs;
     }
 }
 
 impl RemAssign<&IBig> for IBig {
+    #[inline]
     fn rem_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) % rhs;
     }
@@ -519,6 +559,7 @@ impl DivRem<IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem(self, rhs: IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -535,6 +576,7 @@ impl DivRem<&IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem(self, rhs: &IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = self.into_sign_magnitude();
@@ -551,6 +593,7 @@ impl DivRem<IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem(self, rhs: IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -567,6 +610,7 @@ impl DivRem<&IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem(self, rhs: &IBig) -> (IBig, IBig) {
         // Truncate towards 0.
         let (sign0, mag0) = (self.sign(), self.magnitude());
@@ -582,6 +626,7 @@ impl DivRem<&IBig> for &IBig {
 impl DivEuclid<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
@@ -595,6 +640,7 @@ impl DivEuclid<IBig> for IBig {
 impl DivEuclid<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
         match r.sign() {
@@ -607,6 +653,7 @@ impl DivEuclid<&IBig> for IBig {
 impl DivEuclid<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn div_euclid(self, rhs: IBig) -> IBig {
         let s = rhs.signum();
         let (q, r) = self.div_rem(rhs);
@@ -620,6 +667,7 @@ impl DivEuclid<IBig> for &IBig {
 impl DivEuclid<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn div_euclid(self, rhs: &IBig) -> IBig {
         let (q, r) = self.div_rem(rhs);
         match r.sign() {
@@ -632,6 +680,7 @@ impl DivEuclid<&IBig> for &IBig {
 impl RemEuclid<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
         match r.sign() {
@@ -644,6 +693,7 @@ impl RemEuclid<IBig> for IBig {
 impl RemEuclid<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
         match r.sign() {
@@ -656,6 +706,7 @@ impl RemEuclid<&IBig> for IBig {
 impl RemEuclid<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: IBig) -> IBig {
         let r = self % &rhs;
         match r.sign() {
@@ -668,6 +719,7 @@ impl RemEuclid<IBig> for &IBig {
 impl RemEuclid<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn rem_euclid(self, rhs: &IBig) -> IBig {
         let r = self % rhs;
         match r.sign() {
@@ -681,6 +733,7 @@ impl DivRemEuclid<IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
         match r.sign() {
@@ -694,6 +747,7 @@ impl DivRemEuclid<&IBig> for IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
         match r.sign() {
@@ -707,6 +761,7 @@ impl DivRemEuclid<IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(&rhs);
         match r.sign() {
@@ -720,6 +775,7 @@ impl DivRemEuclid<&IBig> for &IBig {
     type OutputDiv = IBig;
     type OutputRem = IBig;
 
+    #[inline]
     fn div_rem_euclid(self, rhs: &IBig) -> (IBig, IBig) {
         let (q, r) = self.div_rem(rhs);
         match r.sign() {
@@ -734,6 +790,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl Div<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> UBig {
                 self.div_unsigned(rhs)
             }
@@ -742,6 +799,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl Div<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> UBig {
                 self.div_ref_unsigned(rhs)
             }
@@ -750,6 +808,7 @@ macro_rules! impl_div_ubig_unsigned {
         helper_macros::forward_binop_second_arg_by_value!(impl Div<$t> for UBig, div);
 
         impl DivAssign<$t> for UBig {
+            #[inline]
             fn div_assign(&mut self, rhs: $t) {
                 self.div_assign_unsigned(rhs)
             }
@@ -760,6 +819,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl Rem<$t> for UBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_unsigned(rhs)
             }
@@ -768,6 +828,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl Rem<$t> for &UBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_ref_unsigned(rhs)
             }
@@ -776,6 +837,7 @@ macro_rules! impl_div_ubig_unsigned {
         helper_macros::forward_binop_second_arg_by_value!(impl Rem<$t> for UBig, rem);
 
         impl RemAssign<$t> for UBig {
+            #[inline]
             fn rem_assign(&mut self, rhs: $t) {
                 self.rem_assign_unsigned(rhs)
             }
@@ -787,6 +849,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_unsigned(rhs)
             }
@@ -796,6 +859,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_ref_unsigned(rhs)
             }
@@ -806,6 +870,7 @@ macro_rules! impl_div_ubig_unsigned {
          impl DivEuclid<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> UBig {
                 self.div_unsigned(rhs)
             }
@@ -814,6 +879,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl DivEuclid<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> UBig {
                 self.div_ref_unsigned(rhs)
             }
@@ -823,6 +889,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl RemEuclid<$t> for UBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_unsigned(rhs)
             }
@@ -831,6 +898,7 @@ macro_rules! impl_div_ubig_unsigned {
         impl RemEuclid<$t> for &UBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_ref_unsigned(rhs)
             }
@@ -842,6 +910,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_unsigned(rhs)
             }
@@ -851,6 +920,7 @@ macro_rules! impl_div_ubig_unsigned {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_ref_unsigned(rhs)
             }
@@ -872,6 +942,7 @@ macro_rules! impl_div_ubig_signed {
         impl Div<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> UBig {
                 self.div_signed(rhs)
             }
@@ -880,6 +951,7 @@ macro_rules! impl_div_ubig_signed {
         impl Div<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> UBig {
                 self.div_ref_signed(rhs)
             }
@@ -888,6 +960,7 @@ macro_rules! impl_div_ubig_signed {
         helper_macros::forward_binop_second_arg_by_value!(impl Div<$t> for UBig, div);
 
         impl DivAssign<$t> for UBig {
+            #[inline]
             fn div_assign(&mut self, rhs: $t) {
                 self.div_assign_signed(rhs)
             }
@@ -898,6 +971,7 @@ macro_rules! impl_div_ubig_signed {
         impl Rem<$t> for UBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_signed(rhs)
             }
@@ -906,6 +980,7 @@ macro_rules! impl_div_ubig_signed {
         impl Rem<$t> for &UBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_ref_signed(rhs)
             }
@@ -914,6 +989,7 @@ macro_rules! impl_div_ubig_signed {
         helper_macros::forward_binop_second_arg_by_value!(impl Rem<$t> for UBig, rem);
 
         impl RemAssign<$t> for UBig {
+            #[inline]
             fn rem_assign(&mut self, rhs: $t) {
                 self.rem_assign_signed(rhs)
             }
@@ -925,6 +1001,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_signed(rhs)
             }
@@ -934,6 +1011,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_ref_signed(rhs)
             }
@@ -944,6 +1022,7 @@ macro_rules! impl_div_ubig_signed {
         impl DivEuclid<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> UBig {
                 self.div_euclid_signed(rhs)
             }
@@ -952,6 +1031,7 @@ macro_rules! impl_div_ubig_signed {
         impl DivEuclid<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> UBig {
                 self.div_euclid_ref_signed(rhs)
             }
@@ -962,6 +1042,7 @@ macro_rules! impl_div_ubig_signed {
         impl RemEuclid<$t> for UBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_euclid_signed(rhs)
             }
@@ -970,6 +1051,7 @@ macro_rules! impl_div_ubig_signed {
         impl RemEuclid<$t> for &UBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_euclid_ref_signed(rhs)
             }
@@ -981,6 +1063,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_euclid_signed(rhs)
             }
@@ -990,6 +1073,7 @@ macro_rules! impl_div_ubig_signed {
             type OutputDiv = UBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (UBig, $t) {
                 self.div_rem_euclid_ref_signed(rhs)
             }
@@ -1012,6 +1096,7 @@ macro_rules! impl_div_ibig_unsigned {
             // Can be negative, so does not fit in $t.
             type Output = IBig;
 
+            #[inline]
             fn rem(self, rhs: $t) -> IBig {
                 self.rem_unsigned(rhs)
             }
@@ -1020,6 +1105,7 @@ macro_rules! impl_div_ibig_unsigned {
         impl Rem<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn rem(self, rhs: $t) -> IBig {
                 self.rem_ref_unsigned(rhs)
             }
@@ -1030,6 +1116,7 @@ macro_rules! impl_div_ibig_unsigned {
             // Can be negative, so does not fit in $t.
             type OutputRem = IBig;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (IBig, IBig) {
                 self.div_rem_unsigned(rhs)
             }
@@ -1039,6 +1126,7 @@ macro_rules! impl_div_ibig_unsigned {
             type OutputDiv = IBig;
             type OutputRem = IBig;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (IBig, IBig) {
                 self.div_rem_ref_unsigned(rhs)
             }
@@ -1053,6 +1141,7 @@ macro_rules! impl_div_ibig_signed {
         impl Rem<$t> for IBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_signed(rhs)
             }
@@ -1061,6 +1150,7 @@ macro_rules! impl_div_ibig_signed {
         impl Rem<$t> for &IBig {
             type Output = $t;
 
+            #[inline]
             fn rem(self, rhs: $t) -> $t {
                 self.rem_ref_signed(rhs)
             }
@@ -1070,6 +1160,7 @@ macro_rules! impl_div_ibig_signed {
             type OutputDiv = IBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (IBig, $t) {
                 self.div_rem_signed(rhs)
             }
@@ -1079,6 +1170,7 @@ macro_rules! impl_div_ibig_signed {
             type OutputDiv = IBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem(self, rhs: $t) -> (IBig, $t) {
                 self.div_rem_ref_signed(rhs)
             }
@@ -1093,6 +1185,7 @@ macro_rules! impl_div_ibig_primitive {
         impl Div<$t> for IBig {
             type Output = IBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> IBig {
                 self.div_primitive(rhs)
             }
@@ -1101,6 +1194,7 @@ macro_rules! impl_div_ibig_primitive {
         impl Div<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn div(self, rhs: $t) -> IBig {
                 self.div_ref_primitive(rhs)
             }
@@ -1109,6 +1203,7 @@ macro_rules! impl_div_ibig_primitive {
         helper_macros::forward_binop_second_arg_by_value!(impl Div<$t> for IBig, div);
 
         impl DivAssign<$t> for IBig {
+            #[inline]
             fn div_assign(&mut self, rhs: $t) {
                 self.div_assign_primitive(rhs)
             }
@@ -1119,6 +1214,7 @@ macro_rules! impl_div_ibig_primitive {
         helper_macros::forward_binop_second_arg_by_value!(impl Rem<$t> for IBig, rem);
 
         impl RemAssign<$t> for IBig {
+            #[inline]
             fn rem_assign(&mut self, rhs: $t) {
                 self.rem_assign_primitive(rhs)
             }
@@ -1131,6 +1227,7 @@ macro_rules! impl_div_ibig_primitive {
         impl DivEuclid<$t> for IBig {
             type Output = IBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> IBig {
                 self.div_euclid_primitive(rhs)
             }
@@ -1139,6 +1236,7 @@ macro_rules! impl_div_ibig_primitive {
         impl DivEuclid<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn div_euclid(self, rhs: $t) -> IBig {
                 self.div_euclid_ref_primitive(rhs)
             }
@@ -1149,6 +1247,7 @@ macro_rules! impl_div_ibig_primitive {
         impl RemEuclid<$t> for IBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_euclid_primitive(rhs)
             }
@@ -1157,6 +1256,7 @@ macro_rules! impl_div_ibig_primitive {
         impl RemEuclid<$t> for &IBig {
             type Output = $t;
 
+            #[inline]
             fn rem_euclid(self, rhs: $t) -> $t {
                 self.rem_euclid_ref_primitive(rhs)
             }
@@ -1168,6 +1268,7 @@ macro_rules! impl_div_ibig_primitive {
             type OutputDiv = IBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (IBig, $t) {
                 self.div_rem_euclid_primitive(rhs)
             }
@@ -1177,6 +1278,7 @@ macro_rules! impl_div_ibig_primitive {
             type OutputDiv = IBig;
             type OutputRem = $t;
 
+            #[inline]
             fn div_rem_euclid(self, rhs: $t) -> (IBig, $t) {
                 self.div_rem_euclid_ref_primitive(rhs)
             }
@@ -1201,6 +1303,7 @@ impl_div_ibig_signed!(isize);
 
 impl UBig {
     /// `lhs / rhs`
+    #[inline]
     fn div_word(lhs: Word, rhs: Word) -> UBig {
         match lhs.checked_div(rhs) {
             Some(res) => UBig::from_word(res),
@@ -1209,6 +1312,7 @@ impl UBig {
     }
 
     /// `lhs % rhs`
+    #[inline]
     fn rem_word(lhs: Word, rhs: Word) -> UBig {
         match lhs.checked_rem(rhs) {
             Some(res) => UBig::from_word(res),
@@ -1217,6 +1321,7 @@ impl UBig {
     }
 
     /// (lhs / rhs, lhs % rhs)
+    #[inline]
     fn div_rem_word(lhs: Word, rhs: Word) -> (UBig, UBig) {
         // If division works, remainder also works.
         match lhs.checked_div(rhs) {
@@ -1295,69 +1400,84 @@ impl UBig {
         shift
     }
 
+    #[inline]
     fn div_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self / UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn div_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self / UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn div_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         self.div_assign(UBig::from_unsigned(rhs))
     }
 
+    #[inline]
     fn rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
         (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
     }
 
+    #[inline]
     fn rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
         (self % UBig::from_unsigned(rhs)).try_to_unsigned().unwrap()
     }
 
+    #[inline]
     fn rem_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         self.rem_assign(UBig::from_unsigned(rhs))
     }
 
+    #[inline]
     fn div_rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> (UBig, T) {
         let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
         (q, r.try_to_unsigned().unwrap())
     }
 
+    #[inline]
     fn div_rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = self.div_rem(UBig::from_unsigned(rhs));
         (q, r.try_to_unsigned().unwrap())
     }
 
+    #[inline]
     fn div_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn div_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) / IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn div_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).div_signed(rhs)
     }
 
+    #[inline]
     fn rem_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
         let (_, rhs_unsigned) = rhs.to_sign_magnitude();
         let res = self.rem_unsigned(rhs_unsigned);
         T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
+    #[inline]
     fn rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
         let (_, rhs_unsigned) = rhs.to_sign_magnitude();
         let res = self.rem_ref_unsigned(rhs_unsigned);
         T::try_from_sign_magnitude(Positive, res).unwrap()
     }
 
+    #[inline]
     fn rem_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         let res = IBig::from(mem::take(self)) % IBig::from_signed(rhs);
         *self = UBig::from_ibig_panic_on_overflow(res);
     }
 
+    #[inline]
     fn div_rem_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem(IBig::from_signed(rhs));
         (
@@ -1366,6 +1486,7 @@ impl UBig {
         )
     }
 
+    #[inline]
     fn div_rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem(IBig::from_signed(rhs));
         (
@@ -1374,22 +1495,27 @@ impl UBig {
         )
     }
 
+    #[inline]
     fn div_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
     }
 
+    #[inline]
     fn div_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self).div_euclid(IBig::from_signed(rhs)))
     }
 
+    #[inline]
     fn rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
         self.rem_signed(rhs)
     }
 
+    #[inline]
     fn rem_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
         self.rem_ref_signed(rhs)
     }
 
+    #[inline]
     fn div_rem_euclid_signed<T: PrimitiveSigned>(self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem_euclid(IBig::from_signed(rhs));
         (
@@ -1398,6 +1524,7 @@ impl UBig {
         )
     }
 
+    #[inline]
     fn div_rem_euclid_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> (UBig, T) {
         let (q, r) = IBig::from(self).div_rem_euclid(IBig::from_signed(rhs));
         (
@@ -1408,6 +1535,7 @@ impl UBig {
 }
 
 impl IBig {
+    #[inline]
     fn div_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -1415,6 +1543,7 @@ impl IBig {
         self.div(IBig::from(rhs))
     }
 
+    #[inline]
     fn div_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -1422,6 +1551,7 @@ impl IBig {
         self.div(IBig::from(rhs))
     }
 
+    #[inline]
     fn div_assign_primitive<T>(&mut self, rhs: T)
     where
         IBig: From<T>,
@@ -1429,22 +1559,27 @@ impl IBig {
         self.div_assign(IBig::from(rhs))
     }
 
+    #[inline]
     fn rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> IBig {
         self % IBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> IBig {
         self % IBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn rem_signed<T: PrimitiveSigned>(self, rhs: T) -> T {
         (self % IBig::from_signed(rhs)).try_to_signed().unwrap()
     }
 
+    #[inline]
     fn rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> T {
         (self % IBig::from_signed(rhs)).try_to_signed().unwrap()
     }
 
+    #[inline]
     fn rem_assign_primitive<T>(&mut self, rhs: T)
     where
         IBig: From<T>,
@@ -1452,24 +1587,29 @@ impl IBig {
         self.rem_assign(IBig::from(rhs))
     }
 
+    #[inline]
     fn div_rem_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> (IBig, IBig) {
         self.div_rem(IBig::from_unsigned(rhs))
     }
 
+    #[inline]
     fn div_rem_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> (IBig, IBig) {
         self.div_rem(IBig::from_unsigned(rhs))
     }
 
+    #[inline]
     fn div_rem_signed<T: PrimitiveSigned>(self, rhs: T) -> (IBig, T) {
         let (q, r) = self.div_rem(IBig::from_signed(rhs));
         (q, r.try_to_signed().unwrap())
     }
 
+    #[inline]
     fn div_rem_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> (IBig, T) {
         let (q, r) = self.div_rem(IBig::from_signed(rhs));
         (q, r.try_to_signed().unwrap())
     }
 
+    #[inline]
     fn div_euclid_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -1477,6 +1617,7 @@ impl IBig {
         self.div_euclid(IBig::from(rhs))
     }
 
+    #[inline]
     fn div_euclid_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -1484,6 +1625,7 @@ impl IBig {
         self.div_euclid(IBig::from(rhs))
     }
 
+    #[inline]
     fn rem_euclid_primitive<T>(self, rhs: T) -> T
     where
         IBig: From<T>,
@@ -1493,6 +1635,7 @@ impl IBig {
         T::try_from(self.rem_euclid(IBig::from(rhs))).unwrap()
     }
 
+    #[inline]
     fn rem_euclid_ref_primitive<T>(&self, rhs: T) -> T
     where
         IBig: From<T>,
@@ -1502,6 +1645,7 @@ impl IBig {
         T::try_from(self.rem_euclid(IBig::from(rhs))).unwrap()
     }
 
+    #[inline]
     fn div_rem_euclid_primitive<T>(self, rhs: T) -> (IBig, T)
     where
         IBig: From<T>,
@@ -1512,6 +1656,7 @@ impl IBig {
         (q, T::try_from(r).unwrap())
     }
 
+    #[inline]
     fn div_rem_euclid_ref_primitive<T>(&self, rhs: T) -> (IBig, T)
     where
         IBig: From<T>,

@@ -13,15 +13,18 @@ use core::{
 };
 
 /// Cast `Word` to `DoubleWord`.
+#[inline]
 pub(crate) const fn extend_word(word: Word) -> DoubleWord {
     word as DoubleWord
 }
 
 /// Create a `DoubleWord` from two `Word`s.
+#[inline]
 pub(crate) const fn double_word(low: Word, high: Word) -> DoubleWord {
     extend_word(low) | extend_word(high) << WORD_BITS
 }
 
+#[inline]
 pub(crate) const fn split_double_word(dw: DoubleWord) -> (Word, Word) {
     (dw as Word, (dw >> WORD_BITS) as Word)
 }
@@ -74,14 +77,17 @@ macro_rules! impl_primitive_unsigned {
             type ByteRepr = [u8; mem::size_of::<Self>()];
             const MAX: Self = Self::MAX;
 
+            #[inline]
             fn to_le_bytes(self) -> Self::ByteRepr {
                 self.to_le_bytes()
             }
 
+            #[inline]
             fn from_le_bytes(repr: Self::ByteRepr) -> Self {
                 Self::from_le_bytes(repr)
             }
 
+            #[inline]
             fn leading_zeros(self) -> u32 {
                 self.leading_zeros()
             }
@@ -94,6 +100,7 @@ macro_rules! impl_primitive_signed {
         impl PrimitiveSigned for $t {
             type Unsigned = $u;
 
+            #[inline]
             fn to_sign_magnitude(self) -> (Sign, Self::Unsigned) {
                 if self >= 0 {
                     (Positive, self as Self::Unsigned)
@@ -102,6 +109,7 @@ macro_rules! impl_primitive_signed {
                 }
             }
 
+            #[inline]
             fn try_from_sign_magnitude(
                 sign: Sign,
                 mag: Self::Unsigned,
@@ -140,12 +148,14 @@ pub(crate) const WORD_BITS: u32 = Word::BIT_SIZE;
 pub(crate) const WORD_BITS_USIZE: usize = WORD_BITS as usize;
 pub(crate) const WORD_BYTES: usize = Word::BYTE_SIZE;
 
+#[inline]
 pub(crate) fn word_from_le_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[..bytes.len()].copy_from_slice(bytes);
     Word::from_le_bytes(word_bytes)
 }
 
+#[inline]
 pub(crate) fn word_from_be_bytes_partial(bytes: &[u8]) -> Word {
     let mut word_bytes = [0; WORD_BYTES];
     word_bytes[Word::BYTE_SIZE - bytes.len()..].copy_from_slice(bytes);

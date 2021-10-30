@@ -40,6 +40,7 @@ impl MemoryAllocation {
     }
 
     /// Get memory.
+    #[inline]
     pub(crate) fn memory(&mut self) -> Memory {
         Memory {
             start: self.start,
@@ -163,6 +164,7 @@ impl Memory<'_> {
     }
 }
 
+#[inline]
 pub(crate) fn zero_layout() -> Layout {
     Layout::from_size_align(0, 1).unwrap()
 }

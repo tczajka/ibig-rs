@@ -28,6 +28,7 @@ impl ModuloRing {
     /// let ring = ModuloRing::new(&ubig!(100));
     /// assert_eq!(ring.modulus(), ubig!(100));
     /// ```
+    #[inline]
     pub fn modulus(&self) -> UBig {
         match self.repr() {
             ModuloRingRepr::Small(self_small) => UBig::from_word(self_small.modulus()),
@@ -46,12 +47,14 @@ impl ModuloRing {
     /// let y = ring.from(ubig!(3366));
     /// assert!(x == y);
     /// ```
+    #[inline]
     pub fn from<T: IntoModulo>(&self, x: T) -> Modulo {
         x.into_modulo(self)
     }
 }
 
 impl ModuloRingSmall {
+    #[inline]
     pub(crate) fn modulus(&self) -> Word {
         self.normalized_modulus() >> self.shift()
     }
@@ -79,6 +82,7 @@ impl Modulo<'_> {
     /// let x = ring.from(-1234);
     /// assert_eq!(x.residue(), ubig!(66));
     /// ```
+    #[inline]
     pub fn residue(&self) -> UBig {
         match self.repr() {
             ModuloRepr::Small(self_small) => UBig::from_word(self_small.residue()),
@@ -88,11 +92,13 @@ impl Modulo<'_> {
 }
 
 impl ModuloSmallRaw {
+    #[inline]
     pub(crate) fn residue(self, ring: &ModuloRingSmall) -> Word {
         debug_assert!(self.is_valid(ring));
         self.normalized() >> ring.shift()
     }
 
+    #[inline]
     pub(crate) const fn from_word(word: Word, ring: &ModuloRingSmall) -> ModuloSmallRaw {
         let rem = if ring.shift() == 0 {
             ring.fast_div().div_rem_word(word).1
@@ -112,6 +118,7 @@ impl ModuloSmallRaw {
 }
 
 impl ModuloSmall<'_> {
+    #[inline]
     pub(crate) fn residue(&self) -> Word {
         self.raw().residue(self.ring())
     }
@@ -134,6 +141,7 @@ pub trait IntoModulo {
 }
 
 impl IntoModulo for UBig {
+    #[inline]
     fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(&self, ring_small).into(),
@@ -143,6 +151,7 @@ impl IntoModulo for UBig {
 }
 
 impl IntoModulo for &UBig {
+    #[inline]
     fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(self, ring_small).into(),
@@ -154,6 +163,7 @@ impl IntoModulo for &UBig {
 }
 
 impl IntoModulo for IBig {
+    #[inline]
     fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         let (sign, mag) = self.into_sign_magnitude();
         let modulo = mag.into_modulo(ring);
@@ -165,6 +175,7 @@ impl IntoModulo for IBig {
 }
 
 impl IntoModulo for &IBig {
+    #[inline]
     fn into_modulo(self, ring: &ModuloRing) -> Modulo {
         let modulo = self.magnitude().into_modulo(ring);
         match self.sign() {
@@ -175,6 +186,7 @@ impl IntoModulo for &IBig {
 }
 
 impl<'a> ModuloSmall<'a> {
+    #[inline]
     pub(crate) fn from_ubig(x: &UBig, ring: &'a ModuloRingSmall) -> ModuloSmall<'a> {
         let raw = match x.repr() {
             Repr::Small(word) => ModuloSmallRaw::from_word(*word, ring),
@@ -219,6 +231,7 @@ impl<'a> ModuloLarge<'a> {
 macro_rules! impl_into_modulo_for_unsigned {
     ($t:ty) => {
         impl IntoModulo for $t {
+            #[inline]
             fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
                 UBig::from(self).into_modulo(ring)
             }
@@ -230,6 +243,7 @@ macro_rules! impl_into_modulo_for_unsigned {
 macro_rules! impl_into_modulo_for_signed {
     ($t:ty) => {
         impl IntoModulo for $t {
+            #[inline]
             fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
                 IBig::from(self).into_modulo(ring)
             }

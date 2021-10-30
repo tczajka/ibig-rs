@@ -16,6 +16,7 @@ impl UBig {
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(3).pow(3), ubig!(27));
     /// ```
+    #[inline]
     pub fn pow(&self, exp: usize) -> UBig {
         match exp {
             0 => return UBig::from_word(1),
@@ -58,6 +59,7 @@ impl IBig {
     /// # use ibig::ibig;
     /// assert_eq!(ibig!(-3).pow(3), ibig!(-27));
     /// ```
+    #[inline]
     pub fn pow(&self, exp: usize) -> IBig {
         let sign = if self.sign() == Negative && exp % 2 == 1 {
             Negative

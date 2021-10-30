@@ -18,6 +18,7 @@ use core::{
 impl Add<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn add(self, rhs: UBig) -> UBig {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::add_word(word0, word1),
@@ -37,6 +38,7 @@ impl Add<UBig> for UBig {
 impl Add<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn add(self, rhs: &UBig) -> UBig {
         match self.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -54,6 +56,7 @@ impl Add<&UBig> for UBig {
 impl Add<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn add(self, rhs: UBig) -> UBig {
         rhs.add(self)
     }
@@ -62,6 +65,7 @@ impl Add<UBig> for &UBig {
 impl Add<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn add(self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::add_word(*word0, *word1),
@@ -79,12 +83,14 @@ impl Add<&UBig> for &UBig {
 }
 
 impl AddAssign<UBig> for UBig {
+    #[inline]
     fn add_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) + rhs;
     }
 }
 
 impl AddAssign<&UBig> for UBig {
+    #[inline]
     fn add_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) + rhs;
     }
@@ -93,6 +99,7 @@ impl AddAssign<&UBig> for UBig {
 impl Sub<UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn sub(self, rhs: UBig) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_val(self, rhs))
     }
@@ -101,6 +108,7 @@ impl Sub<UBig> for UBig {
 impl Sub<&UBig> for UBig {
     type Output = UBig;
 
+    #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_ref(self, rhs))
     }
@@ -109,6 +117,7 @@ impl Sub<&UBig> for UBig {
 impl Sub<UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn sub(self, rhs: UBig) -> UBig {
         UBig::from_ibig_panic_on_overflow(-IBig::sub_ubig_val_ref(rhs, self))
     }
@@ -117,18 +126,21 @@ impl Sub<UBig> for &UBig {
 impl Sub<&UBig> for &UBig {
     type Output = UBig;
 
+    #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_ref_ref(self, rhs))
     }
 }
 
 impl SubAssign<UBig> for UBig {
+    #[inline]
     fn sub_assign(&mut self, rhs: UBig) {
         *self = mem::take(self) - rhs;
     }
 }
 
 impl SubAssign<&UBig> for UBig {
+    #[inline]
     fn sub_assign(&mut self, rhs: &UBig) {
         *self = mem::take(self) - rhs;
     }
@@ -137,6 +149,7 @@ impl SubAssign<&UBig> for UBig {
 impl Add<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn add(self, rhs: IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = rhs.into_sign_magnitude();
@@ -152,6 +165,7 @@ impl Add<IBig> for IBig {
 impl Add<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn add(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = self.into_sign_magnitude();
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -167,6 +181,7 @@ impl Add<&IBig> for IBig {
 impl Add<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn add(self, rhs: IBig) -> IBig {
         rhs.add(self)
     }
@@ -175,6 +190,7 @@ impl Add<IBig> for &IBig {
 impl Add<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn add(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -188,12 +204,14 @@ impl Add<&IBig> for &IBig {
 }
 
 impl AddAssign<IBig> for IBig {
+    #[inline]
     fn add_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) + rhs;
     }
 }
 
 impl AddAssign<&IBig> for IBig {
+    #[inline]
     fn add_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) + rhs;
     }
@@ -202,6 +220,7 @@ impl AddAssign<&IBig> for IBig {
 impl Sub<IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn sub(self, rhs: IBig) -> IBig {
         self + -rhs
     }
@@ -210,6 +229,7 @@ impl Sub<IBig> for IBig {
 impl Sub<&IBig> for IBig {
     type Output = IBig;
 
+    #[inline]
     fn sub(self, rhs: &IBig) -> IBig {
         -(-self + rhs)
     }
@@ -218,6 +238,7 @@ impl Sub<&IBig> for IBig {
 impl Sub<IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn sub(self, rhs: IBig) -> IBig {
         self + -rhs
     }
@@ -226,6 +247,7 @@ impl Sub<IBig> for &IBig {
 impl Sub<&IBig> for &IBig {
     type Output = IBig;
 
+    #[inline]
     fn sub(self, rhs: &IBig) -> IBig {
         let (sign0, mag0) = (self.sign(), self.magnitude());
         let (sign1, mag1) = (rhs.sign(), rhs.magnitude());
@@ -239,12 +261,14 @@ impl Sub<&IBig> for &IBig {
 }
 
 impl SubAssign<IBig> for IBig {
+    #[inline]
     fn sub_assign(&mut self, rhs: IBig) {
         *self = mem::take(self) - rhs;
     }
 }
 
 impl SubAssign<&IBig> for IBig {
+    #[inline]
     fn sub_assign(&mut self, rhs: &IBig) {
         *self = mem::take(self) - rhs;
     }
@@ -255,6 +279,7 @@ macro_rules! impl_add_ubig_unsigned {
         impl Add<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> UBig {
                 self.add_unsigned(rhs)
             }
@@ -263,6 +288,7 @@ macro_rules! impl_add_ubig_unsigned {
         impl Add<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> UBig {
                 self.add_ref_unsigned(rhs)
             }
@@ -272,6 +298,7 @@ macro_rules! impl_add_ubig_unsigned {
         helper_macros::forward_binop_swap_args!(impl Add<UBig> for $t, add);
 
         impl AddAssign<$t> for UBig {
+            #[inline]
             fn add_assign(&mut self, rhs: $t) {
                 self.add_assign_unsigned(rhs)
             }
@@ -282,6 +309,7 @@ macro_rules! impl_add_ubig_unsigned {
         impl Sub<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> UBig {
                 self.sub_unsigned(rhs)
             }
@@ -290,6 +318,7 @@ macro_rules! impl_add_ubig_unsigned {
         impl Sub<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> UBig {
                 self.sub_ref_unsigned(rhs)
             }
@@ -298,6 +327,7 @@ macro_rules! impl_add_ubig_unsigned {
         helper_macros::forward_binop_second_arg_by_value!(impl Sub<$t> for UBig, sub);
 
         impl SubAssign<$t> for UBig {
+            #[inline]
             fn sub_assign(&mut self, rhs: $t) {
                 self.sub_assign_unsigned(rhs)
             }
@@ -319,6 +349,7 @@ macro_rules! impl_add_ubig_signed {
         impl Add<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> UBig {
                 self.add_signed(rhs)
             }
@@ -327,6 +358,7 @@ macro_rules! impl_add_ubig_signed {
         impl Add<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> UBig {
                 self.add_ref_signed(rhs)
             }
@@ -336,6 +368,7 @@ macro_rules! impl_add_ubig_signed {
         helper_macros::forward_binop_swap_args!(impl Add<UBig> for $t, add);
 
         impl AddAssign<$t> for UBig {
+            #[inline]
             fn add_assign(&mut self, rhs: $t) {
                 self.add_assign_signed(rhs)
             }
@@ -346,13 +379,16 @@ macro_rules! impl_add_ubig_signed {
         impl Sub<$t> for UBig {
             type Output = UBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> UBig {
                 self.sub_signed(rhs)
             }
         }
+
         impl Sub<$t> for &UBig {
             type Output = UBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> UBig {
                 self.sub_ref_signed(rhs)
             }
@@ -361,6 +397,7 @@ macro_rules! impl_add_ubig_signed {
         helper_macros::forward_binop_second_arg_by_value!(impl Sub<$t> for UBig, sub);
 
         impl SubAssign<$t> for UBig {
+            #[inline]
             fn sub_assign(&mut self, rhs: $t) {
                 self.sub_assign_signed(rhs)
             }
@@ -382,6 +419,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Add<$t> for IBig {
             type Output = IBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> IBig {
                 self.add_primitive(rhs)
             }
@@ -390,6 +428,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Add<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn add(self, rhs: $t) -> IBig {
                 self.add_ref_primitive(rhs)
             }
@@ -399,6 +438,7 @@ macro_rules! impl_add_ibig_primitive {
         helper_macros::forward_binop_swap_args!(impl Add<IBig> for $t, add);
 
         impl AddAssign<$t> for IBig {
+            #[inline]
             fn add_assign(&mut self, rhs: $t) {
                 self.add_assign_primitive(rhs)
             }
@@ -409,6 +449,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Sub<$t> for IBig {
             type Output = IBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> IBig {
                 self.sub_primitive(rhs)
             }
@@ -417,6 +458,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Sub<$t> for &IBig {
             type Output = IBig;
 
+            #[inline]
             fn sub(self, rhs: $t) -> IBig {
                 self.sub_ref_primitive(rhs)
             }
@@ -425,6 +467,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Sub<IBig> for $t {
             type Output = IBig;
 
+            #[inline]
             fn sub(self, rhs: IBig) -> IBig {
                 rhs.sub_from_primitive(self)
             }
@@ -433,6 +476,7 @@ macro_rules! impl_add_ibig_primitive {
         impl Sub<&IBig> for $t {
             type Output = IBig;
 
+            #[inline]
             fn sub(self, rhs: &IBig) -> IBig {
                 rhs.sub_ref_from_primitive(self)
             }
@@ -442,6 +486,7 @@ macro_rules! impl_add_ibig_primitive {
         helper_macros::forward_binop_first_arg_by_value!(impl Sub<IBig> for $t, sub);
 
         impl SubAssign<$t> for IBig {
+            #[inline]
             fn sub_assign(&mut self, rhs: $t) {
                 self.sub_assign_primitive(rhs)
             }
@@ -466,6 +511,7 @@ impl_add_ibig_primitive!(isize);
 
 impl UBig {
     /// Add two `Word`s.
+    #[inline]
     fn add_word(a: Word, b: Word) -> UBig {
         let (res, overflow) = a.overflowing_add(b);
         if overflow {
@@ -507,56 +553,69 @@ impl UBig {
         lhs.into()
     }
 
+    #[inline]
     fn add_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self + UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn add_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self + UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn add_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self += UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn sub_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> UBig {
         self - UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn sub_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self - UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn sub_assign_unsigned<T: PrimitiveUnsigned>(&mut self, rhs: T) {
         *self -= UBig::from_unsigned(rhs)
     }
 
+    #[inline]
     fn add_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn add_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) + IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn add_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).add_signed(rhs)
     }
 
+    #[inline]
     fn sub_signed<T: PrimitiveSigned>(self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn sub_ref_signed<T: PrimitiveSigned>(&self, rhs: T) -> UBig {
         UBig::from_ibig_panic_on_overflow(IBig::from(self) - IBig::from_signed(rhs))
     }
 
+    #[inline]
     fn sub_assign_signed<T: PrimitiveSigned>(&mut self, rhs: T) {
         *self = mem::take(self).sub_signed(rhs)
     }
 }
 
 impl IBig {
+    #[inline]
     fn sub_ubig_val_val(lhs: UBig, rhs: UBig) -> IBig {
         match (lhs.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => IBig::sub_word_word(word0, word1),
@@ -572,6 +631,7 @@ impl IBig {
         }
     }
 
+    #[inline]
     fn sub_ubig_val_ref(lhs: UBig, rhs: &UBig) -> IBig {
         match lhs.into_repr() {
             Small(word0) => match rhs.repr() {
@@ -585,6 +645,7 @@ impl IBig {
         }
     }
 
+    #[inline]
     fn sub_ubig_ref_ref(lhs: &UBig, rhs: &UBig) -> IBig {
         match (lhs.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => IBig::sub_word_word(*word0, *word1),
@@ -600,6 +661,7 @@ impl IBig {
         }
     }
 
+    #[inline]
     fn sub_word_word(lhs: Word, rhs: Word) -> IBig {
         if lhs >= rhs {
             IBig::from(lhs - rhs)
@@ -629,6 +691,7 @@ impl IBig {
         }
     }
 
+    #[inline]
     fn add_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -636,6 +699,7 @@ impl IBig {
         self + IBig::from(rhs)
     }
 
+    #[inline]
     fn add_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -643,6 +707,7 @@ impl IBig {
         self + IBig::from(rhs)
     }
 
+    #[inline]
     fn add_assign_primitive<T>(&mut self, rhs: T)
     where
         IBig: From<T>,
@@ -650,6 +715,7 @@ impl IBig {
         *self += IBig::from(rhs)
     }
 
+    #[inline]
     fn sub_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -657,6 +723,7 @@ impl IBig {
         self - IBig::from(rhs)
     }
 
+    #[inline]
     fn sub_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -664,6 +731,7 @@ impl IBig {
         self - IBig::from(rhs)
     }
 
+    #[inline]
     fn sub_assign_primitive<T>(&mut self, rhs: T)
     where
         IBig: From<T>,
@@ -671,6 +739,7 @@ impl IBig {
         *self -= IBig::from(rhs)
     }
 
+    #[inline]
     fn sub_from_primitive<T>(self, rhs: T) -> IBig
     where
         IBig: From<T>,
@@ -678,6 +747,7 @@ impl IBig {
         IBig::from(rhs) - self
     }
 
+    #[inline]
     fn sub_ref_from_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,

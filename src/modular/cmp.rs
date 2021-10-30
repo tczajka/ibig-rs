@@ -8,6 +8,7 @@ use core::ptr;
 
 /// Equality is identity: two rings are not equal even if they have the same modulus.
 impl PartialEq for ModuloRing {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self, other)
     }
@@ -17,6 +18,7 @@ impl Eq for ModuloRing {}
 
 /// Equality is identity: two rings are not equal even if they have the same modulus.
 impl PartialEq for ModuloRingSmall {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self, other)
     }
@@ -26,6 +28,7 @@ impl Eq for ModuloRingSmall {}
 
 /// Equality is identity: two rings are not equal even if they have the same modulus.
 impl PartialEq for ModuloRingLarge {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         ptr::eq(self, other)
     }
@@ -39,6 +42,7 @@ impl Eq for ModuloRingLarge {}
 ///
 /// Panics if the two values are from different rings.
 impl PartialEq for Modulo<'_> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         match (self.repr(), other.repr()) {
             (ModuloRepr::Small(self_small), ModuloRepr::Small(other_small)) => {
@@ -55,6 +59,7 @@ impl PartialEq for Modulo<'_> {
 impl Eq for Modulo<'_> {}
 
 impl PartialEq for ModuloSmall<'_> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.check_same_ring(other);
         self.raw() == other.raw()
