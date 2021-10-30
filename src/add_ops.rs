@@ -101,7 +101,12 @@ impl Sub<UBig> for UBig {
 
     #[inline]
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_val(self, rhs))
+        match (self.into_repr(), rhs.into_repr()) {
+            (Small(word0), Small(word1)) => UBig::sub_word(word0, word1),
+            (Small(_), Large(_)) => UBig::panic_negative(),
+            (Large(buffer0), Small(word1)) => UBig::sub_large_word(buffer0, word1),
+            (Large(buffer0), Large(buffer1)) => UBig::sub_large(buffer0, &buffer1),
+        }
     }
 }
 
@@ -110,7 +115,16 @@ impl Sub<&UBig> for UBig {
 
     #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_val_ref(self, rhs))
+        match self.into_repr() {
+            Small(word0) => match rhs.repr() {
+                Small(word1) => UBig::sub_word(word0, *word1),
+                Large(_) => UBig::panic_negative(),
+            },
+            Large(buffer0) => match rhs.repr() {
+                Small(word1) => UBig::sub_large_word(buffer0, *word1),
+                Large(buffer1) => UBig::sub_large(buffer0, buffer1),
+            },
+        }
     }
 }
 
@@ -119,7 +133,16 @@ impl Sub<UBig> for &UBig {
 
     #[inline]
     fn sub(self, rhs: UBig) -> UBig {
-        UBig::from_ibig_panic_on_overflow(-IBig::sub_ubig_val_ref(rhs, self))
+        match self.repr() {
+            Small(word0) => match rhs.into_repr() {
+                Small(word1) => UBig::sub_word(*word0, word1),
+                Large(_) => UBig::panic_negative(),
+            },
+            Large(buffer0) => match rhs.into_repr() {
+                Small(word1) => UBig::sub_large_word(buffer0.clone(), word1),
+                Large(buffer1) => UBig::sub_large_ref_val(buffer0, buffer1),
+            },
+        }
     }
 }
 
@@ -128,7 +151,12 @@ impl Sub<&UBig> for &UBig {
 
     #[inline]
     fn sub(self, rhs: &UBig) -> UBig {
-        UBig::from_ibig_panic_on_overflow(IBig::sub_ubig_ref_ref(self, rhs))
+        match (self.repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::sub_word(*word0, *word1),
+            (Small(_), Large(_)) => UBig::panic_negative(),
+            (Large(buffer0), Small(word1)) => UBig::sub_large_word(buffer0.clone(), *word1),
+            (Large(buffer0), Large(buffer1)) => UBig::sub_large(buffer0.clone(), buffer1),
+        }
     }
 }
 
@@ -547,10 +575,40 @@ impl UBig {
         buffer.into()
     }
 
+    /// Subtract two `Word`s.
+    #[inline]
+    fn sub_word(a: Word, b: Word) -> UBig {
+        match a.checked_sub(b) {
+            Some(res) => UBig::from_word(res),
+            None => UBig::panic_negative(),
+        }
+    }
+
     fn sub_large_word(mut lhs: Buffer, rhs: Word) -> UBig {
         let overflow = add::sub_word_in_place(&mut lhs, rhs);
         assert!(!overflow);
         lhs.into()
+    }
+
+    fn sub_large(mut lhs: Buffer, rhs: &[Word]) -> UBig {
+        if lhs.len() < rhs.len() || add::sub_in_place(&mut lhs, rhs) {
+            UBig::panic_negative();
+        }
+        lhs.into()
+    }
+
+    fn sub_large_ref_val(lhs: &[Word], mut rhs: Buffer) -> UBig {
+        let n = rhs.len();
+        if lhs.len() < n {
+            UBig::panic_negative();
+        }
+        let borrow = add::sub_same_len_in_place_swap(&lhs[..n], &mut rhs);
+        rhs.ensure_capacity(lhs.len());
+        rhs.extend(&lhs[n..]);
+        if borrow && add::sub_one_in_place(&mut rhs[n..]) {
+            UBig::panic_negative();
+        }
+        rhs.into()
     }
 
     #[inline]
@@ -680,15 +738,8 @@ impl IBig {
             let sign = add::sub_in_place_with_sign(&mut lhs, rhs);
             IBig::from_sign_magnitude(sign, lhs.into())
         } else {
-            let n = lhs.len();
-            let borrow = add::sub_same_len_in_place_swap(&rhs[..n], &mut lhs);
-            lhs.ensure_capacity(rhs.len());
-            lhs.extend(&rhs[n..]);
-            if borrow {
-                let overflow = add::sub_one_in_place(&mut lhs[n..]);
-                assert!(!overflow);
-            }
-            IBig::from_sign_magnitude(Negative, lhs.into())
+            let res = UBig::sub_large_ref_val(rhs, lhs);
+            IBig::from_sign_magnitude(Negative, res)
         }
     }
 

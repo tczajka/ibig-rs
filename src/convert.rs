@@ -563,8 +563,13 @@ impl UBig {
     pub(crate) fn from_ibig_panic_on_overflow(x: IBig) -> UBig {
         match UBig::try_from(x) {
             Ok(v) => v,
-            Err(_) => panic!("UBig overflow"),
+            Err(_) => UBig::panic_negative(),
         }
+    }
+
+    #[inline]
+    pub(crate) fn panic_negative() -> ! {
+        panic!("negative UBig")
     }
 }
 
