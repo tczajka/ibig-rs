@@ -13,6 +13,7 @@ use core::{
     fmt::{self, Formatter},
     mem,
 };
+use static_assertions::const_assert;
 
 /// Format in chunks of CHUNK_LEN * digits_per_word.
 const CHUNK_LEN: usize = 16;
@@ -180,6 +181,9 @@ impl PreparedLarge {
             if 2 * prev.len() - 1 > number.len() {
                 break;
             }
+            // 2 * prev.len() is at most 1 larger than number.len().
+            // It won't overflow because UBig::MAX_LEN is even.
+            const_assert!(UBig::MAX_LEN % 2 == 0);
             let new = prev * prev;
             if new > *number {
                 break;

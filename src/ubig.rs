@@ -89,13 +89,15 @@ impl UBig {
     ///
     /// We also make sure that any multiplication whose result fits in `MAX_LEN` can fit
     /// within the largest possible number-theoretic transform.
+    ///
+    /// Also make sure this is even, useful for checking whether a square will overflow.
     pub(crate) const MAX_LEN: usize = math::min_usize(
         usize::MAX / WORD_BITS_USIZE,
         match 1usize.checked_shl(ntt::MAX_ORDER) {
             Some(ntt_len) => ntt_len,
             None => usize::MAX,
         },
-    );
+    ) & !1usize;
 
     /// Maximum length in bits.
     ///

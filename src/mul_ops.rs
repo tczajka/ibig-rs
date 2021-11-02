@@ -15,6 +15,7 @@ use core::{
     mem,
     ops::{Mul, MulAssign},
 };
+use static_assertions::const_assert;
 
 impl Mul<UBig> for UBig {
     type Output = UBig;
@@ -313,6 +314,8 @@ impl UBig {
     fn mul_large(lhs: &[Word], rhs: &[Word]) -> UBig {
         debug_assert!(lhs.len() >= 2 && rhs.len() >= 2);
 
+        // This may be 1 too large.
+        const_assert!(Buffer::MAX_CAPACITY - UBig::MAX_LEN >= 1);
         let res_len = lhs.len() + rhs.len();
         let mut buffer = Buffer::allocate(res_len);
         buffer.push_zeros(res_len);

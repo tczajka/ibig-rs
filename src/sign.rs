@@ -8,6 +8,7 @@ use crate::{
 use core::ops::Neg;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub(crate) enum Sign {
     Positive,
     Negative,

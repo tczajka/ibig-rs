@@ -151,9 +151,8 @@ impl Buffer {
 
     /// Maximum number of `Word`s.
     ///
-    /// We allow 1 extra word beyond `UBig::MAX_LEN` to allow a leading zero
-    /// in operations.
-    pub(crate) const MAX_CAPACITY: usize = UBig::MAX_LEN + 1;
+    /// We allow 4 extra words beyond `UBig::MAX_LEN` to allow temporary space in operations.
+    pub(crate) const MAX_CAPACITY: usize = UBig::MAX_LEN + 4;
 
     /// Default capacity for a given number of `Word`s.
     /// It should be between `num_words` and `max_capacity(num_words).
