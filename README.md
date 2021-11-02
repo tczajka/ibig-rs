@@ -42,6 +42,13 @@ let y = ring.from(55443);
 assert_eq!(format!("{}", x - y), "6902 (mod 10000)");
 ```
 
+## Optional dependencies
+
+* `std` (default): for `std::error::Error`.
+* `num-traits` (default): integral traits.
+* `rand` (default): random number generation.
+* `serde`: serialization and deserialization.
+
 ## Benchmarks
 
 [Benchmarks](https://github.com/tczajka/bigint-benchmark-rs) contains a quick benchmark of

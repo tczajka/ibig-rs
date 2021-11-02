@@ -51,6 +51,13 @@
 //! assert_eq!(format!("{}", x - y), "6902 (mod 10000)");
 //! # Ok::<(), ParseError>(())
 //! ```
+//!
+//! # Optional dependencies
+//!
+//! * `std` (default): for `std::error::Error`.
+//! * `num-traits` (default): integral traits.
+//! * `rand` (default): random number generation.
+//! * `serde`: serialization and deserialization.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
