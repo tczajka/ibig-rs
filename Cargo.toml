@@ -13,27 +13,49 @@ homepage = "https://github.com/tczajka/ibig-rs"
 readme = "README.md"
 exclude = ["generate_coverage.sh"]
 
-[workspace]
-members = ["dev-tools"]
-
-[dependencies]
-cfg-if = "1.0.0"
-const_fn_assert = "0.1.2"
-static_assertions = "1.1"
-num-traits = { optional = true, version = "0.2.14", default-features = false }
-rand = { optional = true, version = "0.8.3", default-features = false }
-serde = { optional = true, version = "1.0.130", default-features = false, features = ["derive"] }
-
-[dev-dependencies]
-criterion = { version = "0.3.4", features = ["html_reports"] }
-rand = "0.8.3"
-serde_test = "1.0.130"
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = ["std", "rand", "num-traits"]
 
 # Interface with the std library.
 std = []
+
+[dependencies.cfg-if]
+version = "1.0.0"
+
+[dependencies.const_fn_assert]
+version = "0.1.2"
+
+[dependencies.static_assertions]
+version = "1.1"
+
+[dependencies.num-traits]
+optional = true
+version = "0.2.14"
+default-features = false
+
+[dependencies.rand]
+optional = true
+version = "0.8.3"
+default-features = false
+
+[dependencies.serde]
+optional = true
+version = "1.0.130"
+default-features = false
+features = ["derive"]
+
+[dev-dependencies.criterion]
+version = "0.3.4"
+features = ["html_reports"]
+
+[dev-dependencies.rand]
+version = "0.8.3"
+
+[dev-dependencies.serde_test]
+version = "1.0.130"
 
 [lib]
 bench = false
@@ -51,5 +73,5 @@ name = "benchmarks"
 required-features = ["rand"]
 harness = false
 
-[package.metadata.docs.rs]
-all-features = true
+[workspace]
+members = ["dev-tools"]
