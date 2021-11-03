@@ -2,16 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.3.4 - Unreleased
+## 0.3.4 - 2021-11-03
 
 ### Features
 * Optional `serde` support for `UBig` and `IBig`.
 
 ### Toolchain
 * Rust 1.49+ is now required.
-
-### Performance
-* Various small performance improvements. Many small functions now marked `#[inline]`.
 
 ### Dependencies
 * Added an optional dependency on `serde`.
