@@ -50,3 +50,6 @@ required-features = ["serde"]
 name = "benchmarks"
 required-features = ["rand"]
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true
