@@ -2,13 +2,13 @@
 
 use crate::{
     arch::word::Word,
+    assert::debug_assert_in_const_fn,
     cmp, div,
     fast_divide::FastDivideNormalized,
     math,
     ubig::{Repr, UBig},
 };
 use alloc::vec::Vec;
-use const_fn_assert::cfn_debug_assert;
 use core::cmp::Ordering;
 
 /// A ring of integers modulo a positive integer.
@@ -77,7 +77,7 @@ impl ModuloRingSmall {
     /// Create a new small ring of integers modulo `n`.
     #[inline]
     pub(crate) const fn new(n: Word) -> ModuloRingSmall {
-        cfn_debug_assert!(n != 0);
+        debug_assert_in_const_fn!(n != 0);
         let shift = n.leading_zeros();
         let normalized_modulus = n << shift;
         let fast_div = FastDivideNormalized::new(normalized_modulus);

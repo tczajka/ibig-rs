@@ -68,6 +68,7 @@ pub use crate::{ibig::IBig, ubig::UBig};
 mod add;
 mod add_ops;
 mod arch;
+mod assert;
 mod bits;
 mod buffer;
 mod cmp;

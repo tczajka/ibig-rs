@@ -2,6 +2,11 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.5 - unreleased
+
+### Dependencies
+* Removed the dependency on `const_fn_assert`.
+
 ## 0.3.4 - 2021-11-03
 
 ### Features
