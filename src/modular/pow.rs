@@ -10,7 +10,7 @@ use crate::{
     ubig::{Repr::*, UBig},
 };
 
-impl Modulo<'_> {
+impl<'a> Modulo<'a> {
     /// Exponentiation.
     ///
     /// # Examples
@@ -25,7 +25,7 @@ impl Modulo<'_> {
     /// assert_eq!(a.pow(&(p - ubig!(1))), ring.from(1));
     /// ```
     #[inline]
-    pub fn pow(&self, exp: &UBig) -> Modulo {
+    pub fn pow(&self, exp: &UBig) -> Modulo<'a> {
         match self.repr() {
             ModuloRepr::Small(self_small) => self_small.pow(exp).into(),
             ModuloRepr::Large(self_large) => self_large.pow(exp).into(),
@@ -66,10 +66,10 @@ impl ModuloSmallRaw {
     }
 }
 
-impl ModuloSmall<'_> {
+impl<'a> ModuloSmall<'a> {
     /// Exponentiation.
     #[inline]
-    fn pow(&self, exp: &UBig) -> ModuloSmall {
+    fn pow(&self, exp: &UBig) -> ModuloSmall<'a> {
         match exp.repr() {
             // self^0 == 1
             Small(0) => ModuloSmall::from_ubig(&UBig::from_word(1), self.ring()),
@@ -84,7 +84,7 @@ impl ModuloSmall<'_> {
         }
     }
 
-    fn pow_nontrivial(&self, exp: &UBig) -> ModuloSmall {
+    fn pow_nontrivial(&self, exp: &UBig) -> ModuloSmall<'a> {
         debug_assert!(*exp >= UBig::from_word(3));
 
         let exp_words = exp.as_words();
@@ -98,8 +98,8 @@ impl ModuloSmall<'_> {
     }
 }
 
-impl ModuloLarge<'_> {
-    fn pow(&self, exp: &UBig) -> ModuloLarge {
+impl<'a> ModuloLarge<'a> {
+    fn pow(&self, exp: &UBig) -> ModuloLarge<'a> {
         match exp.repr() {
             // self^0 == 1
             Small(0) => ModuloLarge::from_ubig(UBig::from_word(1), self.ring()),
@@ -109,7 +109,7 @@ impl ModuloLarge<'_> {
         }
     }
 
-    fn pow_nontrivial(&self, exp: &UBig) -> ModuloLarge {
+    fn pow_nontrivial(&self, exp: &UBig) -> ModuloLarge<'a> {
         debug_assert!(*exp >= UBig::from_word(2));
 
         let n = self.ring().normalized_modulus().len();
