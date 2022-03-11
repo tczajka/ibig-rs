@@ -131,6 +131,7 @@ impl Memory<'_> {
     where
         F: FnOnce(*mut T),
     {
+        #[allow(clippy::redundant_closure)]
         let (ptr, slice_end) = self
             .try_find_memory_for_slice::<T>(n)
             .unwrap_or_else(|| panic_allocated_too_little());

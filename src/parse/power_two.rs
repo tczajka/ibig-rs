@@ -47,6 +47,7 @@ fn parse_large(src: &str, radix: Digit) -> Result<UBig, ParseError> {
     debug_assert!(radix::is_radix_valid(radix) && radix.is_power_of_two());
 
     let log_radix = radix.trailing_zeros();
+    #[allow(clippy::redundant_closure)]
     let num_bits = src
         .len()
         .checked_mul(log_radix as usize)
