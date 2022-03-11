@@ -2,7 +2,10 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.3.5 - unreleased
+## 0.3.5 - 2022-03-12
+
+### Bugfixes
+* Corrected too-strict lifetimes in modular exponentiation.
 
 ### Dependencies
 * Removed the dependency on `const_fn_assert`.
