@@ -53,9 +53,9 @@ fn is_prime(mult: &UBig, order: usize) -> bool {
         let base = ring.from(thread_rng().gen_range(ubig!(1)..n.clone()));
 
         // Miller-Rabin test
-        let mut p = base.pow(&mult);
+        let mut p = base.pow(mult);
         let mut passed_miller_rabin = None;
-        if &p == &one {
+        if p == one {
             passed_miller_rabin = Some(0);
         }
         for i in 0..order {
