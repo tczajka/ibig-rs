@@ -328,14 +328,13 @@ fn test_not_ibig() {
 
 #[test]
 fn test_and_ibig() {
-    for a in -20i8..=20i8 {
-        for b in -20i8..=20i8 {
+    for a in -255i16..=255i16 {
+        for b in -20i16..=20i16 {
             let a_big: IBig = a.into();
             let b_big: IBig = b.into();
             let res: IBig = (a & b).into();
 
             assert_eq!(&a_big & &b_big, res);
-            assert_eq!(&a_big & b_big.clone(), res);
             assert_eq!(a_big.clone() & &b_big, res);
             assert_eq!(a_big.clone() & b_big.clone(), res);
 
@@ -346,6 +345,13 @@ fn test_and_ibig() {
             let mut x = a_big.clone();
             x &= b_big.clone();
             assert_eq!(x, res);
+        }
+        
+        for b in 0u8..=255u8 {
+            let a_big: IBig = a.into();
+            let res = a as u8 & b;
+            assert_eq!(&a_big & b, res);
+            assert_eq!(a_big.clone() & b, res);
         }
     }
 }
@@ -401,15 +407,19 @@ fn test_xor_ibig() {
 #[test]
 fn test_and_not_ibig() {
     for a in -20i8..=20i8 {
-        for b in -20i8..=20i8 {
+        for b in -255i16..=255i16 {
             let a_big: IBig = a.into();
             let b_big: IBig = b.into();
-            let res: IBig = (a & !b).into();
+            let res = a as i16 & !b;
+            let res_big: IBig = res.into();
+            let res = res as i8;
 
-            assert_eq!((&a_big).and_not(&b_big), res);
-            assert_eq!((&a_big).and_not(b_big.clone()), res);
-            assert_eq!(a_big.clone().and_not(&b_big), res);
-            assert_eq!(a_big.clone().and_not(b_big.clone()), res);
+            assert_eq!(a.and_not(&b_big), res);
+            assert_eq!((&a_big).and_not(b), res_big);
+            assert_eq!((&a_big).and_not(&b_big), res_big);
+            assert_eq!((&a_big).and_not(b_big.clone()), res_big);
+            assert_eq!(a_big.clone().and_not(&b_big), res_big);
+            assert_eq!(a_big.clone().and_not(b_big.clone()), res_big);
         }
     }
 }
@@ -475,6 +485,11 @@ fn test_bit_ops_ubig_unsigned() {
     assert_eq!(ubig!(0xf0f).and_not(&0xffu8), ubig!(0xf00));
     assert_eq!((&ubig!(0xf0f)).and_not(0xffu8), ubig!(0xf00));
     assert_eq!((&ubig!(0xf0f)).and_not(&0xffu8), ubig!(0xf00));
+
+    assert_eq!(0xffu8.and_not(ubig!(0xf0f)), 0xF0);
+    assert_eq!(0xffu8.and_not(&ubig!(0xf0f)), 0xF0);
+    assert_eq!((&0xffu8).and_not(ubig!(0xf0f)), 0xF0);
+    assert_eq!((&0xffu8).and_not(&ubig!(0xf0f)), 0xF0);
 }
 
 #[test]

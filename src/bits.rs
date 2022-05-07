@@ -1056,6 +1056,24 @@ macro_rules! impl_bit_ops_ubig_unsigned {
             }
         }
 
+        impl AndNot<UBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: UBig) -> $t {
+                rhs.rev_and_not_unsigned(self)
+            }
+        }
+
+        impl AndNot<&UBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: &UBig) -> $t {
+                rhs.rev_and_not_ref_unsigned(self)
+            }
+        }
+
         helper_macros::forward_binop_second_arg_by_value!(impl AndNot<$t> for UBig, and_not);
     };
 }
@@ -1207,6 +1225,24 @@ macro_rules! impl_bit_ops_ibig_unsigned {
                 self.bitand_ref_unsigned(rhs)
             }
         }
+
+        impl AndNot<IBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: IBig) -> $t {
+                rhs.rev_and_not_unsigned(self)
+            }
+        }
+
+        impl AndNot<&IBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: &IBig) -> $t {
+                rhs.rev_and_not_ref_unsigned(self)
+            }
+        }
     };
 }
 
@@ -1234,6 +1270,25 @@ macro_rules! impl_bit_ops_ibig_signed {
             #[inline]
             fn bitand(self, rhs: $t) -> IBig {
                 self.bitand_ref_signed(rhs)
+            }
+        }
+
+
+        impl AndNot<IBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: IBig) -> $t {
+                rhs.rev_and_not_signed(self)
+            }
+        }
+
+        impl AndNot<&IBig> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn and_not(self, rhs: &IBig) -> $t {
+                rhs.rev_and_not_ref_signed(self)
             }
         }
     };
@@ -1411,8 +1466,18 @@ impl UBig {
     }
 
     #[inline]
+    fn rev_and_not_unsigned<T: PrimitiveUnsigned>(self, lhs: T) -> T {
+        lhs & !(self.bitand_unsigned(T::MAX))
+    }
+
+    #[inline]
     fn and_not_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> UBig {
         self.and_not(UBig::from_unsigned(rhs))
+    }
+
+    #[inline]
+    fn rev_and_not_ref_unsigned<T: PrimitiveUnsigned>(&self, lhs: T) -> T {
+        lhs & !(self.bitand_ref_unsigned(T::MAX))
     }
 
     #[inline]
@@ -1479,16 +1544,21 @@ impl UBig {
 impl IBig {
     #[inline]
     fn bitand_unsigned<T: PrimitiveUnsigned>(self, rhs: T) -> T {
-        self.bitand(IBig::from_unsigned(rhs))
-            .try_to_unsigned()
-            .unwrap()
+        let (sign, magnitude) = self.into_sign_magnitude();
+        let v = match (sign, magnitude.bitand_unsigned(T::MAX)) {
+            (Positive, v) => v,
+            (Negative, v) => !v.wrapping_sub(T::from(1u8)),
+        };
+        v & rhs
     }
 
     #[inline]
     fn bitand_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
-        self.bitand(IBig::from_unsigned(rhs))
-            .try_to_unsigned()
-            .unwrap()
+        let v = match (self.sign(), self.magnitude().bitand_ref_unsigned(T::MAX)) {
+            (Positive, v) => v,
+            (Negative, v) => !v.wrapping_sub(T::from(1u8)),
+        };
+        v & rhs
     }
 
     #[inline]
@@ -1566,10 +1636,30 @@ impl IBig {
     }
 
     #[inline]
+    fn rev_and_not_signed<T: PrimitiveSigned>(self, lhs: T) -> T {
+        lhs & !T::as_signed(self.bitand_unsigned(<T::Unsigned as PrimitiveUnsigned>::MAX))
+    }
+
+    #[inline]
+    fn rev_and_not_unsigned<T: PrimitiveUnsigned>(self, lhs: T) -> T {
+        lhs & !(self.bitand_unsigned(T::MAX))
+    }
+
+    #[inline]
     fn and_not_ref_primitive<T>(&self, rhs: T) -> IBig
     where
         IBig: From<T>,
     {
         self.and_not(IBig::from(rhs))
+    }
+
+    #[inline]
+    fn rev_and_not_ref_signed<T: PrimitiveSigned>(&self, lhs: T) -> T {
+        lhs & !T::as_signed(self.bitand_ref_unsigned(<T::Unsigned as PrimitiveUnsigned>::MAX))
+    }
+
+    #[inline]
+    fn rev_and_not_ref_unsigned<T: PrimitiveUnsigned>(&self, lhs: T) -> T {
+        lhs & !(self.bitand_ref_unsigned(T::MAX))
     }
 }

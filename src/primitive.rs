@@ -9,7 +9,7 @@ use core::{
     convert::{TryFrom, TryInto},
     fmt::Debug,
     mem,
-    ops::{Add, Div, Mul, Shl, Shr, Sub},
+    ops::{Add, BitAnd, Div, Mul, Not, Shl, Shr, Sub},
 };
 
 /// Cast `Word` to `DoubleWord`.
@@ -40,8 +40,10 @@ where
     Self: TryInto<usize>,
     Self: Eq,
     Self: Add<Output = Self>,
+    Self: BitAnd<Output = Self>,
     Self: Div<Output = Self>,
     Self: Mul<Output = Self>,
+    Self: Not<Output = Self>,
     Self: Sub<Output = Self>,
     Self: Shl<u32, Output = Self>,
     Self: Shr<u32, Output = Self>,
@@ -54,18 +56,20 @@ where
     fn to_le_bytes(self) -> Self::ByteRepr;
     fn from_le_bytes(repr: Self::ByteRepr) -> Self;
     fn leading_zeros(self) -> u32;
+    fn wrapping_sub(self, rhs: Self) -> Self;
 }
 
 pub(crate) trait PrimitiveSigned
 where
     Self: Copy,
     Self: TryFrom<Word>,
-    Self::Unsigned: PrimitiveUnsigned,
-    Self::Unsigned: TryFrom<Self>,
-    Self::Unsigned: TryInto<Self>,
+    Self: BitAnd<Output = Self>,
+    Self: Not<Output = Self>,
 {
-    type Unsigned;
+    type Unsigned: PrimitiveUnsigned + TryFrom<Self> + TryInto<Self>;
 
+    fn as_unsigned(self) -> Self::Unsigned;
+    fn as_signed(v: Self::Unsigned) -> Self;
     fn to_sign_magnitude(self) -> (Sign, Self::Unsigned);
     fn try_from_sign_magnitude(sign: Sign, mag: Self::Unsigned) -> Result<Self, OutOfBoundsError>;
 }
@@ -91,6 +95,11 @@ macro_rules! impl_primitive_unsigned {
             fn leading_zeros(self) -> u32 {
                 self.leading_zeros()
             }
+
+            #[inline]
+            fn wrapping_sub(self, rhs: Self) -> Self {
+                self.wrapping_sub(rhs)
+            }
         }
     };
 }
@@ -99,6 +108,16 @@ macro_rules! impl_primitive_signed {
     ($t:ty, $u:ty) => {
         impl PrimitiveSigned for $t {
             type Unsigned = $u;
+
+            #[inline]
+            fn as_unsigned(self) -> Self::Unsigned {
+                self as Self::Unsigned
+            }
+            
+            #[inline]
+            fn as_signed(v: Self::Unsigned) -> Self {
+                v as Self
+            }
 
             #[inline]
             fn to_sign_magnitude(self) -> (Sign, Self::Unsigned) {
