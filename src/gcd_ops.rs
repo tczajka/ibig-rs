@@ -3,12 +3,10 @@
 use crate::{
     arch::word::Word,
     buffer::Buffer,
-    helper_macros,
+    div, gcd, helper_macros,
     ibig::IBig,
     memory::MemoryAllocation,
-    ops::{Gcd, ExtendedGcd},
-    gcd,
-    div,
+    ops::{ExtendedGcd, Gcd},
     primitive::{extend_word, PrimitiveSigned, PrimitiveUnsigned},
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
@@ -25,7 +23,7 @@ impl Gcd<UBig> for UBig {
             (Small(word0), Small(word1)) => UBig::gcd_word(word0, word1),
             (Small(word0), Large(buffer1)) => UBig::gcd_large_word(&buffer1, word0),
             (Large(buffer0), Small(word1)) => UBig::gcd_large_word(&buffer0, word1),
-            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(&buffer0, &buffer1),
+            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0, buffer1),
         }
     }
 }
@@ -39,7 +37,7 @@ impl Gcd<&UBig> for UBig {
             (Small(word0), Small(word1)) => UBig::gcd_word(word0, *word1),
             (Small(word0), Large(buffer1)) => UBig::gcd_large_word(buffer1, word0),
             (Large(buffer0), Small(word1)) => UBig::gcd_large_word(&buffer0, *word1),
-            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(&buffer0, buffer1),
+            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0, buffer1.clone()),
         }
     }
 }
@@ -62,7 +60,7 @@ impl Gcd<&UBig> for &UBig {
             (Small(word0), Small(word1)) => UBig::gcd_word(*word0, *word1),
             (Small(word0), Large(buffer1)) => UBig::gcd_large_word(buffer1, *word0),
             (Large(buffer0), Small(word1)) => UBig::gcd_large_word(buffer0, *word1),
-            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0, buffer1),
+            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0.clone(), buffer1.clone()),
         }
     }
 }
@@ -94,8 +92,11 @@ impl UBig {
         UBig::from_word(gcd::gcd_word_by_word(small, rhs))
     }
 
-    /// Multiply two large numbers.
-    fn gcd_large(lhs: &[Word], rhs: &[Word]) -> UBig {
-        unimplemented!()
+    /// Perform gcd on two large numbers.
+    #[inline]
+    fn gcd_large(mut lhs: Buffer, mut rhs: Buffer) -> UBig {
+        let len = gcd::gcd_in_place(&mut lhs, &mut rhs);
+        lhs.truncate(len);
+        lhs.into()
     }
 }
