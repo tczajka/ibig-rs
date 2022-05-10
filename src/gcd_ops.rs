@@ -157,8 +157,8 @@ impl UBig {
         let (lhs_sign, rhs_sign) = gcd::xgcd_in_place(&mut lhs, &mut rhs, &mut buffer, &mut memory);
         (
             buffer.into(),
-            IBig::from_sign_magnitude(lhs_sign, lhs.into()),
-            IBig::from_sign_magnitude(rhs_sign, rhs.into()),
+            IBig::from_sign_magnitude(lhs_sign, rhs.into()),
+            IBig::from_sign_magnitude(rhs_sign, lhs.into()),
         )
     }
 }

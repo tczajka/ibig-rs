@@ -51,6 +51,21 @@ fn test_gcd_ubig() {
         (ubig!(7966496), ubig!(314080416), ubig!(32)),
         // big cases
         (
+            ubig!(0xffffffffffffffffffffffff1), // largest prime under 2^100
+            ubig!(0x7ffffffffffffffffffffff8d), // largest prime under 2^99
+            ubig!(1),
+        ),
+        (
+            ubig!(0xffffffffffffffffffffffffffffff61), // largest prime under 2^128
+            ubig!(0xffffffffffffffffffffffffffffff53), // second largest prime under 2^128
+            ubig!(1),
+        ),
+        (
+            ubig!(_0x3ffffffffffffffffffffffffffffffffffffd), // largest prime under 2^150
+            ubig!(_0x1fffffffffffffffffffffffffffffffffffe1), // largest prime under 2^149
+            ubig!(1),
+        ),
+        (
             ubig!(_0x123456789123456789123456789123456789),
             ubig!(_0x987654321),
             ubig!(_0x2d),
@@ -72,8 +87,12 @@ fn test_gcd_ubig() {
         test_gcd(b, a, c);
 
         // TODO: move into the templated function
-        // let (g, x, y) = a.clone().extended_gcd(b.clone());
-        // assert_eq!(&g, c);
-        // assert_eq!(x * IBig::from(a) + y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}", a, b);
+        let (g, x, y) = a.clone().extended_gcd(b.clone());
+        assert_eq!(&g, c);
+        assert_eq!(&x * IBig::from(a) + &y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}, result = ({}, {})", a, b, x, y);
+        
+        let (g, y, x) = b.clone().extended_gcd(a.clone());
+        assert_eq!(&g, c);
+        assert_eq!(&x * IBig::from(a) + &y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}, result = ({}, {})", b, a, y, x);
     }
 }

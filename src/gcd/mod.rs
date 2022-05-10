@@ -83,6 +83,7 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
 /// 
 /// Specifically if g = gcd(lhs, rhs), lhs * a + rhs * b = g, then a is stored in **rhs**, b is stored in **lhs**,
 /// and the returned tuple is (sign of a, sign of b)
+// TODO: add bonly option
 pub(crate) fn xgcd_in_place(
     lhs: &mut [Word],
     rhs: &mut [Word],
