@@ -8,7 +8,7 @@ use crate::{
 use alloc::alloc::Layout;
 use core::mem;
 
-mod simple;
+mod binary;
 
 /// Single word gcd, requires a > 0 and b > 0
 pub(crate) fn gcd_word_by_word(a: Word, b: Word) -> Word {
@@ -41,7 +41,8 @@ pub(crate) fn gcd_word_by_word(a: Word, b: Word) -> Word {
 pub(crate) fn xgcd_word_by_word(a: Word, b: Word, bonly: bool) -> (Word, SignedWord, SignedWord) {
     if b > a {
         debug_assert!(!bonly, "`bonly` option only make sense when a >= b");
-        return xgcd_word_by_word(a, b, false);
+        let (r, s, t) = xgcd_word_by_word(b, a, false);
+        return (r, t, s);
     }
     if b == 1 {
         // this shortcut eliminates the overflow when a = Word::Max and b = 1
@@ -72,23 +73,26 @@ pub(crate) fn xgcd_word_by_word(a: Word, b: Word, bonly: bool) -> (Word, SignedW
 /// The result is stored in the low bits of lhs.
 /// The word length of the result number is returned.
 pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
-    simple::gcd_in_place(lhs, rhs)
+    binary::gcd_in_place(lhs, rhs)
 }
 
 /// Extended greatest common divisor for two multi-digit integers
 ///
 /// The GCD result is stored in g (need to be pre-allocated and zero filled), while the Bézout coefficient
-/// for the two operands is stored in their original position, and the sign of the two coefficients are returned
+/// for the two operands is stored in the input slices, and the sign of the two coefficients are returned.
+/// 
+/// Specifically if g = gcd(lhs, rhs), lhs * a + rhs * b = g, then a is stored in **rhs**, b is stored in **lhs**,
+/// and the returned tuple is (sign of a, sign of b)
 pub(crate) fn xgcd_in_place(
     lhs: &mut [Word],
     rhs: &mut [Word],
     g: &mut [Word],
     memory: &mut Memory,
 ) -> (Sign, Sign) {
-    simple::xgcd_in_place(lhs, rhs, g, memory)
+    binary::xgcd_in_place(lhs, rhs, g, memory)
 }
 
 /// Memory requirement for division.
 pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout {
-    simple::memory_requirement_up_to(lhs_len, rhs_len)
+    binary::memory_requirement_up_to(lhs_len, rhs_len)
 }

@@ -72,9 +72,9 @@ impl ExtendedGcd<UBig> for UBig {
     fn extended_gcd(self, rhs: UBig) -> (UBig, IBig, IBig) {
         match (self.into_repr(), rhs.into_repr()) {
             (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, word1),
-            (Small(word0), Large(buffer1)) => UBig::extended_gcd_large_word(buffer1, word0),
-            (Large(buffer0), Small(word1)) => {
-                let (g, s, t) = UBig::extended_gcd_large_word(buffer0, word1);
+            (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, word1),
+            (Small(word0), Large(buffer1)) => {
+                let (g, s, t) = UBig::extended_gcd_large_word(buffer1, word0);
                 (g, t, s)
             }
             (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1),
@@ -96,6 +96,7 @@ impl UBig {
     /// Perform extended gcd on two `Word`s.
     #[inline]
     fn extended_gcd_word(a: Word, b: Word) -> (UBig, IBig, IBig) {
+        // cases where a = 0 or b = 0 can be correctly handled by extended euclidean algorithm
         let (r, s, t) = gcd::xgcd_word_by_word(a, b, false);
         (UBig::from_word(r), IBig::from(s), IBig::from(t))
     }
@@ -120,7 +121,7 @@ impl UBig {
     #[inline]
     fn extended_gcd_large_word(mut buffer: Buffer, rhs: Word) -> (UBig, IBig, IBig) {
         if rhs == 0 {
-            panic!("Operands must not be zero in extended gcd.")
+            return (buffer.into(), IBig::from(1u8), IBig::from(0u8));
         }
 
         // reduce the large number

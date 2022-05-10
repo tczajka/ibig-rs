@@ -1,5 +1,5 @@
 use core::fmt::Debug;
-use ibig::{ibig, ops::Gcd, ubig};
+use ibig::{IBig, ops::{Gcd, ExtendedGcd}, ubig};
 
 fn test_gcd<'a, T>(a: &'a T, b: &'a T, c: &'a T)
 where
@@ -19,6 +19,7 @@ where
 
 #[test]
 fn test_gcd_ubig() {
+    // test cases (x, y, gcd(x,y))
     let test_cases = [
         // trivial cases
         (ubig!(0), ubig!(0), ubig!(0)),
@@ -69,5 +70,10 @@ fn test_gcd_ubig() {
     for (a, b, c) in &test_cases {
         test_gcd(a, b, c);
         test_gcd(b, a, c);
+
+        // TODO: move into the templated function
+        // let (g, x, y) = a.clone().extended_gcd(b.clone());
+        // assert_eq!(&g, c);
+        // assert_eq!(x * IBig::from(a) + y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}", a, b);
     }
 }
