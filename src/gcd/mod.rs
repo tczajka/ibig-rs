@@ -1,8 +1,11 @@
 //! Greatest Common Divisor
 use crate::{
     arch::word::{SignedWord, Word},
+    memory::Memory,
     primitive::{double_word, extend_word},
+    sign::Sign,
 };
+use alloc::alloc::Layout;
 use core::mem;
 
 mod simple;
@@ -33,6 +36,8 @@ pub(crate) fn gcd_word_by_word(a: Word, b: Word) -> Word {
 ///
 /// If bonly is set to true, then only the coefficient for b will be calculated,
 /// the coefficient for a will be 1. This is useful for modular inverse calculation
+///
+/// Binary GCD algorithm is slower in machine word than Euclidean's method
 pub(crate) fn xgcd_word_by_word(a: Word, b: Word, bonly: bool) -> (Word, SignedWord, SignedWord) {
     if b > a {
         debug_assert!(!bonly, "`bonly` option only make sense when a >= b");
@@ -68,4 +73,22 @@ pub(crate) fn xgcd_word_by_word(a: Word, b: Word, bonly: bool) -> (Word, SignedW
 /// The word length of the result number is returned.
 pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
     simple::gcd_in_place(lhs, rhs)
+}
+
+/// Extended greatest common divisor for two multi-digit integers
+///
+/// The GCD result is stored in g (need to be pre-allocated and zero filled), while the Bézout coefficient
+/// for the two operands is stored in their original position, and the sign of the two coefficients are returned
+pub(crate) fn xgcd_in_place(
+    lhs: &mut [Word],
+    rhs: &mut [Word],
+    g: &mut [Word],
+    memory: &mut Memory,
+) -> (Sign, Sign) {
+    simple::xgcd_in_place(lhs, rhs, g, memory)
+}
+
+/// Memory requirement for division.
+pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout {
+    simple::memory_requirement_up_to(lhs_len, rhs_len)
 }

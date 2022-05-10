@@ -9,7 +9,7 @@ use crate::{
     ops::{ExtendedGcd, Gcd},
     primitive::{extend_word, PrimitiveSigned, PrimitiveUnsigned},
     sign::Sign::{self, *},
-    ubig::{IBig, Repr::*, UBig},
+    ubig::{Repr::*, UBig},
 };
 use core::mem;
 
@@ -145,6 +145,19 @@ impl UBig {
     /// Perform extended gcd on two large numbers.
     #[inline]
     fn extended_gcd_large(mut lhs: Buffer, mut rhs: Buffer) -> (UBig, IBig, IBig) {
-        unimplemented!()
+        let res_len = lhs.len().min(rhs.len());
+        let mut buffer = Buffer::allocate(res_len);
+        buffer.push_zeros(res_len);
+
+        let mut allocation =
+            MemoryAllocation::new(gcd::memory_requirement_exact(lhs.len(), rhs.len()));
+        let mut memory = allocation.memory();
+
+        let (lhs_sign, rhs_sign) = gcd::xgcd_in_place(&mut lhs, &mut rhs, &mut buffer, &mut memory);
+        (
+            buffer.into(),
+            IBig::from_sign_magnitude(lhs_sign, lhs.into()),
+            IBig::from_sign_magnitude(rhs_sign, rhs.into()),
+        )
     }
 }
