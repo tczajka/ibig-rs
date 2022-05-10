@@ -1,8 +1,9 @@
 //! Greatest Common Divisor
 use crate::{
-    arch::word::Word,
+    arch::word::{SignedWord, Word},
     primitive::{double_word, extend_word},
 };
+use core::mem;
 
 mod simple;
 
@@ -26,6 +27,39 @@ pub(crate) fn gcd_word_by_word(a: Word, b: Word) -> Word {
         }
     }
     a << shift
+}
+
+/// Single extended word gcd
+///
+/// If bonly is set to true, then only the coefficient for b will be calculated,
+/// the coefficient for a will be 1. This is useful for modular inverse calculation
+pub(crate) fn xgcd_word_by_word(a: Word, b: Word, bonly: bool) -> (Word, SignedWord, SignedWord) {
+    if b > a {
+        debug_assert!(!bonly, "`bonly` option only make sense when a >= b");
+        return xgcd_word_by_word(a, b, false);
+    }
+    if b == 1 {
+        // this shortcut eliminates the overflow when a = Word::Max and b = 1
+        return (1, 0, 1);
+    }
+
+    let (mut last_r, mut r) = (a, b);
+    let (mut last_s, mut s) = (1, 0);
+    let (mut last_t, mut t) = (0, 1);
+
+    while r > 0 {
+        let quo = last_r / r;
+        let new_r = last_r - quo * r;
+        last_r = mem::replace(&mut r, new_r);
+        if !bonly {
+            let new_s = last_s - quo as SignedWord * s;
+            last_s = mem::replace(&mut s, new_s);
+        }
+        let new_t = last_t - quo as SignedWord * t;
+        last_t = mem::replace(&mut t, new_t);
+    }
+
+    (last_r, last_s, last_t)
 }
 
 /// Greatest common divisor for two multi-digit integers

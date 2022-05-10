@@ -1,4 +1,4 @@
-use core::{ptr, cmp::Ordering};
+use core::{cmp::Ordering, ptr};
 
 use crate::{
     add, arch::word::Word, bits::trailing_zeros_large, cmp::cmp_same_len,
@@ -26,7 +26,8 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
         let (mut lhs_cur, mut rhs_cur) = (&mut lhs[lhs_pos..], &mut rhs[rhs_pos..]);
 
         loop {
-            match lhs_cur.len()
+            match lhs_cur
+                .len()
                 .cmp(&rhs_cur.len())
                 .then_with(|| cmp_same_len(lhs_cur, rhs_cur))
             {
@@ -38,7 +39,7 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
                         let last_pos = lhs_cur.len() - 1;
                         lhs_cur = &mut lhs_cur[..last_pos];
                     }
-    
+
                     let zeros = trailing_zeros_large(lhs_cur);
                     lhs_cur = &mut lhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(lhs_cur, (zeros % WORD_BITS_USIZE) as u32);
@@ -50,14 +51,14 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
                         let last_pos = rhs_cur.len() - 1;
                         rhs_cur = &mut rhs_cur[..last_pos];
                     }
-    
+
                     let zeros = trailing_zeros_large(rhs_cur);
                     rhs_cur = &mut rhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(rhs_cur, (zeros % WORD_BITS_USIZE) as u32);
                 }
             }
         }
-      
+
         let carry = shift::shl_in_place(lhs_cur, (shift % WORD_BITS_USIZE) as u32);
         (lhs_cur.as_ptr(), lhs_cur.len(), carry)
     };
