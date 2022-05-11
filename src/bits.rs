@@ -17,7 +17,7 @@ use core::{
 };
 
 pub(crate) fn trailing_zeros_large(words: &[Word]) -> usize {
-    debug_assert!(*words.last().unwrap() != 0);
+    debug_assert!(words.len() > 1 || *words.last().unwrap() != 0);
 
     for (idx, word) in words.iter().enumerate() {
         if *word != 0 {

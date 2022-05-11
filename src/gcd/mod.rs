@@ -80,7 +80,7 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
 ///
 /// The GCD result is stored in g (need to be pre-allocated and zero filled), while the Bézout coefficient
 /// for the two operands is stored in the input slices, and the sign of the two coefficients are returned.
-/// 
+///
 /// Specifically if g = gcd(lhs, rhs), lhs * a + rhs * b = g, then a is stored in **rhs**, b is stored in **lhs**,
 /// and the returned tuple is (sign of a, sign of b)
 // TODO: add bonly option

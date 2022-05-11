@@ -11,7 +11,6 @@ use crate::{
     sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
-use core::mem;
 
 impl Gcd<UBig> for UBig {
     type Output = UBig;
@@ -79,6 +78,45 @@ impl ExtendedGcd<UBig> for UBig {
             }
             (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1),
         }
+    }
+}
+
+impl ExtendedGcd<&UBig> for UBig {
+    type OutputGcd = UBig;
+    type OutputCoeff = IBig;
+
+    #[inline]
+    fn extended_gcd(self, rhs: &UBig) -> (UBig, IBig, IBig) {
+        match (self.into_repr(), rhs.repr()) {
+            (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, *word1),
+            (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, *word1),
+            (Small(word0), Large(buffer1)) => {
+                let (g, s, t) = UBig::extended_gcd_large_word(buffer1.clone(), word0);
+                (g, t, s)
+            }
+            (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1.clone()),
+        }
+    }
+}
+
+impl ExtendedGcd<UBig> for &UBig {
+    type OutputGcd = UBig;
+    type OutputCoeff = IBig;
+
+    #[inline]
+    fn extended_gcd(self, rhs: UBig) -> (UBig, IBig, IBig) {
+        let (g, s, t) = rhs.extended_gcd(self);
+        (g, t, s)
+    }
+}
+
+impl ExtendedGcd<&UBig> for &UBig {
+    type OutputGcd = UBig;
+    type OutputCoeff = IBig;
+
+    #[inline]
+    fn extended_gcd(self, rhs: &UBig) -> (UBig, IBig, IBig) {
+        self.clone().extended_gcd(rhs.clone())
     }
 }
 

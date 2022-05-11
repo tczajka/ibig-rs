@@ -2,17 +2,17 @@
 
 use core::{cmp::Ordering, mem, ptr};
 
+use super::gcd_word_by_word;
 use crate::{
     add,
     arch::word::Word,
     bits::trailing_zeros_large,
     cmp::cmp_same_len,
     memory::{self, Memory},
-    primitive::{WORD_BITS_USIZE, double_word},
+    primitive::{double_word, WORD_BITS_USIZE},
     shift,
     sign::Sign,
 };
-use super::gcd_word_by_word;
 
 use alloc::alloc::Layout;
 
@@ -44,29 +44,33 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
                 Ordering::Greater => {
                     // lhs -= rhs
                     assert!(!add::sub_in_place(lhs_cur, rhs_cur));
-                    while *lhs_cur.last().unwrap() == 0 {
-                        let last_pos = lhs_cur.len() - 1;
-                        lhs_cur = &mut lhs_cur[..last_pos];
-                    }
 
                     // truncate trailing zeros
                     let zeros = trailing_zeros_large(lhs_cur);
                     lhs_cur = &mut lhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(lhs_cur, (zeros % WORD_BITS_USIZE) as u32);
-                },
+
+                    // truncate leading zeros
+                    while *lhs_cur.last().unwrap() == 0 {
+                        let last_pos = lhs_cur.len() - 1;
+                        lhs_cur = &mut lhs_cur[..last_pos];
+                    }
+                }
                 Ordering::Less => {
                     // rhs -= lhs
                     assert!(!add::sub_in_place(rhs_cur, lhs_cur));
-                    while *rhs_cur.last().unwrap() == 0 {
-                        let last_pos = rhs_cur.len() - 1;
-                        rhs_cur = &mut rhs_cur[..last_pos];
-                    }
 
                     // truncate trailing zeros
                     let zeros = trailing_zeros_large(rhs_cur);
                     rhs_cur = &mut rhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(rhs_cur, (zeros % WORD_BITS_USIZE) as u32);
-                },
+
+                    // truncate leading zeros
+                    while *rhs_cur.last().unwrap() == 0 {
+                        let last_pos = rhs_cur.len() - 1;
+                        rhs_cur = &mut rhs_cur[..last_pos];
+                    }
+                }
             }
 
             // delegate to single word version when both numbers fit in single word
@@ -85,7 +89,10 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
     let mut final_size = result_cur.len() + shift_words;
     lhs[..shift_words].fill(0);
     lhs[shift_words..final_size].copy_from_slice(result_cur);
-    let carry = shift::shl_in_place(&mut lhs[shift_words..final_size], (init_zeros % WORD_BITS_USIZE) as u32);
+    let carry = shift::shl_in_place(
+        &mut lhs[shift_words..final_size],
+        (init_zeros % WORD_BITS_USIZE) as u32,
+    );
     if carry > 0 {
         lhs[final_size] = carry;
         final_size += 1;
@@ -132,19 +139,19 @@ pub(crate) fn xgcd_in_place(
             *s0.first_mut().unwrap() = 1;
             *t1.first_mut().unwrap() = 1;
             (lhs_zeros, 0)
-        },
+        }
         Ordering::Greater => {
             let shift = lhs_zeros - rhs_zeros;
             *s0.first_mut().unwrap() = 1;
             *t1.get_mut(shift / WORD_BITS_USIZE).unwrap() |= 1 << (shift % WORD_BITS_USIZE);
             (rhs_zeros, shift)
-        },
+        }
         Ordering::Less => {
             let shift = rhs_zeros - lhs_zeros;
             *s0.get_mut(shift / WORD_BITS_USIZE).unwrap() |= 1 << (shift % WORD_BITS_USIZE);
             *t1.first_mut().unwrap() = 1;
             (lhs_zeros, shift)
-        },
+        }
     };
 
     // Use the binary GCD algorithm from GMP. Right shift operations are performed inplace just like gcd_in_place
@@ -162,16 +169,18 @@ pub(crate) fn xgcd_in_place(
                 Ordering::Greater => {
                     // lhs -= rhs
                     assert!(!add::sub_in_place(lhs_cur, rhs_cur));
-                    while *lhs_cur.last().unwrap() == 0 {
-                        let last_pos = lhs_cur.len() - 1;
-                        lhs_cur = &mut lhs_cur[..last_pos];
-                    }
 
                     // truncate trailing zeros
                     let zeros = trailing_zeros_large(lhs_cur);
                     lhs_cur = &mut lhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(lhs_cur, (zeros % WORD_BITS_USIZE) as u32);
                     shift += zeros;
+
+                    // truncate leading zeros
+                    while *lhs_cur.last().unwrap() == 0 {
+                        let last_pos = lhs_cur.len() - 1;
+                        lhs_cur = &mut lhs_cur[..last_pos];
+                    }
 
                     assert!(!add::add_in_place(t0, t1));
                     assert!(shift::shl_in_place(t1, zeros as u32) == 0);
@@ -181,10 +190,6 @@ pub(crate) fn xgcd_in_place(
                 Ordering::Less => {
                     // rhs -= lhs
                     assert!(!add::sub_in_place(rhs_cur, lhs_cur));
-                    while *rhs_cur.last().unwrap() == 0 {
-                        let last_pos = rhs_cur.len() - 1;
-                        rhs_cur = &mut rhs_cur[..last_pos];
-                    }
 
                     // truncate trailing zeros
                     let zeros = trailing_zeros_large(rhs_cur);
@@ -192,11 +197,17 @@ pub(crate) fn xgcd_in_place(
                     shift::shr_in_place(rhs_cur, (zeros % WORD_BITS_USIZE) as u32);
                     shift += zeros;
 
+                    // truncate leading zeros
+                    while *rhs_cur.last().unwrap() == 0 {
+                        let last_pos = rhs_cur.len() - 1;
+                        rhs_cur = &mut rhs_cur[..last_pos];
+                    }
+
                     assert!(!add::add_in_place(t1, t0));
                     assert!(shift::shl_in_place(t0, zeros as u32) == 0);
                     assert!(!add::add_in_place(s1, s0));
                     assert!(shift::shl_in_place(s0, zeros as u32) == 0);
-                },
+                }
             }
 
             // TODO: delegate to single word version when lhs_cur.len() = rhs_cur.len() = 1
@@ -234,7 +245,7 @@ pub(crate) fn xgcd_in_place(
     let (ssign, tsign) = if reduce {
         (
             add::sub_in_place_with_sign(s0, s1),
-            add::sub_in_place_with_sign(t0, t1)
+            add::sub_in_place_with_sign(t0, t1),
         )
     } else {
         (Sign::Positive, Sign::Positive)

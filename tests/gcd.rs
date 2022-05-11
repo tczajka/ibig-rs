@@ -1,20 +1,32 @@
 use core::fmt::Debug;
-use ibig::{IBig, ops::{Gcd, ExtendedGcd}, ubig};
+use core::ops::{Add, Mul};
+use ibig::{
+    ops::{ExtendedGcd, Gcd},
+    ubig,
+};
 
-fn test_gcd<'a, T>(a: &'a T, b: &'a T, c: &'a T)
+fn test_gcd<'a, T, U>(a: &'a T, b: &'a T, c: &'a T)
 where
-    T: Gcd<T, Output = T>,
-    T: Gcd<&'a T, Output = T>,
-    &'a T: Gcd<T, Output = T>,
-    &'a T: Gcd<&'a T, Output = T>,
-    T: Clone,
-    T: Debug,
-    T: Eq,
+    T: Gcd<T, Output = T> + ExtendedGcd<T, OutputGcd = T, OutputCoeff = U>,
+    T: Gcd<&'a T, Output = T> + ExtendedGcd<&'a T, OutputGcd = T, OutputCoeff = U>,
+    &'a T: Gcd<T, Output = T> + ExtendedGcd<T, OutputGcd = T, OutputCoeff = U>,
+    &'a T: Gcd<&'a T, Output = T> + ExtendedGcd<&'a T, OutputGcd = T, OutputCoeff = U>,
+    T: Clone + Debug + Eq,
+    U: From<T> + Clone + Debug + Eq,
+    U: Add<U, Output = U> + Mul<U, Output = U>,
 {
     assert_eq!(a.gcd(b), *c);
     assert_eq!(a.clone().gcd(b), *c);
     assert_eq!(a.gcd(b.clone()), *c);
     assert_eq!(a.clone().gcd(b.clone()), *c);
+
+    let (g, x, y) = a.extended_gcd(b);
+    assert_eq!(&g, c);
+    assert_eq!(x * U::from(a.clone()) + y * U::from(b.clone()), U::from(g));
+
+    let (g, x, y) = a.extended_gcd(b.clone());
+    assert_eq!(&g, c);
+    assert_eq!(x * U::from(a.clone()) + y * U::from(b.clone()), U::from(g));
 }
 
 #[test]
@@ -85,14 +97,5 @@ fn test_gcd_ubig() {
     for (a, b, c) in &test_cases {
         test_gcd(a, b, c);
         test_gcd(b, a, c);
-
-        // TODO: move into the templated function
-        let (g, x, y) = a.clone().extended_gcd(b.clone());
-        assert_eq!(&g, c);
-        assert_eq!(&x * IBig::from(a) + &y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}, result = ({}, {})", a, b, x, y);
-        
-        let (g, y, x) = b.clone().extended_gcd(a.clone());
-        assert_eq!(&g, c);
-        assert_eq!(&x * IBig::from(a) + &y * IBig::from(b), IBig::from(g), "xgcd failed with {}, {}, result = ({}, {})", b, a, y, x);
     }
 }
