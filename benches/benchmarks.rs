@@ -6,7 +6,11 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
-use ibig::{modular::ModuloRing, ops::{DivRem, Gcd, ExtendedGcd}, ubig, UBig};
+use ibig::{
+    modular::ModuloRing,
+    ops::{DivRem, ExtendedGcd, Gcd},
+    ubig, UBig,
+};
 use rand::prelude::*;
 use std::fmt::Write;
 
@@ -101,7 +105,7 @@ fn bench_gcd(criterion: &mut Criterion) {
     }
 
     group.finish();
-    
+
     let mut group = criterion.benchmark_group("extended_gcd");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 

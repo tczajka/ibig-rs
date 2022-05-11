@@ -103,9 +103,9 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
 /// Temporary memory required for extended gcd.
 pub(crate) fn memory_requirement_up_to(lhs_len: usize, rhs_len: usize) -> Layout {
     // Required memory:
-    // - two numbers (s0 & s1) with almost the same size as rhs
-    // - two numbers (t0 & t1) with almost the same size as lhs
-    let num_words = 2 * (lhs_len + rhs_len) + 4;
+    // - two numbers (s0 & s1) with at most the same size as rhs
+    // - two numbers (t0 & t1) with at most the same size as lhs
+    let num_words = 2 * (lhs_len + rhs_len);
     memory::array_layout::<Word>(num_words)
 }
 
@@ -116,6 +116,8 @@ pub(crate) fn xgcd_in_place(
     g: &mut [Word],
     memory: &mut Memory,
 ) -> (Sign, Sign) {
+    debug_assert!(lhs.len() > 1 && rhs.len() > 1);
+
     // find common factors of 2
     let lhs_zeros = trailing_zeros_large(lhs);
     let rhs_zeros = trailing_zeros_large(rhs);
@@ -125,13 +127,12 @@ pub(crate) fn xgcd_in_place(
     shift::shr_in_place(&mut rhs[rhs_pos..], (rhs_zeros % WORD_BITS_USIZE) as u32);
 
     // allocate memory for coefficients
-    // the extra 1 word is required for the final shifting stage
-    let (s0, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len() + 1, 0);
-    let (s1, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len() + 1, 0);
-    let (t0, mut memory) = memory.allocate_slice_fill::<Word>(rhs.len() + 1, 0);
-    let (t1, _) = memory.allocate_slice_fill::<Word>(rhs.len() + 1, 0);
-
-    // TODO: log down the last position of s0, s1, t0, t1
+    let (s0, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
+    let (s1, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
+    let (t0, mut memory) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
+    let (t1, _) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
+    let (mut s0_end, mut s1_end) = (1, 1);
+    let (mut t0_end, mut t1_end) = (1, 1);
 
     // initialize s, t
     let (init_zeros, mut shift) = match lhs_zeros.cmp(&rhs_zeros) {
@@ -144,15 +145,43 @@ pub(crate) fn xgcd_in_place(
             let shift = lhs_zeros - rhs_zeros;
             *s0.first_mut().unwrap() = 1;
             *t1.get_mut(shift / WORD_BITS_USIZE).unwrap() |= 1 << (shift % WORD_BITS_USIZE);
+            t1_end += shift / WORD_BITS_USIZE;
             (rhs_zeros, shift)
         }
         Ordering::Less => {
             let shift = rhs_zeros - lhs_zeros;
             *s0.get_mut(shift / WORD_BITS_USIZE).unwrap() |= 1 << (shift % WORD_BITS_USIZE);
+            s0_end += shift / WORD_BITS_USIZE;
             *t1.first_mut().unwrap() = 1;
             (lhs_zeros, shift)
         }
     };
+
+    /// lhs[..lhs_end] += rhs, assuming rhs.len() <= lhs.len()
+    /// return true if lhs is fully overflowed
+    #[inline(always)]
+    fn add_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, rhs: &[Word]) -> bool {
+        *lhs_end = (*lhs_end).max(rhs.len());
+        if add::add_in_place(&mut lhs[..*lhs_end], rhs) {
+            debug_assert!(*lhs_end <= lhs.len());
+            if *lhs_end == lhs.len() {
+                return true;
+            }
+            lhs[*lhs_end] = 1;
+            *lhs_end += 1;
+        }
+        false
+    }
+    // lhs[..lhs_end] += rhs, assuming no overflow
+    #[inline(always)]
+    fn shl_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, shift: usize) {
+        let carry = shift::shl_in_place(&mut lhs[..*lhs_end], shift as u32);
+        if carry > 0 {
+            debug_assert!(*lhs_end < lhs.len());
+            lhs[*lhs_end] = carry;
+            *lhs_end += 1;
+        }
+    }
 
     // Use the binary GCD algorithm from GMP. Right shift operations are performed inplace just like gcd_in_place
     {
@@ -182,10 +211,10 @@ pub(crate) fn xgcd_in_place(
                         lhs_cur = &mut lhs_cur[..last_pos];
                     }
 
-                    assert!(!add::add_in_place(t0, t1));
-                    assert!(shift::shl_in_place(t1, zeros as u32) == 0);
-                    assert!(!add::add_in_place(s0, s1));
-                    assert!(shift::shl_in_place(s1, zeros as u32) == 0);
+                    assert!(!add_in_place_with_pos(t0, &mut t0_end, &t1[..t1_end]));
+                    shl_in_place_with_pos(t1, &mut t1_end, zeros);
+                    assert!(!add_in_place_with_pos(s0, &mut s0_end, &s1[..s1_end]));
+                    shl_in_place_with_pos(s1, &mut s1_end, zeros);
                 }
                 Ordering::Less => {
                     // rhs -= lhs
@@ -203,10 +232,10 @@ pub(crate) fn xgcd_in_place(
                         rhs_cur = &mut rhs_cur[..last_pos];
                     }
 
-                    assert!(!add::add_in_place(t1, t0));
-                    assert!(shift::shl_in_place(t0, zeros as u32) == 0);
-                    assert!(!add::add_in_place(s1, s0));
-                    assert!(shift::shl_in_place(s0, zeros as u32) == 0);
+                    assert!(!add_in_place_with_pos(t1, &mut t1_end, &t0[..t0_end]));
+                    shl_in_place_with_pos(t0, &mut t0_end, zeros);
+                    assert!(!add_in_place_with_pos(s1, &mut s1_end, &s0[..s0_end]));
+                    shl_in_place_with_pos(s0, &mut s0_end, zeros);
                 }
             }
 
@@ -223,25 +252,34 @@ pub(crate) fn xgcd_in_place(
     };
 
     // now u = v = g = gcd (lhs,rhs). Compute U/g (store in t1) and V/g (store in s1)
-    assert!(!add::add_in_place(s1, s0));
-    assert!(!add::add_in_place(t1, t0));
+    assert!(!add_in_place_with_pos(s1, &mut s1_end, &s0[..s0_end]));
+    assert!(!add_in_place_with_pos(t1, &mut t1_end, &t0[..t0_end]));
 
     // now 2^shift * g = s0 * U - t0 * V. Get rid of the power of two, using
     // s0 * U - t0 * V = (s0 + V/g) U - (t0 + U/g) V.
     for _ in 0..shift {
-        if (s0.first().unwrap() | t0.first().unwrap()) & 1 > 0 {
-            // TODO: overflow may happen if we remove the extra 1 word
-            assert!(!add::add_in_place(s0, s1));
-            assert!(!add::add_in_place(t0, t1));
-        }
-        shift::shr_in_place(s0, 1);
-        shift::shr_in_place(t0, 1);
+        let (s_carry, t_carry) = if (s0.first().unwrap() | t0.first().unwrap()) & 1 > 0 {
+            (
+                add_in_place_with_pos(s0, &mut s0_end, &s1[..s1_end]),
+                add_in_place_with_pos(t0, &mut t0_end, &t1[..t1_end]),
+            )
+        } else {
+            (false, false)
+        };
+
+        const HBIT: Word = 1 << (WORD_BITS_USIZE - 1);
+        shift::shr_in_place_with_carry(&mut s0[..s0_end], 1, HBIT * s_carry as Word);
+        shift::shr_in_place_with_carry(&mut t0[..t0_end], 1, HBIT * t_carry as Word);
     }
 
-    // reduce s and t if necessary
-    assert!(shift::shl_in_place(s0, 1) == 0);
-    let reduce = cmp_same_len(s0, s1).is_gt();
-    shift::shr_in_place(s0, 1);
+    // reduce s0 and t0 if s0 > V/g - s0
+    // the xx_end markers are ignored here because there could be leading zeros
+    let reduce = cmp_same_len(s0, s1).is_ge() || {
+        assert!(!add::sub_in_place(s1, s0));
+        let r = cmp_same_len(s0, s1).is_ge();
+        assert!(!add::add_in_place(s1, s0));
+        r
+    };
     let (ssign, tsign) = if reduce {
         (
             add::sub_in_place_with_sign(s0, s1),

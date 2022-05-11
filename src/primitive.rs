@@ -24,6 +24,7 @@ pub(crate) const fn double_word(low: Word, high: Word) -> DoubleWord {
     extend_word(low) | extend_word(high) << WORD_BITS
 }
 
+/// Split a `DoubleWord` into (low, high) parts
 #[inline]
 pub(crate) const fn split_double_word(dw: DoubleWord) -> (Word, Word) {
     (dw as Word, (dw >> WORD_BITS) as Word)
