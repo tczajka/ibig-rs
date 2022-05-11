@@ -2,7 +2,6 @@
 use crate::{
     arch::word::{SignedWord, Word},
     memory::Memory,
-    primitive::{double_word, extend_word},
     sign::Sign,
 };
 use alloc::alloc::Layout;

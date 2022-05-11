@@ -1,6 +1,6 @@
 //! Binary GCD algorithms.
 
-use core::{cmp::Ordering, mem, ptr};
+use core::cmp::Ordering;
 
 use super::gcd_word_by_word;
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     bits::trailing_zeros_large,
     cmp::cmp_same_len,
     memory::{self, Memory},
-    primitive::{double_word, WORD_BITS_USIZE},
+    primitive::WORD_BITS_USIZE,
     shift,
     sign::Sign,
 };

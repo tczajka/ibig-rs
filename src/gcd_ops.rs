@@ -7,8 +7,6 @@ use crate::{
     ibig::IBig,
     memory::MemoryAllocation,
     ops::{ExtendedGcd, Gcd},
-    primitive::{extend_word, PrimitiveSigned, PrimitiveUnsigned},
-    sign::Sign::{self, *},
     ubig::{Repr::*, UBig},
 };
 
