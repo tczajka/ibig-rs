@@ -27,3 +27,4 @@ pub(crate) mod modulo;
 pub(crate) mod modulo_ring;
 mod mul;
 mod pow;
+mod inv;
