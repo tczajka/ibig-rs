@@ -176,7 +176,7 @@ pub(crate) fn xgcd_in_place(
         }
         false
     }
-    /// lhs[..lhs_end] += rhs, assuming no overflow
+    /// lhs[..lhs_end] << shift, assuming no overflow
     #[inline(always)]
     fn shl_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, shift: usize) {
         let carry = shift::shl_in_place(&mut lhs[..*lhs_end], shift as u32);
