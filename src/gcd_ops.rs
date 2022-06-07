@@ -190,7 +190,7 @@ impl UBig {
             MemoryAllocation::new(gcd::memory_requirement_exact(lhs.len(), rhs.len()));
         let mut memory = allocation.memory();
 
-        let (lhs_sign, rhs_sign) = gcd::xgcd_in_place(&mut lhs, &mut rhs, &mut buffer, &mut memory);
+        let (lhs_sign, rhs_sign) = gcd::xgcd_in_place(&mut lhs, &mut rhs, &mut buffer, false, &mut memory);
         (
             buffer.into(),
             IBig::from_sign_magnitude(lhs_sign, rhs.into()),

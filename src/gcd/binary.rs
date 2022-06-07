@@ -114,6 +114,7 @@ pub(crate) fn xgcd_in_place(
     lhs: &mut [Word],
     rhs: &mut [Word],
     g: &mut [Word],
+    bonly: bool,
     memory: &mut Memory,
 ) -> (Sign, Sign) {
     debug_assert!(lhs.len() > 1 && rhs.len() > 1);
@@ -172,7 +173,7 @@ pub(crate) fn xgcd_in_place(
         }
         false
     }
-    // lhs[..lhs_end] += rhs, assuming no overflow
+    /// lhs[..lhs_end] += rhs, assuming no overflow
     #[inline(always)]
     fn shl_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, shift: usize) {
         let carry = shift::shl_in_place(&mut lhs[..*lhs_end], shift as u32);
@@ -188,7 +189,6 @@ pub(crate) fn xgcd_in_place(
         let (mut lhs_cur, mut rhs_cur) = (&mut lhs[lhs_pos..], &mut rhs[rhs_pos..]);
 
         loop {
-            // keep lhs > rhs, swap if needed
             match lhs_cur
                 .len()
                 .cmp(&rhs_cur.len())
@@ -251,7 +251,8 @@ pub(crate) fn xgcd_in_place(
         }
     };
 
-    // now u = v = g = gcd (lhs,rhs). Compute U/g (store in t1) and V/g (store in s1)
+    // now lhs = rhs = g = gcd (U,V). (U and V denote the original lhs and rhs)
+    // compute U/g (store in t1) and V/g (store in s1)
     assert!(!add_in_place_with_pos(s1, &mut s1_end, &s0[..s0_end]));
     assert!(!add_in_place_with_pos(t1, &mut t1_end, &t0[..t0_end]));
 
@@ -291,6 +292,10 @@ pub(crate) fn xgcd_in_place(
 
     // move s0 to rhs, t0 to lhs
     lhs.copy_from_slice(&t0[..lhs.len()]);
-    rhs.copy_from_slice(&s0[..rhs.len()]);
+    if !bonly {
+        // there's not much we can do other than not copying the result
+        // in the binary extended GCD algorithm
+        rhs.copy_from_slice(&s0[..rhs.len()]);
+    }
     (ssign, -tsign)
 }
