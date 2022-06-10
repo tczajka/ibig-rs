@@ -191,6 +191,17 @@ pub(crate) fn xgcd_in_place(
     {
         let (mut lhs_cur, mut rhs_cur) = (&mut lhs[lhs_pos..], &mut rhs[rhs_pos..]);
 
+        // truncate leading zeros
+        // TODO: make this a function
+        while *lhs_cur.last().unwrap() == 0 {
+            let last_pos = lhs_cur.len() - 1;
+            lhs_cur = &mut lhs_cur[..last_pos];
+        }
+        while *rhs_cur.last().unwrap() == 0 {
+            let last_pos = rhs_cur.len() - 1;
+            rhs_cur = &mut rhs_cur[..last_pos];
+        }
+
         loop {
             match lhs_cur
                 .len()
