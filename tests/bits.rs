@@ -335,6 +335,7 @@ fn test_and_ibig() {
             let res: IBig = (a & b).into();
 
             assert_eq!(&a_big & &b_big, res);
+            assert_eq!(&a_big & b_big.clone(), res);
             assert_eq!(a_big.clone() & &b_big, res);
             assert_eq!(a_big.clone() & b_big.clone(), res);
 

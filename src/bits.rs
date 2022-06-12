@@ -1547,7 +1547,7 @@ impl IBig {
         let (sign, magnitude) = self.into_sign_magnitude();
         let v = match (sign, magnitude.bitand_unsigned(T::MAX)) {
             (Positive, v) => v,
-            (Negative, v) => !v.wrapping_sub(T::from(1u8)),
+            (Negative, v) => T::from(0u8).wrapping_sub(v),
         };
         v & rhs
     }
@@ -1556,7 +1556,7 @@ impl IBig {
     fn bitand_ref_unsigned<T: PrimitiveUnsigned>(&self, rhs: T) -> T {
         let v = match (self.sign(), self.magnitude().bitand_ref_unsigned(T::MAX)) {
             (Positive, v) => v,
-            (Negative, v) => !v.wrapping_sub(T::from(1u8)),
+            (Negative, v) => T::from(0u8).wrapping_sub(v),
         };
         v & rhs
     }
