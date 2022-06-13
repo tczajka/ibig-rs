@@ -92,7 +92,7 @@ pub(crate) fn xgcd_in_place(
     binary::xgcd_in_place(lhs, rhs, g, bonly, memory)
 }
 
-/// Memory requirement for division.
+/// Memory requirement for GCD.
 pub(crate) fn memory_requirement_exact(lhs_len: usize, rhs_len: usize) -> Layout {
     binary::memory_requirement_up_to(lhs_len, rhs_len)
 }

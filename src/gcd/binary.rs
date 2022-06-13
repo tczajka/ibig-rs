@@ -1,4 +1,4 @@
-//! Binary GCD algorithms.
+//! Binary GCD algorithms (aka Stein's algorithm).
 
 use core::cmp::Ordering;
 
@@ -187,7 +187,9 @@ pub(crate) fn xgcd_in_place(
         }
     }
 
-    // Use the binary GCD algorithm from GMP. Right shift operations are performed inplace just like gcd_in_place
+    // Use the binary GCD algorithm here. Right shift operations are performed inplace just like gcd_in_place
+    // We maintain U = t1 * lhs + t0 * rhs and V = s1 * lhs + s0 * rhs, where U, V are the original inputs with
+    // common divisors 2 removed
     {
         let (mut lhs_cur, mut rhs_cur) = (&mut lhs[lhs_pos..], &mut rhs[rhs_pos..]);
 
@@ -241,8 +243,6 @@ pub(crate) fn xgcd_in_place(
                     shl_in_place_with_pos(s0, &mut s0_end, zeros);
                 }
             }
-
-            // TODO: delegate to single word version when lhs_cur.len() = rhs_cur.len() = 1
         }
 
         // copy result from lhs to g
@@ -254,13 +254,13 @@ pub(crate) fn xgcd_in_place(
         }
     };
 
-    // now lhs = rhs = g = gcd (U,V). (U and V denote the original lhs and rhs)
+    // now lhs = rhs = g = gcd (U,V).
     // compute U/g (store in t1) and V/g (store in s1)
     assert!(!add_in_place_with_pos(s1, &mut s1_end, &s0[..s0_end]));
     assert!(!add_in_place_with_pos(t1, &mut t1_end, &t0[..t0_end]));
 
     // now 2^shift * g = s0 * U - t0 * V. Get rid of the power of two, using
-    // s0 * U - t0 * V = (s0 + V/g) U - (t0 + U/g) V.
+    // the equation s0 * U - t0 * V = (s0 + V/g) U - (t0 + U/g) V.
     for _ in 0..shift {
         let (s_carry, t_carry) = if (s0.first().unwrap() | t0.first().unwrap()) & 1 > 0 {
             (
