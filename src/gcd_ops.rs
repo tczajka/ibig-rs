@@ -6,52 +6,19 @@ use crate::{
     div, gcd,
     ibig::IBig,
     memory::MemoryAllocation,
-    ops::{ExtendedGcd, Gcd},
     ubig::{Repr::*, UBig},
 };
 
-impl Gcd<UBig> for UBig {
-    type Output = UBig;
-
+impl UBig {
+    /// Compute the greatest common divisor between self and the other operand
+    ///
+    /// # Example
+    /// ```
+    /// # use ibig::ubig;
+    /// assert_eq!(ubig!(12).gcd(&ubig!(18)), ubig!(6));
+    /// ```
     #[inline]
-    fn gcd(self, rhs: UBig) -> UBig {
-        match (self.into_repr(), rhs.into_repr()) {
-            (Small(word0), Small(word1)) => UBig::gcd_word(word0, word1),
-            (Small(word0), Large(buffer1)) => UBig::gcd_large_word(&buffer1, word0),
-            (Large(buffer0), Small(word1)) => UBig::gcd_large_word(&buffer0, word1),
-            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0, buffer1),
-        }
-    }
-}
-
-impl Gcd<&UBig> for UBig {
-    type Output = UBig;
-
-    #[inline]
-    fn gcd(self, rhs: &UBig) -> UBig {
-        match (self.into_repr(), rhs.repr()) {
-            (Small(word0), Small(word1)) => UBig::gcd_word(word0, *word1),
-            (Small(word0), Large(buffer1)) => UBig::gcd_large_word(buffer1, word0),
-            (Large(buffer0), Small(word1)) => UBig::gcd_large_word(&buffer0, *word1),
-            (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0, buffer1.clone()),
-        }
-    }
-}
-
-impl Gcd<UBig> for &UBig {
-    type Output = UBig;
-
-    #[inline]
-    fn gcd(self, rhs: UBig) -> UBig {
-        rhs.gcd(self)
-    }
-}
-
-impl Gcd<&UBig> for &UBig {
-    type Output = UBig;
-
-    #[inline]
-    fn gcd(self, rhs: &UBig) -> UBig {
+    pub fn gcd(&self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::gcd_word(*word0, *word1),
             (Small(word0), Large(buffer1)) => UBig::gcd_large_word(buffer1, *word0),
@@ -59,33 +26,18 @@ impl Gcd<&UBig> for &UBig {
             (Large(buffer0), Large(buffer1)) => UBig::gcd_large(buffer0.clone(), buffer1.clone()),
         }
     }
-}
 
-impl ExtendedGcd<UBig> for UBig {
-    type OutputGcd = UBig;
-    type OutputCoeff = IBig;
-
+    /// Compute the greatest common divisor between self and the other operand, and return
+    /// both the common divisor `g` and the Bézout coefficients.
+    ///
+    /// # Example
+    /// ```
+    /// # use ibig::{ibig, ubig};
+    /// assert_eq!(ubig!(12).extended_gcd(&ubig!(18)), (ubig!(6), ibig!(-1), ibig!(1)));
+    /// ```
     #[inline]
-    fn extended_gcd(self, rhs: UBig) -> (UBig, IBig, IBig) {
-        match (self.into_repr(), rhs.into_repr()) {
-            (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, word1),
-            (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, word1),
-            (Small(word0), Large(buffer1)) => {
-                let (g, s, t) = UBig::extended_gcd_large_word(buffer1, word0);
-                (g, t, s)
-            }
-            (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1),
-        }
-    }
-}
-
-impl ExtendedGcd<&UBig> for UBig {
-    type OutputGcd = UBig;
-    type OutputCoeff = IBig;
-
-    #[inline]
-    fn extended_gcd(self, rhs: &UBig) -> (UBig, IBig, IBig) {
-        match (self.into_repr(), rhs.repr()) {
+    pub fn extended_gcd(&self, rhs: &UBig) -> (UBig, IBig, IBig) {
+        match (self.clone().into_repr(), rhs.repr()) {
             (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, *word1),
             (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, *word1),
             (Small(word0), Large(buffer1)) => {
@@ -95,30 +47,7 @@ impl ExtendedGcd<&UBig> for UBig {
             (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1.clone()),
         }
     }
-}
 
-impl ExtendedGcd<UBig> for &UBig {
-    type OutputGcd = UBig;
-    type OutputCoeff = IBig;
-
-    #[inline]
-    fn extended_gcd(self, rhs: UBig) -> (UBig, IBig, IBig) {
-        let (g, s, t) = rhs.extended_gcd(self);
-        (g, t, s)
-    }
-}
-
-impl ExtendedGcd<&UBig> for &UBig {
-    type OutputGcd = UBig;
-    type OutputCoeff = IBig;
-
-    #[inline]
-    fn extended_gcd(self, rhs: &UBig) -> (UBig, IBig, IBig) {
-        self.clone().extended_gcd(rhs.clone())
-    }
-}
-
-impl UBig {
     /// Perform gcd on two `Word`s.
     #[inline]
     fn gcd_word(a: Word, b: Word) -> UBig {

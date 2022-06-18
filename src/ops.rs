@@ -109,18 +109,3 @@ pub trait DivRemEuclid<Rhs = Self> {
 
     fn div_rem_euclid(self, rhs: Rhs) -> (Self::OutputDiv, Self::OutputRem);
 }
-
-/// Compute the greatest common divisor
-pub trait Gcd<Rhs = Self> {
-    type Output;
-
-    fn gcd(self, rhs: Rhs) -> Self::Output;
-}
-
-/// Compute the extended greatest common divisor
-pub trait ExtendedGcd<Rhs = Self> {
-    type OutputGcd;
-    type OutputCoeff;
-
-    fn extended_gcd(self, rhs: Rhs) -> (Self::OutputGcd, Self::OutputCoeff, Self::OutputCoeff);
-}
