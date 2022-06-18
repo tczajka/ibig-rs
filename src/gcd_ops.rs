@@ -17,6 +17,8 @@ impl UBig {
     /// # use ibig::ubig;
     /// assert_eq!(ubig!(12).gcd(&ubig!(18)), ubig!(6));
     /// ```
+    ///
+    /// Panics if two oprands are both zero.
     #[inline]
     pub fn gcd(&self, rhs: &UBig) -> UBig {
         match (self.repr(), rhs.repr()) {
@@ -35,6 +37,8 @@ impl UBig {
     /// # use ibig::{ibig, ubig};
     /// assert_eq!(ubig!(12).extended_gcd(&ubig!(18)), (ubig!(6), ibig!(-1), ibig!(1)));
     /// ```
+    ///
+    /// Panics if two oprands are both zero.
     #[inline]
     pub fn extended_gcd(&self, rhs: &UBig) -> (UBig, IBig, IBig) {
         match (self.clone().into_repr(), rhs.repr()) {
@@ -52,6 +56,9 @@ impl UBig {
     #[inline]
     fn gcd_word(a: Word, b: Word) -> UBig {
         if a == 0 || b == 0 {
+            if a == 0 && b == 0 {
+                UBig::panic_gcd_with_0();
+            }
             return UBig::from_word(a | b);
         }
 
@@ -61,6 +68,10 @@ impl UBig {
     /// Perform extended gcd on two `Word`s.
     #[inline]
     fn extended_gcd_word(a: Word, b: Word) -> (UBig, IBig, IBig) {
+        if a == 0 && b == 0 {
+            UBig::panic_gcd_with_0();
+        }
+
         // cases where a = 0 or b = 0 can be correctly handled by extended euclidean algorithm
         let (r, s, t) = gcd::xgcd_word_by_word(a, b, false);
         (UBig::from_word(r), IBig::from(s), IBig::from(t))
@@ -126,5 +137,10 @@ impl UBig {
             IBig::from_sign_magnitude(lhs_sign, rhs.into()),
             IBig::from_sign_magnitude(rhs_sign, lhs.into()),
         )
+    }
+
+    #[inline]
+    fn panic_gcd_with_0() -> ! {
+        panic!("the greatest common divisor is not defined between zeros!")
     }
 }

@@ -87,9 +87,9 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
     // move the result from rhs to low bits of lhs, with shift taken into account
     let shift_words = init_zeros / WORD_BITS_USIZE;
     let mut final_size = result_cur.len() + shift_words;
-    for i in 0..shift_words {
+    for i in lhs.iter_mut().take(shift_words) {
         // LEGACY: equivalent to lhs[..shift_words].fill(0) after Rust 1.50
-        lhs[i] = 0;
+        *i = 0;
     }
     lhs[shift_words..final_size].copy_from_slice(result_cur);
     let carry = shift::shl_in_place(

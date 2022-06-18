@@ -5,7 +5,6 @@ fn test_gcd_ubig() {
     // test cases (x, y, gcd(x,y))
     let test_cases = [
         // trivial cases
-        (ubig!(0), ubig!(0), ubig!(0)),
         (ubig!(0), ubig!(123), ubig!(123)),
         (ubig!(123), ubig!(0), ubig!(123)),
         (ubig!(1), ubig!(123), ubig!(1)),
@@ -82,4 +81,11 @@ fn test_gcd_ubig() {
             IBig::from(g)
         );
     }
+}
+
+#[test]
+#[should_panic]
+fn test_gcd_0() {
+    let _ = ubig!(0).gcd(&ubig!(0));
+    let _ = ubig!(0).extended_gcd(&ubig!(0));
 }
