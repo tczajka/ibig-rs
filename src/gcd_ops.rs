@@ -41,14 +41,14 @@ impl UBig {
     /// Panics if two oprands are both zero.
     #[inline]
     pub fn extended_gcd(&self, rhs: &UBig) -> (UBig, IBig, IBig) {
-        match (self.clone().into_repr(), rhs.repr()) {
-            (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, *word1),
-            (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, *word1),
+        match (self.clone().into_repr(), rhs.clone().into_repr()) {
+            (Small(word0), Small(word1)) => UBig::extended_gcd_word(word0, word1),
+            (Large(buffer0), Small(word1)) => UBig::extended_gcd_large_word(buffer0, word1),
             (Small(word0), Large(buffer1)) => {
-                let (g, s, t) = UBig::extended_gcd_large_word(buffer1.clone(), word0);
+                let (g, s, t) = UBig::extended_gcd_large_word(buffer1, word0);
                 (g, t, s)
             }
-            (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1.clone()),
+            (Large(buffer0), Large(buffer1)) => UBig::extended_gcd_large(buffer0, buffer1),
         }
     }
 
