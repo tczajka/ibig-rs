@@ -16,15 +16,15 @@ use core::{
     ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not},
 };
 
-pub(crate) fn trailing_zeros_large(words: &[Word]) -> usize {
-    debug_assert!(words.len() > 1 || *words.last().unwrap() != 0);
+pub(crate) fn trailing_zeros(words: &[Word]) -> usize {
+    debug_assert!(words.len() > 0 || *words.last().unwrap() != 0);
 
     for (idx, word) in words.iter().enumerate() {
         if *word != 0 {
             return idx * WORD_BITS_USIZE + word.trailing_zeros() as usize;
         }
     }
-    panic!("trailing_zeros_large(0)")
+    panic!("trailing_zeros(0)")
 }
 
 impl UBig {
@@ -147,7 +147,7 @@ impl UBig {
         match self.repr() {
             Small(0) => None,
             Small(word) => Some(word.trailing_zeros() as usize),
-            Large(buffer) => Some(trailing_zeros_large(buffer)),
+            Large(buffer) => Some(trailing_zeros(buffer)),
         }
     }
 

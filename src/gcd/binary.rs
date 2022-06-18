@@ -6,7 +6,7 @@ use super::gcd_word_by_word;
 use crate::{
     add,
     arch::word::Word,
-    bits::trailing_zeros_large,
+    bits::trailing_zeros,
     cmp::cmp_same_len,
     memory::{self, Memory},
     primitive::WORD_BITS_USIZE,
@@ -19,8 +19,8 @@ use alloc::alloc::Layout;
 /// Naive binary GCD for two multi-digit integers
 pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
     // find common factors of 2
-    let lhs_zeros = trailing_zeros_large(lhs);
-    let rhs_zeros = trailing_zeros_large(rhs);
+    let lhs_zeros = trailing_zeros(lhs);
+    let rhs_zeros = trailing_zeros(rhs);
     let init_zeros = lhs_zeros.min(rhs_zeros);
 
     let (lhs_pos, rhs_pos) = (lhs_zeros / WORD_BITS_USIZE, rhs_zeros / WORD_BITS_USIZE);
@@ -46,7 +46,7 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
                     assert!(!add::sub_in_place(lhs_cur, rhs_cur));
 
                     // truncate trailing zeros
-                    let zeros = trailing_zeros_large(lhs_cur);
+                    let zeros = trailing_zeros(lhs_cur);
                     lhs_cur = &mut lhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(lhs_cur, (zeros % WORD_BITS_USIZE) as u32);
 
@@ -61,7 +61,7 @@ pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
                     assert!(!add::sub_in_place(rhs_cur, lhs_cur));
 
                     // truncate trailing zeros
-                    let zeros = trailing_zeros_large(rhs_cur);
+                    let zeros = trailing_zeros(rhs_cur);
                     rhs_cur = &mut rhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(rhs_cur, (zeros % WORD_BITS_USIZE) as u32);
 
@@ -123,18 +123,18 @@ pub(crate) fn xgcd_in_place(
     debug_assert!(lhs.len() > 1 && rhs.len() > 1);
 
     // find common factors of 2
-    let lhs_zeros = trailing_zeros_large(lhs);
-    let rhs_zeros = trailing_zeros_large(rhs);
+    let lhs_zeros = trailing_zeros(lhs);
+    let rhs_zeros = trailing_zeros(rhs);
 
     let (lhs_pos, rhs_pos) = (lhs_zeros / WORD_BITS_USIZE, rhs_zeros / WORD_BITS_USIZE);
     shift::shr_in_place(&mut lhs[lhs_pos..], (lhs_zeros % WORD_BITS_USIZE) as u32);
     shift::shr_in_place(&mut rhs[rhs_pos..], (rhs_zeros % WORD_BITS_USIZE) as u32);
 
     // allocate memory for coefficients
-    let (s0, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
-    let (s1, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
-    let (t0, mut memory) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
-    let (t1, _) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
+    let (s0, mut memory) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
+    let (s1, mut memory) = memory.allocate_slice_fill::<Word>(rhs.len(), 0);
+    let (t0, mut memory) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
+    let (t1, _) = memory.allocate_slice_fill::<Word>(lhs.len(), 0);
     let (mut s0_end, mut s1_end) = (1, 1);
     let (mut t0_end, mut t1_end) = (1, 1);
 
@@ -163,7 +163,7 @@ pub(crate) fn xgcd_in_place(
 
     /// lhs[..lhs_end] += rhs, assuming rhs.len() <= lhs.len()
     /// return true if lhs is fully overflowed
-    #[inline(always)]
+    #[inline]
     fn add_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, rhs: &[Word]) -> bool {
         *lhs_end = (*lhs_end).max(rhs.len());
         if add::add_in_place(&mut lhs[..*lhs_end], rhs) {
@@ -177,7 +177,7 @@ pub(crate) fn xgcd_in_place(
         false
     }
     /// lhs[..lhs_end] << shift, assuming no overflow
-    #[inline(always)]
+    #[inline]
     fn shl_in_place_with_pos(lhs: &mut [Word], lhs_end: &mut usize, shift: usize) {
         let carry = shift::shl_in_place(&mut lhs[..*lhs_end], shift as u32);
         if carry > 0 {
@@ -205,7 +205,7 @@ pub(crate) fn xgcd_in_place(
                     assert!(!add::sub_in_place(lhs_cur, rhs_cur));
 
                     // truncate trailing zeros
-                    let zeros = trailing_zeros_large(lhs_cur);
+                    let zeros = trailing_zeros(lhs_cur);
                     lhs_cur = &mut lhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(lhs_cur, (zeros % WORD_BITS_USIZE) as u32);
                     shift += zeros;
@@ -226,7 +226,7 @@ pub(crate) fn xgcd_in_place(
                     assert!(!add::sub_in_place(rhs_cur, lhs_cur));
 
                     // truncate trailing zeros
-                    let zeros = trailing_zeros_large(rhs_cur);
+                    let zeros = trailing_zeros(rhs_cur);
                     rhs_cur = &mut rhs_cur[zeros / WORD_BITS_USIZE..];
                     shift::shr_in_place(rhs_cur, (zeros % WORD_BITS_USIZE) as u32);
                     shift += zeros;
