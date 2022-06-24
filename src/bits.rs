@@ -118,7 +118,7 @@ impl UBig {
 
     /// Returns the number of trailing zeros in the binary representation.
     ///
-    /// In other words, it is the smallest `n` such that 2 to the power of `n` divides the number.
+    /// In other words, it is the largest `n` such that 2 to the power of `n` divides the number.
     ///
     /// For 0, it returns `None`.
     ///
@@ -212,7 +212,7 @@ impl UBig {
 impl IBig {
     /// Returns the number of trailing zeros in the two's complement binary representation.
     ///
-    /// In other words, it is the smallest `n` such that 2 to the power of `n` divides the number.
+    /// In other words, it is the largest `n` such that 2 to the power of `n` divides the number.
     ///
     /// For 0, it returns `None`.
     ///
