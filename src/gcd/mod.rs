@@ -10,13 +10,31 @@ use core::mem;
 mod binary;
 
 /// Single word gcd, requires a > 0 and b > 0
-pub(crate) fn gcd_word_by_word(a: Word, b: Word) -> Word {
+pub(crate) fn gcd_word_by_word(mut a: Word, mut b: Word) -> Word {
     debug_assert!(a > 0 && b > 0);
 
     // find common factors of 2
     let shift = (a | b).trailing_zeros();
-    let mut a = a >> a.trailing_zeros();
-    let mut b = b >> b.trailing_zeros();
+    a >>= a.trailing_zeros();
+    b >>= b.trailing_zeros();
+
+    // reduce by division if the difference between operands is large
+    let (za, zb) = (a.leading_zeros(), b.leading_zeros());
+    if za > zb.wrapping_add(4) {
+        let r = b % a;
+        if r == 0 {
+            return a << shift;
+        } else {
+            b = r >> r.trailing_zeros();
+        }
+    } else if zb > za.wrapping_add(4) {
+        let r = a % b;
+        if r == 0 {
+            return b << shift;
+        } else {
+            a = r >> r.trailing_zeros();
+        }
+    }
 
     // the binary GCD algorithm
     while a != b {
