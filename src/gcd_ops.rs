@@ -38,7 +38,9 @@ impl UBig {
     /// assert_eq!(ubig!(12).extended_gcd(&ubig!(18)), (ubig!(6), ibig!(-1), ibig!(1)));
     /// ```
     ///
-    /// Panics if two oprands are both zero.
+    /// # Panics
+    /// 
+    /// Panics if two operands are both zero.
     #[inline]
     pub fn extended_gcd(&self, rhs: &UBig) -> (UBig, IBig, IBig) {
         match (self.clone().into_repr(), rhs.clone().into_repr()) {

@@ -17,6 +17,9 @@ use crate::{
 use alloc::alloc::Layout;
 
 /// Naive binary GCD for two multi-digit integers
+/// 
+/// The result is stored in the low bits of lhs.
+/// The word length of the result number is returned.
 pub(crate) fn gcd_in_place(lhs: &mut [Word], rhs: &mut [Word]) -> usize {
     // find common factors of 2
     let lhs_zeros = trailing_zeros(lhs);
