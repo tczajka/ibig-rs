@@ -2,6 +2,12 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Features
+* GCD
+* Extended GCD
+
 ## 0.3.5 - 2022-03-12
 
 ### Bugfixes
