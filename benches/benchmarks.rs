@@ -86,6 +86,37 @@ fn bench_div(criterion: &mut Criterion) {
     group.finish();
 }
 
+fn bench_gcd(criterion: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(1);
+    let mut group = criterion.benchmark_group("gcd");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=5 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a).gcd(black_box(&b)))
+        });
+    }
+
+    group.finish();
+
+    let mut group = criterion.benchmark_group("extended_gcd");
+    group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+
+    for log_bits in 1..=5 {
+        let bits = 10usize.pow(log_bits);
+        let a = random_ubig(bits, &mut rng);
+        let b = random_ubig(bits, &mut rng);
+        group.bench_with_input(BenchmarkId::from_parameter(bits), &bits, |bencher, _| {
+            bencher.iter(|| black_box(&a).extended_gcd(black_box(&b)))
+        });
+    }
+
+    group.finish();
+}
+
 fn bench_to_hex(criterion: &mut Criterion) {
     let mut rng = StdRng::seed_from_u64(1);
     let mut group = criterion.benchmark_group("to_hex");
@@ -222,6 +253,7 @@ criterion_group!(
     bench_sub,
     bench_mul,
     bench_div,
+    bench_gcd,
     bench_to_hex,
     bench_to_dec,
     bench_from_hex,
