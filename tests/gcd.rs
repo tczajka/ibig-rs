@@ -1,4 +1,8 @@
-use ibig::{ubig, IBig};
+use ibig::{
+    ibig,
+    ops::{Abs, UnsignedAbs},
+    ubig, IBig, UBig,
+};
 
 #[test]
 fn test_gcd_ubig() {
@@ -65,27 +69,77 @@ fn test_gcd_ubig() {
     ];
 
     for (a, b, c) in &test_cases {
-        assert_eq!(&a.gcd(b), c);
-        assert_eq!(&b.gcd(a), c);
+        for (a, b) in [(a, b), (b, a)] {
+            assert_eq!(a.gcd(b), *c);
 
-        let (g, x, y) = a.extended_gcd(b);
-        assert_eq!(&g, c);
-        assert_eq!(
-            x * IBig::from(a.clone()) + y * IBig::from(b.clone()),
-            IBig::from(g)
-        );
-        let (g, y, x) = b.extended_gcd(a);
-        assert_eq!(&g, c);
-        assert_eq!(
-            x * IBig::from(a.clone()) + y * IBig::from(b.clone()),
-            IBig::from(g)
-        );
+            let (g, x, y) = a.extended_gcd(b);
+            assert_eq!(g, *c);
+            assert_eq!(&x * IBig::from(a) + &y * IBig::from(b), IBig::from(g));
+
+            assert!(x.unsigned_abs() <= *b.max(&ubig!(1)));
+            assert!(y.unsigned_abs() <= *a.max(&ubig!(1)));
+        }
+    }
+
+    for a in 0u8..=20 {
+        for b in 0u8..=20 {
+            if a == 0 && b == 0 {
+                continue;
+            }
+            let a = UBig::from(a);
+            let b = UBig::from(b);
+            let (g, x, y) = a.extended_gcd(&b);
+            assert_eq!(g, a.gcd(&b));
+            assert_eq!(&x * IBig::from(&a) + &y * IBig::from(&b), IBig::from(g));
+            assert!(x.unsigned_abs() <= b.max(ubig!(1)));
+            assert!(y.unsigned_abs() <= a.max(ubig!(1)));
+        }
     }
 }
 
 #[test]
 #[should_panic]
-fn test_gcd_0() {
+fn test_gcd_ubig_0_0() {
     let _ = ubig!(0).gcd(&ubig!(0));
+}
+
+#[test]
+#[should_panic]
+fn test_extended_gcd_ubig_0_0() {
     let _ = ubig!(0).extended_gcd(&ubig!(0));
+}
+
+#[test]
+fn test_gcd_ibig() {
+    assert_eq!(ibig!(12).gcd(&ibig!(18)), ibig!(6));
+    assert_eq!(ibig!(12).gcd(&ibig!(-18)), ibig!(6));
+    assert_eq!(ibig!(-12).gcd(&ibig!(18)), ibig!(6));
+    assert_eq!(ibig!(-12).gcd(&ibig!(-18)), ibig!(6));
+
+    for a in -20i8..=20 {
+        for b in -20i8..=20 {
+            if a == 0 && b == 0 {
+                continue;
+            }
+            let a = IBig::from(a);
+            let b = IBig::from(b);
+            let (g, x, y) = a.extended_gcd(&b);
+            assert_eq!(g, a.gcd(&b));
+            assert_eq!(&x * &a + &y * &b, g);
+            assert!(x.abs() <= b.abs().max(ibig!(1)));
+            assert!(y.abs() <= a.abs().max(ibig!(1)));
+        }
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_gcd_ibig_0_0() {
+    let _ = ibig!(0).gcd(&ibig!(0));
+}
+
+#[test]
+#[should_panic]
+fn test_extended_gcd_ibig_0_0() {
+    let _ = ibig!(0).extended_gcd(&ibig!(0));
 }

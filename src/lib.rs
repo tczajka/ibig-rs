@@ -78,6 +78,7 @@ mod div_ops;
 pub mod error;
 mod fast_divide;
 pub mod fmt;
+mod gcd;
 mod helper_macros;
 mod ibig;
 mod macros;

@@ -159,6 +159,16 @@ impl MulAssign<Sign> for Sign {
     }
 }
 
+impl Mul<IBig> for Sign {
+    type Output = IBig;
+
+    #[inline]
+    fn mul(self, rhs: IBig) -> IBig {
+        let (sign, mag) = rhs.into_sign_magnitude();
+        IBig::from_sign_magnitude(self * sign, mag)
+    }
+}
+
 macro_rules! impl_mul_ubig_unsigned {
     ($t:ty) => {
         impl Mul<$t> for UBig {
