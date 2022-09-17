@@ -2,11 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.3.6 - 2022-09-18
 
 ### Features
-* GCD
-* Extended GCD
+* GCD, greatest common divisor.
+* Extended GCD (GCD with Bézout coefficients).
+* Modular inverse.
+* Modular division.
 
 ## 0.3.5 - 2022-03-12
 
