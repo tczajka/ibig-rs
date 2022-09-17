@@ -5,7 +5,10 @@ use crate::{
     ops::RemEuclid,
     ubig::UBig,
 };
-use core::convert::TryInto;
+use core::{
+    convert::TryInto,
+    ops::{Div, DivAssign},
+};
 
 impl<'a> Modulo<'a> {
     /// Inverse.
@@ -25,6 +28,61 @@ impl<'a> Modulo<'a> {
             ModuloRepr::Small(self_small) => self_small.inverse().map(Into::into),
             ModuloRepr::Large(self_large) => self_large.inverse().map(Into::into),
         }
+    }
+}
+
+impl<'a> Div<Modulo<'a>> for Modulo<'a> {
+    type Output = Modulo<'a>;
+
+    #[inline]
+    fn div(self, rhs: Modulo<'a>) -> Modulo<'a> {
+        (&self).div(&rhs)
+    }
+}
+
+impl<'a> Div<&Modulo<'a>> for Modulo<'a> {
+    type Output = Modulo<'a>;
+
+    #[inline]
+    fn div(self, rhs: &Modulo<'a>) -> Modulo<'a> {
+        (&self).div(rhs)
+    }
+}
+
+impl<'a> Div<Modulo<'a>> for &Modulo<'a> {
+    type Output = Modulo<'a>;
+
+    #[inline]
+    fn div(self, rhs: Modulo<'a>) -> Modulo<'a> {
+        self.div(&rhs)
+    }
+}
+
+impl<'a> Div<&Modulo<'a>> for &Modulo<'a> {
+    type Output = Modulo<'a>;
+
+    #[inline]
+    fn div(self, rhs: &Modulo<'a>) -> Modulo<'a> {
+        // Clippy doesn't like that division is implemented using multiplication.
+        #[allow(clippy::suspicious_arithmetic_impl)]
+        match rhs.inverse() {
+            None => panic!("Division by a non-invertible Modulo"),
+            Some(inv_rhs) => self * inv_rhs,
+        }
+    }
+}
+
+impl<'a> DivAssign<Modulo<'a>> for Modulo<'a> {
+    #[inline]
+    fn div_assign(&mut self, rhs: Modulo<'a>) {
+        self.div_assign(&rhs)
+    }
+}
+
+impl<'a> DivAssign<&Modulo<'a>> for Modulo<'a> {
+    #[inline]
+    fn div_assign(&mut self, rhs: &Modulo<'a>) {
+        *self = (&*self).div(rhs)
     }
 }
 

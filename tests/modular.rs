@@ -234,31 +234,55 @@ fn test_mul() {
 
 #[test]
 fn test_inverse() {
+    let ring = ModuloRing::new(&ubig!(1));
+    assert_eq!(ring.from(0).inverse(), Some(ring.from(0)));
+
     let ring = ModuloRing::new(&ubig!(100));
     let x = ring.from(9);
     let y = x.inverse().unwrap();
-    assert_eq!((x * y).residue(), ubig!(1));
+    assert_eq!(x * y, ring.from(1));
 
-    let x = ring.from(10);
-    assert!(x.inverse().is_none());
+    assert!(ring.from(10).inverse().is_none());
 
     let ring = ModuloRing::new(&ubig!(103));
-    let x = ring.from(20);
-    let y = x.inverse().unwrap();
-    assert_eq!(y.residue(), ubig!(67)); // inverse is unique for prime modulus
+    assert_eq!(ring.from(20).inverse(), Some(ring.from(67))); // inverse is unique for prime modulus
 
-    let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
-    let x = ring.from(ibig!(_3333312345678901234567890123456789));
+    let ring = ModuloRing::new(&ubig!(1000000000000000000000000000000));
+    let x = ring.from(ibig!(3333312345678901234567890123456789));
     let y = x.inverse().unwrap();
-    assert_eq!((x * y).residue(), ubig!(1));
+    assert_eq!(x * y, ring.from(1));
 
-    let x = ring.from(10);
-    assert!(x.inverse().is_none());
+    assert!(ring.from(10).inverse().is_none());
 
-    let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000057)); // prime
-    let x = ring.from(123456789);
-    let y = x.inverse().unwrap();
-    assert_eq!(y.residue(), ubig!(951144331155413413514262063034));
+    let ring = ModuloRing::new(&ubig!(1000000000000000000000000000057)); // prime
+    assert_eq!(
+        ring.from(123456789).inverse(),
+        Some(ring.from(ubig!(951144331155413413514262063034)))
+    );
+}
+
+#[test]
+fn test_div() {
+    let ring = ModuloRing::new(&ubig!(1));
+    assert_eq!(ring.from(0) / ring.from(0), ring.from(0));
+
+    let ring = ModuloRing::new(&ubig!(10));
+    // 2 / 3 == 4
+    let a = ring.from(2);
+    let b = ring.from(3);
+    let res = ring.from(4);
+    assert_eq!(a.clone() / b.clone(), res);
+    assert_eq!(a.clone() / &b, res);
+    assert_eq!(&a / b.clone(), res);
+    assert_eq!(&a / &b, res);
+
+    let mut a = ring.from(2);
+    a /= b.clone();
+    assert_eq!(a, res);
+
+    let mut a = ring.from(2);
+    a /= &b;
+    assert_eq!(a, res);
 }
 
 #[test]
@@ -279,6 +303,35 @@ fn test_sub_different_rings() {
     let x = ring1.from(5);
     let y = ring2.from(5);
     let _ = x - y;
+}
+
+#[test]
+#[should_panic]
+fn test_mul_different_rings() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(200));
+    let x = ring1.from(5);
+    let y = ring2.from(5);
+    let _ = x * y;
+}
+
+#[test]
+#[should_panic]
+fn test_div_different_rings() {
+    let ring1 = ModuloRing::new(&ubig!(100));
+    let ring2 = ModuloRing::new(&ubig!(200));
+    let x = ring1.from(1);
+    let y = ring2.from(1);
+    let _ = x / y;
+}
+
+#[test]
+#[should_panic]
+fn test_div_by_noninvertible() {
+    let ring = ModuloRing::new(&ubig!(100));
+    let x = ring.from(10);
+    let y = ring.from(2);
+    let _ = x / y;
 }
 
 #[test]
