@@ -132,6 +132,6 @@ fn div_rem_in_place_small_quotient(
         q_overflow -= SignedWord::from(add::sub_one_in_place(q));
     }
 
-    assert!(rem_overflow == 0 && q_overflow >= 0 && q_overflow <= 1);
+    assert!(rem_overflow == 0 && (0..=1).contains(&q_overflow));
     q_overflow != 0
 }
