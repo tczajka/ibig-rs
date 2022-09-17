@@ -365,6 +365,20 @@ fn test_pow() {
 }
 
 #[test]
+fn test_pow_signed() {
+    let ring = ModuloRing::new(&ubig!(100));
+    assert_eq!(ring.from(2).pow_signed(&ibig!(10)), ring.from(24));
+    assert_eq!(ring.from(3).pow_signed(&ibig!(-3)), ring.from(63));
+}
+
+#[test]
+#[should_panic]
+fn test_pow_signed_noninvertible() {
+    let ring = ModuloRing::new(&ubig!(100));
+    let _ = ring.from(2).pow_signed(&ibig!(-2));
+}
+
+#[test]
 fn test_format() {
     let ring = ModuloRing::new(&ubig!(100));
     let x = ring.from(105);
