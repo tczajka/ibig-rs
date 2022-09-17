@@ -233,31 +233,31 @@ fn test_mul() {
 }
 
 #[test]
-fn test_inv() {
+fn test_inverse() {
     let ring = ModuloRing::new(&ubig!(100));
     let x = ring.from(9);
-    let y = x.inv().unwrap();
+    let y = x.inverse().unwrap();
     assert_eq!((x * y).residue(), ubig!(1));
 
     let x = ring.from(10);
-    assert!(x.inv().is_none());
+    assert!(x.inverse().is_none());
 
     let ring = ModuloRing::new(&ubig!(103));
     let x = ring.from(20);
-    let y = x.inv().unwrap();
+    let y = x.inverse().unwrap();
     assert_eq!(y.residue(), ubig!(67)); // inverse is unique for prime modulus
 
     let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000000));
     let x = ring.from(ibig!(_3333312345678901234567890123456789));
-    let y = x.inv().unwrap();
+    let y = x.inverse().unwrap();
     assert_eq!((x * y).residue(), ubig!(1));
 
     let x = ring.from(10);
-    assert!(x.inv().is_none());
+    assert!(x.inverse().is_none());
 
     let ring = ModuloRing::new(&ubig!(_1000000000000000000000000000057)); // prime
     let x = ring.from(123456789);
-    let y = x.inv().unwrap();
+    let y = x.inverse().unwrap();
     assert_eq!(y.residue(), ubig!(951144331155413413514262063034));
 }
 
