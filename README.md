@@ -2,7 +2,7 @@
 
 [![crate](https://img.shields.io/crates/v/ibig.svg)](https://crates.io/crates/ibig)
 [![docs](https://docs.rs/ibig/badge.svg)](https://docs.rs/ibig)
-![rustc 1.49+](https://img.shields.io/badge/rustc-1.49%2B-informational.svg)
+![rustc 1.61+](https://img.shields.io/badge/rustc-1.61%2B-informational.svg)
 [![tests](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml/badge.svg)](https://github.com/tczajka/ibig-rs/actions/workflows/tests.yml)
 
 A big integer library with good performance.

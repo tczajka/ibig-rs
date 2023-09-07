@@ -18,8 +18,8 @@ jobs:
           command: check
           args: --all-features --tests
 
-  check-msrv:
-    name: Check MSRV
+  check-minimal:
+    name: Check minimal versions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,22 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.57
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --all-features --tests
+
+  check-msrv:
+    name: Check MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.61
           override: true
       - uses: actions-rs/cargo@v1
         with:

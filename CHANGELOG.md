@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## 0.4.0 -- unreleased
 
 ### Dependencies
-* Minimum Rust version is now 1.57.
+* Minimum Rust version is now 1.61.
 
 ## 0.3.6 - 2022-09-18
 
