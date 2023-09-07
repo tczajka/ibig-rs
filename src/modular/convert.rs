@@ -232,7 +232,7 @@ macro_rules! impl_into_modulo_for_unsigned {
     ($t:ty) => {
         impl IntoModulo for $t {
             #[inline]
-            fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+            fn into_modulo(self, ring: &ModuloRing) -> Modulo {
                 UBig::from(self).into_modulo(ring)
             }
         }
@@ -244,7 +244,7 @@ macro_rules! impl_into_modulo_for_signed {
     ($t:ty) => {
         impl IntoModulo for $t {
             #[inline]
-            fn into_modulo<'a>(self, ring: &'a ModuloRing) -> Modulo<'a> {
+            fn into_modulo(self, ring: &ModuloRing) -> Modulo {
                 IBig::from(self).into_modulo(ring)
             }
         }

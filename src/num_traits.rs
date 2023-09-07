@@ -45,6 +45,7 @@ impl num_traits::Pow<usize> for UBig {
 
     #[inline]
     fn pow(self, rhs: usize) -> UBig {
+        #[allow(clippy::needless_borrow)]
         (&self).pow(rhs)
     }
 }
@@ -63,6 +64,7 @@ impl num_traits::Pow<usize> for IBig {
 
     #[inline]
     fn pow(self, rhs: usize) -> IBig {
+        #[allow(clippy::needless_borrow)]
         (&self).pow(rhs)
     }
 }

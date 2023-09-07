@@ -148,7 +148,7 @@ pub(crate) fn sub_in_place_with_sign(lhs: &mut [Word], rhs: &[Word]) -> Sign {
         }
         Less => {
             let borrow = sub_same_len_in_place_swap(&rhs[..lhs_len], &mut lhs[..lhs_len]);
-            (&mut lhs[lhs_len..rhs_len]).copy_from_slice(&rhs[lhs_len..rhs_len]);
+            lhs[lhs_len..rhs_len].copy_from_slice(&rhs[lhs_len..rhs_len]);
             if borrow {
                 let overflow = sub_one_in_place(&mut lhs[lhs_len..rhs_len]);
                 assert!(!overflow);
