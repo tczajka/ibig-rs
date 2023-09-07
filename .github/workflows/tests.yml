@@ -18,8 +18,11 @@ jobs:
           command: check
           args: --all-features --tests
 
-  check-minimal:
+  check-msrv:
     name: Check minimal versions
+    strategy: 
+      matrix:
+        toolchain: [1.61, stable]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,30 +31,15 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: "${{ matrix.toolchain }}$"
           override: true
       - uses: actions-rs/cargo@v1
         with:
           command: check
           args: --all-features --tests
 
-  check-msrv:
-    name: Check MSRV
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.61
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --all-features --tests
-
-  test:
-    name: Test
+  test-bits:
+    name: Test bits
     strategy: 
       matrix:
         bits: [16, 32, 64]
