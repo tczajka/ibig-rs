@@ -99,8 +99,22 @@ impl UBig {
         },
     ) & !1usize;
 
+    /// Maximum length in bits.
+    ///
+    /// [UBig]s up to this length are supported. Creating a longer number
+    /// will panic.
+    ///
+    /// This does not guarantee that there is sufficient memory to store numbers
+    /// up to this length. Memory allocation may fail even for smaller numbers.
+    ///
+    /// The fact that this limit fits in `usize` guarantees that all bit
+    /// addressing operations can be performed using `usize`.
+    ///
+    /// It is typically close to `usize::MAX`, but the exact value is platform-dependent.
+    pub const MAX_BIT_LEN: usize = UBig::MAX_LEN * WORD_BITS_USIZE;
+
     pub(crate) fn panic_number_too_large() -> ! {
-        panic!("number too large")
+        panic!("number too large, maximum is {} bits", UBig::MAX_BIT_LEN)
     }
 }
 
