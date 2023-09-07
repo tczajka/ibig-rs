@@ -45,8 +45,7 @@ assert_eq!(format!("{}", x - y), "6902 (mod 10000)");
 ## Optional dependencies
 
 * `std` (default): for `std::error::Error`.
-* `num-traits` (default): integral traits.
-* `rand` (default): random number generation.
+* `rand`: random number generation.
 * `serde`: serialization and deserialization.
 
 ## Benchmarks

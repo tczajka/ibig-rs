@@ -110,7 +110,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --no-default-features --features "rand, num-traits, serde"
+          args: --no-default-features --features "rand, serde"
 
   build-aarch64:
     name: Build aarch64

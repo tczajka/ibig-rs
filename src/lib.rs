@@ -55,8 +55,7 @@
 //! # Optional dependencies
 //!
 //! * `std` (default): for `std::error::Error`.
-//! * `num-traits` (default): integral traits.
-//! * `rand` (default): random number generation.
+//! * `rand`: random number generation.
 //! * `serde`: serialization and deserialization.
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -86,6 +85,7 @@ mod memory;
 pub mod modular;
 mod mul;
 mod mul_ops;
+mod num_traits;
 pub mod ops;
 mod parse;
 mod pow;
@@ -98,9 +98,6 @@ mod ubig;
 
 #[cfg(feature = "rand")]
 pub mod rand;
-
-#[cfg(feature = "num-traits")]
-mod num_traits;
 
 #[cfg(feature = "serde")]
 mod serde;

@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Dependencies
 * Minimum Rust version is now 1.61.
+* `rand` is no longer a default dependency.
+* `num-traits` is no longer optional.
 
 ## 0.3.6 - 2022-09-18
 
