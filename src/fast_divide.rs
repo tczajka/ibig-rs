@@ -2,7 +2,6 @@
 
 use crate::{
     arch::word::{DoubleWord, Word},
-    assert::{assert_in_const_fn, debug_assert_in_const_fn},
     math,
     primitive::{double_word, extend_word, split_double_word},
 };
@@ -28,7 +27,7 @@ pub(crate) struct FastDivideSmall {
 impl FastDivideSmall {
     #[inline]
     pub(crate) const fn new(divisor: Word) -> Self {
-        assert_in_const_fn(divisor > 1);
+        assert!(divisor > 1);
         let n = math::ceil_log_2_word(divisor);
 
         // Calculate:
@@ -113,9 +112,9 @@ impl FastDivideNormalized {
     /// divisor must have top bit of 1
     #[inline]
     pub(crate) const fn new(divisor: Word) -> Self {
-        assert_in_const_fn(divisor.leading_zeros() == 0);
-        let (m, _hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
-        assert_in_const_fn(_hi == 1);
+        assert!(divisor.leading_zeros() == 0);
+        let (m, hi) = split_double_word(DoubleWord::MAX / extend_word(divisor));
+        assert!(hi == 1);
 
         // Note:
         // m > 0
@@ -138,7 +137,7 @@ impl FastDivideNormalized {
     #[inline]
     pub(crate) const fn div_rem(&self, a: DoubleWord) -> (Word, Word) {
         let (a_lo, a_hi) = split_double_word(a);
-        debug_assert_in_const_fn!(a_hi < self.divisor);
+        debug_assert!(a_hi < self.divisor);
 
         // Approximate quotient is (m + B) * a / B^2 ~= (m * a/B + a)/B.
         // This is q1 below.

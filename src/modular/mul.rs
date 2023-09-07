@@ -1,6 +1,5 @@
 use crate::{
     arch::word::Word,
-    assert::debug_assert_in_const_fn,
     div,
     memory::{self, Memory, MemoryAllocation},
     modular::{
@@ -82,7 +81,7 @@ impl<'a> MulAssign<&Modulo<'a>> for Modulo<'a> {
 impl ModuloSmallRaw {
     #[inline]
     pub(crate) const fn mul(self, other: ModuloSmallRaw, ring: &ModuloRingSmall) -> ModuloSmallRaw {
-        debug_assert_in_const_fn!(self.is_valid(ring) && other.is_valid(ring));
+        debug_assert!(self.is_valid(ring) && other.is_valid(ring));
         let a = self.normalized();
         let b = other.normalized();
         let product = extend_word(a >> ring.shift()) * extend_word(b);
