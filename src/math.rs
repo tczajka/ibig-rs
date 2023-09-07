@@ -6,14 +6,14 @@ use crate::{arch::word::Word, primitive::PrimitiveUnsigned};
 /// 0 for 0.
 #[inline]
 pub(crate) fn bit_len<T: PrimitiveUnsigned>(x: T) -> u32 {
-    T::BIT_SIZE - x.leading_zeros()
+    T::BITS - x.leading_zeros()
 }
 
 /// The length of an integer in bits.
 /// 0 for 0.
 #[inline]
 pub(crate) const fn bit_len_word(x: Word) -> u32 {
-    Word::BIT_SIZE - x.leading_zeros()
+    Word::BITS - x.leading_zeros()
 }
 
 /// Ceiling of log_2(x).
@@ -73,7 +73,7 @@ where
     if n == 0 {
         T::from(0u8)
     } else {
-        T::MAX >> (T::BIT_SIZE - n)
+        T::MAX >> (T::BITS - n)
     }
 }
 
@@ -83,7 +83,7 @@ pub(crate) const fn ones_word(n: u32) -> Word {
     if n == 0 {
         0
     } else {
-        Word::MAX >> (Word::BIT_SIZE - n)
+        Word::MAX >> (Word::BITS - n)
     }
 }
 

@@ -583,7 +583,7 @@ where
         Err(OutOfBoundsError)
     } else {
         assert!(
-            T::BIT_SIZE % WORD_BITS == 0,
+            T::BITS % WORD_BITS == 0,
             "A large primitive type not a multiple of word size."
         );
         let mut repr = T::default().to_le_bytes();

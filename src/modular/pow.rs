@@ -7,7 +7,7 @@ use crate::{
         modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
         modulo_ring::ModuloRingSmall,
     },
-    primitive::{double_word, split_double_word, PrimitiveUnsigned, WORD_BITS, WORD_BITS_USIZE},
+    primitive::{double_word, split_double_word, WORD_BITS, WORD_BITS_USIZE},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -226,14 +226,14 @@ impl<'a> ModuloLarge<'a> {
     }
 
     /// Choose the optimal window size for n-bit exponents.
-    /// 1 <= window_size < min(WORD_BITS, usize::BIT_SIZE) inclusive.
+    /// 1 <= window_size < min(WORD_BITS, usize::BITS) inclusive.
     fn choose_pow_window_len(n: usize) -> u32 {
         // This won't overflow because cost(3) is already approximately usize::MAX / 4
         // and it can only grow by a factor of 2.
         let cost = |window_size| (1usize << (window_size - 1)) - 1 + n / (window_size as usize + 1);
         let mut window_size = 1;
         let mut c = cost(window_size);
-        while window_size + 1 < WORD_BITS.min(usize::BIT_SIZE) {
+        while window_size + 1 < WORD_BITS.min(usize::BITS) {
             let c2 = cost(window_size + 1);
             if c <= c2 {
                 break;

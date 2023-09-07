@@ -2,7 +2,6 @@
 
 use crate::{
     ibig::IBig,
-    primitive::PrimitiveUnsigned,
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
@@ -34,7 +33,7 @@ impl UBig {
             }
             _ => {}
         }
-        let mut p = usize::BIT_SIZE - 2 - exp.leading_zeros();
+        let mut p = usize::BITS - 2 - exp.leading_zeros();
         let mut res = self * self;
         loop {
             if exp & (1 << p) != 0 {

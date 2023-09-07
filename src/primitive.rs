@@ -46,7 +46,7 @@ where
     Self: Shr<u32, Output = Self>,
 {
     const BYTE_SIZE: usize = mem::size_of::<Self>();
-    const BIT_SIZE: u32 = 8 * Self::BYTE_SIZE as u32;
+    const BITS: u32;
     const MAX: Self;
     type ByteRepr: AsRef<[u8]> + AsMut<[u8]>;
 
@@ -72,8 +72,8 @@ where
 macro_rules! impl_primitive_unsigned {
     ($t:ty) => {
         impl PrimitiveUnsigned for $t {
-            // LEGACY: In Rust 1.49 this could be [u8; Self::BYTE_SIZE].
-            type ByteRepr = [u8; mem::size_of::<Self>()];
+            type ByteRepr = [u8; Self::BYTE_SIZE];
+            const BITS: u32 = Self::BITS;
             const MAX: Self = Self::MAX;
 
             #[inline]
@@ -143,7 +143,7 @@ impl_primitive_signed!(i64, u64);
 impl_primitive_signed!(i128, u128);
 impl_primitive_signed!(isize, usize);
 
-pub(crate) const WORD_BITS: u32 = Word::BIT_SIZE;
+pub(crate) const WORD_BITS: u32 = Word::BITS;
 pub(crate) const WORD_BITS_USIZE: usize = WORD_BITS as usize;
 pub(crate) const WORD_BYTES: usize = Word::BYTE_SIZE;
 
@@ -167,8 +167,8 @@ mod tests {
 
     #[test]
     fn test_bits_bytes() {
-        assert_eq!(u8::BIT_SIZE, 8);
-        assert_eq!(u64::BIT_SIZE, 64);
+        assert_eq!(u8::BITS, 8);
+        assert_eq!(u64::BITS, 64);
         assert_eq!(u8::BYTE_SIZE, 1);
         assert_eq!(u64::BYTE_SIZE, 8);
     }
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_double_word() {
-        assert_eq!(DoubleWord::BIT_SIZE, 2 * WORD_BITS);
+        assert_eq!(DoubleWord::BITS, 2 * WORD_BITS);
         assert_eq!(split_double_word(double_word(3, 4)), (3, 4));
     }
 
