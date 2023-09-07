@@ -5,10 +5,7 @@ use crate::{
     ops::RemEuclid,
     ubig::UBig,
 };
-use core::{
-    convert::TryInto,
-    ops::{Div, DivAssign},
-};
+use core::ops::{Div, DivAssign};
 
 impl<'a> Modulo<'a> {
     /// Inverse.

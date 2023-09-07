@@ -1,7 +1,7 @@
 //! Buffered raw digit -> ASCII conversion.
 
 use crate::{arch, math, radix::DigitCase};
-use core::{convert::TryInto, fmt, str};
+use core::{fmt, str};
 
 /// Minimum buffer length.
 const BUFFER_LEN_MIN: usize = 32;

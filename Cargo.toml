@@ -2,8 +2,8 @@
 name = "ibig"
 version = "0.3.6"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
-edition = "2018"
-rust-version = "1.49"
+edition = "2021"
+rust-version = "1.57"
 description = "A big integer library with good performance"
 keywords = ["bigint", "bignum", "mathematics", "modular", "modulo"]
 categories = ["mathematics", "no-std"]
