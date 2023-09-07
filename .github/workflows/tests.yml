@@ -45,7 +45,7 @@ jobs:
         bits: [16, 32, 64]
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -D warnings --cfg force_bits=${{ matrix.bits }}
+      RUSTFLAGS: -D warnings --cfg force_bits="${{ matrix.bits }}"
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
