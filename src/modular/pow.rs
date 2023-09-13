@@ -18,7 +18,7 @@ impl<'a> Modulo<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// // A Mersenne prime.
     /// let p = ubig!(2).pow(607) - ubig!(1);
     /// let ring = ModuloRing::new(&p);
@@ -43,7 +43,7 @@ impl<'a> Modulo<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ibig, ubig};
+    /// # use ibig::{ModuloRing, ibig, ubig};
     /// let ring = ModuloRing::new(&ubig!(10));
     /// assert_eq!(ring.from(2).pow_signed(&ibig!(4)), ring.from(6));
     /// assert_eq!(ring.from(3).pow_signed(&ibig!(-3)), ring.from(3));

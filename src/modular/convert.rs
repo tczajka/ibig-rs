@@ -24,7 +24,7 @@ impl ModuloRing {
     /// # Example
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(100));
     /// assert_eq!(ring.modulus(), ubig!(100));
     /// ```
@@ -41,7 +41,7 @@ impl ModuloRing {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(100));
     /// let x = ring.from(-1234);
     /// let y = ring.from(ubig!(3366));
@@ -77,7 +77,7 @@ impl Modulo<'_> {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(100));
     /// let x = ring.from(-1234);
     /// assert_eq!(x.residue(), ubig!(66));

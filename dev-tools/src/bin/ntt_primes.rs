@@ -1,4 +1,4 @@
-use ibig::{modular::ModuloRing, ubig, UBig};
+use ibig::{ubig, ModuloRing, UBig};
 use rand::{thread_rng, Rng};
 
 fn main() {

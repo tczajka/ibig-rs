@@ -15,7 +15,7 @@ use core::cmp::Ordering;
 /// # Examples
 ///
 /// ```
-/// # use ibig::{modular::ModuloRing, ubig};
+/// # use ibig::{ModuloRing, ubig};
 /// let ring = ModuloRing::new(&ubig!(100));
 /// assert_eq!(ring.modulus(), ubig!(100));
 /// ```
@@ -41,7 +41,7 @@ pub(crate) struct ModuloRingLarge {
 impl ModuloRing {
     /// Create a new ring of integers modulo `n`.
     ///
-    /// For two [Modulo](crate::modular::Modulo) numbers to be compatible,
+    /// For two [Modulo](crate::Modulo) numbers to be compatible,
     /// they must come from the same [ModuloRing].
     /// Two different [ModuloRing]s are not compatible even if
     /// they have the same modulus `n`.
@@ -49,7 +49,7 @@ impl ModuloRing {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(100));
     /// assert_eq!(ring.modulus(), ubig!(100));
     /// ```

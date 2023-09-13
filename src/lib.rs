@@ -19,13 +19,13 @@
 //!
 //! The two main integer types are [UBig] (for unsigned integers) and [IBig] (for signed integers).
 //!
-//! Modular arithmetic is supported by the module [modular].
+//! Modular arithmetic is implemented by the [Modulo] type.
 //!
 //! # Examples
 //!
 //! ```
 //! # use ibig::error::ParseError;
-//! use ibig::{ibig, modular::ModuloRing, ubig, UBig};
+//! use ibig::{ibig, ubig, ModuloRing, UBig};
 //!
 //! let a = ubig!(12345678);
 //! let b = ubig!(0x10ff);
@@ -62,7 +62,11 @@
 
 extern crate alloc;
 
-pub use crate::{ibig::IBig, ubig::UBig};
+pub use crate::{
+    ibig::IBig,
+    modular::{convert::IntoModulo, modulo::Modulo, modulo_ring::ModuloRing},
+    ubig::UBig,
+};
 
 mod add;
 mod add_ops;
@@ -82,7 +86,7 @@ mod ibig;
 mod macros;
 mod math;
 mod memory;
-pub mod modular;
+mod modular;
 mod mul;
 mod mul_ops;
 mod num_traits;

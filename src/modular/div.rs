@@ -15,7 +15,7 @@ impl<'a> Modulo<'a> {
     /// # Examples
     ///
     /// ```
-    /// # use ibig::{modular::ModuloRing, ubig};
+    /// # use ibig::{ModuloRing, ubig};
     /// let ring = ModuloRing::new(&ubig!(10));
     /// assert_eq!(ring.from(7).inverse(), Some(ring.from(3)));
     /// assert_eq!(ring.from(2).inverse(), None);
