@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## 0.4.0 -- unreleased
 
+### Breaking changes
+* Modular arithmetic moved from `modular` to the top-level module.
+
 ### Dependencies
 * Minimum Rust version is now 1.61.
 * `rand` is no longer a default dependency.
