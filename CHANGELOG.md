@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Breaking changes
 * Modular arithmetic moved from `modular` to the top-level module.
+* `Modulo` is now a fully owned type without a reference to `ModuloRing`.
+
+### Features
+* `Modulo::ring`.
 
 ### Dependencies
 * Minimum Rust version is now 1.61.

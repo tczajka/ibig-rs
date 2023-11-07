@@ -64,7 +64,7 @@ extern crate alloc;
 
 pub use crate::{
     ibig::IBig,
-    modular::{convert::IntoModulo, modulo::Modulo, modulo_ring::ModuloRing},
+    modular::{modulo::Modulo, modulo_ring::ModuloRing},
     ubig::UBig,
 };
 

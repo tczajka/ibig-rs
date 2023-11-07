@@ -1,14 +1,7 @@
 //! A ring of integers modulo a positive integer.
 
-use crate::{
-    arch::word::Word,
-    cmp, div,
-    fast_divide::FastDivideNormalized,
-    math,
-    ubig::{Repr, UBig},
-};
-use alloc::vec::Vec;
-use core::cmp::Ordering;
+use crate::{fast_divide::FastDivideNormalized, ubig::UBig};
+use alloc::sync::Arc;
 
 /// A ring of integers modulo a positive integer.
 ///
@@ -19,21 +12,11 @@ use core::cmp::Ordering;
 /// let ring = ModuloRing::new(&ubig!(100));
 /// assert_eq!(ring.modulus(), ubig!(100));
 /// ```
-pub struct ModuloRing(ModuloRingRepr);
+#[derive(Clone)]
+pub struct ModuloRing(Arc<ModuloRingRepr>);
 
-pub(crate) enum ModuloRingRepr {
-    Small(ModuloRingSmall),
-    Large(ModuloRingLarge),
-}
-
-pub(crate) struct ModuloRingSmall {
-    normalized_modulus: Word,
-    shift: u32,
-    fast_div: FastDivideNormalized,
-}
-
-pub(crate) struct ModuloRingLarge {
-    normalized_modulus: Vec<Word>,
+struct ModuloRingRepr {
+    normalized_modulus: UBig,
     shift: u32,
     fast_div_top: FastDivideNormalized,
 }
@@ -59,77 +42,29 @@ impl ModuloRing {
     /// Panics if `n` is zero.
     #[inline]
     pub fn new(n: &UBig) -> ModuloRing {
-        match n.repr() {
-            Repr::Small(0) => panic!("ModuloRing::new(0)"),
-            Repr::Small(word) => ModuloRing(ModuloRingRepr::Small(ModuloRingSmall::new(*word))),
-            Repr::Large(words) => ModuloRing(ModuloRingRepr::Large(ModuloRingLarge::new(words))),
-        }
-    }
-
-    #[inline]
-    pub(crate) fn repr(&self) -> &ModuloRingRepr {
-        &self.0
-    }
-}
-
-impl ModuloRingSmall {
-    /// Create a new small ring of integers modulo `n`.
-    #[inline]
-    pub(crate) const fn new(n: Word) -> ModuloRingSmall {
-        debug_assert!(n != 0);
-        let shift = n.leading_zeros();
+        let last = n.as_words().last().expect("ModuloRing::new(0)");
+        let shift = last.leading_zeros();
         let normalized_modulus = n << shift;
-        let fast_div = FastDivideNormalized::new(normalized_modulus);
-        ModuloRingSmall {
-            normalized_modulus,
-            shift,
-            fast_div,
-        }
-    }
-
-    #[inline]
-    pub(crate) const fn normalized_modulus(&self) -> Word {
-        self.normalized_modulus
-    }
-
-    #[inline]
-    pub(crate) const fn shift(&self) -> u32 {
-        self.shift
-    }
-
-    #[inline]
-    pub(crate) const fn fast_div(&self) -> FastDivideNormalized {
-        self.fast_div
-    }
-}
-
-impl ModuloRingLarge {
-    /// Create a new large ring of integers modulo `n`.
-    fn new(n: &[Word]) -> ModuloRingLarge {
-        let mut normalized_modulus = n.to_vec();
-        let (shift, fast_div_top) = div::normalize_large(&mut normalized_modulus);
-        ModuloRingLarge {
+        let fast_div_top = FastDivideNormalized::new(last);
+        ModuloRing(Arc::new(ModuloRingRepr {
             normalized_modulus,
             shift,
             fast_div_top,
-        }
+        }))
     }
 
-    pub(crate) fn normalized_modulus(&self) -> &[Word] {
+    #[inline]
+    pub(crate) fn normalized_modulus(&self) -> &UBig {
         &self.normalized_modulus
     }
 
+    #[inline]
     pub(crate) fn shift(&self) -> u32 {
         self.shift
     }
 
+    #[inline]
     pub(crate) fn fast_div_top(&self) -> FastDivideNormalized {
         self.fast_div_top
-    }
-
-    pub(crate) fn is_valid(&self, val: &[Word]) -> bool {
-        val.len() == self.normalized_modulus.len()
-            && cmp::cmp_same_len(val, &self.normalized_modulus) == Ordering::Less
-            && val[0] & math::ones::<Word>(self.shift) == 0
     }
 }

@@ -3,16 +3,13 @@ use crate::{
     ibig::IBig,
     math,
     memory::{self, MemoryAllocation},
-    modular::{
-        modulo::{Modulo, ModuloLarge, ModuloRepr, ModuloSmall, ModuloSmallRaw},
-        modulo_ring::ModuloRingSmall,
-    },
+    modular::modulo::Modulo,
     primitive::{double_word, split_double_word, WORD_BITS, WORD_BITS_USIZE},
     sign::Sign::*,
     ubig::{Repr::*, UBig},
 };
 
-impl<'a> Modulo<'a> {
+impl Modulo {
     /// Exponentiation.
     ///
     /// # Examples
@@ -27,11 +24,8 @@ impl<'a> Modulo<'a> {
     /// assert_eq!(a.pow(&(p - ubig!(1))), ring.from(1));
     /// ```
     #[inline]
-    pub fn pow(&self, exp: &UBig) -> Modulo<'a> {
-        match self.repr() {
-            ModuloRepr::Small(self_small) => self_small.pow(exp).into(),
-            ModuloRepr::Large(self_large) => self_large.pow(exp).into(),
-        }
+    pub fn pow(&self, exp: &UBig) -> Modulo {
+        todo!()
     }
 
     /// Exponentiation to a signed exponent.
@@ -49,7 +43,7 @@ impl<'a> Modulo<'a> {
     /// assert_eq!(ring.from(3).pow_signed(&ibig!(-3)), ring.from(3));
     /// ```
     #[inline]
-    pub fn pow_signed(&self, exp: &IBig) -> Modulo<'a> {
+    pub fn pow_signed(&self, exp: &IBig) -> Modulo {
         match exp.sign() {
             Positive => self.pow(exp.magnitude()),
             Negative => match self.inverse() {
