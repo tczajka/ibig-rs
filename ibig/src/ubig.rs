@@ -21,7 +21,8 @@ impl UBig {
     /// Construct from little-endian digits, normalizing to the canonical representation.
     ///
     /// Trailing (most-significant) zero digits are removed; a value that fits in a single
-    /// digit is stored as [`Repr::Small`].
+    /// digit is stored as [`Repr::Small`]. Excess capacity is released when the buffer is
+    /// heavily over-allocated.
     pub(crate) fn from_digits(mut digits: Vec<Digit>) -> UBig {
         while let Some(&Digit::ZERO) = digits.last() {
             digits.pop();
@@ -29,7 +30,12 @@ impl UBig {
         match digits.len() {
             0 => UBig::from_digit(Digit::ZERO),
             1 => UBig::from_digit(digits[0]),
-            _ => UBig(Large(digits)),
+            _ => {
+                if digits.len() < digits.capacity() / 4 {
+                    digits.shrink_to_fit();
+                }
+                UBig(Large(digits))
+            }
         }
     }
 

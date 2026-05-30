@@ -3,6 +3,7 @@
 use crate::UBig;
 use crate::ubig::Repr::{Large, Small};
 use alloc::vec;
+use alloc::vec::Vec;
 use ibig_core::Digit;
 
 #[test]
@@ -25,4 +26,19 @@ fn test_from_digits_large() {
     // A multi-digit value stays `Large`, with the leading zero removed.
     let n = UBig::from_digits(vec![Digit::from(1u8), Digit::from(2u8), Digit::ZERO]);
     assert_eq!(n.repr(), &Large(vec![Digit::from(1u8), Digit::from(2u8)]));
+}
+
+#[test]
+fn test_from_digits_shrinks_oversized_large() {
+    // A buffer more than 4x larger than its contents is compacted.
+    let mut digits = Vec::with_capacity(100);
+    digits.push(Digit::from(1u8));
+    digits.push(Digit::from(2u8));
+    match UBig::from_digits(digits).repr() {
+        Large(v) => {
+            assert_eq!(v.len(), 2);
+            assert!(v.capacity() < 100);
+        }
+        Small(_) => panic!("expected Large"),
+    }
 }
