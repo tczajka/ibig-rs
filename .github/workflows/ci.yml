@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-64bit:
+    name: Test (64-bit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace --all-features
+
+  test-32bit:
+    name: Test (32-bit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+      # `i686` binaries run on the x86_64 host, but linking them needs the 32-bit C runtime.
+      - name: Install 32-bit C libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib
+      - run: cargo test --workspace --all-features --target i686-unknown-linux-gnu
+
+  build-16bit:
+    name: Build (16-bit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # `msp430-none-elf` is a 16-bit, `no_std` target without a prebuilt `core`/`alloc`,
+      # so we build the standard library from source on nightly. Build only, no tests.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --workspace -Z build-std=core,alloc --target msp430-none-elf
+
+  msrv:
+    name: MSRV (1.95)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Keep this toolchain in sync with `rust-version` in the crate manifests.
+      - uses: dtolnay/rust-toolchain@1.95.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace --all-features
+
+  minimal-versions:
+    name: Direct minimal versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      # Nightly cargo is needed for the unstable `-Z direct-minimal-versions` resolver.
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      # Pin every direct dependency to the lowest version its `Cargo.toml` requirement allows,
+      # verifying those declared minimums actually build and test.
+      - run: cargo +nightly update -Z direct-minimal-versions
+      - run: cargo +stable test --workspace --all-features
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-features --tests -- -D warnings
