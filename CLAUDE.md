@@ -4,78 +4,71 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-`ibig` is a pure-Rust arbitrary-precision integer library (`no_std` compatible). The public types are `UBig` (unsigned), `IBig` (signed), and `Modulo`/`ModuloRing` (modular arithmetic). The crate aims for good performance, so much of the code is concerned with algorithm selection by operand size and per-architecture word primitives.
+`ibig` is a pure-Rust arbitrary-precision integer library (`no_std` compatible). The public types are `UBig` (unsigned) and `IBig` (signed). The library aims for good performance, so much of the code is concerned with algorithm selection by operand size and per-word-size primitives.
+
+The repository is currently a **ground-up rewrite**. The new crates (`ibig-core`, `ibig`) are early-stage; the previous full implementation lives in `ibig-old` and is the reference for the algorithms still to be ported.
+
+## Repository layout
+
+A Cargo workspace (`Cargo.toml`) with two active members plus two excluded reference directories:
+
+- **`ibig-core/`** — low-level arithmetic algorithms operating on slices of `Digit`s (addition, subtraction, multiplication, division). `Digit` is defined here (`src/lib.rs`) as `unative::UNative`, the platform's native unsigned integer. `no_std`.
+- **`ibig/`** — the user-facing crate with `UBig`/`IBig` and their trait impls. Depends on `ibig-core`. `no_std`. This is the published `ibig` crate (version 0.4.0+).
+- **`ibig-old/`** — the previous implementation, published as `ibig` 0.3.6. **Excluded from the workspace.** Keep it as a reference when porting algorithms; do not edit it as part of new work.
+- **`dev-tools-old/`** — offline code-generation utilities for the old crate (e.g. NTT prime constants). **Excluded from the workspace.**
 
 ## Commands
 
 ```bash
-cargo test --all-features                 # run all tests
-cargo test --all-features <name>          # run tests matching <name>
-cargo test --all-features --test mul      # run one integration test file (tests/mul.rs)
+cargo test --workspace --all-features            # run all tests (64-bit, native)
+cargo test --workspace --all-features <name>     # run tests matching <name>
 
-cargo build --no-default-features --features "rand, serde"   # verify no_std build
-cargo fmt --all -- --check                # formatting check (CI-enforced)
-cargo clippy --all-features --tests -- -D warnings           # lint (CI-enforced; warnings are errors)
-cargo bench --features rand               # Criterion benchmarks (benches/benchmarks.rs)
+cargo fmt --all -- --check                        # formatting check (CI-enforced)
+cargo clippy --workspace --all-features --tests -- -D warnings   # lint (CI-enforced; warnings are errors)
 ```
-
-Feature flags: `std` (default), `rand`, `serde`. Tests `tests/random.rs` and `tests/serde.rs` require their respective features (hence `--all-features` everywhere).
 
 ### Testing across word sizes
 
-The word size is normally chosen from the target architecture, but it can be forced for testing. CI runs the full suite under each:
+`Digit` width (16/32/64 bits) is chosen by `unative` from the target — there is no `force_bits` override in the new crates. CI therefore exercises each width with a real target (see `.github/workflows/ci.yml`):
 
 ```bash
-RUSTFLAGS='--cfg force_bits="16"' cargo test --all-features   # also 32, 64
+# 64-bit: native
+cargo test --workspace --all-features
+
+# 32-bit: i686 (needs the 32-bit C runtime, e.g. `gcc-multilib`)
+cargo test --workspace --all-features --target i686-unknown-linux-gnu
+
+# 16-bit: msp430, build only — no prebuilt std, so build core/alloc from source on nightly
+cargo +nightly build --workspace -Z build-std=core,alloc --target msp430-none-elf
 ```
 
-Always consider whether a change behaves correctly at all three word sizes (16/32/64), since algorithm thresholds and NTT primes differ per size.
+Always consider whether a change behaves correctly at all three word sizes, since algorithm thresholds and NTT primes differ per size.
 
-### Minimal dependency versions
+### MSRV and dependency versions
 
-`Cargo.lock.min` pins the oldest supported dependency versions. CI copies it over `Cargo.lock` and checks against rustc 1.61 (the MSRV) and stable. If you change dependencies, update both `Cargo.toml` and `Cargo.lock.min`.
-
-### dev-tools
-
-`dev-tools/` is a separate workspace member holding offline code-generation utilities, not part of the library. `cargo run -p dev-tools --bin ntt_primes` regenerates the NTT prime constants used in `src/arch/*/ntt.rs`.
+- MSRV for the new crates is rustc **1.95** (`rust-version` in `ibig/Cargo.toml` and `ibig-core/Cargo.toml`). CI has a job pinned to 1.95; keep the manifests and that job in sync. (`ibig-old` is separately 1.93.)
+- A CI job runs `cargo +nightly update -Z direct-minimal-versions` to verify the declared lower bounds of direct dependencies actually build. If you raise a dependency requirement, make sure that minimum still compiles.
 
 ## Architecture
 
-### Number representation
+### Number representation (`ibig`)
 
-- `UBig` wraps a private `Repr` enum (`src/ubig.rs`): `Small(Word)` for single-word values, `Large(Buffer)` otherwise. `Large` invariants: length ≥ 2, no leading zero word, compact capacity. Code branches on `repr()` constantly — preserve these invariants when constructing a `Large`.
-- `IBig` (`src/ibig.rs`) is a `Sign` + magnitude (`UBig`).
-- `Word` is the architecture's native unsigned integer (`u16`/`u32`/`u64`); numbers are little-endian `Word` slices.
-- `Buffer` (`src/buffer.rs`) is the growable `Vec<Word>` backing `Large`. It deliberately over-allocates (~12.5% slack) and panics on capacity overflow rather than reallocating in hot paths — use `push` only with pre-reserved capacity, `push_may_reallocate` otherwise. `UBig::MAX_LEN` caps the word count.
+- `UBig` (`src/ubig.rs`) wraps a private `Repr` enum: `Small(Digit)` for single-digit values, `Large(Vec<Digit>)` otherwise. The representation is **canonical** — every value has exactly one representation, so derived `Eq`/`Hash` are correct. `Large` invariants: length ≥ 2, no leading zero digit. Construct via `from_digits`, which normalizes (strips leading zeros, collapses to `Small`, shrinks heavily over-allocated buffers) — preserve these invariants when building a `Large` directly. Access the representation with `repr()` / `into_repr()`.
+- `Digit` (`ibig-core`) is the architecture's native unsigned integer (`UNative`, 16/32/64 bits); numbers are little-endian `Digit` slices.
 
-### Architecture-specific code (`src/arch/`)
+### Core algorithms (`ibig-core`)
 
-`src/arch/mod.rs` uses `cfg_if!` to select an implementation module (`x86`, `x86_64`, or `generic_{16,32,64}_bit`) based on `force_bits`, then `target_arch`, then `target_pointer_width`. Each module re-exports `word` (the `Word`/`SignedWord`/`DoubleWord` types and primitives), `add`, `digits`, and `ntt` (number-theoretic-transform primes/roots tuned to the word size). Anything word-size- or CPU-dependent (carry handling, multiword add) lives here; the rest of the crate is generic over `Word`.
-
-### Algorithm selection by size
-
-The big-integer operations dispatch to different algorithms based on operand length. Thresholds are `const`s near the top of each module:
-
-- **Multiplication** (`src/mul/`): schoolbook (`simple`) → Karatsuba → Toom-3 → NTT (`ntt`), with cutoffs `MAX_LEN_SIMPLE`/`MAX_LEN_KARATSUBA` in `src/mul/mod.rs`.
-- **Division** (`src/div/`): `simple` (schoolbook) vs `divide_conquer` (recursive).
-- **Radix conversion** (`src/parse/`, `src/fmt/`): `power_two` (bases that are powers of 2, bit-shift based) vs `non_power_two` (general, divide-and-conquer for large numbers).
-
-When changing a threshold or adding an algorithm, the `const_assert!`s wiring adjacent thresholds together (e.g. `MAX_LEN_SIMPLE + 1 >= karatsuba::MIN_LEN`) must stay satisfied.
-
-### Scratch memory (`src/memory.rs`)
-
-Recursive algorithms (Karatsuba, Toom-3, NTT, divide-and-conquer division) need temporary `Word` scratch space. Rather than allocating per recursion, a single `MemoryAllocation` is sized up front and sub-slices are handed out via `Memory` regions. Functions expose a `*_memory_requirement` helper computing the needed `Layout`. Follow this pattern for new recursive algorithms instead of allocating inline.
-
-### Operator trait boilerplate (`src/helper_macros.rs`)
-
-Arithmetic operators are implemented once for the owned/owned case, and the macros in `helper_macros.rs` (`forward_binop_first_arg_by_value`, etc.) generate the `&A op B`, `A op &B`, `&A op &B` variants by forwarding. The user-facing `ubig!` / `ibig!` literal macros live in `src/macros.rs`.
-
-### File layout convention
-
-Per operation, low-level slice-on-`Word` algorithms live in a topic file or directory (e.g. `add.rs`, `mul/`, `div/`) while the public `UBig`/`IBig` trait impls live in the `*_ops.rs` counterpart (`add_ops.rs`, `mul_ops.rs`, `div_ops.rs`, `shift_ops.rs`). Modular arithmetic is fully contained in `src/modular/`.
+Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the word size. As the port progresses this is where the size-dispatched algorithms land (schoolbook → Karatsuba → Toom-3 → NTT multiplication; schoolbook vs divide-and-conquer division; power-of-two vs general radix conversion). See `ibig-old/src/{mul,div,parse,fmt}` for the reference implementations, including the threshold `const`s and the `const_assert!`s that wire adjacent thresholds together. Recursive algorithms should use the up-front scratch-allocation pattern (`*_memory_requirement` + `Memory` regions) rather than allocating per recursion — see `ibig-old/src/memory.rs`.
 
 ## Conventions
 
-- Public API changes must be recorded in `CHANGELOG.md`; note breaking changes explicitly.
-- MSRV is rustc 1.93 (`ibig-old/Cargo.toml`) — avoid standard-library APIs and language features newer than that.
-- The crate is `no_std`; use `alloc` (e.g. `alloc::vec::Vec`) rather than `std`, and gate any `std`-only code behind `#[cfg(feature = "std")]`.
+- Public API changes must be recorded in `CHANGELOG.md`; note breaking changes explicitly. The top section is `## 0.4.0 - unreleased`.
+- **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions and the private `Repr` enum).
+- The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`) rather than `std`, and gate any `std`-only code behind `#[cfg(feature = "std")]`.
+- Avoid standard-library APIs and language features newer than the MSRV (1.95).
+
+### Tests
+
+- Tests of **internal details** are unit tests under a crate's `src/tests/` module tree, mirroring the code they cover (e.g. tests for `ubig.rs`'s representation are in `src/tests/ubig/repr.rs`, run as `tests::ubig::repr::*`), declared via `#[cfg(test)] mod tests;`. These can reach `pub(crate)` items.
+- Tests of the **public API** are integration tests in a crate's `tests/` directory; they see only the public interface.
+- Do **not** prefix test function names with `test_` — the module path already namespaces them (name them `from_digit`, `from_digits_large`, etc.).
