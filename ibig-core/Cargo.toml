@@ -1,0 +1,14 @@
+[package]
+name = "ibig-core"
+version = "0.0.1"
+authors = ["Tomek Czajka <tczajka@gmail.com>"]
+edition = "2024"
+rust-version = "1.95"
+description = "Core big-integer algorithms."
+keywords = ["bigint", "bignum", "arbitrary-precision", "mathematics"]
+categories = ["mathematics", "no-std"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tczajka/ibig-rs"
+
+[dependencies]
+unative = "0.2.2"
