@@ -5,6 +5,9 @@ version = 4
 [[package]]
 name = "ibig"
 version = "0.4.0"
+dependencies = [
+ "ibig-core",
+]
 
 [[package]]
 name = "ibig-core"
