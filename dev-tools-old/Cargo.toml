@@ -1,5 +1,5 @@
 [package]
-name = "dev-tools"
+name = "dev-tools-old"
 version = "0.0.0"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2021"
