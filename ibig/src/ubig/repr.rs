@@ -68,6 +68,6 @@ pub(crate) enum Repr {
     /// In a canonical representation, this has:
     /// * length at least 2,
     /// * no leading zero (the most significant digit is non-zero),
-    /// * capacity no more than 4x length (assuming no such over-allocation inside `Vec`).
+    /// * capacity no more than ~4x length (assuming no such over-allocation inside `Vec`).
     Large(Vec<Digit>),
 }
