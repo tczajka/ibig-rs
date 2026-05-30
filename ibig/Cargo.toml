@@ -1,0 +1,11 @@
+[package]
+name = "ibig"
+version = "0.4.0"
+authors = ["Tomek Czajka <tczajka@gmail.com>"]
+edition = "2024"
+rust-version = "1.95"
+description = "A big integer library"
+keywords = ["bigint", "bignum"]
+categories = ["mathematics", "no-std"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tczajka/ibig-rs"

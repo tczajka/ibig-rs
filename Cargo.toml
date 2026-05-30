@@ -1,3 +1,4 @@
 [workspace]
 resolver = "2"
-members = ["ibig-core", "ibig-old", "dev-tools-old"]
+members = ["ibig-core", "ibig"]
+exclude = ["ibig-old", "dev-tools-old"]
