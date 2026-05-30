@@ -30,9 +30,9 @@ impl UBig {
         while let Some(&Digit::ZERO) = digits.last() {
             digits.pop();
         }
-        match digits.len() {
-            0 => UBig::from_digit(Digit::ZERO),
-            1 => UBig::from_digit(digits[0]),
+        match digits[..] {
+            [] => UBig::from_digit(Digit::ZERO),
+            [d] => UBig::from_digit(d),
             _ => {
                 if digits.len() < digits.capacity() / 4 {
                     digits.shrink_to_fit();
