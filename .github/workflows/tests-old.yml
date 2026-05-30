@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: Tests
+name: Tests (ibig-old)
 
 jobs:
   check:
@@ -16,11 +16,11 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features --tests
+          args: -p ibig --all-features --tests
 
   check-min-versions:
     name: Check minimal versions
-    strategy: 
+    strategy:
       matrix:
         toolchain: [1.61, stable]
     runs-on: ubuntu-latest
@@ -36,11 +36,11 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features --tests
+          args: -p ibig --all-features --tests
 
   test-bits:
     name: Test bits
-    strategy: 
+    strategy:
       matrix:
         bits: [16, 32, 64]
     runs-on: ubuntu-latest
@@ -56,7 +56,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features
+          args: -p ibig --all-features
 
   test-x86:
     name: Test x86
@@ -76,7 +76,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features
+          args: -p ibig --all-features
 
   test-x86_64:
     name: Test x86_64
@@ -93,7 +93,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features
+          args: -p ibig --all-features
 
   build-no-std:
     name: Build no-std
@@ -110,7 +110,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --no-default-features --features "rand, serde"
+          args: -p ibig --no-default-features --features "rand, serde"
 
   build-aarch64:
     name: Build aarch64
@@ -128,7 +128,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target aarch64-unknown-linux-gnu --all-features
+          args: -p ibig --target aarch64-unknown-linux-gnu --all-features
 
   fmt:
     name: Rustfmt
@@ -160,4 +160,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-features --tests -- -D warnings
+          args: -p ibig --all-features --tests -- -D warnings
