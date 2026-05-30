@@ -6,4 +6,4 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.3"
-ibig = { path = "../ibig-old" }
+ibig = { path = "../ibig-old", features = ["rand"] }
