@@ -77,5 +77,5 @@ Per operation, low-level slice-on-`Word` algorithms live in a topic file or dire
 ## Conventions
 
 - Public API changes must be recorded in `CHANGELOG.md`; note breaking changes explicitly.
-- MSRV is rustc 1.61 — avoid newer standard-library APIs and language features.
+- MSRV is rustc 1.93 (`ibig-old/Cargo.toml`) — avoid standard-library APIs and language features newer than that.
 - The crate is `no_std`; use `alloc` (e.g. `alloc::vec::Vec`) rather than `std`, and gate any `std`-only code behind `#[cfg(feature = "std")]`.

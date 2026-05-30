@@ -41,7 +41,7 @@ impl MemoryAllocation {
 
     /// Get memory.
     #[inline]
-    pub(crate) fn memory(&mut self) -> Memory {
+    pub(crate) fn memory(&mut self) -> Memory<'_> {
         Memory {
             start: self.start,
             end: self.start.wrapping_add(self.layout.size()),
@@ -67,7 +67,7 @@ impl Memory<'_> {
     /// The original memory is not usable until both the new memory and the slice are dropped.
     ///
     /// The elements of the slice never get dropped!
-    pub(crate) fn allocate_slice_fill<T: Copy>(&mut self, n: usize, val: T) -> (&mut [T], Memory) {
+    pub(crate) fn allocate_slice_fill<T: Copy>(&mut self, n: usize, val: T) -> (&mut [T], Memory<'_>) {
         self.allocate_slice_initialize::<T, _>(n, |ptr| {
             for i in 0..n {
                 // Safe because ptr is properly aligned and has enough space.
@@ -85,7 +85,7 @@ impl Memory<'_> {
     /// The original memory is not usable until both the new memory and the slice are dropped.
     ///
     /// The elements of the slice never get dropped!
-    pub(crate) fn allocate_slice_copy<T: Copy>(&mut self, source: &[T]) -> (&mut [T], Memory) {
+    pub(crate) fn allocate_slice_copy<T: Copy>(&mut self, source: &[T]) -> (&mut [T], Memory<'_>) {
         self.allocate_slice_initialize::<T, _>(source.len(), |ptr| {
             for (i, v) in source.iter().enumerate() {
                 // Safe because ptr is properly aligned and has enough space.
@@ -108,7 +108,7 @@ impl Memory<'_> {
         n: usize,
         source: &[T],
         val: T,
-    ) -> (&mut [T], Memory) {
+    ) -> (&mut [T], Memory<'_>) {
         assert!(n >= source.len());
 
         self.allocate_slice_initialize::<T, _>(n, |ptr| {
@@ -127,7 +127,7 @@ impl Memory<'_> {
         })
     }
 
-    fn allocate_slice_initialize<T, F>(&mut self, n: usize, init: F) -> (&mut [T], Memory)
+    fn allocate_slice_initialize<T, F>(&mut self, n: usize, init: F) -> (&mut [T], Memory<'_>)
     where
         F: FnOnce(*mut T),
     {

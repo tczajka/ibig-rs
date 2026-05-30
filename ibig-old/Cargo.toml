@@ -3,7 +3,7 @@ name = "ibig"
 version = "0.3.6"
 authors = ["Tomek Czajka <tczajka@gmail.com>"]
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.93"
 description = "A big integer library with good performance"
 keywords = ["bigint", "bignum", "mathematics", "modular", "modulo"]
 categories = ["mathematics", "no-std"]
@@ -21,6 +21,10 @@ default = ["std"]
 
 # Interface with the std library.
 std = []
+
+[lints.rust]
+# `force_bits` is set via RUSTFLAGS to test a specific word size (see src/arch/mod.rs).
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(force_bits, values("16", "32", "64"))'] }
 
 [dependencies.cfg-if]
 version = "1.0.0"

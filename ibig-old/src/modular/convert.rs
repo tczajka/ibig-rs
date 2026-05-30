@@ -48,7 +48,7 @@ impl ModuloRing {
     /// assert!(x == y);
     /// ```
     #[inline]
-    pub fn from<T: IntoModulo>(&self, x: T) -> Modulo {
+    pub fn from<T: IntoModulo>(&self, x: T) -> Modulo<'_> {
         x.into_modulo(self)
     }
 }
@@ -137,12 +137,12 @@ impl ModuloLarge<'_> {
 
 /// Trait for types that can be converted into [Modulo] in a [ModuloRing].
 pub trait IntoModulo {
-    fn into_modulo(self, ring: &ModuloRing) -> Modulo;
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_>;
 }
 
 impl IntoModulo for UBig {
     #[inline]
-    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(&self, ring_small).into(),
             ModuloRingRepr::Large(ring_large) => ModuloLarge::from_ubig(self, ring_large).into(),
@@ -152,7 +152,7 @@ impl IntoModulo for UBig {
 
 impl IntoModulo for &UBig {
     #[inline]
-    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
         match ring.repr() {
             ModuloRingRepr::Small(ring_small) => ModuloSmall::from_ubig(self, ring_small).into(),
             ModuloRingRepr::Large(ring_large) => {
@@ -164,7 +164,7 @@ impl IntoModulo for &UBig {
 
 impl IntoModulo for IBig {
     #[inline]
-    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
         let (sign, mag) = self.into_sign_magnitude();
         let modulo = mag.into_modulo(ring);
         match sign {
@@ -176,7 +176,7 @@ impl IntoModulo for IBig {
 
 impl IntoModulo for &IBig {
     #[inline]
-    fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+    fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
         let modulo = self.magnitude().into_modulo(ring);
         match self.sign() {
             Positive => modulo,
@@ -232,7 +232,7 @@ macro_rules! impl_into_modulo_for_unsigned {
     ($t:ty) => {
         impl IntoModulo for $t {
             #[inline]
-            fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+            fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
                 UBig::from(self).into_modulo(ring)
             }
         }
@@ -244,7 +244,7 @@ macro_rules! impl_into_modulo_for_signed {
     ($t:ty) => {
         impl IntoModulo for $t {
             #[inline]
-            fn into_modulo(self, ring: &ModuloRing) -> Modulo {
+            fn into_modulo(self, ring: &ModuloRing) -> Modulo<'_> {
                 IBig::from(self).into_modulo(ring)
             }
         }

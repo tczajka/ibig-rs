@@ -252,6 +252,8 @@ mod tests {
         assert_eq!(capacity(&a), capacity(&num));
     }
 
+    // `i.into()` is a no-op when `Word` is `u16` (force_bits=16) but required otherwise.
+    #[allow(clippy::useless_conversion)]
     fn gen_ubig(num_words: u16) -> UBig {
         let mut buf = Buffer::allocate(num_words.into());
         for i in 0..num_words {

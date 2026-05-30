@@ -17,7 +17,7 @@ pub(crate) struct DigitWriter<'a> {
 }
 
 impl<'a> DigitWriter<'a> {
-    pub(crate) fn new(writer: &'a mut dyn fmt::Write, digit_case: DigitCase) -> DigitWriter {
+    pub(crate) fn new(writer: &'a mut dyn fmt::Write, digit_case: DigitCase) -> DigitWriter<'a> {
         DigitWriter {
             buffer: [0; BUFFER_LEN],
             buffer_len: 0,

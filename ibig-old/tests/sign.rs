@@ -5,7 +5,6 @@ use ibig::{
 };
 
 #[test]
-#[allow(clippy::double_neg)]
 fn test_neg() {
     assert_eq!(-ibig!(123), ibig!(-123));
     assert_eq!(-ibig!(-123), ibig!(123));
