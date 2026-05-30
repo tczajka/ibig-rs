@@ -4,9 +4,9 @@
 
 extern crate alloc;
 
+pub use ubig::UBig;
+
 mod ubig;
 
 #[cfg(test)]
 mod tests;
-
-pub use ubig::UBig;
