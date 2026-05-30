@@ -3,10 +3,7 @@
 use crate::{arch::word::Word, ubig::UBig};
 
 use alloc::vec::Vec;
-use core::{
-    iter,
-    ops::{Deref, DerefMut},
-};
+use core::ops::{Deref, DerefMut};
 
 /// Buffer for Words.
 ///
@@ -88,7 +85,7 @@ impl Buffer {
     /// Panics if there is not enough capacity.
     pub(crate) fn push_zeros(&mut self, n: usize) {
         assert!(n <= self.capacity() - self.len());
-        self.0.extend(iter::repeat(0).take(n));
+        self.0.extend(core::iter::repeat_n(0, n));
     }
 
     /// Insert `n` zeros in front.
@@ -98,7 +95,7 @@ impl Buffer {
     /// Panics if there is not enough capacity.
     pub(crate) fn push_zeros_front(&mut self, n: usize) {
         assert!(n <= self.capacity() - self.len());
-        self.0.splice(..0, iter::repeat(0).take(n));
+        self.0.splice(..0, core::iter::repeat_n(0, n));
     }
 
     /// Pop the most significant `Word`.
