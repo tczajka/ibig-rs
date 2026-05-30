@@ -8,7 +8,7 @@ description = "Core big-integer algorithms."
 keywords = ["bigint", "bignum", "arbitrary-precision", "mathematics"]
 categories = ["mathematics", "no-std"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/tczajka/ibig-rs"
+repository = "https://github.com/tczajka/ibig"
 
 [dependencies]
 unative = "0.2.2"

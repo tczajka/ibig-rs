@@ -8,4 +8,4 @@ description = "A big integer library"
 keywords = ["bigint", "bignum"]
 categories = ["mathematics", "no-std"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/tczajka/ibig-rs"
+repository = "https://github.com/tczajka/ibig"
