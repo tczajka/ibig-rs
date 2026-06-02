@@ -4,7 +4,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## 0.4.0 - unreleased
 
-Work in progress.
+Work in progress. This release is a ground-up rewrite of the library, with
+substantial internal changes to representation and algorithms. Expect breaking
+API changes; they will be documented here as the rewrite progresses.
 
 ## 0.3.6 - 2022-09-18
 
