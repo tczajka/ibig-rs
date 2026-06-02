@@ -7,9 +7,11 @@ extern crate alloc;
 use ibig_core::Digit;
 use smallvec::SmallVec;
 
+pub use error::TryFromBigError;
 pub use ibig::IBig;
 pub use ubig::UBig;
 
+mod error;
 mod ibig;
 mod ubig;
 

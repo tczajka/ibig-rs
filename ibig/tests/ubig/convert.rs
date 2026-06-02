@@ -1,6 +1,6 @@
 //! Integration tests for `UBig` <-> byte-sequence conversions.
 
-use ibig::UBig;
+use ibig::{IBig, UBig};
 
 /// Little-endian byte sequences that are already normalized (no most-significant zero
 /// byte), chosen to exercise sub-digit, single-digit and multi-digit values at every digit
@@ -122,4 +122,24 @@ fn try_from_signed() {
     assert!(UBig::try_from(i64::MIN).is_err());
     assert!(UBig::try_from(-1i128).is_err());
     assert!(UBig::try_from(-1isize).is_err());
+}
+
+#[test]
+fn try_from_ibig() {
+    assert_eq!(UBig::try_from(IBig::ZERO).unwrap(), UBig::ZERO);
+    assert_eq!(
+        UBig::try_from(IBig::from(200i16)).unwrap(),
+        UBig::from(200u16)
+    );
+    // A large positive value (with the extra sign digit) round-trips.
+    let big = UBig::from(u64::MAX);
+    assert_eq!(UBig::try_from(IBig::from(&big)).unwrap(), big);
+    // The by-reference conversion agrees.
+    assert_eq!(UBig::try_from(&IBig::from(5i32)).unwrap(), UBig::from(5u32));
+
+    // Negative values are rejected.
+    assert!(UBig::try_from(IBig::from(-1i32)).is_err());
+    assert!(UBig::try_from(IBig::from(i64::MIN)).is_err());
+    assert!(UBig::try_from(IBig::from(i128::MIN)).is_err());
+    assert!(UBig::try_from(&IBig::from(-5i32)).is_err());
 }

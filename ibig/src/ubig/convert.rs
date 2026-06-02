@@ -1,6 +1,6 @@
 //! Conversions to and from [`UBig`].
 
-use crate::{Digits, INLINE_DIGITS, UBig};
+use crate::{Digits, IBig, INLINE_DIGITS, TryFromBigError, UBig};
 use alloc::{vec, vec::Vec};
 use core::num::TryFromIntError;
 use ibig_core::Digit;
@@ -167,3 +167,34 @@ impl_try_from_signed!(i32 => u32);
 impl_try_from_signed!(i64 => u64);
 impl_try_from_signed!(i128 => u128);
 impl_try_from_signed!(isize => usize);
+
+impl TryFrom<IBig> for UBig {
+    type Error = TryFromBigError;
+
+    #[inline]
+    fn try_from(value: IBig) -> Result<UBig, TryFromBigError> {
+        if value.is_negative() {
+            return Err(TryFromBigError);
+        }
+        // A non-negative two's complement value's digits are its unsigned magnitude.
+        if let Some(digit) = value.try_to_digit() {
+            // Fast path: a single non-negative digit.
+            Ok(UBig::from_digit(digit.cast_unsigned()))
+        } else {
+            Ok(UBig::from_digits(value.into_digits()))
+        }
+    }
+}
+
+impl TryFrom<&IBig> for UBig {
+    type Error = TryFromBigError;
+
+    #[inline]
+    fn try_from(value: &IBig) -> Result<UBig, TryFromBigError> {
+        // Fast path to avoid cloning.
+        if value.is_negative() {
+            return Err(TryFromBigError);
+        }
+        UBig::try_from(value.clone())
+    }
+}

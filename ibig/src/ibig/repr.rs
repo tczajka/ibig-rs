@@ -64,7 +64,6 @@ impl IBig {
     }
 
     /// The value as a single signed digit, if it fits in one.
-    #[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
     #[inline]
     pub(crate) fn try_to_digit(&self) -> Option<SignedDigit> {
         if !self.0.spilled() && self.0.len() == 1 {
@@ -81,7 +80,6 @@ impl IBig {
     }
 
     /// Consume into the little-endian digits of the two's complement representation.
-    #[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
     #[inline]
     pub(crate) fn into_digits(self) -> Digits {
         self.0
