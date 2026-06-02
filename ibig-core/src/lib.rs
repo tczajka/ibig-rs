@@ -5,7 +5,7 @@
 
 #![no_std]
 
-use unative::UNative;
+use unative::{INative, UNative};
 
 /// A single digit of a big integer.
 ///
@@ -13,3 +13,10 @@ use unative::UNative;
 /// platform's native unsigned integer type ([`UNative`]), chosen for efficient hardware
 /// arithmetic.
 pub type Digit = UNative;
+
+/// A [`Digit`] interpreted as a signed (two's complement) value.
+///
+/// This is the platform's native signed integer type ([`INative`]), the same width as
+/// [`Digit`]. It is used as the most-significant digit of a signed two's complement
+/// number, where the sign bit lives.
+pub type SignedDigit = INative;

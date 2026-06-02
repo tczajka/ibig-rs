@@ -7,8 +7,10 @@ extern crate alloc;
 use ibig_core::Digit;
 use smallvec::SmallVec;
 
+pub use ibig::IBig;
 pub use ubig::UBig;
 
+mod ibig;
 mod ubig;
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.
