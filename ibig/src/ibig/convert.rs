@@ -23,20 +23,18 @@ impl IBig {
     /// Constructs from an `i32`.
     #[inline]
     pub const fn from_i32(value: i32) -> IBig {
-        if SignedDigit::BITS >= i32::BITS {
-            IBig::from_digit(SignedDigit::try_from_i32(value).unwrap())
-        } else {
-            IBig::const_from_le_bytes(&value.to_le_bytes())
+        match SignedDigit::try_from_i32(value) {
+            Some(digit) => IBig::from_digit(digit),
+            None => IBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
     /// Constructs from an `i64`.
     #[inline]
     pub const fn from_i64(value: i64) -> IBig {
-        if SignedDigit::BITS >= i64::BITS {
-            IBig::from_digit(SignedDigit::try_from_i64(value).unwrap())
-        } else {
-            IBig::const_from_le_bytes(&value.to_le_bytes())
+        match SignedDigit::try_from_i64(value) {
+            Some(digit) => IBig::from_digit(digit),
+            None => IBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
@@ -139,51 +137,28 @@ impl IBig {
     }
 }
 
-impl From<i8> for IBig {
-    #[inline]
-    fn from(value: i8) -> IBig {
-        IBig::from_i8(value)
-    }
-}
-
-impl From<i16> for IBig {
-    #[inline]
-    fn from(value: i16) -> IBig {
-        IBig::from_i16(value)
-    }
-}
-
-impl From<i32> for IBig {
-    #[inline]
-    fn from(value: i32) -> IBig {
-        IBig::from_i32(value)
-    }
-}
-
-impl From<i64> for IBig {
-    #[inline]
-    fn from(value: i64) -> IBig {
-        IBig::from_i64(value)
-    }
-}
-
-impl From<i128> for IBig {
-    #[inline]
-    fn from(value: i128) -> IBig {
-        IBig::from_le_bytes(&value.to_le_bytes())
-    }
-}
-
-impl From<isize> for IBig {
-    #[inline]
-    fn from(value: isize) -> IBig {
-        if SignedDigit::BITS >= isize::BITS {
-            IBig::from_digit(SignedDigit::try_from(value).unwrap())
-        } else {
-            IBig::from_le_bytes(&value.to_le_bytes())
+/// Implements `From<$t> for IBig` for a signed primitive: a value that fits in a single
+/// digit takes the fast path, otherwise it goes through the little-endian bytes.
+macro_rules! impl_from_signed {
+    ($t:ty) => {
+        impl From<$t> for IBig {
+            #[inline]
+            fn from(value: $t) -> IBig {
+                match SignedDigit::try_from(value) {
+                    Ok(digit) => IBig::from_digit(digit),
+                    Err(_) => IBig::from_le_bytes(&value.to_le_bytes()),
+                }
+            }
         }
-    }
+    };
 }
+
+impl_from_signed!(i8);
+impl_from_signed!(i16);
+impl_from_signed!(i32);
+impl_from_signed!(i64);
+impl_from_signed!(i128);
+impl_from_signed!(isize);
 
 impl From<UBig> for IBig {
     #[inline]

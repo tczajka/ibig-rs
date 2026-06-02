@@ -24,22 +24,18 @@ impl UBig {
     /// Constructs from a `u32`.
     #[inline]
     pub const fn from_u32(value: u32) -> UBig {
-        if Digit::BITS >= u32::BITS {
-            UBig::from_digit(Digit::try_from_u32(value).unwrap())
-        } else {
-            UBig::const_from_le_bytes(&value.to_le_bytes())
+        match Digit::try_from_u32(value) {
+            Some(digit) => UBig::from_digit(digit),
+            None => UBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
     /// Constructs from a `u64`.
-    ///
-    /// A `u64` always fits in the inline digit buffer, so this never allocates.
     #[inline]
     pub const fn from_u64(value: u64) -> UBig {
-        if Digit::BITS >= u64::BITS {
-            UBig::from_digit(Digit::try_from_u64(value).unwrap())
-        } else {
-            UBig::const_from_le_bytes(&value.to_le_bytes())
+        match Digit::try_from_u64(value) {
+            Some(digit) => UBig::from_digit(digit),
+            None => UBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
@@ -126,51 +122,28 @@ impl UBig {
     }
 }
 
-impl From<u8> for UBig {
-    #[inline]
-    fn from(value: u8) -> UBig {
-        UBig::from_u8(value)
-    }
-}
-
-impl From<u16> for UBig {
-    #[inline]
-    fn from(value: u16) -> UBig {
-        UBig::from_u16(value)
-    }
-}
-
-impl From<u32> for UBig {
-    #[inline]
-    fn from(value: u32) -> UBig {
-        UBig::from_u32(value)
-    }
-}
-
-impl From<u64> for UBig {
-    #[inline]
-    fn from(value: u64) -> UBig {
-        UBig::from_u64(value)
-    }
-}
-
-impl From<u128> for UBig {
-    #[inline]
-    fn from(value: u128) -> UBig {
-        UBig::from_le_bytes(&value.to_le_bytes())
-    }
-}
-
-impl From<usize> for UBig {
-    #[inline]
-    fn from(value: usize) -> UBig {
-        if Digit::BITS >= usize::BITS {
-            UBig::from_digit(Digit::try_from(value).unwrap())
-        } else {
-            UBig::from_le_bytes(&value.to_le_bytes())
+/// Implements `From<$t> for UBig` for an unsigned primitive: a value that fits in a single
+/// digit takes the fast path, otherwise it goes through the little-endian bytes.
+macro_rules! impl_from_unsigned {
+    ($t:ty) => {
+        impl From<$t> for UBig {
+            #[inline]
+            fn from(value: $t) -> UBig {
+                match Digit::try_from(value) {
+                    Ok(digit) => UBig::from_digit(digit),
+                    Err(_) => UBig::from_le_bytes(&value.to_le_bytes()),
+                }
+            }
         }
-    }
+    };
 }
+
+impl_from_unsigned!(u8);
+impl_from_unsigned!(u16);
+impl_from_unsigned!(u32);
+impl_from_unsigned!(u64);
+impl_from_unsigned!(u128);
+impl_from_unsigned!(usize);
 
 /// Implements `TryFrom<$signed> for UBig` by forwarding through the unsigned `$unsigned`: a
 /// non-negative value converts, while a negative value yields the same `TryFromIntError`
