@@ -8,11 +8,12 @@ fn digit(n: u8) -> Digit {
 
 #[test]
 fn test_min_len() {
-    // A single digit (including zero) is already minimal.
-    assert_eq!(min_len(&[digit(0)]), 1);
+    // Zero needs no digits: empty and all-zero slices collapse to 0.
+    assert_eq!(min_len(&[]), 0);
+    assert_eq!(min_len(&[digit(0)]), 0);
+    assert_eq!(min_len(&[digit(0), digit(0), digit(0)]), 0);
+    // A nonzero value keeps up to its most-significant nonzero digit.
     assert_eq!(min_len(&[digit(5)]), 1);
-    // All-zero and leading-zero slices collapse, but never below one digit.
-    assert_eq!(min_len(&[digit(0), digit(0), digit(0)]), 1);
     assert_eq!(min_len(&[digit(5), digit(0)]), 1);
     assert_eq!(min_len(&[digit(1), digit(2), digit(0)]), 2);
     // A zero low digit below a nonzero digit is kept.
@@ -39,4 +40,10 @@ fn test_min_len_signed() {
     // all-ones digit, which must be kept.
     assert_eq!(min_len_signed(&[digit(0), Digit::MAX]), 2);
     assert_eq!(min_len_signed(&[digit(5), Digit::MAX]), 2);
+}
+
+#[test]
+#[should_panic]
+fn test_min_len_signed_empty() {
+    min_len_signed(&[]);
 }

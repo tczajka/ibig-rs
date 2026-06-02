@@ -29,10 +29,11 @@ impl UBig {
 
     /// Construct from little-endian digits.
     pub(crate) fn from_digits(mut digits: Digits) -> UBig {
+        digits.truncate(min_len(&digits));
+        // `min_len` returns 0 for zero, but `UBig` always keeps at least one digit.
         if digits.is_empty() {
             digits.push(Digit::ZERO);
         }
-        digits.truncate(min_len(&digits));
         if digits.spilled()
             && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
         {

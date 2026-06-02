@@ -35,7 +35,6 @@ impl IBig {
     ///
     /// Panics if `digits` is empty.
     pub(crate) fn from_digits(mut digits: Digits) -> IBig {
-        assert!(!digits.is_empty());
         digits.truncate(min_len_signed(&digits));
         if digits.spilled()
             && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
