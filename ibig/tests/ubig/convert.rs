@@ -19,12 +19,12 @@ fn normalized_le() -> Vec<Vec<u8>> {
 
 #[test]
 fn zero() {
-    assert_eq!(UBig::from_le_bytes(&[]), UBig::from(0u8));
-    assert_eq!(UBig::from_le_bytes(&[0, 0, 0]), UBig::from(0u8));
-    assert_eq!(UBig::from_be_bytes(&[]), UBig::from(0u8));
-    assert_eq!(UBig::from_be_bytes(&[0, 0, 0]), UBig::from(0u8));
-    assert_eq!(UBig::from(0u8).to_le_bytes(), []);
-    assert_eq!(UBig::from(0u8).to_be_bytes(), []);
+    assert_eq!(UBig::from_le_bytes(&[]), UBig::ZERO);
+    assert_eq!(UBig::from_le_bytes(&[0, 0, 0]), UBig::ZERO);
+    assert_eq!(UBig::from_be_bytes(&[]), UBig::ZERO);
+    assert_eq!(UBig::from_be_bytes(&[0, 0, 0]), UBig::ZERO);
+    assert_eq!(UBig::ZERO.to_le_bytes(), []);
+    assert_eq!(UBig::ZERO.to_be_bytes(), []);
 }
 
 #[test]
@@ -72,8 +72,8 @@ fn le_be_agree() {
 #[test]
 fn from_unsigned() {
     // Zero from every type is the empty byte sequence.
-    assert_eq!(UBig::from(0u8), UBig::from_le_bytes(&[]));
-    assert_eq!(UBig::from(0u128), UBig::from_le_bytes(&[]));
+    assert_eq!(UBig::from(0u8), UBig::ZERO);
+    assert_eq!(UBig::from(0u128), UBig::ZERO);
     // Each type matches its little-endian bytes.
     assert_eq!(UBig::from(5u8), UBig::from_le_bytes(&[5]));
     assert_eq!(UBig::from(0x0102u16), UBig::from_le_bytes(&[0x02, 0x01]));
@@ -104,7 +104,7 @@ fn from_unsigned_const() {
 #[test]
 fn try_from_signed() {
     // Non-negative values convert and match the unsigned conversion.
-    assert_eq!(UBig::try_from(0i8).unwrap(), UBig::from(0u8));
+    assert_eq!(UBig::try_from(0i8).unwrap(), UBig::ZERO);
     assert_eq!(UBig::try_from(5i32).unwrap(), UBig::from(5u32));
     assert_eq!(
         UBig::try_from(i64::MAX).unwrap(),

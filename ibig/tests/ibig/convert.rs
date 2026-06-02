@@ -78,7 +78,7 @@ fn from_signed_const() {
 #[test]
 fn from_signed() {
     // The `From` impls agree with the `from_iN` constructors and the byte conversions.
-    assert_eq!(IBig::from(0i8).to_le_bytes(), [0]);
+    assert_eq!(IBig::from(0i8), IBig::ZERO);
     assert_eq!(IBig::from(5i16), IBig::from_i16(5));
     assert_eq!(IBig::from(-1i32).to_le_bytes(), [0xff]);
     assert_eq!(

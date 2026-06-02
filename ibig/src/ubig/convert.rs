@@ -6,6 +6,9 @@ use core::num::TryFromIntError;
 use ibig_core::Digit;
 
 impl UBig {
+    /// The number zero.
+    pub const ZERO: UBig = UBig::from_digit(Digit::ZERO);
+
     /// Constructs from a `u8`.
     #[inline]
     pub const fn from_u8(value: u8) -> UBig {

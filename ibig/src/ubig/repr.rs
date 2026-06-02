@@ -17,7 +17,6 @@ pub struct UBig(
     Digits,
 );
 
-#[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
 impl UBig {
     /// Construct from a single digit.
     #[inline]
@@ -69,6 +68,7 @@ impl UBig {
     }
 
     /// The value as a single digit, if it fits in one.
+    #[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
     #[inline]
     pub(crate) fn try_to_digit(&self) -> Option<Digit> {
         if !self.0.spilled() && self.0.len() == 1 {
@@ -85,6 +85,7 @@ impl UBig {
     }
 
     /// Consume into the little-endian digits.
+    #[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
     #[inline]
     pub(crate) fn into_digits(self) -> Digits {
         self.0

@@ -5,6 +5,9 @@ use alloc::{vec, vec::Vec};
 use ibig_core::{Digit, SignedDigit};
 
 impl IBig {
+    /// The number zero.
+    pub const ZERO: IBig = IBig::from_digit(SignedDigit::ZERO);
+
     /// Constructs from an `i8`.
     #[inline]
     pub const fn from_i8(value: i8) -> IBig {
