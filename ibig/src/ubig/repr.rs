@@ -21,10 +21,36 @@ pub struct UBig(
 impl UBig {
     /// Construct from a single digit.
     #[inline]
-    pub(crate) fn from_digit(digit: Digit) -> UBig {
-        let mut digits = Digits::new();
-        digits.push(digit);
-        UBig(digits)
+    pub(crate) const fn from_digit(digit: Digit) -> UBig {
+        const { assert!(INLINE_DIGITS >= 1) };
+        let mut digits = [Digit::ZERO; INLINE_DIGITS];
+        digits[0] = digit;
+        // A single digit is always canonical.
+        // SAFETY: `1 <= INLINE_DIGITS`.
+        UBig(unsafe { Digits::from_const_with_len_unchecked(digits, 1) })
+    }
+
+    /// Construct from at most `INLINE_DIGITS` little-endian digits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits.len() > INLINE_DIGITS`.
+    #[inline]
+    pub(crate) const fn const_from_digits(digits: &[Digit]) -> UBig {
+        assert!(digits.len() <= INLINE_DIGITS);
+
+        let mut buffer = [Digit::ZERO; INLINE_DIGITS];
+        let mut len = min_len(digits);
+        let (dest, _) = buffer.split_at_mut(len);
+        let (src, _) = digits.split_at(len);
+        dest.copy_from_slice(src);
+
+        // `UBig` always keeps at least one digit.
+        if len == 0 {
+            len = 1;
+        }
+        // SAFETY: `len <= INLINE_DIGITS`.
+        UBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
     }
 
     /// Construct from little-endian digits.

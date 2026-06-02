@@ -19,4 +19,4 @@ include = [
 
 [dependencies]
 ibig-core = { version = "0.0.1", path = "../ibig-core" }
-smallvec = { version = "1.15", features = ["union", "const_generics"] }
+smallvec = { version = "1.15", features = ["union", "const_generics", "const_new"] }

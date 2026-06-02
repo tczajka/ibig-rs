@@ -1,10 +1,44 @@
 //! Conversions to and from [`UBig`].
 
-use crate::{Digits, UBig};
+use crate::{Digits, INLINE_DIGITS, UBig};
 use alloc::{vec, vec::Vec};
 use ibig_core::Digit;
 
 impl UBig {
+    /// Constructs from a `u8`.
+    #[inline]
+    pub const fn from_u8(value: u8) -> UBig {
+        UBig::from_digit(Digit::from_u8(value))
+    }
+
+    /// Constructs from a `u16`.
+    #[inline]
+    pub const fn from_u16(value: u16) -> UBig {
+        UBig::from_digit(Digit::from_u16(value))
+    }
+
+    /// Constructs from a `u32`.
+    #[inline]
+    pub const fn from_u32(value: u32) -> UBig {
+        if Digit::BITS >= u32::BITS {
+            UBig::from_digit(Digit::try_from_u32(value).unwrap())
+        } else {
+            UBig::const_from_le_bytes(&value.to_le_bytes())
+        }
+    }
+
+    /// Constructs from a `u64`.
+    ///
+    /// A `u64` always fits in the inline digit buffer, so this never allocates.
+    #[inline]
+    pub const fn from_u64(value: u64) -> UBig {
+        if Digit::BITS >= u64::BITS {
+            UBig::from_digit(Digit::try_from_u64(value).unwrap())
+        } else {
+            UBig::const_from_le_bytes(&value.to_le_bytes())
+        }
+    }
+
     /// Returns the little-endian (least-significant-first) byte representation, with no
     /// most-significant zero bytes. Zero produces an empty sequence.
     ///
@@ -56,6 +90,21 @@ impl UBig {
         UBig::from_digits(digits)
     }
 
+    /// Constructs from at most `INLINE_DIGITS * Digit::BYTES` little-endian bytes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `bytes` is longer than `INLINE_DIGITS * Digit::BYTES`.
+    #[inline]
+    pub(crate) const fn const_from_le_bytes(bytes: &[u8]) -> UBig {
+        assert!(bytes.len() <= INLINE_DIGITS * Digit::BYTES);
+        let mut digits = [Digit::ZERO; INLINE_DIGITS];
+        let n = bytes.len().div_ceil(Digit::BYTES);
+        let (used, _) = digits.split_at_mut(n);
+        ibig_core::from_bytes(bytes, used);
+        UBig::const_from_digits(used)
+    }
+
     /// Constructs a number from its big-endian (most-significant-first) byte representation.
     /// Any length is accepted, and leading zero bytes are ignored.
     ///
@@ -70,5 +119,51 @@ impl UBig {
         digits.resize(bytes.len().div_ceil(Digit::BYTES), Digit::ZERO);
         ibig_core::from_be_bytes(bytes, &mut digits);
         UBig::from_digits(digits)
+    }
+}
+
+impl From<u8> for UBig {
+    #[inline]
+    fn from(value: u8) -> UBig {
+        UBig::from_u8(value)
+    }
+}
+
+impl From<u16> for UBig {
+    #[inline]
+    fn from(value: u16) -> UBig {
+        UBig::from_u16(value)
+    }
+}
+
+impl From<u32> for UBig {
+    #[inline]
+    fn from(value: u32) -> UBig {
+        UBig::from_u32(value)
+    }
+}
+
+impl From<u64> for UBig {
+    #[inline]
+    fn from(value: u64) -> UBig {
+        UBig::from_u64(value)
+    }
+}
+
+impl From<u128> for UBig {
+    #[inline]
+    fn from(value: u128) -> UBig {
+        UBig::from_le_bytes(&value.to_le_bytes())
+    }
+}
+
+impl From<usize> for UBig {
+    #[inline]
+    fn from(value: usize) -> UBig {
+        if Digit::BITS >= usize::BITS {
+            UBig::from_digit(Digit::try_from(value).unwrap())
+        } else {
+            UBig::from_le_bytes(&value.to_le_bytes())
+        }
     }
 }

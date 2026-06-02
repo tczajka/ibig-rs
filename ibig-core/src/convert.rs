@@ -17,9 +17,9 @@ use crate::Digit;
 /// assert_eq!(min_len(&[Digit::ZERO, Digit::ZERO]), 0);
 /// ```
 #[inline]
-pub fn min_len(digits: &[Digit]) -> usize {
+pub const fn min_len(digits: &[Digit]) -> usize {
     let mut len = digits.len();
-    while len > 0 && digits[len - 1] == Digit::ZERO {
+    while len > 0 && digits[len - 1].const_eq(Digit::ZERO) {
         len -= 1;
     }
     len
@@ -148,19 +148,22 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
 /// from_bytes(&[0x02, 0x01], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
 /// ```
-pub fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
-    assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
-    let mut digit_iter = digits.iter_mut();
+pub const fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
+    assert!(digits.len() == bytes.len().div_ceil(Digit::BYTES));
     let (chunks, rem) = bytes.as_chunks::<{ Digit::BYTES }>();
-    for &chunk in chunks {
-        *digit_iter.next().unwrap() = Digit::from_le_bytes(chunk);
+    let mut i = 0;
+    while i < chunks.len() {
+        digits[i] = Digit::from_le_bytes(chunks[i]);
+        i += 1;
     }
     if !rem.is_empty() {
         let mut arr = [0u8; Digit::BYTES];
-        arr[..rem.len()].copy_from_slice(rem);
-        *digit_iter.next().unwrap() = Digit::from_le_bytes(arr);
+        let (dest, _) = arr.split_at_mut(rem.len());
+        dest.copy_from_slice(rem);
+        digits[i] = Digit::from_le_bytes(arr);
+        i += 1;
     }
-    assert!(digit_iter.next().is_none());
+    assert!(i == digits.len());
 }
 
 /// Fills `digits` from the big-endian `bytes`.
