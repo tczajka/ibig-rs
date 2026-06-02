@@ -95,6 +95,20 @@ fn from_signed() {
 }
 
 #[test]
+fn from_unsigned() {
+    assert_eq!(IBig::from(0u8), IBig::ZERO);
+    // Non-negative values match the signed conversion of the same value.
+    assert_eq!(IBig::from(127u8), IBig::from(127i8));
+    assert_eq!(IBig::from(200u32), IBig::from(200i32));
+    assert_eq!(IBig::from(255usize), IBig::from(255i32));
+    // `u64::MAX` is a positive `2^64 - 1`, gaining a leading zero byte to stay non-negative.
+    assert_eq!(
+        IBig::from(u64::MAX),
+        IBig::from_le_bytes(&[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0])
+    );
+}
+
+#[test]
 fn from_ubig() {
     assert_eq!(IBig::from(UBig::ZERO), IBig::ZERO);
     // A value whose top bit is clear keeps the same magnitude.

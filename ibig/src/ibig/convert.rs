@@ -208,3 +208,22 @@ impl From<UBig> for IBig {
         IBig::from_digits(digits)
     }
 }
+
+/// Implements `From<$t> for IBig` for an unsigned primitive by converting through `UBig`.
+macro_rules! impl_from_unsigned {
+    ($t:ty) => {
+        impl From<$t> for IBig {
+            #[inline]
+            fn from(value: $t) -> IBig {
+                IBig::from(UBig::from(value))
+            }
+        }
+    };
+}
+
+impl_from_unsigned!(u8);
+impl_from_unsigned!(u16);
+impl_from_unsigned!(u32);
+impl_from_unsigned!(u64);
+impl_from_unsigned!(u128);
+impl_from_unsigned!(usize);
