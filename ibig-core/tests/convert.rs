@@ -1,7 +1,8 @@
 //! Integration tests for digit-slice normalization helpers.
 
 use ibig_core::{
-    Digit, from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_signed, to_bytes,
+    Digit, from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_bytes_signed, min_len_signed,
+    to_bytes,
 };
 
 fn digit(n: u8) -> Digit {
@@ -59,6 +60,28 @@ fn test_min_len_bytes() {
     assert_eq!(min_len_bytes(&[5, 0]), 1);
     assert_eq!(min_len_bytes(&[1, 2, 0]), 2);
     assert_eq!(min_len_bytes(&[0, 1]), 2);
+}
+
+#[test]
+fn test_min_len_bytes_signed() {
+    // Zero and sign-only sequences collapse to a single byte.
+    assert_eq!(min_len_bytes_signed(&[0]), 1);
+    assert_eq!(min_len_bytes_signed(&[0, 0, 0]), 1);
+    assert_eq!(min_len_bytes_signed(&[0xff, 0xff, 0xff]), 1);
+    // Redundant sign bytes above a same-signed byte are stripped.
+    assert_eq!(min_len_bytes_signed(&[5, 0]), 1);
+    assert_eq!(min_len_bytes_signed(&[0xfe, 0xff]), 1);
+    // A leading byte needed to carry the sign is kept: 0xc8 alone is negative, so +200
+    // needs the leading zero; 0x80 alone is positive-looking below 0x80, so -32768 needs it.
+    assert_eq!(min_len_bytes_signed(&[0xc8, 0x00]), 2); // +200
+    assert_eq!(min_len_bytes_signed(&[0x00, 0x80]), 2); // -32768
+    assert_eq!(min_len_bytes_signed(&[5, 0, 0, 0]), 1);
+}
+
+#[test]
+#[should_panic]
+fn test_min_len_bytes_signed_empty() {
+    min_len_bytes_signed(&[]);
 }
 
 #[test]

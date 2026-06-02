@@ -82,6 +82,37 @@ pub fn min_len_bytes(bytes: &[u8]) -> usize {
     len
 }
 
+/// Given a non-empty little-endian slice of two's complement bytes, returns the minimum
+/// number of bytes needed to represent the value: the length with redundant
+/// most-significant sign-extension bytes removed, but always at least 1.
+///
+/// This is the byte analogue of [`min_len_signed`].
+///
+/// # Panics
+///
+/// Panics if `bytes` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::min_len_bytes_signed;
+/// // A redundant zero sign byte above a non-negative byte is dropped.
+/// assert_eq!(min_len_bytes_signed(&[5, 0]), 1);
+/// // -1 is all-ones; the redundant 0xff sign bytes are dropped.
+/// assert_eq!(min_len_bytes_signed(&[0xff, 0xff]), 1);
+/// // 0xc8 alone is negative, so a leading zero byte is needed to stay positive (200).
+/// assert_eq!(min_len_bytes_signed(&[0xc8, 0x00]), 2);
+/// ```
+#[inline]
+pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
+    assert!(!bytes.is_empty());
+    let mut len = bytes.len();
+    while len > 1 && bytes[len - 1] == sign_extension_byte(bytes[len - 2]) {
+        len -= 1;
+    }
+    len
+}
+
 /// Writes the little-endian byte representation of the unsigned value held in `digits` into
 /// `bytes`, one digit per `Digit::BYTES` bytes.
 ///
@@ -160,6 +191,78 @@ pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
     assert!(digit_iter.next().is_none());
 }
 
+/// Fills `digits` from the little-endian two's complement `bytes`.
+///
+/// `digits.len()` must equal `bytes.len().div_ceil(Digit::BYTES)`.
+///
+/// # Panics
+///
+/// Panics if `bytes` is empty: a signed value needs at least one byte to carry its sign.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, from_le_bytes_signed};
+/// let mut digits = [Digit::ZERO; 1];
+/// from_le_bytes_signed(&[1, 2], &mut digits);
+/// assert_eq!(digits, [Digit::from(0x0201u16)]);
+/// from_le_bytes_signed(&[0xff], &mut digits);
+/// assert_eq!(digits, [Digit::MAX]);
+/// ```
+pub fn from_le_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
+    assert!(!bytes.is_empty());
+    assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
+    let mut digit_iter = digits.iter_mut();
+    let (chunks, rem) = bytes.as_chunks::<{ Digit::BYTES }>();
+    for &chunk in chunks {
+        *digit_iter.next().unwrap() = Digit::from_le_bytes(chunk);
+    }
+    if !rem.is_empty() {
+        let fill = sign_extension_byte(*bytes.last().unwrap());
+        let mut arr = [fill; Digit::BYTES];
+        arr[..rem.len()].copy_from_slice(rem);
+        *digit_iter.next().unwrap() = Digit::from_le_bytes(arr);
+    }
+    assert!(digit_iter.next().is_none());
+}
+
+/// Fills `digits` from the big-endian two's complement `bytes`, sign-extending the
+/// most-significant digit.
+///
+/// `digits.len()` must equal `bytes.len().div_ceil(Digit::BYTES)`.
+///
+/// # Panics
+///
+/// Panics if `bytes` is empty: a signed value needs at least one byte to carry its sign.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, from_be_bytes_signed};
+/// let mut digits = [Digit::ZERO; 1];
+/// from_be_bytes_signed(&[1, 2], &mut digits);
+/// assert_eq!(digits, [Digit::from(0x0102u16)]);
+/// // 0xff is -1 in two's complement; it sign-extends to fill the digit with ones.
+/// from_be_bytes_signed(&[0xff], &mut digits);
+/// assert_eq!(digits, [Digit::MAX]);
+/// ```
+pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
+    assert!(!bytes.is_empty());
+    assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
+    let mut digit_iter = digits.iter_mut();
+    let (rem, chunks) = bytes.as_rchunks::<{ Digit::BYTES }>();
+    for &chunk in chunks.iter().rev() {
+        *digit_iter.next().unwrap() = Digit::from_be_bytes(chunk);
+    }
+    if !rem.is_empty() {
+        let fill = sign_extension_byte(bytes[0]);
+        let mut arr = [fill; Digit::BYTES];
+        arr[Digit::BYTES - rem.len()..].copy_from_slice(rem);
+        *digit_iter.next().unwrap() = Digit::from_be_bytes(arr);
+    }
+    assert!(digit_iter.next().is_none());
+}
+
 /// The digit that sign-extends `digit`: all-ones if `digit` is negative, zero otherwise.
 #[inline]
 fn sign_extension(digit: Digit) -> Digit {
@@ -168,4 +271,10 @@ fn sign_extension(digit: Digit) -> Digit {
     } else {
         Digit::ZERO
     }
+}
+
+/// The byte that sign-extends `byte`: all-ones if `byte` is negative, zero otherwise.
+#[inline]
+fn sign_extension_byte(byte: u8) -> u8 {
+    if (byte as i8) < 0 { u8::MAX } else { 0 }
 }
