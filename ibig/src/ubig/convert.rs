@@ -41,14 +41,14 @@ impl UBig {
     }
 
     /// Returns the little-endian (least-significant-first) byte representation, with no
-    /// most-significant zero bytes. Zero produces an empty sequence.
+    /// most-significant zero bytes.
     ///
     /// # Examples
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_le_bytes(&[5, 1, 0]).to_le_bytes(), [5, 1]);
-    /// assert!(UBig::from_le_bytes(&[]).to_le_bytes().is_empty());
+    /// assert_eq!(UBig::from(0x0105u16).to_le_bytes(), [5, 1]);
+    /// assert_eq!(UBig::from(0u8).to_le_bytes(), []);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
         let digits = self.as_digits();
@@ -59,14 +59,14 @@ impl UBig {
     }
 
     /// Returns the big-endian (most-significant-first) byte representation, with no leading
-    /// zero bytes. Zero produces an empty sequence.
+    /// zero bytes.
     ///
     /// # Examples
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_be_bytes(&[0, 1, 5]).to_be_bytes(), [1, 5]);
-    /// assert!(UBig::from_be_bytes(&[]).to_be_bytes().is_empty());
+    /// assert_eq!(UBig::from(0x0105u16).to_be_bytes(), [1, 5]);
+    /// assert_eq!(UBig::from(0u8).to_be_bytes(), []);
     /// ```
     pub fn to_be_bytes(&self) -> Vec<u8> {
         // Big-endian is the little-endian representation reversed.
@@ -82,7 +82,7 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_le_bytes(&[5, 1]), UBig::from_be_bytes(&[1, 5]));
+    /// assert_eq!(UBig::from_le_bytes(&[5, 1]), UBig::from(0x0105u16));
     /// ```
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
         let mut digits = Digits::new();
@@ -113,7 +113,7 @@ impl UBig {
     ///
     /// ```
     /// # use ibig::UBig;
-    /// assert_eq!(UBig::from_be_bytes(&[1, 5]), UBig::from_le_bytes(&[5, 1]));
+    /// assert_eq!(UBig::from_be_bytes(&[1, 5]), UBig::from(0x0105u16));
     /// ```
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
         let mut digits = Digits::new();

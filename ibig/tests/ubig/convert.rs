@@ -19,11 +19,12 @@ fn normalized_le() -> Vec<Vec<u8>> {
 
 #[test]
 fn zero() {
-    assert!(UBig::from_le_bytes(&[]).to_le_bytes().is_empty());
-    assert!(UBig::from_be_bytes(&[]).to_be_bytes().is_empty());
-    assert!(UBig::from_le_bytes(&[0, 0, 0]).to_le_bytes().is_empty());
-    assert!(UBig::from_be_bytes(&[0, 0, 0]).to_be_bytes().is_empty());
-    assert_eq!(UBig::from_le_bytes(&[0, 0]), UBig::from_be_bytes(&[]));
+    assert_eq!(UBig::from_le_bytes(&[]), UBig::from(0u8));
+    assert_eq!(UBig::from_le_bytes(&[0, 0, 0]), UBig::from(0u8));
+    assert_eq!(UBig::from_be_bytes(&[]), UBig::from(0u8));
+    assert_eq!(UBig::from_be_bytes(&[0, 0, 0]), UBig::from(0u8));
+    assert_eq!(UBig::from(0u8).to_le_bytes(), []);
+    assert_eq!(UBig::from(0u8).to_be_bytes(), []);
 }
 
 #[test]

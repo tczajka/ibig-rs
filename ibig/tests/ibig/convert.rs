@@ -50,21 +50,12 @@ fn le_be_agree() {
 
 #[test]
 fn sign_extension_is_ignored() {
-    // +200 with extra zero padding equals its canonical form.
-    assert_eq!(
-        IBig::from_le_bytes(&[0xc8, 0x00, 0x00]),
-        IBig::from_le_bytes(&[0xc8, 0x00])
-    );
-    // A negative value with extra 0xff padding equals its canonical form.
-    assert_eq!(
-        IBig::from_le_bytes(&[0x9c, 0xff, 0xff]),
-        IBig::from_le_bytes(&[0x9c, 0xff])
-    );
+    // +200 with extra zero sign padding.
+    assert_eq!(IBig::from_le_bytes(&[200, 0, 0]), IBig::from(200i16));
+    // -100 with extra 0xff sign padding.
+    assert_eq!(IBig::from_le_bytes(&[0x9c, 0xff, 0xff]), IBig::from(-100i8));
     // The big-endian side ignores leading sign bytes too.
-    assert_eq!(
-        IBig::from_be_bytes(&[0xff, 0xff, 0x9c]),
-        IBig::from_be_bytes(&[0xff, 0x9c])
-    );
+    assert_eq!(IBig::from_be_bytes(&[0xff, 0xff, 0x9c]), IBig::from(-100i8));
 }
 
 #[test]

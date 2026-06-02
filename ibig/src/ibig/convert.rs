@@ -39,15 +39,16 @@ impl IBig {
 
     /// Returns the little-endian (least-significant-first) two's complement byte
     /// representation, with no redundant sign-extension bytes. The result
-    /// always has at least one byte (zero produces `[0]`).
+    /// always has at least one byte.
     ///
     /// # Examples
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from_le_bytes(&[5]).to_le_bytes(), [5]);
-    /// // -1 is all-ones in two's complement.
-    /// assert_eq!(IBig::from_le_bytes(&[0xff]).to_le_bytes(), [0xff]);
+    /// assert_eq!(IBig::from(0i8).to_le_bytes(), [0]);
+    /// assert_eq!(IBig::from(0x0102i16).to_le_bytes(), [2, 1]);
+    /// assert_eq!(IBig::from(0xffffi32).to_le_bytes(), [0xff, 0xff, 0]);
+    /// assert_eq!(IBig::from(-1i8).to_le_bytes(), [0xff]);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
         let digits = self.as_digits();
@@ -59,14 +60,16 @@ impl IBig {
 
     /// Returns the big-endian (most-significant-first) two's complement byte representation,
     /// with no redundant leading sign-extension bytes. The result always has at least one
-    /// byte (zero produces `[0]`).
+    /// byte.
     ///
     /// # Examples
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from_be_bytes(&[5]).to_be_bytes(), [5]);
-    /// assert_eq!(IBig::from_be_bytes(&[0xff]).to_be_bytes(), [0xff]);
+    /// assert_eq!(IBig::from(0i8).to_be_bytes(), [0]);
+    /// assert_eq!(IBig::from(0x0102i16).to_be_bytes(), [1, 2]);
+    /// assert_eq!(IBig::from(0xffffi32).to_be_bytes(), [0, 0xff, 0xff]);
+    /// assert_eq!(IBig::from(-1i8).to_be_bytes(), [0xff]);
     /// ```
     pub fn to_be_bytes(&self) -> Vec<u8> {
         let mut bytes = self.to_le_bytes();
@@ -85,7 +88,8 @@ impl IBig {
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from_le_bytes(&[0xc8, 0]), IBig::from_le_bytes(&[0xc8, 0, 0]));
+    /// assert_eq!(IBig::from_le_bytes(&[1, 2, 0]), IBig::from(0x0201i16));
+    /// assert_eq!(IBig::from_le_bytes(&[0xff]), IBig::from(-1i8));
     /// ```
     pub fn from_le_bytes(bytes: &[u8]) -> IBig {
         let mut digits = Digits::new();
@@ -121,7 +125,8 @@ impl IBig {
     ///
     /// ```
     /// # use ibig::IBig;
-    /// assert_eq!(IBig::from_be_bytes(&[1, 5]), IBig::from_le_bytes(&[5, 1]));
+    /// assert_eq!(IBig::from_be_bytes(&[0, 1, 2]), IBig::from(0x0102i16));
+    /// assert_eq!(IBig::from_be_bytes(&[0xff]), IBig::from(-1i8));
     /// ```
     pub fn from_be_bytes(bytes: &[u8]) -> IBig {
         let mut digits = Digits::new();
