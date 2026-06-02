@@ -7,7 +7,7 @@
 
 mod convert;
 
-pub use convert::{min_len, min_len_signed};
+pub use convert::{from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_signed, to_bytes};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

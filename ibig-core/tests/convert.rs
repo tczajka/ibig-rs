@@ -1,6 +1,8 @@
 //! Integration tests for digit-slice normalization helpers.
 
-use ibig_core::{Digit, min_len, min_len_signed};
+use ibig_core::{
+    Digit, from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_signed, to_bytes,
+};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
@@ -46,4 +48,62 @@ fn test_min_len_signed() {
 #[should_panic]
 fn test_min_len_signed_empty() {
     min_len_signed(&[]);
+}
+
+#[test]
+fn test_min_len_bytes() {
+    assert_eq!(min_len_bytes(&[]), 0);
+    assert_eq!(min_len_bytes(&[0]), 0);
+    assert_eq!(min_len_bytes(&[0, 0, 0]), 0);
+    assert_eq!(min_len_bytes(&[5]), 1);
+    assert_eq!(min_len_bytes(&[5, 0]), 1);
+    assert_eq!(min_len_bytes(&[1, 2, 0]), 2);
+    assert_eq!(min_len_bytes(&[0, 1]), 2);
+}
+
+#[test]
+fn test_le_bytes_round_trip() {
+    let inputs: [&[u8]; _] = [
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        &[1, 2, 3, 4, 5, 6, 7, 8],
+        &[1, 2, 3],
+        &[],
+    ];
+    for input in inputs {
+        let len = input.len().div_ceil(Digit::BYTES);
+        let mut digits = vec![Digit::ZERO; len];
+        from_bytes(input, &mut digits);
+
+        // The output is the input zero-padded up to a whole number of digits.
+        let mut bytes = vec![0u8; len * Digit::BYTES];
+        to_bytes(&digits, &mut bytes);
+        assert_eq!(&bytes[..input.len()], input);
+        assert!(bytes[input.len()..].iter().all(|&b| b == 0));
+        // `input` has no trailing zero byte, so this is its minimal length.
+        assert_eq!(min_len_bytes(&bytes), input.len());
+    }
+}
+
+#[test]
+fn test_be_bytes_round_trip() {
+    let inputs: [&[u8]; _] = [
+        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        &[1, 2, 3, 4, 5, 6, 7, 8],
+        &[1, 2, 3],
+        &[],
+    ];
+    for input in inputs {
+        let len = input.len().div_ceil(Digit::BYTES);
+        let mut digits = vec![Digit::ZERO; len];
+        from_be_bytes(input, &mut digits);
+
+        // Reversing the little-endian bytes gives the big-endian bytes, right-aligned with
+        // leading zero padding up to a whole number of digits.
+        let mut bytes = vec![0u8; len * Digit::BYTES];
+        to_bytes(&digits, &mut bytes);
+        bytes.reverse();
+        let pad = len * Digit::BYTES - input.len();
+        assert!(bytes[..pad].iter().all(|&b| b == 0));
+        assert_eq!(&bytes[pad..], input);
+    }
 }
