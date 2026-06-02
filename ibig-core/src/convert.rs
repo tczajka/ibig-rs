@@ -7,6 +7,15 @@ use crate::Digit;
 ///
 /// This is the length with the most-significant zero digits removed. It is 0 for the value
 /// zero (an empty slice, or a slice of only zero digits).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, min_len};
+/// assert_eq!(min_len(&[Digit::from(5u8), Digit::from(2u8)]), 2);
+/// assert_eq!(min_len(&[Digit::from(5u8), Digit::ZERO]), 1);
+/// assert_eq!(min_len(&[Digit::ZERO, Digit::ZERO]), 0);
+/// ```
 #[inline]
 pub fn min_len(digits: &[Digit]) -> usize {
     let mut len = digits.len();
@@ -26,6 +35,19 @@ pub fn min_len(digits: &[Digit]) -> usize {
 /// # Panics
 ///
 /// Panics if `digits` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, min_len_signed};
+/// // 5 is positive in a single digit, so the redundant zero sign-extension is dropped.
+/// assert_eq!(min_len_signed(&[Digit::from(5u8), Digit::ZERO]), 1);
+/// // -1 is all-ones; the redundant all-ones sign-extension digits are dropped.
+/// assert_eq!(min_len_signed(&[Digit::MAX, Digit::MAX]), 1);
+/// // The top digit's high bit being set means the leading zero digit is needed to keep
+/// // this value positive, so it is not dropped.
+/// assert_eq!(min_len_signed(&[Digit::MAX, Digit::ZERO]), 2);
+/// ```
 #[inline]
 pub fn min_len_signed(digits: &[Digit]) -> usize {
     assert!(!digits.is_empty());
