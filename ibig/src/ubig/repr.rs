@@ -1,7 +1,6 @@
 //! Contains the definition of [`UBig`] and its internal representation.
 
-use self::Repr::*;
-use alloc::vec::Vec;
+use crate::{Digits, INLINE_DIGITS};
 use ibig_core::Digit;
 
 /// Unsigned big integer.
@@ -9,8 +8,13 @@ use ibig_core::Digit;
 /// An arbitrarily large unsigned integer.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UBig(
-    /// The internal representation in canonical form.
-    Repr,
+    /// The little-endian digits in canonical form: the buffer is never empty, and its
+    /// most-significant digit is nonzero except for the value zero, which is the single
+    /// digit `[0]`. So every value has exactly one representation and the derived
+    /// `Eq`/`Hash` are correct. Every value of at most [`INLINE_DIGITS`] digits — in
+    /// particular every single-digit value — is stored inline, and heap buffers are not
+    /// heavily over-allocated.
+    Digits,
 );
 
 #[allow(dead_code)] // Used by arithmetic algorithms added in later commits.
@@ -18,56 +22,46 @@ impl UBig {
     /// Construct from a single digit.
     #[inline]
     pub(crate) fn from_digit(digit: Digit) -> UBig {
-        UBig(Small(digit))
+        let mut digits = Digits::new();
+        digits.push(digit);
+        UBig(digits)
     }
 
-    /// Construct from little-endian digits, normalizing to the canonical representation.
-    ///
-    /// Trailing (most-significant) zero digits are removed; a value that fits in a single
-    /// digit is stored as [`Repr::Small`]. Excess capacity is released when the buffer is
-    /// heavily over-allocated.
-    pub(crate) fn from_digits(mut digits: Vec<Digit>) -> UBig {
-        while let Some(&Digit::ZERO) = digits.last() {
+    /// Construct from little-endian digits.
+    pub(crate) fn from_digits(mut digits: Digits) -> UBig {
+        while digits.len() > 1 && *digits.last().unwrap() == Digit::ZERO {
             digits.pop();
         }
-        match digits[..] {
-            [] => UBig::from_digit(Digit::ZERO),
-            [d] => UBig::from_digit(d),
-            _ => {
-                if digits.len() < digits.capacity() / 4 {
-                    digits.shrink_to_fit();
-                }
-                UBig(Large(digits))
-            }
+        if digits.is_empty() {
+            digits.push(Digit::ZERO);
+        }
+        if digits.spilled()
+            && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
+        {
+            digits.shrink_to_fit();
+        }
+        UBig(digits)
+    }
+
+    /// The value as a single digit, if it fits in one.
+    #[inline]
+    pub(crate) fn try_to_digit(&self) -> Option<Digit> {
+        if !self.0.spilled() && self.0.len() == 1 {
+            Some(self.0[0])
+        } else {
+            None
         }
     }
 
-    /// The internal representation, by reference.
+    /// The little-endian digits, by reference.
     #[inline]
-    pub(crate) fn repr(&self) -> &Repr {
+    pub(crate) fn as_digits(&self) -> &[Digit] {
         &self.0
     }
 
-    /// Consume into the internal representation.
+    /// Consume into the little-endian digits.
     #[inline]
-    pub(crate) fn into_repr(self) -> Repr {
+    pub(crate) fn into_digits(self) -> Digits {
         self.0
     }
-}
-
-/// Internal representation of [`UBig`].
-#[allow(dead_code)] // Constructed by arithmetic algorithms added in later commits.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum Repr {
-    /// A number that fits in a single [`Digit`].
-    Small(Digit),
-    /// A number that does not fit in a single [`Digit`].
-    ///
-    /// The digits are stored little-endian.
-    ///
-    /// In a canonical representation, this has:
-    /// * length at least 2,
-    /// * no leading zero (the most significant digit is non-zero),
-    /// * capacity no more than ~4x length (assuming no such over-allocation inside `Vec`).
-    Large(Vec<Digit>),
 }
