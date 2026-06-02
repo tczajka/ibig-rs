@@ -1,6 +1,6 @@
 //! Conversions to and from [`IBig`].
 
-use crate::{Digits, IBig, INLINE_DIGITS};
+use crate::{Digits, IBig, INLINE_DIGITS, UBig};
 use alloc::{vec, vec::Vec};
 use ibig_core::{Digit, SignedDigit};
 
@@ -182,5 +182,29 @@ impl From<isize> for IBig {
         } else {
             IBig::from_le_bytes(&value.to_le_bytes())
         }
+    }
+}
+
+impl From<UBig> for IBig {
+    #[inline]
+    fn from(value: UBig) -> IBig {
+        // Fast path: a single digit whose sign bit is clear is already a canonical
+        // non-negative two's complement digit.
+        if let Some(digit) = value.try_to_digit() {
+            let signed = digit.cast_signed();
+            if !signed.is_negative() {
+                return IBig::from_digit(signed);
+            }
+        }
+
+        // Slow path.
+        let mut digits = value.into_digits();
+        // The unsigned digits are non-negative. If the most-significant digit's sign bit is
+        // set, the two's complement reading would be negative, so append a zero digit.
+        let top = *digits.last().unwrap();
+        if top.cast_signed().is_negative() {
+            digits.push(Digit::ZERO);
+        }
+        IBig::from_digits(digits)
     }
 }

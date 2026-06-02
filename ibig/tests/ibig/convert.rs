@@ -1,6 +1,6 @@
 //! Integration tests for `IBig` <-> two's complement byte-sequence conversions.
 
-use ibig::IBig;
+use ibig::{IBig, UBig};
 
 /// Little-endian two's complement byte sequences that are already canonical (no redundant
 /// most-significant sign-extension byte), covering zero, both signs, and multi-digit
@@ -92,6 +92,19 @@ fn from_signed() {
     assert_eq!(IBig::from(-1234isize), IBig::from_i16(-1234));
     // The same value through different types is equal.
     assert_eq!(IBig::from(-5i8), IBig::from(-5i128));
+}
+
+#[test]
+fn from_ubig() {
+    assert_eq!(IBig::from(UBig::ZERO), IBig::ZERO);
+    // A value whose top bit is clear keeps the same magnitude.
+    assert_eq!(IBig::from(UBig::from(200u8)), IBig::from(200i16));
+    // A value whose most-significant digit has its sign bit set gains a zero high digit so
+    // it stays non-negative; the unsigned `u64::MAX` becomes a positive `2^64 - 1`.
+    assert_eq!(
+        IBig::from(UBig::from(u64::MAX)),
+        IBig::from_le_bytes(&[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0])
+    );
 }
 
 #[test]
