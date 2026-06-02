@@ -99,3 +99,26 @@ fn from_unsigned_const() {
     assert_eq!(UBig::from_u32(0xdead_beef), UBig::from(0xdead_beefu32));
     assert_eq!(UBig::from_u16(0x0102), UBig::from_le_bytes(&[0x02, 0x01]));
 }
+
+#[test]
+fn try_from_signed() {
+    // Non-negative values convert and match the unsigned conversion.
+    assert_eq!(UBig::try_from(0i8).unwrap(), UBig::from(0u8));
+    assert_eq!(UBig::try_from(5i32).unwrap(), UBig::from(5u32));
+    assert_eq!(
+        UBig::try_from(i64::MAX).unwrap(),
+        UBig::from(i64::MAX as u64)
+    );
+    assert_eq!(
+        UBig::try_from(i128::MAX).unwrap(),
+        UBig::from(i128::MAX as u128)
+    );
+    assert_eq!(UBig::try_from(1234isize).unwrap(), UBig::from(1234usize));
+
+    // Negative values are rejected.
+    assert!(UBig::try_from(-1i8).is_err());
+    assert!(UBig::try_from(-1i32).is_err());
+    assert!(UBig::try_from(i64::MIN).is_err());
+    assert!(UBig::try_from(-1i128).is_err());
+    assert!(UBig::try_from(-1isize).is_err());
+}

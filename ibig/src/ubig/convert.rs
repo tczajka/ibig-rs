@@ -2,6 +2,7 @@
 
 use crate::{Digits, INLINE_DIGITS, UBig};
 use alloc::{vec, vec::Vec};
+use core::num::TryFromIntError;
 use ibig_core::Digit;
 
 impl UBig {
@@ -167,3 +168,26 @@ impl From<usize> for UBig {
         }
     }
 }
+
+/// Implements `TryFrom<$signed> for UBig` by forwarding through the unsigned `$unsigned`: a
+/// non-negative value converts, while a negative value yields the same `TryFromIntError`
+/// that the unsigned conversion produces.
+macro_rules! impl_try_from_signed {
+    ($signed:ty => $unsigned:ty) => {
+        impl TryFrom<$signed> for UBig {
+            type Error = TryFromIntError;
+
+            #[inline]
+            fn try_from(value: $signed) -> Result<UBig, TryFromIntError> {
+                <$unsigned>::try_from(value).map(UBig::from)
+            }
+        }
+    };
+}
+
+impl_try_from_signed!(i8 => u8);
+impl_try_from_signed!(i16 => u16);
+impl_try_from_signed!(i32 => u32);
+impl_try_from_signed!(i64 => u64);
+impl_try_from_signed!(i128 => u128);
+impl_try_from_signed!(isize => usize);
