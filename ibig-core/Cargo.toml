@@ -9,6 +9,12 @@ keywords = ["bigint", "bignum", "arbitrary-precision", "mathematics"]
 categories = ["mathematics", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tczajka/ibig"
+include = [
+    "src/**/*.rs",
+    "README.md",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+]
 
 [dependencies]
 unative = "0.2.2"

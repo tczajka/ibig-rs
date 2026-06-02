@@ -62,7 +62,7 @@ Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the
 
 ## Conventions
 
-- Public API changes must be recorded in `CHANGELOG.md`; note breaking changes explicitly. The top section is `## 0.4.0 - unreleased`.
+- Public API changes must be recorded in `ibig/CHANGELOG.md`; note breaking changes explicitly. The top section is `## 0.4.0 - unreleased`.
 - **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions and the private `Repr` enum).
 - The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`) rather than `std`, and gate any `std`-only code behind `#[cfg(feature = "std")]`.
 - Avoid standard-library APIs and language features newer than the MSRV (1.95).

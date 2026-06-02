@@ -9,6 +9,13 @@ keywords = ["bigint", "bignum"]
 categories = ["mathematics", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tczajka/ibig"
+include = [
+    "src/**/*.rs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+]
 
 [dependencies]
 ibig-core = { version = "0.0.1", path = "../ibig-core" }
