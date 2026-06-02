@@ -5,6 +5,9 @@
 
 #![no_std]
 
+mod convert;
+
+pub use convert::{min_len, min_len_signed};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

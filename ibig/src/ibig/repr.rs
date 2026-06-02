@@ -1,7 +1,7 @@
 //! Contains the definition of [`IBig`] and its internal representation.
 
 use crate::{Digits, INLINE_DIGITS};
-use ibig_core::{Digit, SignedDigit};
+use ibig_core::{Digit, SignedDigit, min_len_signed};
 
 /// Signed big integer.
 ///
@@ -30,25 +30,13 @@ impl IBig {
     }
 
     /// Construct from the little-endian digits of a two's complement representation.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` is empty.
     pub(crate) fn from_digits(mut digits: Digits) -> IBig {
-        // Drop most-significant digits that merely sign-extend the digit below them: such a
-        // digit carries no information beyond the sign bit already present below it.
-        loop {
-            let d = &digits[..];
-            let n = d.len();
-            if n <= 1 {
-                break;
-            }
-            let top = d[n - 1];
-            let sign_extension = sign_extension(d[n - 2]);
-            if top != sign_extension {
-                break;
-            }
-            digits.pop();
-        }
-        if digits.is_empty() {
-            digits.push(Digit::ZERO);
-        }
+        assert!(!digits.is_empty());
+        digits.truncate(min_len_signed(&digits));
         if digits.spilled()
             && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
         {
@@ -77,15 +65,5 @@ impl IBig {
     #[inline]
     pub(crate) fn into_digits(self) -> Digits {
         self.0
-    }
-}
-
-/// The digit that sign-extends `digit`: all-ones if `digit` is negative, zero otherwise.
-#[inline]
-fn sign_extension(digit: Digit) -> Digit {
-    if digit.cast_signed().is_negative() {
-        Digit::MAX
-    } else {
-        Digit::ZERO
     }
 }

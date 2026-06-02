@@ -24,8 +24,6 @@ fn from_digit() {
 
 #[test]
 fn from_digits_normalizes() {
-    // Empty and all-(sign)-extension buffers normalize to the single digit `[0]`.
-    assert_eq!(IBig::from_digits(smallvec![]).as_digits(), &[digit(0)]);
     assert_eq!(
         IBig::from_digits(smallvec![digit(0), digit(0)]).as_digits(),
         &[digit(0)]
@@ -40,6 +38,12 @@ fn from_digits_normalizes() {
         IBig::from_digits(smallvec![Digit::MAX, Digit::MAX, Digit::MAX]).as_digits(),
         &[Digit::MAX]
     );
+}
+
+#[test]
+#[should_panic]
+fn from_digits_panics_on_empty() {
+    IBig::from_digits(smallvec![]);
 }
 
 #[test]

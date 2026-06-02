@@ -1,7 +1,7 @@
 //! Contains the definition of [`UBig`] and its internal representation.
 
 use crate::{Digits, INLINE_DIGITS};
-use ibig_core::Digit;
+use ibig_core::{Digit, min_len};
 
 /// Unsigned big integer.
 ///
@@ -29,12 +29,10 @@ impl UBig {
 
     /// Construct from little-endian digits.
     pub(crate) fn from_digits(mut digits: Digits) -> UBig {
-        while digits.len() > 1 && *digits.last().unwrap() == Digit::ZERO {
-            digits.pop();
-        }
         if digits.is_empty() {
             digits.push(Digit::ZERO);
         }
+        digits.truncate(min_len(&digits));
         if digits.spilled()
             && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
         {
