@@ -18,6 +18,6 @@ dependencies = [
 
 [[package]]
 name = "unative"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c757a8777efd76ebc87f784de8ead57ffcd5653430a129ea3cca72ddbfb900c"
+checksum = "c5b9ef77b403367264df9a311d250589ea82712a7fb2f0308c307bb55e1a2f51"
