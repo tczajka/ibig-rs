@@ -2,4 +2,5 @@
 
 pub use repr::UBig;
 
+mod convert;
 mod repr;
