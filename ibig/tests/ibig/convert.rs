@@ -119,6 +119,10 @@ fn from_ubig() {
         IBig::from(UBig::from(u64::MAX)),
         IBig::from_le_bytes(&[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0])
     );
+    // The by-reference conversion agrees with the by-value one.
+    let big = UBig::from(u64::MAX);
+    assert_eq!(IBig::from(&big), IBig::from(big.clone()));
+    assert_eq!(IBig::from(&UBig::from(200u8)), IBig::from(200i16));
 }
 
 #[test]

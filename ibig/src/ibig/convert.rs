@@ -184,6 +184,13 @@ impl From<UBig> for IBig {
     }
 }
 
+impl From<&UBig> for IBig {
+    #[inline]
+    fn from(value: &UBig) -> IBig {
+        IBig::from(value.clone())
+    }
+}
+
 /// Implements `From<$t> for IBig` for an unsigned primitive by converting through `UBig`.
 macro_rules! impl_from_unsigned {
     ($t:ty) => {
