@@ -49,10 +49,10 @@ pub const fn min_len(digits: &[Digit]) -> usize {
 /// assert_eq!(min_len_signed(&[Digit::MAX, Digit::ZERO]), 2);
 /// ```
 #[inline]
-pub fn min_len_signed(digits: &[Digit]) -> usize {
+pub const fn min_len_signed(digits: &[Digit]) -> usize {
     assert!(!digits.is_empty());
     let mut len = digits.len();
-    while len > 1 && digits[len - 1] == sign_extension(digits[len - 2]) {
+    while len > 1 && digits[len - 1].const_eq(sign_extension(digits[len - 2])) {
         len -= 1;
     }
     len
@@ -205,28 +205,32 @@ pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, from_le_bytes_signed};
+/// # use ibig_core::{Digit, from_bytes_signed};
 /// let mut digits = [Digit::ZERO; 1];
-/// from_le_bytes_signed(&[1, 2], &mut digits);
+/// from_bytes_signed(&[1, 2], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0201u16)]);
-/// from_le_bytes_signed(&[0xff], &mut digits);
+/// from_bytes_signed(&[0xff], &mut digits);
 /// assert_eq!(digits, [Digit::MAX]);
 /// ```
-pub fn from_le_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
+pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     assert!(!bytes.is_empty());
-    assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
-    let mut digit_iter = digits.iter_mut();
+    assert!(digits.len() == bytes.len().div_ceil(Digit::BYTES));
+
     let (chunks, rem) = bytes.as_chunks::<{ Digit::BYTES }>();
-    for &chunk in chunks {
-        *digit_iter.next().unwrap() = Digit::from_le_bytes(chunk);
+    let mut i = 0;
+    while i < chunks.len() {
+        digits[i] = Digit::from_le_bytes(chunks[i]);
+        i += 1;
     }
     if !rem.is_empty() {
-        let fill = sign_extension_byte(*bytes.last().unwrap());
+        let fill = sign_extension_byte(bytes[bytes.len() - 1]);
         let mut arr = [fill; Digit::BYTES];
-        arr[..rem.len()].copy_from_slice(rem);
-        *digit_iter.next().unwrap() = Digit::from_le_bytes(arr);
+        let (dest, _) = arr.split_at_mut(rem.len());
+        dest.copy_from_slice(rem);
+        digits[i] = Digit::from_le_bytes(arr);
+        i += 1;
     }
-    assert!(digit_iter.next().is_none());
+    assert!(i == digits.len());
 }
 
 /// Fills `digits` from the big-endian two's complement `bytes`, sign-extending the
@@ -268,7 +272,7 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
 
 /// The digit that sign-extends `digit`: all-ones if `digit` is negative, zero otherwise.
 #[inline]
-fn sign_extension(digit: Digit) -> Digit {
+const fn sign_extension(digit: Digit) -> Digit {
     if digit.cast_signed().is_negative() {
         Digit::MAX
     } else {
@@ -278,6 +282,6 @@ fn sign_extension(digit: Digit) -> Digit {
 
 /// The byte that sign-extends `byte`: all-ones if `byte` is negative, zero otherwise.
 #[inline]
-fn sign_extension_byte(byte: u8) -> u8 {
+const fn sign_extension_byte(byte: u8) -> u8 {
     if (byte as i8) < 0 { u8::MAX } else { 0 }
 }

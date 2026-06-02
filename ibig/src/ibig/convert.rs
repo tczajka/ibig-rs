@@ -1,10 +1,42 @@
 //! Conversions to and from [`IBig`].
 
-use crate::{Digits, IBig};
+use crate::{Digits, IBig, INLINE_DIGITS};
 use alloc::{vec, vec::Vec};
-use ibig_core::Digit;
+use ibig_core::{Digit, SignedDigit};
 
 impl IBig {
+    /// Constructs from an `i8`.
+    #[inline]
+    pub const fn from_i8(value: i8) -> IBig {
+        IBig::from_digit(SignedDigit::from_i8(value))
+    }
+
+    /// Constructs from an `i16`.
+    #[inline]
+    pub const fn from_i16(value: i16) -> IBig {
+        IBig::from_digit(SignedDigit::from_i16(value))
+    }
+
+    /// Constructs from an `i32`.
+    #[inline]
+    pub const fn from_i32(value: i32) -> IBig {
+        if SignedDigit::BITS >= i32::BITS {
+            IBig::from_digit(SignedDigit::try_from_i32(value).unwrap())
+        } else {
+            IBig::const_from_le_bytes(&value.to_le_bytes())
+        }
+    }
+
+    /// Constructs from an `i64`.
+    #[inline]
+    pub const fn from_i64(value: i64) -> IBig {
+        if SignedDigit::BITS >= i64::BITS {
+            IBig::from_digit(SignedDigit::try_from_i64(value).unwrap())
+        } else {
+            IBig::const_from_le_bytes(&value.to_le_bytes())
+        }
+    }
+
     /// Returns the little-endian (least-significant-first) two's complement byte
     /// representation, with no redundant sign-extension bytes. The result
     /// always has at least one byte (zero produces `[0]`).
@@ -58,8 +90,24 @@ impl IBig {
     pub fn from_le_bytes(bytes: &[u8]) -> IBig {
         let mut digits = Digits::new();
         digits.resize(bytes.len().div_ceil(Digit::BYTES), Digit::ZERO);
-        ibig_core::from_le_bytes_signed(bytes, &mut digits);
+        ibig_core::from_bytes_signed(bytes, &mut digits);
         IBig::from_digits(digits)
+    }
+
+    /// Constructs from at most `INLINE_DIGITS * Digit::BYTES` little-endian two's complement
+    /// bytes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `bytes` is empty or longer than `INLINE_DIGITS * Digit::BYTES`.
+    #[inline]
+    pub(crate) const fn const_from_le_bytes(bytes: &[u8]) -> IBig {
+        assert!(bytes.len() <= INLINE_DIGITS * Digit::BYTES);
+        let mut digits = [Digit::ZERO; INLINE_DIGITS];
+        let n = bytes.len().div_ceil(Digit::BYTES);
+        let (used, _) = digits.split_at_mut(n);
+        ibig_core::from_bytes_signed(bytes, used);
+        IBig::const_from_digits(used)
     }
 
     /// Constructs a number from its big-endian (most-significant-first) two's complement

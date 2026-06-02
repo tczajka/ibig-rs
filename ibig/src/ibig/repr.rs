@@ -23,10 +23,30 @@ pub struct IBig(
 impl IBig {
     /// Construct from a single signed digit.
     #[inline]
-    pub(crate) fn from_digit(digit: SignedDigit) -> IBig {
-        let mut digits = Digits::new();
-        digits.push(digit.cast_unsigned());
-        IBig(digits)
+    pub(crate) const fn from_digit(digit: SignedDigit) -> IBig {
+        let mut buffer = [Digit::ZERO; INLINE_DIGITS];
+        buffer[0] = digit.cast_unsigned();
+        // A single signed digit is always canonical.
+        // SAFETY: `1 <= INLINE_DIGITS`.
+        IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, 1) })
+    }
+
+    /// Construct from at most `INLINE_DIGITS` little-endian two's complement digits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` is empty or longer than `INLINE_DIGITS`.
+    #[inline]
+    pub(crate) const fn const_from_digits(digits: &[Digit]) -> IBig {
+        assert!(!digits.is_empty() && digits.len() <= INLINE_DIGITS);
+        let mut buffer = [Digit::ZERO; INLINE_DIGITS];
+        // `min_len_signed` is always at least 1, so the buffer keeps a sign-carrying digit.
+        let len = min_len_signed(digits);
+        let (dest, _) = buffer.split_at_mut(len);
+        let (src, _) = digits.split_at(len);
+        dest.copy_from_slice(src);
+        // SAFETY: `1 <= len <= INLINE_DIGITS`.
+        IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
     }
 
     /// Construct from the little-endian digits of a two's complement representation.

@@ -68,6 +68,23 @@ fn sign_extension_is_ignored() {
 }
 
 #[test]
+fn from_signed_const() {
+    // The `from_iN` constructors are usable in `const` contexts.
+    const NEG: IBig = IBig::from_i64(-0x0102030405060708);
+    const POS: IBig = IBig::from_i32(0x0a0b0c0d);
+    const ZERO: IBig = IBig::from_i8(0);
+
+    assert_eq!(
+        NEG,
+        IBig::from_le_bytes(&(-0x0102030405060708i64).to_le_bytes())
+    );
+    assert_eq!(POS, IBig::from_le_bytes(&0x0a0b0c0di32.to_le_bytes()));
+    assert_eq!(ZERO.to_le_bytes(), [0]);
+    // -1 is all-ones in two's complement.
+    assert_eq!(IBig::from_i8(-1).to_le_bytes(), [0xff]);
+}
+
+#[test]
 #[should_panic]
 fn from_le_empty_panics() {
     IBig::from_le_bytes(&[]);
