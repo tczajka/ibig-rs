@@ -85,6 +85,25 @@ fn from_signed_const() {
 }
 
 #[test]
+fn from_signed() {
+    // The `From` impls agree with the `from_iN` constructors and the byte conversions.
+    assert_eq!(IBig::from(0i8).to_le_bytes(), [0]);
+    assert_eq!(IBig::from(5i16), IBig::from_i16(5));
+    assert_eq!(IBig::from(-1i32).to_le_bytes(), [0xff]);
+    assert_eq!(
+        IBig::from(i64::MIN),
+        IBig::from_le_bytes(&i64::MIN.to_le_bytes())
+    );
+    assert_eq!(
+        IBig::from(i128::MAX),
+        IBig::from_le_bytes(&i128::MAX.to_le_bytes())
+    );
+    assert_eq!(IBig::from(-1234isize), IBig::from_i16(-1234));
+    // The same value through different types is equal.
+    assert_eq!(IBig::from(-5i8), IBig::from(-5i128));
+}
+
+#[test]
 #[should_panic]
 fn from_le_empty_panics() {
     IBig::from_le_bytes(&[]);

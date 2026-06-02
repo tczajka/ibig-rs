@@ -130,3 +130,49 @@ impl IBig {
         IBig::from_digits(digits)
     }
 }
+
+impl From<i8> for IBig {
+    #[inline]
+    fn from(value: i8) -> IBig {
+        IBig::from_i8(value)
+    }
+}
+
+impl From<i16> for IBig {
+    #[inline]
+    fn from(value: i16) -> IBig {
+        IBig::from_i16(value)
+    }
+}
+
+impl From<i32> for IBig {
+    #[inline]
+    fn from(value: i32) -> IBig {
+        IBig::from_i32(value)
+    }
+}
+
+impl From<i64> for IBig {
+    #[inline]
+    fn from(value: i64) -> IBig {
+        IBig::from_i64(value)
+    }
+}
+
+impl From<i128> for IBig {
+    #[inline]
+    fn from(value: i128) -> IBig {
+        IBig::from_le_bytes(&value.to_le_bytes())
+    }
+}
+
+impl From<isize> for IBig {
+    #[inline]
+    fn from(value: isize) -> IBig {
+        if SignedDigit::BITS >= isize::BITS {
+            IBig::from_digit(SignedDigit::try_from(value).unwrap())
+        } else {
+            IBig::from_le_bytes(&value.to_le_bytes())
+        }
+    }
+}
