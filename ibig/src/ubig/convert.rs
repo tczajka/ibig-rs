@@ -228,14 +228,22 @@ macro_rules! impl_try_into_unsigned {
                 }
 
                 const N: usize = size_of::<$t>();
-                // Fast path: two-digit values are too large for the target type.
-                //
-                // If the target's `N` bytes are too few for the full digit-aligned
-                // representation, then the value cannot fit: a multi-digit `UBig` is
-                // canonical, so its top digit is nonzero and the value is at least
-                // `2^((len - 1) * Digit::BITS)`. As `N` and `Digit::BYTES` are both
-                // powers of two, `len * Digit::BYTES > N` implies
-                // `(len - 1) * Digit::BYTES >= N`, so the value is too large.
+                const {
+                    assert!(Digit::BYTES.is_power_of_two());
+                    assert!(N.is_power_of_two());
+                }
+
+                // The minimum required number of bits is b = (len - 1) * Digit::BITS + 1.
+                // Since len >= 2 and Digit::BITS is a power of two:
+                // next_power_of_two(b) = next_power_of_two(len * Digit::BITS)
+                // If the number fits, we must have:
+                // b <= N * 8
+                // next_power_of_two(b) <= N * 8
+                // len * Digit::BITS <= N * 8
+                // len * Digit::BYTES <= N
+                // len <= N / Digit::BYTES
+
+                // Compile-time fast path: two-digit values are too large for the target type.
                 if 2 * Digit::BYTES > N {
                     return Err(TryFromBigError);
                 }
@@ -243,9 +251,7 @@ macro_rules! impl_try_into_unsigned {
                 // Slow path.
                 let digits = value.as_digits();
                 let num_bytes = digits.len() * Digit::BYTES;
-                // Again, if the target's `N` bytes are too few for the full digit-aligned
-                // representation, then the value cannot fit.
-                if 2 * Digit::BYTES > N || num_bytes > N {
+                if num_bytes > N {
                     return Err(TryFromBigError);
                 }
                 let mut arr = [0u8; N];
