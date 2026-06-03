@@ -114,25 +114,64 @@ pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
 }
 
 /// Writes the little-endian byte representation of the unsigned value held in `digits` into
-/// `bytes`, one digit per `Digit::BYTES` bytes.
+/// `bytes`, zero-extending to fill `bytes`.
 ///
-/// `bytes.len()` must equal `digits.len() * Digit::BYTES`.
+/// # Panics
+///
+/// Panics if `bytes.len() < digits.len() * Digit::BYTES`.
 ///
 /// # Examples
 ///
 /// ```
 /// # use ibig_core::{Digit, to_bytes};
-/// let mut bytes = vec![0u8; Digit::BYTES];
+/// let mut bytes = vec![0xffu8; 20];
 /// to_bytes(&[Digit::from(0x0102u16)], &mut bytes);
 /// assert_eq!(&bytes[..2], &[0x02, 0x01]);
 /// assert!(bytes[2..].iter().all(|&b| b == 0));
 /// ```
 pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
-    assert_eq!(bytes.len(), digits.len() * Digit::BYTES);
-    let (chunks, _) = bytes.as_chunks_mut::<{ Digit::BYTES }>();
+    to_bytes_fill(digits, bytes, 0);
+}
+
+/// Writes the little-endian two's complement byte representation of the signed value held in
+/// `digits` into `bytes`, sign-extending to fill `bytes`.
+///
+/// `bytes.len()` must be at least `digits.len() * Digit::BYTES`.
+///
+/// # Panics
+///
+/// Panics if `digits` is empty or `bytes.len() < digits.len() * Digit::BYTES`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, to_bytes_signed};
+/// let mut bytes = vec![0u8; Digit::BYTES + 1];
+/// to_bytes_signed(&[Digit::MAX], &mut bytes);
+/// assert!(bytes.iter().all(|&b| b == 0xff));
+/// ```
+pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
+    let fill = if digits[digits.len() - 1].cast_signed().is_negative() {
+        u8::MAX
+    } else {
+        0
+    };
+    to_bytes_fill(digits, bytes, fill);
+}
+
+/// Writes `digits` little-endian into the low bytes of `bytes` and fills the rest with
+/// `fill` (the sign-extension byte).
+///
+/// # Panics
+///
+/// Panics if `bytes.len() < digits.len() * Digit::BYTES`.
+fn to_bytes_fill(digits: &[Digit], bytes: &mut [u8], fill: u8) {
+    let (low, high) = bytes.split_at_mut(digits.len() * Digit::BYTES);
+    let (chunks, _) = low.as_chunks_mut::<{ Digit::BYTES }>();
     for (chunk, &digit) in chunks.iter_mut().zip(digits) {
         *chunk = digit.to_le_bytes();
     }
+    high.fill(fill);
 }
 
 /// Fills `digits` from the little-endian `bytes`.

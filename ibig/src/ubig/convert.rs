@@ -254,7 +254,7 @@ macro_rules! impl_try_into_unsigned {
                     return Err(TryFromBigError);
                 }
                 let mut arr = [0u8; N];
-                ibig_core::to_bytes(digits, &mut arr[..num_bytes]);
+                ibig_core::to_bytes(digits, &mut arr);
                 Ok(<$t>::from_le_bytes(arr))
             }
         }

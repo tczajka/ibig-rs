@@ -154,3 +154,24 @@ fn is_positive() {
     assert!(IBig::from(u64::MAX).is_positive());
     assert!(!IBig::from(-1i128 << 100).is_positive());
 }
+
+#[test]
+fn try_into_signed_primitive() {
+    // Single-digit fast path, both signs.
+    assert_eq!(i32::try_from(IBig::from(100i8)).unwrap(), 100);
+    assert_eq!(i8::try_from(IBig::from(-100i8)).unwrap(), -100);
+    assert!(i8::try_from(IBig::from(200i16)).is_err());
+    assert!(i8::try_from(IBig::from(-200i16)).is_err());
+    assert_eq!(i32::try_from(IBig::ZERO).unwrap(), 0);
+
+    // Multi-digit values.
+    assert_eq!(
+        i128::try_from(IBig::from(u64::MAX)).unwrap(),
+        i128::from(u64::MAX)
+    );
+    assert!(i64::try_from(IBig::from(u64::MAX)).is_err());
+    // A large negative value (multi-digit at every digit width).
+    let neg = IBig::from(-1i128 << 100);
+    assert_eq!(i128::try_from(&neg).unwrap(), -(1i128 << 100));
+    assert!(i64::try_from(&neg).is_err());
+}

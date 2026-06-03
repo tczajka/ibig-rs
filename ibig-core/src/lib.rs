@@ -9,7 +9,7 @@ mod convert;
 
 pub use convert::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, min_len, min_len_bytes,
-    min_len_bytes_signed, min_len_signed, to_bytes,
+    min_len_bytes_signed, min_len_signed, to_bytes, to_bytes_signed,
 };
 use unative::{INative, UNative};
 

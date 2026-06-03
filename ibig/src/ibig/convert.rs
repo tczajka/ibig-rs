@@ -1,6 +1,6 @@
 //! Conversions to and from [`IBig`].
 
-use crate::{Digits, IBig, INLINE_DIGITS, UBig};
+use crate::{Digits, IBig, INLINE_DIGITS, TryFromBigError, UBig};
 use alloc::{vec, vec::Vec};
 use ibig_core::{Digit, SignedDigit};
 
@@ -229,3 +229,74 @@ impl_from_unsigned!(u32);
 impl_from_unsigned!(u64);
 impl_from_unsigned!(u128);
 impl_from_unsigned!(usize);
+
+/// Forwards `TryFrom<IBig> for $t` to the by-reference conversion.
+macro_rules! impl_try_into_by_value {
+    ($t:ty) => {
+        impl TryFrom<IBig> for $t {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: IBig) -> Result<$t, TryFromBigError> {
+                <$t>::try_from(&value)
+            }
+        }
+    };
+}
+
+/// Implements `TryFrom<&IBig> for $t` for a signed primitive. A single-digit value is
+/// converted directly; a larger value is read from its sign-extended little-endian bytes.
+macro_rules! impl_try_into_signed {
+    ($t:ty) => {
+        impl TryFrom<&IBig> for $t {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: &IBig) -> Result<$t, TryFromBigError> {
+                // Fast path: a single digit.
+                if let Some(digit) = value.try_to_digit() {
+                    return <$t>::try_from(digit).map_err(|_| TryFromBigError);
+                }
+
+                const N: usize = size_of::<$t>();
+                const {
+                    assert!(Digit::BYTES.is_power_of_two());
+                    assert!(N.is_power_of_two());
+                }
+
+                // The minimum required number of bits is b = (len - 1) * Digit::BITS + 1.
+                // Since len >= 2 and Digit::BITS is a power of two:
+                // next_power_of_two(b) = next_power_of_two(len * Digit::BITS)
+                // If the number fits, we must have:
+                // b <= N * 8
+                // next_power_of_two(b) <= N * 8
+                // len * Digit::BITS <= N * 8
+                // len * Digit::BYTES <= N
+
+                // Compile-time fast path: two-digit values are too large for the target type.
+                if 2 * Digit::BYTES > N {
+                    return Err(TryFromBigError);
+                }
+
+                // Slow path.
+                let digits = value.as_digits();
+                let num_bytes = digits.len() * Digit::BYTES;
+                if num_bytes > N {
+                    return Err(TryFromBigError);
+                }
+                let mut arr = [0u8; N];
+                ibig_core::to_bytes_signed(digits, &mut arr);
+                Ok(<$t>::from_le_bytes(arr))
+            }
+        }
+
+        impl_try_into_by_value!($t);
+    };
+}
+
+impl_try_into_signed!(i8);
+impl_try_into_signed!(i16);
+impl_try_into_signed!(i32);
+impl_try_into_signed!(i64);
+impl_try_into_signed!(i128);
+impl_try_into_signed!(isize);

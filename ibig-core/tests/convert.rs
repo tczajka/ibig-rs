@@ -2,7 +2,7 @@
 
 use ibig_core::{
     Digit, from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_bytes_signed, min_len_signed,
-    to_bytes,
+    to_bytes, to_bytes_signed,
 };
 
 fn digit(n: u8) -> Digit {
@@ -129,4 +129,43 @@ fn test_be_bytes_round_trip() {
         assert!(bytes[..pad].iter().all(|&b| b == 0));
         assert_eq!(&bytes[pad..], input);
     }
+}
+
+#[test]
+fn test_to_bytes() {
+    // Exact-length buffer: the digit's bytes only.
+    let mut bytes = vec![0xffu8; Digit::BYTES];
+    to_bytes(&[Digit::from(0x0102u16)], &mut bytes);
+    assert_eq!(&bytes[..2], &[0x02, 0x01]);
+    assert!(bytes[2..].iter().all(|&b| b == 0));
+
+    // A longer buffer is zero-extended, including across multiple digits.
+    let mut bytes = vec![0xffu8; 2 * Digit::BYTES + 1];
+    to_bytes(&[digit(1), digit(2)], &mut bytes);
+    assert_eq!(bytes[0], 1);
+    assert_eq!(bytes[Digit::BYTES], 2);
+    bytes[0] = 0;
+    bytes[Digit::BYTES] = 0;
+    assert!(bytes.iter().all(|&b| b == 0));
+}
+
+#[test]
+fn test_to_bytes_signed() {
+    // A non-negative value zero-extends.
+    let mut bytes = vec![0xffu8; Digit::BYTES + 1];
+    to_bytes_signed(&[digit(5)], &mut bytes);
+    assert_eq!(bytes[0], 5);
+    assert!(bytes[1..].iter().all(|&b| b == 0));
+
+    // `Digit::MAX` is -1, so it sign-extends to all ones.
+    let mut bytes = vec![0u8; Digit::BYTES + 1];
+    to_bytes_signed(&[Digit::MAX], &mut bytes);
+    assert!(bytes.iter().all(|&b| b == 0xff));
+
+    // A negative multi-digit value: the top digit's sign fills the high bytes.
+    let mut bytes = vec![0u8; 2 * Digit::BYTES + 1];
+    to_bytes_signed(&[digit(1), Digit::MAX], &mut bytes);
+    assert_eq!(bytes[0], 1);
+    assert!(bytes[1..Digit::BYTES].iter().all(|&b| b == 0));
+    assert!(bytes[Digit::BYTES..].iter().all(|&b| b == 0xff));
 }
