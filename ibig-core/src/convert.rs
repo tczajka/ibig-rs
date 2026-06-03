@@ -52,7 +52,9 @@ pub const fn min_len(digits: &[Digit]) -> usize {
 pub const fn min_len_signed(digits: &[Digit]) -> usize {
     assert!(!digits.is_empty());
     let mut len = digits.len();
-    while len > 1 && digits[len - 1].const_eq(sign_extension(digits[len - 2])) {
+    while len > 1
+        && digits[len - 1].const_eq(sign_extension(digits[len - 2].cast_signed().is_negative()))
+    {
         len -= 1;
     }
     len
@@ -107,7 +109,9 @@ pub fn min_len_bytes(bytes: &[u8]) -> usize {
 pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
     assert!(!bytes.is_empty());
     let mut len = bytes.len();
-    while len > 1 && bytes[len - 1] == sign_extension_byte(bytes[len - 2]) {
+    while len > 1
+        && bytes[len - 1] == sign_extension_byte(bytes[len - 2].cast_signed().is_negative())
+    {
         len -= 1;
     }
     len
@@ -171,8 +175,7 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
 /// assert!(bytes.iter().all(|&b| b == 0xff));
 /// ```
 pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
-    let fill = if is_negative(digits) { u8::MAX } else { 0 };
-    to_bytes_fill(digits, bytes, fill);
+    to_bytes_fill(digits, bytes, sign_extension_byte(is_negative(digits)));
 }
 
 /// Writes `digits` little-endian into the low bytes of `bytes` and fills the rest with
@@ -278,7 +281,7 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         i += 1;
     }
     if !rem.is_empty() {
-        let fill = sign_extension_byte(bytes[bytes.len() - 1]);
+        let fill = sign_extension_byte(bytes.last().unwrap().cast_signed().is_negative());
         let mut arr = [fill; Digit::BYTES];
         let (dest, _) = arr.split_at_mut(rem.len());
         dest.copy_from_slice(rem);
@@ -317,7 +320,7 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         *digit_iter.next().unwrap() = Digit::from_be_bytes(chunk);
     }
     if !rem.is_empty() {
-        let fill = sign_extension_byte(bytes[0]);
+        let fill = sign_extension_byte(bytes[0].cast_signed().is_negative());
         let mut arr = [fill; Digit::BYTES];
         arr[Digit::BYTES - rem.len()..].copy_from_slice(rem);
         *digit_iter.next().unwrap() = Digit::from_be_bytes(arr);
@@ -325,18 +328,16 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     assert!(digit_iter.next().is_none());
 }
 
-/// The digit that sign-extends `digit`: all-ones if `digit` is negative, zero otherwise.
+/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
+/// otherwise.
 #[inline]
-const fn sign_extension(digit: Digit) -> Digit {
-    if digit.cast_signed().is_negative() {
-        Digit::MAX
-    } else {
-        Digit::ZERO
-    }
+const fn sign_extension(is_negative: bool) -> Digit {
+    if is_negative { Digit::MAX } else { Digit::ZERO }
 }
 
-/// The byte that sign-extends `byte`: all-ones if `byte` is negative, zero otherwise.
+/// The sign-extension byte for a value of the given sign: all-ones if negative, zero
+/// otherwise.
 #[inline]
-const fn sign_extension_byte(byte: u8) -> u8 {
-    if (byte as i8) < 0 { u8::MAX } else { 0 }
+const fn sign_extension_byte(is_negative: bool) -> u8 {
+    if is_negative { u8::MAX } else { 0 }
 }
