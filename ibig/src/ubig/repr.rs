@@ -1,6 +1,6 @@
 //! Contains the definition of [`UBig`] and its internal representation.
 
-use crate::{Digits, INLINE_DIGITS};
+use crate::{Digits, INLINE_DIGITS, MAX_DIGITS};
 use ibig_core::{Digit, min_len};
 
 /// Unsigned big integer.
@@ -53,16 +53,22 @@ impl UBig {
     }
 
     /// Construct from little-endian digits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if, after normalization, the value has more than [`MAX_DIGITS`] digits.
     pub(crate) fn from_digits(mut digits: Digits) -> UBig {
         digits.truncate(min_len(&digits));
         // `min_len` returns 0 for zero, but `UBig` always keeps at least one digit.
         if digits.is_empty() {
             digits.push(Digit::ZERO);
         }
-        if digits.spilled()
-            && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
-        {
-            digits.shrink_to_fit();
+        if digits.spilled() {
+            let len = digits.len();
+            assert!(len <= MAX_DIGITS, "number too large");
+            if len <= INLINE_DIGITS || len < digits.capacity() / 4 {
+                digits.shrink_to_fit();
+            }
         }
         UBig(digits)
     }

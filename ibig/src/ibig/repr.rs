@@ -1,6 +1,6 @@
 //! Contains the definition of [`IBig`] and its internal representation.
 
-use crate::{Digits, INLINE_DIGITS};
+use crate::{Digits, INLINE_DIGITS, MAX_DIGITS};
 use ibig_core::{Digit, SignedDigit, min_len_signed};
 
 /// Signed big integer.
@@ -52,13 +52,16 @@ impl IBig {
     ///
     /// # Panics
     ///
-    /// Panics if `digits` is empty.
+    /// Panics if `digits` is empty, or if, after normalization, the value has more than
+    /// [`MAX_DIGITS`] digits.
     pub(crate) fn from_digits(mut digits: Digits) -> IBig {
         digits.truncate(min_len_signed(&digits));
-        if digits.spilled()
-            && (digits.len() <= INLINE_DIGITS || digits.len() < digits.capacity() / 4)
-        {
-            digits.shrink_to_fit();
+        if digits.spilled() {
+            let len = digits.len();
+            assert!(len <= MAX_DIGITS, "number too large");
+            if len <= INLINE_DIGITS || len < digits.capacity() / 4 {
+                digits.shrink_to_fit();
+            }
         }
         IBig(digits)
     }
