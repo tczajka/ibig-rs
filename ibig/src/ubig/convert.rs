@@ -198,3 +198,93 @@ impl TryFrom<&IBig> for UBig {
         UBig::try_from(value.clone())
     }
 }
+
+/// Forwards `TryFrom<UBig> for $t` to the by-reference conversion.
+macro_rules! impl_try_into_by_value {
+    ($t:ty) => {
+        impl TryFrom<UBig> for $t {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: UBig) -> Result<$t, TryFromBigError> {
+                <$t>::try_from(&value)
+            }
+        }
+    };
+}
+
+/// Implements `TryFrom<&UBig> for $t` for an unsigned primitive. A single-digit value is
+/// converted directly; a larger value is read from its little-endian bytes.
+macro_rules! impl_try_into_unsigned {
+    ($t:ty) => {
+        impl TryFrom<&UBig> for $t {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: &UBig) -> Result<$t, TryFromBigError> {
+                // Fast path: a single digit.
+                if let Some(digit) = value.try_to_digit() {
+                    return <$t>::try_from(digit).map_err(|_| TryFromBigError);
+                }
+                // Slow path.
+                const N: usize = size_of::<$t>();
+                let digits = value.as_digits();
+                let num_bytes = digits.len() * Digit::BYTES;
+                // Include a compile-time check for 2 * Digit::BYTES > N to avoid having to call
+                // digits.len() if the target type is too small for multi-digit values.
+                if 2 * Digit::BYTES > N || num_bytes > N {
+                    // The target's `N` bytes are too few for the full digit-aligned
+                    // representation. The value cannot fit: a multi-digit `UBig` is
+                    // canonical, so its top digit is nonzero and the value is at least
+                    // `2^((len - 1) * Digit::BITS)`. As `N` and `Digit::BYTES` are both
+                    // powers of two, `len * Digit::BYTES > N` implies
+                    // `(len - 1) * Digit::BYTES >= N`, so the value is too large.
+                    return Err(TryFromBigError);
+                }
+                let mut arr = [0u8; N];
+                ibig_core::to_bytes(digits, &mut arr[..num_bytes]);
+                Ok(<$t>::from_le_bytes(arr))
+            }
+        }
+
+        impl_try_into_by_value!($t);
+    };
+}
+
+impl_try_into_unsigned!(u8);
+impl_try_into_unsigned!(u16);
+impl_try_into_unsigned!(u32);
+impl_try_into_unsigned!(u64);
+impl_try_into_unsigned!(u128);
+impl_try_into_unsigned!(usize);
+
+/// Implements `TryFrom<&UBig> for $signed` for a signed primitive: a single-digit value is
+/// converted directly; otherwise the value is converted to the same-width unsigned type
+/// `$unsigned` and then narrowed (which rejects values past the signed maximum).
+macro_rules! impl_try_into_signed {
+    ($signed:ty => $unsigned:ty) => {
+        impl TryFrom<&UBig> for $signed {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: &UBig) -> Result<$signed, TryFromBigError> {
+                // Fast path: a single digit.
+                if let Some(digit) = value.try_to_digit() {
+                    return <$signed>::try_from(digit).map_err(|_| TryFromBigError);
+                }
+                // Slow path.
+                let unsigned = <$unsigned>::try_from(value)?;
+                <$signed>::try_from(unsigned).map_err(|_| TryFromBigError)
+            }
+        }
+
+        impl_try_into_by_value!($signed);
+    };
+}
+
+impl_try_into_signed!(i8 => u8);
+impl_try_into_signed!(i16 => u16);
+impl_try_into_signed!(i32 => u32);
+impl_try_into_signed!(i64 => u64);
+impl_try_into_signed!(i128 => u128);
+impl_try_into_signed!(isize => usize);

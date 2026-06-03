@@ -143,3 +143,28 @@ fn try_from_ibig() {
     assert!(UBig::try_from(IBig::from(i128::MIN)).is_err());
     assert!(UBig::try_from(&IBig::from(-5i32)).is_err());
 }
+
+#[test]
+fn try_into_primitive() {
+    // Unsigned, single-digit fast path and byte slow path.
+    assert_eq!(u8::try_from(UBig::from(200u8)).unwrap(), 200);
+    assert!(u8::try_from(UBig::from(256u16)).is_err());
+    assert_eq!(u32::try_from(UBig::ZERO).unwrap(), 0);
+    assert_eq!(u64::try_from(UBig::from(u64::MAX)).unwrap(), u64::MAX);
+    assert_eq!(u128::try_from(UBig::from(u128::MAX)).unwrap(), u128::MAX);
+    assert!(u64::try_from(UBig::from(u128::MAX)).is_err());
+
+    // Signed: must also fit below the sign bit.
+    assert_eq!(i32::try_from(UBig::from(100u8)).unwrap(), 100);
+    assert!(i8::try_from(UBig::from(200u8)).is_err());
+    assert_eq!(
+        i128::try_from(UBig::from(u64::MAX)).unwrap(),
+        i128::from(u64::MAX)
+    );
+    assert!(i64::try_from(UBig::from(u64::MAX)).is_err());
+
+    // The by-reference and by-value conversions agree.
+    let n = UBig::from(u128::MAX);
+    assert_eq!(u128::try_from(&n).unwrap(), u128::MAX);
+    assert!(u32::try_from(&n).is_err());
+}
