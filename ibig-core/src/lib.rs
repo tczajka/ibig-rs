@@ -6,13 +6,16 @@
 #![no_std]
 
 mod bits;
-mod convert;
+mod bytes;
+mod len;
+mod sign;
 
 pub use bits::{bit, bit_signed, bit_width, set_bit};
-pub use convert::{
-    from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, is_negative, min_len,
-    min_len_bytes, min_len_bytes_signed, min_len_signed, sign_extension, to_bytes, to_bytes_signed,
+pub use bytes::{
+    from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
 };
+pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
+pub use sign::{is_negative, sign_extension};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

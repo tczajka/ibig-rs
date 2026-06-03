@@ -139,24 +139,6 @@ fn from_be_empty_panics() {
 }
 
 #[test]
-fn is_negative() {
-    assert!(!IBig::ZERO.is_negative());
-    assert!(!IBig::from(5i8).is_negative());
-    assert!(IBig::from(-5i8).is_negative());
-    assert!(!IBig::from(u64::MAX).is_negative());
-    assert!(IBig::from(-1i128 << 100).is_negative());
-}
-
-#[test]
-fn is_positive() {
-    assert!(!IBig::ZERO.is_positive());
-    assert!(IBig::from(5i8).is_positive());
-    assert!(!IBig::from(-5i8).is_positive());
-    assert!(IBig::from(u64::MAX).is_positive());
-    assert!(!IBig::from(-1i128 << 100).is_positive());
-}
-
-#[test]
 fn try_into_signed_primitive() {
     // Single-digit fast path, both signs.
     assert_eq!(i32::try_from(IBig::from(100i8)).unwrap(), 100);

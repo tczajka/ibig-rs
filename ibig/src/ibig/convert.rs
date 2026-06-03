@@ -38,25 +38,6 @@ impl IBig {
         }
     }
 
-    /// Returns `true` if the number is negative (less than zero).
-    #[inline]
-    pub fn is_negative(&self) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => digit.is_negative(),
-            None => ibig_core::is_negative(self.as_digits()),
-        }
-    }
-
-    /// Returns `true` if the number is positive (greater than zero).
-    #[inline]
-    pub fn is_positive(&self) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => digit.is_positive(),
-            // A multi-digit value is never zero, so it is positive iff not negative.
-            None => !ibig_core::is_negative(self.as_digits()),
-        }
-    }
-
     /// Returns the little-endian (least-significant-first) two's complement byte
     /// representation, with no redundant sign-extension bytes. The result
     /// always has at least one byte.
