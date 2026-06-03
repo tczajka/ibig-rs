@@ -168,3 +168,21 @@ fn try_into_primitive() {
     assert_eq!(u128::try_from(&n).unwrap(), u128::MAX);
     assert!(u32::try_from(&n).is_err());
 }
+
+#[test]
+fn bool_conversions() {
+    assert_eq!(UBig::from(false), UBig::ZERO);
+    assert_eq!(UBig::from(true), UBig::from(1u8));
+    assert!(!bool::try_from(UBig::ZERO).unwrap());
+    assert!(bool::try_from(UBig::from(1u8)).unwrap());
+    assert!(bool::try_from(UBig::from(2u8)).is_err());
+    // By reference.
+    assert!(bool::try_from(&UBig::from(1u8)).unwrap());
+}
+
+#[test]
+fn from_char() {
+    assert_eq!(UBig::from('A'), UBig::from(65u8));
+    assert_eq!(UBig::from('\0'), UBig::ZERO);
+    assert_eq!(UBig::from('\u{10ffff}'), UBig::from(0x10ffffu32));
+}

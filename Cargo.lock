@@ -25,6 +25,6 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "unative"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7bdcb4bc5b02113f825f751fe1093a5ebc025f340ae66ed715915ce1d30c3e9"
+checksum = "d86c71b27f0eebd4252b3ac73c6a29721875d0ec31e107dc0d0438ec6d3898ef"

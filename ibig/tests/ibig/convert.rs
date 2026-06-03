@@ -197,3 +197,15 @@ fn try_into_unsigned_primitive() {
     assert_eq!(u128::try_from(&big).unwrap(), 1u128 << 100);
     assert!(u64::try_from(&big).is_err());
 }
+
+#[test]
+fn bool_conversions() {
+    assert_eq!(IBig::from(false), IBig::ZERO);
+    assert_eq!(IBig::from(true), IBig::from(1i8));
+    assert!(!bool::try_from(IBig::ZERO).unwrap());
+    assert!(bool::try_from(IBig::from(1i8)).unwrap());
+    assert!(bool::try_from(IBig::from(2i8)).is_err());
+    assert!(bool::try_from(IBig::from(-1i8)).is_err());
+    // By reference.
+    assert!(bool::try_from(&IBig::from(1i8)).unwrap());
+}

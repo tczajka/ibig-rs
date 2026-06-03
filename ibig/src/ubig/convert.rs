@@ -168,6 +168,22 @@ impl_try_from_signed!(i64 => u64);
 impl_try_from_signed!(i128 => u128);
 impl_try_from_signed!(isize => usize);
 
+/// Converts a `bool`: `false` to zero and `true` to one.
+impl From<bool> for UBig {
+    #[inline]
+    fn from(value: bool) -> UBig {
+        UBig::from_digit(Digit::from(value))
+    }
+}
+
+/// Converts a `char` to its Unicode scalar value (code point).
+impl From<char> for UBig {
+    #[inline]
+    fn from(value: char) -> UBig {
+        UBig::from(u32::from(value))
+    }
+}
+
 impl TryFrom<IBig> for UBig {
     type Error = TryFromBigError;
 
@@ -304,3 +320,19 @@ impl_try_into_signed!(i32 => u32);
 impl_try_into_signed!(i64 => u64);
 impl_try_into_signed!(i128 => u128);
 impl_try_into_signed!(isize => usize);
+
+/// Converts to `bool`: zero is `false`, one is `true`, anything else is out of range.
+impl TryFrom<&UBig> for bool {
+    type Error = TryFromBigError;
+
+    #[inline]
+    fn try_from(value: &UBig) -> Result<bool, TryFromBigError> {
+        value
+            .try_to_digit()
+            .ok_or(TryFromBigError)?
+            .try_into()
+            .map_err(|_| TryFromBigError)
+    }
+}
+
+impl_try_into_by_value!(bool);

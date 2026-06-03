@@ -228,6 +228,14 @@ impl_from_unsigned!(u64);
 impl_from_unsigned!(u128);
 impl_from_unsigned!(usize);
 
+/// Converts a `bool`: `false` to zero and `true` to one.
+impl From<bool> for IBig {
+    #[inline]
+    fn from(value: bool) -> IBig {
+        IBig::from_digit(SignedDigit::from(value))
+    }
+}
+
 /// Forwards `TryFrom<IBig> for $t` to the by-reference conversion.
 macro_rules! impl_try_into_by_value {
     ($t:ty) => {
@@ -371,3 +379,19 @@ impl_try_into_unsigned!(u32);
 impl_try_into_unsigned!(u64);
 impl_try_into_unsigned!(u128);
 impl_try_into_unsigned!(usize);
+
+/// Converts to `bool`: zero is `false`, one is `true`, anything else is out of range.
+impl TryFrom<&IBig> for bool {
+    type Error = TryFromBigError;
+
+    #[inline]
+    fn try_from(value: &IBig) -> Result<bool, TryFromBigError> {
+        value
+            .try_to_digit()
+            .ok_or(TryFromBigError)?
+            .try_into()
+            .map_err(|_| TryFromBigError)
+    }
+}
+
+impl_try_into_by_value!(bool);

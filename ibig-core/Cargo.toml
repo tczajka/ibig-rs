@@ -17,4 +17,4 @@ include = [
 ]
 
 [dependencies]
-unative = "0.2.4"
+unative = "0.2.5"
