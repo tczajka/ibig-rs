@@ -233,9 +233,13 @@ macro_rules! impl_try_into_unsigned {
                     assert!(N.is_power_of_two());
                 }
 
-                // The minimum required number of bits is b = (len - 1) * Digit::BITS + 1.
+                // The minimum required number of bits is b:
+                // b > (len - 1) * Digit::BITS
+                // b <= len * Digit::BITS
+                //
                 // Since len >= 2 and Digit::BITS is a power of two:
                 // next_power_of_two(b) = next_power_of_two(len * Digit::BITS)
+                //
                 // If the number fits, we must have:
                 // b <= N * 8
                 // next_power_of_two(b) <= N * 8

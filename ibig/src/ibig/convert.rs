@@ -262,9 +262,13 @@ macro_rules! impl_try_into_signed {
                     assert!(N.is_power_of_two());
                 }
 
-                // The minimum required number of bits is b = (len - 1) * Digit::BITS + 1.
+                // The minimum required number of bits is b:
+                // b > (len - 1) * Digit::BITS
+                // b <= len * Digit::BITS
+                //
                 // Since len >= 2 and Digit::BITS is a power of two:
                 // next_power_of_two(b) = next_power_of_two(len * Digit::BITS)
+                //
                 // If the number fits, we must have:
                 // b <= N * 8
                 // next_power_of_two(b) <= N * 8
@@ -298,3 +302,72 @@ impl_try_into_signed!(i32);
 impl_try_into_signed!(i64);
 impl_try_into_signed!(i128);
 impl_try_into_signed!(isize);
+
+/// Implements `TryFrom<&IBig> for $t` for an unsigned primitive. A single-digit value is
+/// converted directly; a larger value must be non-negative and is read from the little-endian
+/// bytes of its unsigned magnitude.
+macro_rules! impl_try_into_unsigned {
+    ($t:ty) => {
+        impl TryFrom<&IBig> for $t {
+            type Error = TryFromBigError;
+
+            #[inline]
+            fn try_from(value: &IBig) -> Result<$t, TryFromBigError> {
+                // Fast path: a single digit.
+                if let Some(digit) = value.try_to_digit() {
+                    return <$t>::try_from(digit).map_err(|_| TryFromBigError);
+                }
+
+                // A negative value is out of range for any unsigned type.
+                let digits = value.as_digits();
+                if ibig_core::is_negative(digits) {
+                    return Err(TryFromBigError);
+                }
+                // A non-negative value carries at most one most-significant sign-extension
+                // zero digit; drop it.
+                let (&top, rest) = digits.split_last().unwrap();
+                let digits = if top == Digit::ZERO { rest } else { digits };
+
+                const N: usize = size_of::<$t>();
+                const {
+                    assert!(Digit::BYTES.is_power_of_two());
+                    assert!(N.is_power_of_two());
+                }
+
+                // The minimum required number of bits is b.
+                // For len >= 2:
+                // b > (len - 1) * Digit::BITS
+                // b <= len * Digit::BITS
+                //
+                // For len = 1 the top digit's high bit is set (since we don't fit in a single
+                // signed digit, otherwise we would have used the fast path).
+                // b = len * Digit::BITS
+                //
+                // In either case:
+                // next_power_of_two(b) = next_power_of_two(len * Digit::BITS)
+                //
+                // If the number fits, we must have:
+                // b <= N * 8
+                // next_power_of_two(b) <= N * 8
+                // len * Digit::BITS <= N * 8
+                // len * Digit::BYTES <= N
+                let num_bytes = digits.len() * Digit::BYTES;
+                if num_bytes > N {
+                    return Err(TryFromBigError);
+                }
+                let mut arr = [0u8; N];
+                ibig_core::to_bytes(digits, &mut arr);
+                Ok(<$t>::from_le_bytes(arr))
+            }
+        }
+
+        impl_try_into_by_value!($t);
+    };
+}
+
+impl_try_into_unsigned!(u8);
+impl_try_into_unsigned!(u16);
+impl_try_into_unsigned!(u32);
+impl_try_into_unsigned!(u64);
+impl_try_into_unsigned!(u128);
+impl_try_into_unsigned!(usize);
