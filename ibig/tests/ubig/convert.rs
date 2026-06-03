@@ -13,7 +13,7 @@ fn normalized_le() -> Vec<Vec<u8>> {
         vec![0, 1], // a zero low byte is kept; only top zeros are not
         vec![0xff, 0xff, 0xff],
         vec![1, 0, 0, 0, 0, 0, 0, 0, 2], // spans more than one 64-bit digit
-        (1..=30).collect(),
+        (1..=121).collect(),
     ]
 }
 

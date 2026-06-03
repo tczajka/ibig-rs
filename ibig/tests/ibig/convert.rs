@@ -16,6 +16,7 @@ fn canonical_le() -> Vec<Vec<u8>> {
         vec![0x00, 0x80], // -32768
         vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // a multi-digit positive value
         vec![0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe], // a multi-digit negative value
+        (1..=121).collect(),
     ]
 }
 
