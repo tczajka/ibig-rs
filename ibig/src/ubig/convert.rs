@@ -241,7 +241,6 @@ macro_rules! impl_try_into_unsigned {
                 // next_power_of_two(b) <= N * 8
                 // len * Digit::BITS <= N * 8
                 // len * Digit::BYTES <= N
-                // len <= N / Digit::BYTES
 
                 // Compile-time fast path: two-digit values are too large for the target type.
                 if 2 * Digit::BYTES > N {
