@@ -38,3 +38,52 @@ fn bit() {
     assert!(neg.bit(200));
     assert!(neg.bit(1000));
 }
+
+#[test]
+fn set_bit() {
+    // Set and clear within a digit.
+    let mut a = IBig::from(0b100i8);
+    a.set_bit(0, true);
+    assert_eq!(a, IBig::from(0b101i8));
+    a.set_bit(2, false);
+    assert_eq!(a, IBig::from(0b001i8));
+
+    // Setting a digit's most-significant bit of a positive value must not flip the sign.
+    // Bit 63 is the top bit of a digit at every word size (64-1 = 2*32-1 = 4*16-1).
+    let mut p = IBig::ZERO;
+    p.set_bit(63, true);
+    assert!(p.is_positive());
+    assert!(p.bit(63));
+    assert!(!p.bit(64));
+
+    // Setting a bit far above a positive value: 5 -> 5 + 2^100, still positive.
+    let mut q = IBig::from(5i8);
+    q.set_bit(100, true);
+    assert!(q.is_positive());
+    assert!(q.bit(0));
+    assert!(q.bit(2));
+    assert!(q.bit(100));
+    assert!(!q.bit(101));
+
+    // -1 is all ones; clearing bit 0 gives -2.
+    let mut n = IBig::from(-1i8);
+    n.set_bit(0, false);
+    assert_eq!(n, IBig::from(-2i8));
+
+    // Clearing a digit's top bit of a negative value keeps it negative.
+    let mut m = IBig::from(-1i8);
+    m.set_bit(63, false);
+    assert!(m.is_negative());
+    assert!(!m.bit(63));
+    assert!(m.bit(64)); // still sign-extended ones above
+
+    // Setting a high bit of a negative value (already 1) is a no-op.
+    let mut r = IBig::from(-5i8);
+    r.set_bit(1000, true);
+    assert_eq!(r, IBig::from(-5i8));
+
+    // Clearing a high bit of a non-negative value (already 0) is a no-op.
+    let mut z = IBig::from(7i8);
+    z.set_bit(1000, false);
+    assert_eq!(z, IBig::from(7i8));
+}

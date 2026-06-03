@@ -137,6 +137,21 @@ pub const fn is_negative(digits: &[Digit]) -> bool {
     digits.last().unwrap().cast_signed().is_negative()
 }
 
+/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
+/// otherwise.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, sign_extension};
+/// assert_eq!(sign_extension(false), Digit::ZERO);
+/// assert_eq!(sign_extension(true), Digit::MAX);
+/// ```
+#[inline]
+pub const fn sign_extension(is_negative: bool) -> Digit {
+    if is_negative { Digit::MAX } else { Digit::ZERO }
+}
+
 /// Writes the little-endian byte representation of the unsigned value held in `digits` into
 /// `bytes`, zero-extending to fill `bytes`.
 ///
@@ -326,13 +341,6 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         *digit_iter.next().unwrap() = Digit::from_be_bytes(arr);
     }
     assert!(digit_iter.next().is_none());
-}
-
-/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
-/// otherwise.
-#[inline]
-const fn sign_extension(is_negative: bool) -> Digit {
-    if is_negative { Digit::MAX } else { Digit::ZERO }
 }
 
 /// The sign-extension byte for a value of the given sign: all-ones if negative, zero

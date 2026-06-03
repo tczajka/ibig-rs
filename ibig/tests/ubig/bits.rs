@@ -49,3 +49,36 @@ fn bit() {
     assert!(m.bit(127));
     assert!(!m.bit(128));
 }
+
+#[test]
+fn set_bit() {
+    // Set and clear within a digit.
+    let mut a = UBig::from(0b100u8);
+    a.set_bit(0, true);
+    assert_eq!(a, UBig::from(0b101u8));
+    a.set_bit(2, false);
+    assert_eq!(a, UBig::from(0b001u8));
+
+    // Setting a high bit grows the value: 0 -> 2^100.
+    let mut b = UBig::ZERO;
+    b.set_bit(100, true);
+    assert_eq!(b, UBig::from(1u128 << 100));
+    assert!(b.bit(100));
+
+    // Clearing the only set bit yields zero.
+    let mut c = UBig::from(1u8);
+    c.set_bit(0, false);
+    assert_eq!(c, UBig::ZERO);
+
+    // Clearing a bit far above the value is a no-op.
+    let mut d = UBig::from(5u8);
+    d.set_bit(1000, false);
+    assert_eq!(d, UBig::from(5u8));
+
+    // Re-setting an already-set bit is idempotent; clearing across digits works.
+    let mut e = UBig::from(u128::MAX);
+    e.set_bit(0, true);
+    assert_eq!(e, UBig::from(u128::MAX));
+    e.set_bit(0, false);
+    assert_eq!(e, UBig::from(u128::MAX - 1));
+}

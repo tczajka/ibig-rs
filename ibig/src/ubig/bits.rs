@@ -1,6 +1,7 @@
 //! Bit operations on [`UBig`].
 
-use crate::UBig;
+use crate::{DIGIT_BITS_USIZE, UBig};
+use core::mem;
 use ibig_core::Digit;
 
 impl UBig {
@@ -18,7 +19,7 @@ impl UBig {
     #[inline]
     pub fn bit_width(&self) -> usize {
         match self.try_to_digit() {
-            Some(digit) => (Digit::BITS - digit.leading_zeros()).try_into().unwrap(),
+            Some(digit) => DIGIT_BITS_USIZE - usize::try_from(digit.leading_zeros()).unwrap(),
             None => ibig_core::bit_width(self.as_digits()),
         }
     }
@@ -58,10 +59,46 @@ impl UBig {
     pub fn bit(&self, position: usize) -> bool {
         match self.try_to_digit() {
             Some(digit) => {
-                position < usize::try_from(Digit::BITS).unwrap()
+                position < DIGIT_BITS_USIZE
                     && (digit >> position) & Digit::from_u8(1) != Digit::ZERO
             }
             None => ibig_core::bit(self.as_digits(), position),
         }
+    }
+
+    /// Sets the bit at `position`, counting from the least-significant bit, to `value`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// let mut a = UBig::from(0b100u8);
+    /// a.set_bit(0, true);
+    /// assert_eq!(a, UBig::from(0b101u8));
+    /// a.set_bit(2, false);
+    /// assert_eq!(a, UBig::from(0b001u8));
+    /// ```
+    pub fn set_bit(&mut self, position: usize, value: bool) {
+        // Fast path: a single digit that stays a single digit.
+        if let Some(digit) = self.try_to_digit()
+            && position < DIGIT_BITS_USIZE
+        {
+            let mask = Digit::from_u8(1) << position;
+            *self = UBig::from_digit(if value { digit | mask } else { digit & !mask });
+            return;
+        }
+
+        // Slow path: the value or position spans multiple digits.
+        let digit_index = position / DIGIT_BITS_USIZE;
+        let mut digits = mem::replace(self, UBig::ZERO).into_digits();
+        if digit_index >= digits.len() {
+            if value {
+                digits.resize(digit_index + 1, Digit::ZERO);
+                ibig_core::set_bit(&mut digits, position, true);
+            }
+        } else {
+            ibig_core::set_bit(&mut digits, position, value);
+        }
+        *self = UBig::from_digits(digits);
     }
 }

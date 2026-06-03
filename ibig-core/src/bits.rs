@@ -50,7 +50,7 @@ pub fn bit_width(digits: &[Digit]) -> usize {
 /// ```
 pub fn bit(digits: &[Digit], position: usize) -> bool {
     let (digit_index, bit_index) = split_index(position);
-    digit_index < digits.len() && bit_digit(digits[digit_index], bit_index)
+    digit_index < digits.len() && digit_bit(digits[digit_index], bit_index)
 }
 
 /// Returns the bit at `position` of the two's complement signed value held in the non-empty
@@ -75,14 +75,41 @@ pub fn bit(digits: &[Digit], position: usize) -> bool {
 pub fn bit_signed(digits: &[Digit], position: usize) -> bool {
     let (digit_index, bit_index) = split_index(position);
     if digit_index < digits.len() {
-        bit_digit(digits[digit_index], bit_index)
+        digit_bit(digits[digit_index], bit_index)
     } else {
         is_negative(digits)
     }
 }
 
+/// Sets the bit at `position` to `value`.
+///
+/// # Panics
+///
+/// Panics if `position` is not within `digits`, that is if
+/// `position >= digits.len() * Digit::BITS`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, set_bit};
+/// let mut digits = [Digit::from(0b100u8)];
+/// set_bit(&mut digits, 0, true);
+/// assert_eq!(digits, [Digit::from(0b101u8)]);
+/// set_bit(&mut digits, 2, false);
+/// assert_eq!(digits, [Digit::from(0b001u8)]);
+/// ```
+pub fn set_bit(digits: &mut [Digit], position: usize, value: bool) {
+    let (digit_index, bit_index) = split_index(position);
+    let mask = Digit::from_u8(1) << bit_index;
+    if value {
+        digits[digit_index] |= mask;
+    } else {
+        digits[digit_index] &= !mask;
+    }
+}
+
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
-fn bit_digit(digit: Digit, bit_index: u32) -> bool {
+fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO
 }
 
