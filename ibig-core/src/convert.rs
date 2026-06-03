@@ -1,4 +1,4 @@
-//! Helpers for normalizing digit-slice representations.
+//! Digit-slice conversions and normalization helpers.
 
 use crate::Digit;
 
