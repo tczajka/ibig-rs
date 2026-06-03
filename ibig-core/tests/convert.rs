@@ -1,8 +1,8 @@
 //! Integration tests for digit-slice normalization helpers.
 
 use ibig_core::{
-    Digit, from_be_bytes, from_bytes, min_len, min_len_bytes, min_len_bytes_signed, min_len_signed,
-    to_bytes, to_bytes_signed,
+    Digit, from_be_bytes, from_bytes, is_negative, min_len, min_len_bytes, min_len_bytes_signed,
+    min_len_signed, to_bytes, to_bytes_signed,
 };
 
 fn digit(n: u8) -> Digit {
@@ -49,6 +49,24 @@ fn test_min_len_signed() {
 #[should_panic]
 fn test_min_len_signed_empty() {
     min_len_signed(&[]);
+}
+
+#[test]
+fn test_is_negative() {
+    // The sign is the most-significant digit's high bit.
+    assert!(!is_negative(&[digit(0)]));
+    assert!(!is_negative(&[digit(5)]));
+    assert!(is_negative(&[Digit::MAX])); // -1
+    // A negative top digit makes the whole value negative regardless of lower digits.
+    assert!(is_negative(&[digit(5), Digit::MAX]));
+    // A non-negative top digit keeps the value non-negative, even across digits.
+    assert!(!is_negative(&[Digit::MAX, digit(0)]));
+}
+
+#[test]
+#[should_panic]
+fn test_is_negative_empty() {
+    is_negative(&[]);
 }
 
 #[test]

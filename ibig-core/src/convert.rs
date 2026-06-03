@@ -113,6 +113,26 @@ pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
     len
 }
 
+/// Returns `true` if the non-empty little-endian slice of two's complement `digits`
+/// represents a negative value (the most-significant digit's sign bit is set).
+///
+/// # Panics
+///
+/// Panics if `digits` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, is_negative};
+/// assert!(is_negative(&[Digit::MAX])); // -1
+/// assert!(!is_negative(&[Digit::from(5u8)])); // +5
+/// assert!(!is_negative(&[Digit::MAX, Digit::ZERO])); // a positive multi-digit value
+/// ```
+#[inline]
+pub const fn is_negative(digits: &[Digit]) -> bool {
+    digits.last().unwrap().cast_signed().is_negative()
+}
+
 /// Writes the little-endian byte representation of the unsigned value held in `digits` into
 /// `bytes`, zero-extending to fill `bytes`.
 ///
@@ -151,11 +171,7 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
 /// assert!(bytes.iter().all(|&b| b == 0xff));
 /// ```
 pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
-    let fill = if digits[digits.len() - 1].cast_signed().is_negative() {
-        u8::MAX
-    } else {
-        0
-    };
+    let fill = if is_negative(digits) { u8::MAX } else { 0 };
     to_bytes_fill(digits, bytes, fill);
 }
 

@@ -43,8 +43,7 @@ impl IBig {
     pub fn is_negative(&self) -> bool {
         match self.try_to_digit() {
             Some(digit) => digit.is_negative(),
-            // A multi-digit value's sign is the most-significant digit's sign bit.
-            None => self.as_digits().last().unwrap().cast_signed().is_negative(),
+            None => ibig_core::is_negative(self.as_digits()),
         }
     }
 
@@ -54,7 +53,7 @@ impl IBig {
         match self.try_to_digit() {
             Some(digit) => digit.is_positive(),
             // A multi-digit value is never zero, so it is positive iff not negative.
-            None => !self.as_digits().last().unwrap().cast_signed().is_negative(),
+            None => !ibig_core::is_negative(self.as_digits()),
         }
     }
 
@@ -196,8 +195,7 @@ impl From<UBig> for IBig {
         let mut digits = value.into_digits();
         // The unsigned digits are non-negative. If the most-significant digit's sign bit is
         // set, the two's complement reading would be negative, so append a zero digit.
-        let top = *digits.last().unwrap();
-        if top.cast_signed().is_negative() {
+        if ibig_core::is_negative(&digits) {
             digits.push(Digit::ZERO);
         }
         IBig::from_digits(digits)
