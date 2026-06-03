@@ -1,4 +1,4 @@
-//! Sign of a two's complement digit slice and the digit/byte that sign-extends it.
+//! Sign and sign-extension of two's complement digit slices.
 
 use crate::Digit;
 
@@ -22,18 +22,37 @@ pub const fn is_negative(digits: &[Digit]) -> bool {
     digits.last().unwrap().cast_signed().is_negative()
 }
 
-/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
-/// otherwise.
+/// Sign-extends the two's complement value held in `digits[..len]` to fill the rest of
+/// `digits` in place: every digit from index `len` onward is set to the value's sign
+/// (all-ones if negative, zero otherwise).
+///
+/// # Panics
+///
+/// Panics if `len` is 0 or greater than `digits.len()`.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sign_extension};
-/// assert_eq!(sign_extension(false), Digit::ZERO);
-/// assert_eq!(sign_extension(true), Digit::MAX);
+/// # use ibig_core::{Digit, extend_signed};
+/// // -1 occupies the low digit; extend it across the buffer.
+/// let mut digits = [Digit::MAX, Digit::ZERO, Digit::ZERO];
+/// extend_signed(&mut digits, 1);
+/// assert_eq!(digits, [Digit::MAX, Digit::MAX, Digit::MAX]);
+/// // A non-negative value extends with zeros.
+/// let mut digits = [Digit::from(5u8), Digit::MAX];
+/// extend_signed(&mut digits, 1);
+/// assert_eq!(digits, [Digit::from(5u8), Digit::ZERO]);
 /// ```
 #[inline]
-pub const fn sign_extension(is_negative: bool) -> Digit {
+pub fn extend_signed(digits: &mut [Digit], len: usize) {
+    let fill = sign_extension(is_negative(&digits[..len]));
+    digits[len..].fill(fill);
+}
+
+/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
+/// otherwise.
+#[inline]
+pub(crate) const fn sign_extension(is_negative: bool) -> Digit {
     if is_negative { Digit::MAX } else { Digit::ZERO }
 }
 

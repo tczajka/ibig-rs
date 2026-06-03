@@ -15,7 +15,7 @@ pub use bytes::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
 };
 pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
-pub use sign::{is_negative, sign_extension};
+pub use sign::{extend_signed, is_negative};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

@@ -64,17 +64,22 @@ impl IBig {
         }
 
         // Slow path.
-        let digit_index = position / DIGIT_BITS_USIZE;
-        let negative = self.is_negative();
-        // Every bit in the sign-extension region already equals the sign.
-        if digit_index >= self.as_digits().len() && value == negative {
+        // Number of digits needed for the modified bit to sit strictly below the sign bit,
+        // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`.
+        // `min_len = (position + 1) / DIGIT_BITS_USIZE + 1`
+        // Written this way to avoid `position + 1` overflowing.
+        let min_len =
+            position / DIGIT_BITS_USIZE + 1 + (position % DIGIT_BITS_USIZE + 1) / DIGIT_BITS_USIZE;
+        let len = self.as_digits().len();
+        if len < min_len && value == self.is_negative() {
+            // The bit is the sign bit or higher and is not changing, nothing to do.
             return;
         }
         let mut digits = mem::replace(self, IBig::ZERO).into_digits();
-        // Sign-extend so that a pure sign digit sits above the modified one; changing a bit
-        // below it then cannot flip the value's sign.
-        let extra_digit = ibig_core::sign_extension(negative);
-        digits.resize((digit_index + 2).max(digits.len()), extra_digit);
+        if len < min_len {
+            digits.resize(min_len, Digit::ZERO);
+            ibig_core::extend_signed(&mut digits, len);
+        }
         ibig_core::set_bit(&mut digits, position, value);
         *self = IBig::from_digits(digits);
     }

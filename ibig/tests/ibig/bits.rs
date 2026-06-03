@@ -86,4 +86,12 @@ fn set_bit() {
     let mut z = IBig::from(7i8);
     z.set_bit(1000, false);
     assert_eq!(z, IBig::from(7i8));
+
+    // A bit below the top digit of a multi-digit value: modified in place, no growth.
+    // `u64::MAX` is multi-digit at every word size (it gains a sign-zero high digit).
+    let mut big = IBig::from(u64::MAX);
+    big.set_bit(0, false);
+    assert_eq!(big, IBig::from(u64::MAX - 1));
+    big.set_bit(0, true);
+    assert_eq!(big, IBig::from(u64::MAX));
 }
