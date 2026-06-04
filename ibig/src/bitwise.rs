@@ -25,7 +25,7 @@ impl CommutativeBinaryOpDigits<UBig> for BitAndOperation {
     fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> UBig {
         let n = lhs.len().min(rhs.len());
         let mut digits = Digits::from_slice(&lhs[..n]);
-        ibig_core::and_same_len_in_place(&mut digits, &rhs[..n]);
+        ibig_core::bitand_same_len(&mut digits, &rhs[..n]);
         UBig::from_digits(digits)
     }
 
@@ -38,7 +38,7 @@ impl CommutativeBinaryOpDigits<UBig> for BitAndOperation {
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
         let n = lhs.len().min(rhs.len());
         lhs.truncate(n);
-        ibig_core::and_same_len_in_place(&mut lhs, &rhs[..n]);
+        ibig_core::bitand_same_len(&mut lhs, &rhs[..n]);
         UBig::from_digits(lhs)
     }
 
