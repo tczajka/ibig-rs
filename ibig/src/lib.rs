@@ -8,6 +8,7 @@ pub use error::TryFromBigError;
 pub use repr::{IBig, UBig};
 
 mod bits;
+mod bitwise;
 mod bytes;
 mod error;
 mod ibig;
