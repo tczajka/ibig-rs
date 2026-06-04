@@ -155,7 +155,7 @@ impl IBig {
 }
 
 /// Access to the digit representation.
-pub(crate) trait AsDigits: Sized {
+pub(crate) trait AsDigits: Default {
     /// The single-digit type.
     type SingleDigit;
 

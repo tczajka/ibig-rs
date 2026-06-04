@@ -1,76 +1,61 @@
 //! Bitwise operators for [`UBig`].
 
+use core::ops::{BitAnd, BitAndAssign};
+
 use crate::UBig;
-use crate::macros::forward_commutative_ref_val;
-use crate::repr::AsDigits;
-use core::ops::BitAnd;
+use crate::ops::{CommutativeBinaryOpDigits, impl_binary_operator};
+use crate::repr::Digits;
+use ibig_core::Digit;
 
-impl BitAnd<UBig> for UBig {
-    type Output = UBig;
+/// Bitwise AND operation.
+enum BitAndOperation {}
+
+impl CommutativeBinaryOpDigits<UBig> for BitAndOperation {
+    #[inline]
+    fn apply_digit_digit(lhs: Digit, rhs: Digit) -> UBig {
+        UBig::from_digit(lhs & rhs)
+    }
 
     #[inline]
-    fn bitand(self, rhs: UBig) -> UBig {
-        if let Some(a) = bitand_fast_path(&self, &rhs) {
-            return a;
-        }
+    fn apply_ref_digit(lhs: &[Digit], rhs: Digit) -> UBig {
+        UBig::from_digit(lhs[0] & rhs)
+    }
 
+    #[inline]
+    fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> UBig {
+        let n = lhs.len().min(rhs.len());
+        let mut digits = Digits::from_slice(&lhs[..n]);
+        ibig_core::and_same_len_in_place(&mut digits, &rhs[..n]);
+        UBig::from_digits(digits)
+    }
+
+    #[inline]
+    fn apply_val_digit(lhs: Digits, rhs: Digit) -> UBig {
+        Self::apply_ref_digit(&lhs, rhs)
+    }
+
+    #[inline]
+    fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
+        let n = lhs.len().min(rhs.len());
+        lhs.truncate(n);
+        ibig_core::and_same_len_in_place(&mut lhs, &rhs[..n]);
+        UBig::from_digits(lhs)
+    }
+
+    #[inline]
+    fn apply_val_val(lhs: Digits, rhs: Digits) -> UBig {
         // Reuse storage from shorter operand.
-        if self.as_digits().len() <= rhs.as_digits().len() {
-            bitand_owned_ref(self, &rhs)
+        if lhs.len() <= rhs.len() {
+            Self::apply_val_ref(lhs, &rhs)
         } else {
-            bitand_owned_ref(rhs, &self)
+            Self::apply_val_ref(rhs, &lhs)
         }
     }
 }
 
-impl BitAnd<&UBig> for UBig {
-    type Output = UBig;
-
-    #[inline]
-    fn bitand(self, rhs: &UBig) -> UBig {
-        if let Some(a) = bitand_fast_path(&self, rhs) {
-            return a;
-        }
-        bitand_owned_ref(self, rhs)
-    }
-}
-
-forward_commutative_ref_val!(UBig, BitAnd::bitand);
-
-impl BitAnd<&UBig> for &UBig {
-    type Output = UBig;
-
-    #[inline]
-    fn bitand(self, rhs: &UBig) -> UBig {
-        if let Some(a) = bitand_fast_path(self, rhs) {
-            return a;
-        }
-
-        // Clone shorter operand.
-        if self.as_digits().len() <= rhs.as_digits().len() {
-            bitand_owned_ref(self.clone(), rhs)
-        } else {
-            bitand_owned_ref(rhs.clone(), self)
-        }
-    }
-}
-
-#[inline]
-fn bitand_fast_path(a: &UBig, b: &UBig) -> Option<UBig> {
-    let digit = match (a.try_to_digit(), b.try_to_digit()) {
-        (Some(a), Some(b)) => Some(a & b),
-        (Some(a), None) => Some(a & b.as_digits()[0]),
-        (None, Some(b)) => Some(a.as_digits()[0] & b),
-        (None, None) => None,
-    };
-    digit.map(UBig::from_digit)
-}
-
-fn bitand_owned_ref(a: UBig, b: &UBig) -> UBig {
-    let mut a = a.into_digits();
-    let b = b.as_digits();
-    let n = a.len().min(b.len());
-    a.truncate(n);
-    ibig_core::and_same_len_in_place(&mut a, &b[..n]);
-    UBig::from_digits(a)
-}
+impl_binary_operator!(
+    UBig,
+    BitAnd::bitand,
+    BitAndAssign::bitand_assign,
+    BitAndOperation
+);

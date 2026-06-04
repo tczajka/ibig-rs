@@ -12,8 +12,8 @@ mod bitwise;
 mod bytes;
 mod convert;
 mod error;
-mod macros;
 mod misc;
+mod ops;
 mod repr;
 mod sign;
 
