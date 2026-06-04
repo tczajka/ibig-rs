@@ -1,6 +1,7 @@
 //! Byte-sequence conversions for [`IBig`].
 
-use crate::{Digits, IBig, INLINE_DIGITS};
+use crate::IBig;
+use crate::repr::{Digits, INLINE_DIGITS};
 use alloc::{vec, vec::Vec};
 use ibig_core::Digit;
 

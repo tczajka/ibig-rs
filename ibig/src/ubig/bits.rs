@@ -1,6 +1,7 @@
 //! Bit operations on [`UBig`].
 
-use crate::{DIGIT_BITS_USIZE, UBig};
+use crate::UBig;
+use crate::repr::DIGIT_BITS_USIZE;
 use core::mem;
 use ibig_core::Digit;
 

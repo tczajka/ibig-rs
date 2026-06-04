@@ -2,7 +2,8 @@
 
 use core::mem;
 
-use crate::{DIGIT_BITS_USIZE, IBig, UBig};
+use crate::repr::DIGIT_BITS_USIZE;
+use crate::{IBig, UBig};
 use ibig_core::{Digit, SignedDigit};
 
 impl IBig {
