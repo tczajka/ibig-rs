@@ -6,11 +6,11 @@ use ibig_core::{Digit, SignedDigit};
 use smallvec::{SmallVec, smallvec};
 
 const fn digit(n: u8) -> Digit {
-    Digit::from(n)
+    Digit::from_u8(n)
 }
 
 const fn signed(n: i8) -> SignedDigit {
-    SignedDigit::from(n)
+    SignedDigit::from_i8(n)
 }
 
 #[test]
