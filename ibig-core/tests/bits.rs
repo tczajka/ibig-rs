@@ -13,20 +13,25 @@ const BITS: usize = Digit::BITS as usize;
 
 #[test]
 fn test_bit_width() {
-    // Zero in any form needs no bits.
-    assert_eq!(bit_width(&[]), 0);
-    assert_eq!(bit_width(&[digit(0)]), 0);
-    assert_eq!(bit_width(&[digit(0), digit(0)]), 0);
-    // Small values.
-    assert_eq!(bit_width(&[digit(1)]), 1);
-    assert_eq!(bit_width(&[digit(0b101)]), 3);
-    assert_eq!(bit_width(&[Digit::MAX]), BITS);
-    // Most-significant zero digits don't count.
-    assert_eq!(bit_width(&[digit(5), digit(0)]), 3);
-    // A set bit in a higher digit, above a zero low digit.
-    assert_eq!(bit_width(&[digit(0), digit(1)]), BITS + 1);
-    assert_eq!(bit_width(&[digit(0), Digit::MAX]), 2 * BITS);
-    assert_eq!(bit_width(&[Digit::MAX, Digit::MAX]), 2 * BITS);
+    let cases: &[(&[Digit], usize)] = &[
+        // Zero in any form needs no bits.
+        (&[], 0),
+        (&[digit(0)], 0),
+        (&[digit(0), digit(0)], 0),
+        // Small values.
+        (&[digit(1)], 1),
+        (&[digit(0b101)], 3),
+        (&[Digit::MAX], BITS),
+        // Most-significant zero digits don't count.
+        (&[digit(5), digit(0)], 3),
+        // A set bit in a higher digit, above a zero low digit.
+        (&[digit(0), digit(1)], BITS + 1),
+        (&[digit(0), Digit::MAX], 2 * BITS),
+        (&[Digit::MAX, Digit::MAX], 2 * BITS),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(bit_width(digits), expected);
+    }
 }
 
 #[test]
@@ -86,51 +91,66 @@ fn test_bit_signed_empty() {
 
 #[test]
 fn test_trailing_zeros() {
-    // Within the low digit.
-    assert_eq!(trailing_zeros(&[digit(0b1100)]), 2);
-    assert_eq!(trailing_zeros(&[digit(1)]), 0);
-    assert_eq!(trailing_zeros(&[Digit::MAX]), 0);
-    // A zero low digit contributes a full digit, then count into the next.
-    assert_eq!(trailing_zeros(&[digit(0), digit(0b100)]), BITS + 2);
-    assert_eq!(trailing_zeros(&[digit(0), digit(0), digit(1)]), 2 * BITS);
-    // All zeros (the value zero): the full width.
-    assert_eq!(trailing_zeros(&[]), 0);
-    assert_eq!(trailing_zeros(&[digit(0), digit(0)]), 2 * BITS);
+    let cases: &[(&[Digit], usize)] = &[
+        // Within the low digit.
+        (&[digit(0b1100)], 2),
+        (&[digit(1)], 0),
+        (&[Digit::MAX], 0),
+        // A zero low digit contributes a full digit, then count into the next.
+        (&[digit(0), digit(0b100)], BITS + 2),
+        (&[digit(0), digit(0), digit(1)], 2 * BITS),
+        // All zeros (the value zero): the full width.
+        (&[], 0),
+        (&[digit(0), digit(0)], 2 * BITS),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(trailing_zeros(digits), expected);
+    }
 }
 
 #[test]
 fn test_trailing_ones() {
-    // Within the low digit.
-    assert_eq!(trailing_ones(&[digit(0b1011)]), 2);
-    assert_eq!(trailing_ones(&[digit(0)]), 0);
-    assert_eq!(trailing_ones(&[Digit::MAX]), BITS);
-    // An all-ones low digit contributes a full digit, then count into the next.
-    assert_eq!(trailing_ones(&[Digit::MAX, digit(0b1011)]), BITS + 2);
-    assert_eq!(trailing_ones(&[Digit::MAX, Digit::MAX, digit(0)]), 2 * BITS);
-    // All ones: the full width.
-    assert_eq!(trailing_ones(&[]), 0);
-    assert_eq!(trailing_ones(&[Digit::MAX, Digit::MAX]), 2 * BITS);
+    let cases: &[(&[Digit], usize)] = &[
+        // Within the low digit.
+        (&[digit(0b1011)], 2),
+        (&[digit(0)], 0),
+        (&[Digit::MAX], BITS),
+        // An all-ones low digit contributes a full digit, then count into the next.
+        (&[Digit::MAX, digit(0b1011)], BITS + 2),
+        (&[Digit::MAX, Digit::MAX, digit(0)], 2 * BITS),
+        // All ones (no zero bit): the full width.
+        (&[], 0),
+        (&[Digit::MAX, Digit::MAX], 2 * BITS),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(trailing_ones(digits), expected);
+    }
 }
 
 #[test]
 fn test_is_power_of_two() {
-    // Zero and all-zero slices are not powers of two.
-    assert!(!is_power_of_two(&[]));
-    assert!(!is_power_of_two(&[digit(0)]));
-    assert!(!is_power_of_two(&[digit(0), digit(0)]));
-    // Single-digit powers of two and non-powers.
-    assert!(is_power_of_two(&[digit(1)]));
-    assert!(is_power_of_two(&[digit(8)]));
-    assert!(!is_power_of_two(&[digit(6)]));
-    assert!(!is_power_of_two(&[Digit::MAX]));
-    // The high bit of a digit is a power of two.
-    assert!(is_power_of_two(&[Digit::MAX / digit(2) + digit(1)]));
-    // A single set bit in a higher digit (lower digits zero).
-    assert!(is_power_of_two(&[digit(0), digit(0), digit(4)]));
-    // More than one set bit, across digits or within one.
-    assert!(!is_power_of_two(&[digit(1), digit(1)]));
-    assert!(!is_power_of_two(&[digit(0), digit(3)]));
-    assert!(!is_power_of_two(&[digit(1), digit(0), digit(4)]));
+    let cases: &[(&[Digit], bool)] = &[
+        // Zero and all-zero slices are not powers of two.
+        (&[], false),
+        (&[digit(0)], false),
+        (&[digit(0), digit(0)], false),
+        // Single-digit powers of two and non-powers.
+        (&[digit(1)], true),
+        (&[digit(8)], true),
+        (&[digit(6)], false),
+        (&[Digit::MAX], false),
+        // The high bit of a digit is a power of two.
+        (&[Digit::MAX / digit(2) + digit(1)], true),
+        // A single set bit in a higher digit (lower digits zero).
+        (&[digit(0), digit(0), digit(4)], true),
+        // More than one set bit, across digits or within one.
+        (&[digit(1), digit(1)], false),
+        (&[digit(0), digit(3)], false),
+        (&[digit(1), digit(0), digit(4)], false),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(is_power_of_two(digits), expected);
+    }
 }
 
 #[test]

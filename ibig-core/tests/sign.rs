@@ -8,14 +8,19 @@ fn digit(n: u8) -> Digit {
 
 #[test]
 fn test_is_negative() {
-    // The sign is the most-significant digit's high bit.
-    assert!(!is_negative(&[digit(0)]));
-    assert!(!is_negative(&[digit(5)]));
-    assert!(is_negative(&[Digit::MAX])); // -1
-    // A negative top digit makes the whole value negative regardless of lower digits.
-    assert!(is_negative(&[digit(5), Digit::MAX]));
-    // A non-negative top digit keeps the value non-negative, even across digits.
-    assert!(!is_negative(&[Digit::MAX, digit(0)]));
+    let cases: &[(&[Digit], bool)] = &[
+        // The sign is the most-significant digit's high bit.
+        (&[digit(0)], false),
+        (&[digit(5)], false),
+        (&[Digit::MAX], true), // -1
+        // A negative top digit makes the whole value negative regardless of lower digits.
+        (&[digit(5), Digit::MAX], true),
+        // A non-negative top digit keeps the value non-negative, even across digits.
+        (&[Digit::MAX, digit(0)], false),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(is_negative(digits), expected);
+    }
 }
 
 #[test]
@@ -26,22 +31,34 @@ fn test_is_negative_empty() {
 
 #[test]
 fn test_extend_signed() {
-    // A negative value extends with all-ones.
-    let mut digits = [Digit::MAX, digit(0), digit(0)];
-    extend_signed(&mut digits, 1);
-    assert_eq!(digits, [Digit::MAX, Digit::MAX, Digit::MAX]);
-    // A non-negative value extends with zeros.
-    let mut digits = [digit(5), Digit::MAX, Digit::MAX];
-    extend_signed(&mut digits, 1);
-    assert_eq!(digits, [digit(5), digit(0), digit(0)]);
-    // The sign comes from the most-significant digit of the value part.
-    let mut digits = [digit(1), Digit::MAX, digit(0)];
-    extend_signed(&mut digits, 2);
-    assert_eq!(digits, [digit(1), Digit::MAX, Digit::MAX]);
-    // `len == digits.len()` leaves the buffer unchanged.
-    let mut digits = [digit(7), digit(8)];
-    extend_signed(&mut digits, 2);
-    assert_eq!(digits, [digit(7), digit(8)]);
+    // `(value digits, value length, expected after extension)`.
+    let cases: &[(&[Digit], usize, &[Digit])] = &[
+        // A negative value extends with all-ones.
+        (
+            &[Digit::MAX, digit(0), digit(0)],
+            1,
+            &[Digit::MAX, Digit::MAX, Digit::MAX],
+        ),
+        // A non-negative value extends with zeros.
+        (
+            &[digit(5), Digit::MAX, Digit::MAX],
+            1,
+            &[digit(5), digit(0), digit(0)],
+        ),
+        // The sign comes from the most-significant digit of the value part.
+        (
+            &[digit(1), Digit::MAX, digit(0)],
+            2,
+            &[digit(1), Digit::MAX, Digit::MAX],
+        ),
+        // `len == digits.len()` leaves the buffer unchanged.
+        (&[digit(7), digit(8)], 2, &[digit(7), digit(8)]),
+    ];
+    for &(input, len, expected) in cases {
+        let mut digits = input.to_vec();
+        extend_signed(&mut digits, len);
+        assert_eq!(digits, expected);
+    }
 }
 
 #[test]
