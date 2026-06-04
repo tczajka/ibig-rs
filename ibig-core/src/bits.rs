@@ -200,6 +200,80 @@ pub fn is_power_of_two(digits: &[Digit]) -> bool {
     found
 }
 
+/// Replaces the unsigned value with the smallest power of two greater than or equal to it.
+///
+/// Returns `true` on overflow — when that power of two does not fit in
+/// `digits.len() * Digit::BITS` bits — in which case `digits` is set to zero.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, next_power_of_two_in_place};
+/// let mut digits = [Digit::from(5u8), Digit::from(5u8)];
+/// assert!(!next_power_of_two_in_place(&mut digits));
+/// assert_eq!(digits, [Digit::ZERO, Digit::from(8u8)]);
+/// let mut digits = [];
+/// assert!(next_power_of_two_in_place(&mut digits));
+/// let mut digits = [Digit::ZERO];
+/// assert!(!next_power_of_two_in_place(&mut digits));
+/// assert_eq!(digits, [Digit::from(1u8)]);
+/// let mut digits = [Digit::MAX];
+/// assert!(next_power_of_two_in_place(&mut digits));
+/// assert_eq!(digits, [Digit::ZERO]);
+/// ```
+pub fn next_power_of_two_in_place(digits: &mut [Digit]) -> bool {
+    // Find the top non-zero digit.
+    let Some(top) = digits.iter().rposition(|&digit| digit != Digit::ZERO) else {
+        // `digits` is all zeros
+        if digits.is_empty() {
+            // Overflow.
+            return true;
+        } else {
+            digits[0] = Digit::from_u8(1);
+            return false;
+        }
+    };
+
+    let top_digit = digits[top];
+
+    // Zero out digits below top.
+    // If `digits` is already a power of two, return.
+    if top_digit.is_power_of_two() {
+        // Find the next non-zero digit below top.
+        let Some(second) = digits[..top]
+            .iter()
+            .rposition(|&digit| digit != Digit::ZERO)
+        else {
+            // The whole number is already a power of two.
+            return false;
+        };
+        digits[..second + 1].fill(Digit::ZERO);
+    } else {
+        digits[..top].fill(Digit::ZERO);
+    }
+
+    // We now know `digits` is not a power of two.
+    // The top digit should become strictly next power of two.
+    match top_digit
+        .checked_add(Digit::from_u8(1))
+        .and_then(Digit::checked_next_power_of_two)
+    {
+        Some(new_top_digit) => {
+            digits[top] = new_top_digit;
+        }
+        None => {
+            digits[top] = Digit::ZERO;
+            if top + 1 != digits.len() {
+                digits[top + 1] = Digit::from_u8(1);
+            } else {
+                // Overflow.
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
 fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO

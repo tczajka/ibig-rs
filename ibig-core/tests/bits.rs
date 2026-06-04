@@ -1,7 +1,8 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    Digit, bit, bit_signed, bit_width, is_power_of_two, trailing_ones, trailing_zeros,
+    Digit, bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place, trailing_ones,
+    trailing_zeros,
 };
 
 fn digit(n: u8) -> Digit {
@@ -130,4 +131,56 @@ fn test_is_power_of_two() {
     assert!(!is_power_of_two(&[digit(1), digit(1)]));
     assert!(!is_power_of_two(&[digit(0), digit(3)]));
     assert!(!is_power_of_two(&[digit(1), digit(0), digit(4)]));
+}
+
+#[test]
+fn test_next_power_of_two_in_place() {
+    let high_bit = Digit::from_u8(1) << (Digit::BITS - 1);
+
+    // Empty slice rounds up to one and overflows.
+    assert!(next_power_of_two_in_place(&mut []));
+
+    // Zero rounds up to one.
+    let mut d = [digit(0), digit(0)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(1), digit(0)]);
+
+    // Already a power of two: unchanged.
+    let mut d = [digit(1)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(1)]);
+    let mut d = [digit(8)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(8)]);
+
+    // Rounds up to the next power of two.
+    let mut d = [digit(3)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(4)]);
+    let mut d = [digit(5)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(8)]);
+
+    // Multi-digit: [1, 1] rounds up to [0, 2].
+    let mut d = [digit(1), digit(1)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), digit(2)]);
+
+    // Multi-digit power of two: unchanged.
+    let mut d = [digit(0), high_bit]; // 2^(2*BITS - 1)
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), high_bit]);
+
+    // Overflow: all-ones has no fitting next power of two, so the value becomes zero.
+    let mut d = [Digit::MAX];
+    assert!(next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0)]);
+    let mut d = [Digit::MAX, Digit::MAX];
+    assert!(next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), digit(0)]);
+
+    // Overflow boundary: the top bit is set but the value is not a power of two.
+    let mut d = [digit(1), high_bit]; // 2^(2*BITS - 1) + 1
+    assert!(next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), digit(0)]);
 }

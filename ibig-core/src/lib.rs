@@ -11,7 +11,8 @@ mod len;
 mod sign;
 
 pub use bits::{
-    bit, bit_signed, bit_width, is_power_of_two, set_bit, trailing_ones, trailing_zeros,
+    bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place, set_bit,
+    trailing_ones, trailing_zeros,
 };
 pub use bytes::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
