@@ -7,6 +7,7 @@ extern crate alloc;
 pub use error::TryFromBigError;
 pub use repr::{IBig, UBig};
 
+mod bits;
 mod error;
 mod ibig;
 mod macros;
