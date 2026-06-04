@@ -153,6 +153,19 @@ fn ubig_from_digits_shrinks_capacity() {
 }
 
 #[test]
+fn ubig_from_digits_no_need_to_shrink() {
+    // A large heap buffer that is already tightly sized is kept as-is, not shrunk.
+    let mut digits: Digits = SmallVec::with_capacity(10);
+    for i in 1..=10 {
+        digits.push(digit(i));
+    }
+    assert!(digits.spilled());
+    let buf = UBig::from_digits(digits).into_digits();
+    assert_eq!(buf.len(), 10);
+    assert!(buf.spilled());
+}
+
+#[test]
 fn ibig_from_digits_normalizes() {
     assert_eq!(
         IBig::from_digits(smallvec![digit(0), digit(0)]).as_digits(),
@@ -217,6 +230,19 @@ fn ibig_from_digits_shrinks_capacity() {
     assert_eq!(buf.len(), 5);
     assert!(buf.spilled());
     assert!(buf.capacity() < 100);
+}
+
+#[test]
+fn ibig_from_digits_no_need_to_shrink() {
+    // A large heap buffer that is already tightly sized is kept as-is, not shrunk.
+    let mut digits: Digits = SmallVec::with_capacity(10);
+    for i in 1..=10 {
+        digits.push(digit(i));
+    }
+    assert!(digits.spilled());
+    let buf = IBig::from_digits(digits).into_digits();
+    assert_eq!(buf.len(), 10);
+    assert!(buf.spilled());
 }
 
 #[test]

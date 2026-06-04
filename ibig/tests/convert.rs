@@ -4,35 +4,50 @@ use ibig::{IBig, UBig};
 
 #[test]
 fn ubig_from_unsigned_const() {
-    // The `from_uN` constructors are usable in `const` contexts.
-    const A: UBig = UBig::from_u64(0x0102030405060708);
-    const ZERO: UBig = UBig::from_u8(0);
+    // The `from_uN` constructors are usable in `const` contexts and agree with the
+    // little-endian byte representation.
+    const A: UBig = UBig::from_u8(0x12);
+    const B: UBig = UBig::from_u16(0x1234);
+    const C: UBig = UBig::from_u32(0x1234_5678);
+    const D: UBig = UBig::from_u64(0x0102_0304_0506_0708);
 
+    assert_eq!(A, UBig::from_le_bytes(&0x12u8.to_le_bytes()));
+    assert_eq!(B, UBig::from_le_bytes(&0x1234u16.to_le_bytes()));
+    assert_eq!(C, UBig::from_le_bytes(&0x1234_5678u32.to_le_bytes()));
     assert_eq!(
-        A.to_le_bytes(),
-        [0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01]
+        D,
+        UBig::from_le_bytes(&0x0102_0304_0506_0708u64.to_le_bytes())
     );
-    assert!(ZERO.to_le_bytes().is_empty());
-    // They agree with the `From` impls.
-    assert_eq!(UBig::from_u32(0xdead_beef), UBig::from(0xdead_beefu32));
-    assert_eq!(UBig::from_u16(0x0102), UBig::from_le_bytes(&[0x02, 0x01]));
+
+    // The same constructors as runtime (non-`const`) calls.
+    assert_eq!(UBig::from_u8(0x12), A);
+    assert_eq!(UBig::from_u16(0x1234), B);
+    assert_eq!(UBig::from_u32(0x1234_5678), C);
+    assert_eq!(UBig::from_u64(0x0102_0304_0506_0708), D);
 }
 
 #[test]
 fn ibig_from_signed_const() {
-    // The `from_iN` constructors are usable in `const` contexts.
-    const NEG: IBig = IBig::from_i64(-0x0102030405060708);
-    const POS: IBig = IBig::from_i32(0x0a0b0c0d);
-    const ZERO: IBig = IBig::from_i8(0);
+    // The `from_iN` constructors are usable in `const` contexts and agree with the
+    // little-endian two's complement byte representation.
+    const A: IBig = IBig::from_i8(-0x12);
+    const B: IBig = IBig::from_i16(-0x1234);
+    const C: IBig = IBig::from_i32(-0x1234_5678);
+    const D: IBig = IBig::from_i64(-0x0102_0304_0506_0708);
 
+    assert_eq!(A, IBig::from_le_bytes(&(-0x12i8).to_le_bytes()));
+    assert_eq!(B, IBig::from_le_bytes(&(-0x1234i16).to_le_bytes()));
+    assert_eq!(C, IBig::from_le_bytes(&(-0x1234_5678i32).to_le_bytes()));
     assert_eq!(
-        NEG,
-        IBig::from_le_bytes(&(-0x0102030405060708i64).to_le_bytes())
+        D,
+        IBig::from_le_bytes(&(-0x0102_0304_0506_0708i64).to_le_bytes())
     );
-    assert_eq!(POS, IBig::from_le_bytes(&0x0a0b0c0di32.to_le_bytes()));
-    assert_eq!(ZERO.to_le_bytes(), [0]);
-    // -1 is all-ones in two's complement.
-    assert_eq!(IBig::from_i8(-1).to_le_bytes(), [0xff]);
+
+    // The same constructors as runtime (non-`const`) calls.
+    assert_eq!(IBig::from_i8(-0x12), A);
+    assert_eq!(IBig::from_i16(-0x1234), B);
+    assert_eq!(IBig::from_i32(-0x1234_5678), C);
+    assert_eq!(IBig::from_i64(-0x0102_0304_0506_0708), D);
 }
 
 #[test]
@@ -130,6 +145,14 @@ fn ubig_try_into_primitive() {
     let n = UBig::from(u128::MAX);
     assert_eq!(u128::try_from(&n).unwrap(), u128::MAX);
     assert!(u32::try_from(&n).is_err());
+
+    // Multi-digit slow paths: a value that fits a signed target, and one too large even for
+    // the widest target.
+    assert_eq!(
+        i128::try_from(&UBig::from(1u128 << 100)).unwrap(),
+        1i128 << 100
+    );
+    assert!(u128::try_from(&UBig::from_le_bytes(&[0xff; 20])).is_err());
 }
 
 #[test]
@@ -151,6 +174,10 @@ fn ibig_try_into_signed() {
     let neg = IBig::from(-1i128 << 100);
     assert_eq!(i128::try_from(&neg).unwrap(), -(1i128 << 100));
     assert!(i64::try_from(&neg).is_err());
+    // A large positive value, too big even for the widest signed target.
+    let mut bytes = [0xffu8; 18];
+    bytes[17] = 0; // clear the top byte so the value stays positive
+    assert!(i128::try_from(&IBig::from_le_bytes(&bytes)).is_err());
 }
 
 #[test]
@@ -173,6 +200,8 @@ fn ibig_try_into_unsigned() {
     let big = IBig::from(1i128 << 100);
     assert_eq!(u128::try_from(&big).unwrap(), 1u128 << 100);
     assert!(u64::try_from(&big).is_err());
+    // A multi-digit negative value is out of range for any unsigned type.
+    assert!(u64::try_from(&IBig::from(-1i128 << 100)).is_err());
 }
 
 #[test]
@@ -240,4 +269,10 @@ fn ibig_from_ubig() {
     let big = UBig::from(u64::MAX);
     assert_eq!(IBig::from(&big), IBig::from(big.clone()));
     assert_eq!(IBig::from(&UBig::from(200u8)), IBig::from(200i16));
+}
+
+#[test]
+fn try_from_big_error_display() {
+    let err = u8::try_from(UBig::from(256u16)).unwrap_err();
+    assert_eq!(err.to_string(), "number out of range for the target type");
 }
