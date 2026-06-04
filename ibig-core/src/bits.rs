@@ -274,6 +274,28 @@ pub fn next_power_of_two_in_place(digits: &mut [Digit]) -> bool {
     false
 }
 
+/// Computes the bitwise AND of two equal-length digit slices, storing the
+/// result in `a`.
+///
+/// # Panics
+///
+/// Panics if `a` and `b` have different lengths.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, and_same_len_in_place};
+/// let mut a = [Digit::from(0b1100u8), Digit::MAX];
+/// and_same_len_in_place(&mut a, &[Digit::from(0b1010u8), Digit::ZERO]);
+/// assert_eq!(a, [Digit::from(0b1000u8), Digit::ZERO]);
+/// ```
+pub fn and_same_len_in_place(a: &mut [Digit], b: &[Digit]) {
+    assert_eq!(a.len(), b.len());
+    for (x, &y) in a.iter_mut().zip(b) {
+        *x &= y;
+    }
+}
+
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
 fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO
