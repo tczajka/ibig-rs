@@ -95,3 +95,35 @@ fn set_bit() {
     big.set_bit(0, true);
     assert_eq!(big, IBig::from(u64::MAX));
 }
+
+#[test]
+fn trailing_zeros() {
+    assert_eq!(IBig::from(0b101000i16).trailing_zeros(), 3);
+    assert_eq!(IBig::from(-4i8).trailing_zeros(), 2);
+    // Multi-digit negative: -(2^100) has 100 trailing zeros.
+    assert_eq!(IBig::from(-1i128 << 100).trailing_zeros(), 100);
+}
+
+#[test]
+#[should_panic]
+fn trailing_zeros_zero() {
+    IBig::ZERO.trailing_zeros();
+}
+
+#[test]
+fn trailing_ones() {
+    assert_eq!(IBig::ZERO.trailing_ones(), 0);
+    assert_eq!(IBig::from(0b100111i16).trailing_ones(), 3);
+    // -4 = ...11111100, -3 = ...11111101, -2 = ...11111110.
+    assert_eq!(IBig::from(-4i8).trailing_ones(), 0);
+    assert_eq!(IBig::from(-3i8).trailing_ones(), 1);
+    assert_eq!(IBig::from(-2i8).trailing_ones(), 0);
+    // Multi-digit (slow path): u64::MAX is 64 set bits below a zero sign digit.
+    assert_eq!(IBig::from(u64::MAX).trailing_ones(), 64);
+}
+
+#[test]
+#[should_panic]
+fn trailing_ones_minus_one() {
+    IBig::from(-1i8).trailing_ones();
+}

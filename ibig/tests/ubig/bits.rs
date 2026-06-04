@@ -82,3 +82,25 @@ fn set_bit() {
     e.set_bit(0, false);
     assert_eq!(e, UBig::from(u128::MAX - 1));
 }
+
+#[test]
+fn trailing_zeros() {
+    assert_eq!(UBig::from(1u8).trailing_zeros(), 0);
+    assert_eq!(UBig::from(0b101000u8).trailing_zeros(), 3);
+    // Multi-digit: 2^100 has 100 trailing zeros.
+    assert_eq!(UBig::from(1u128 << 100).trailing_zeros(), 100);
+}
+
+#[test]
+#[should_panic]
+fn trailing_zeros_zero() {
+    UBig::ZERO.trailing_zeros();
+}
+
+#[test]
+fn trailing_ones() {
+    assert_eq!(UBig::ZERO.trailing_ones(), 0);
+    assert_eq!(UBig::from(0b100111u8).trailing_ones(), 3);
+    // All bits of u128::MAX set; the result is its width, and it never panics (finite).
+    assert_eq!(UBig::from(u128::MAX).trailing_ones(), 128);
+}

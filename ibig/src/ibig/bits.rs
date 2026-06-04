@@ -83,4 +83,58 @@ impl IBig {
         ibig_core::set_bit(&mut digits, position, value);
         *self = IBig::from_digits(digits);
     }
+
+    /// Returns the number of trailing zero bits of the two's complement representation.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` is zero, which has infinitely many trailing zeros.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(0b101000i16).trailing_zeros(), 3);
+    /// // -4 is ...11111100, with 2 trailing zeros.
+    /// assert_eq!(IBig::from(-4i8).trailing_zeros(), 2);
+    /// ```
+    pub fn trailing_zeros(&self) -> usize {
+        match self.try_to_digit() {
+            Some(digit) => {
+                assert!(
+                    digit != SignedDigit::ZERO,
+                    "zero has infinitely many trailing zeros"
+                );
+                digit.trailing_zeros().try_into().unwrap()
+            }
+            None => ibig_core::trailing_zeros(self.as_digits()),
+        }
+    }
+
+    /// Returns the number of trailing one bits of the two's complement representation.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` is -1 (all ones), which has infinitely many trailing ones.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(0b100111i16).trailing_ones(), 3);
+    /// // -3 is ...11111101, with 1 trailing one.
+    /// assert_eq!(IBig::from(-3i8).trailing_ones(), 1);
+    /// ```
+    pub fn trailing_ones(&self) -> usize {
+        match self.try_to_digit() {
+            Some(digit) => {
+                assert!(
+                    digit != SignedDigit::from_i8(-1),
+                    "-1 has infinitely many trailing ones"
+                );
+                digit.trailing_ones().try_into().unwrap()
+            }
+            None => ibig_core::trailing_ones(self.as_digits()),
+        }
+    }
 }

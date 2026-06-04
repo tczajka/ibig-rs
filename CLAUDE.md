@@ -64,8 +64,8 @@ Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the
 
 - Public API changes must be recorded in `ibig/CHANGELOG.md`; note breaking changes explicitly. The top section is `## 0.4.0 - unreleased`.
 - **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions and the private `Repr` enum).
-- The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`) rather than `std`, and gate any `std`-only code behind `#[cfg(feature = "std")]`.
-- Avoid standard-library APIs and language features newer than the MSRV (1.95).
+- **Single-digit fast path**: `UBig`/`IBig` methods commonly special-case the inline single-digit representation via `try_to_digit()`, operating directly on the `Digit`/`SignedDigit` and only falling back to the `ibig_core` slice routine (over `self.as_digits()`) for multi-digit values. Mirror this pattern when adding new operations.
+- The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`).
 
 ### Tests
 

@@ -101,4 +101,46 @@ impl UBig {
         }
         *self = UBig::from_digits(digits);
     }
+
+    /// Returns the number of trailing zero bits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` is zero, which has infinitely many trailing zeros.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(1u8).trailing_zeros(), 0);
+    /// assert_eq!(UBig::from(0b101000u8).trailing_zeros(), 3);
+    /// ```
+    pub fn trailing_zeros(&self) -> usize {
+        match self.try_to_digit() {
+            Some(digit) => {
+                assert!(
+                    digit != Digit::ZERO,
+                    "zero has infinitely many trailing zeros"
+                );
+                digit.trailing_zeros().try_into().unwrap()
+            }
+            None => ibig_core::trailing_zeros(self.as_digits()),
+        }
+    }
+
+    /// Returns the number of trailing one bits.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(0u8).trailing_ones(), 0);
+    /// assert_eq!(UBig::from(0b100111u8).trailing_ones(), 3);
+    /// ```
+    pub fn trailing_ones(&self) -> usize {
+        match self.try_to_digit() {
+            Some(digit) => digit.trailing_ones().try_into().unwrap(),
+            None => ibig_core::trailing_ones(self.as_digits()),
+        }
+    }
 }
