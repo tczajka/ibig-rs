@@ -54,6 +54,7 @@ impl BitAnd<&UBig> for &UBig {
     }
 }
 
+#[inline]
 fn bitand_fast_path(a: &UBig, b: &UBig) -> Option<UBig> {
     let digit = match (a.try_to_digit(), b.try_to_digit()) {
         (Some(a), Some(b)) => Some(a & b),
