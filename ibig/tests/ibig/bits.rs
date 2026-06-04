@@ -127,3 +127,21 @@ fn trailing_ones() {
 fn trailing_ones_minus_one() {
     IBig::from(-1i8).trailing_ones();
 }
+
+#[test]
+fn is_power_of_two() {
+    assert!(!IBig::ZERO.is_power_of_two());
+    assert!(IBig::from(1i8).is_power_of_two());
+    assert!(IBig::from(8i8).is_power_of_two());
+    assert!(!IBig::from(6i8).is_power_of_two());
+    // Negative values are never powers of two.
+    assert!(!IBig::from(-8i8).is_power_of_two());
+    assert!(!IBig::from(-1i8).is_power_of_two());
+    // The most-negative value is a single high bit, but it is negative, so still false.
+    assert!(!IBig::from(i64::MIN).is_power_of_two());
+    // Multi-digit.
+    assert!(IBig::from(1i128 << 100).is_power_of_two());
+    assert!(!IBig::from(3i128 << 100).is_power_of_two());
+    assert!(!IBig::from(-1i128 << 100).is_power_of_two());
+    assert!(!IBig::from(i128::MIN).is_power_of_two());
+}

@@ -104,3 +104,15 @@ fn trailing_ones() {
     // All bits of u128::MAX set; the result is its width, and it never panics (finite).
     assert_eq!(UBig::from(u128::MAX).trailing_ones(), 128);
 }
+
+#[test]
+fn is_power_of_two() {
+    assert!(!UBig::ZERO.is_power_of_two());
+    assert!(UBig::from(1u8).is_power_of_two());
+    assert!(UBig::from(8u8).is_power_of_two());
+    assert!(!UBig::from(6u8).is_power_of_two());
+    // Multi-digit.
+    assert!(UBig::from(1u128 << 100).is_power_of_two());
+    assert!(!UBig::from(3u128 << 100).is_power_of_two());
+    assert!(!UBig::from(u128::MAX).is_power_of_two());
+}

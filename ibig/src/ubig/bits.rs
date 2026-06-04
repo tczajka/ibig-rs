@@ -143,4 +143,21 @@ impl UBig {
             None => ibig_core::trailing_ones(self.as_digits()),
         }
     }
+
+    /// Returns `true` if the value is a power of two (exactly one bit set).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert!(UBig::from(8u8).is_power_of_two());
+    /// assert!(!UBig::from(6u8).is_power_of_two());
+    /// assert!(!UBig::ZERO.is_power_of_two());
+    /// ```
+    pub fn is_power_of_two(&self) -> bool {
+        match self.try_to_digit() {
+            Some(digit) => digit.is_power_of_two(),
+            None => ibig_core::is_power_of_two(self.as_digits()),
+        }
+    }
 }

@@ -137,4 +137,27 @@ impl IBig {
             None => ibig_core::trailing_ones(self.as_digits()),
         }
     }
+
+    /// Returns `true` if the value is a power of two.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert!(IBig::from(8i8).is_power_of_two());
+    /// assert!(!IBig::from(6i8).is_power_of_two());
+    /// assert!(!IBig::from(-8i8).is_power_of_two());
+    /// assert!(!IBig::ZERO.is_power_of_two());
+    /// ```
+    pub fn is_power_of_two(&self) -> bool {
+        match self.try_to_digit() {
+            // A negative digit is never a power of two, even though its bit pattern may be
+            // (the most-negative value is a single high bit).
+            Some(digit) => !digit.is_negative() && digit.cast_unsigned().is_power_of_two(),
+            None => {
+                let digits = self.as_digits();
+                !ibig_core::is_negative(digits) && ibig_core::is_power_of_two(digits)
+            }
+        }
+    }
 }
