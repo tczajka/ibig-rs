@@ -40,6 +40,69 @@ fn ubig_ilog2_zero() {
 }
 
 #[test]
+fn ubig_checked_ilog2() {
+    assert_eq!(UBig::ZERO.checked_ilog2(), None);
+    assert_eq!(UBig::from(1u8).checked_ilog2(), Some(0));
+    assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
+    assert_eq!(UBig::from(1u128 << 100).checked_ilog2(), Some(100));
+}
+
+#[test]
+fn ibig_bit_width() {
+    assert_eq!(IBig::ZERO.bit_width(), 0);
+    assert_eq!(IBig::from(1i8).bit_width(), 1);
+    assert_eq!(IBig::from(0b101i8).bit_width(), 3);
+    // Multi-digit positive: `u64::MAX` is a positive `2^64 - 1`.
+    assert_eq!(IBig::from(u64::MAX).bit_width(), 64);
+    assert_eq!(IBig::from(1i128 << 100).bit_width(), 101);
+}
+
+#[test]
+#[should_panic]
+fn ibig_bit_width_negative() {
+    IBig::from(-1i8).bit_width();
+}
+
+#[test]
+fn ibig_checked_bit_width() {
+    assert_eq!(IBig::ZERO.checked_bit_width(), Some(0));
+    assert_eq!(IBig::from(0b101i8).checked_bit_width(), Some(3));
+    assert_eq!(IBig::from(1i128 << 100).checked_bit_width(), Some(101));
+    // Negative values have no defined bit width.
+    assert_eq!(IBig::from(-1i8).checked_bit_width(), None);
+    assert_eq!(IBig::from(-1i128 << 100).checked_bit_width(), None);
+}
+
+#[test]
+fn ibig_ilog2() {
+    assert_eq!(IBig::from(1i8).ilog2(), 0);
+    assert_eq!(IBig::from(0b101i8).ilog2(), 2);
+    assert_eq!(IBig::from(1i128 << 100).ilog2(), 100);
+}
+
+#[test]
+#[should_panic]
+fn ibig_ilog2_zero() {
+    IBig::ZERO.ilog2();
+}
+
+#[test]
+#[should_panic]
+fn ibig_ilog2_negative() {
+    IBig::from(-4i8).ilog2();
+}
+
+#[test]
+fn ibig_checked_ilog2() {
+    assert_eq!(IBig::ZERO.checked_ilog2(), None);
+    assert_eq!(IBig::from(1i8).checked_ilog2(), Some(0));
+    assert_eq!(IBig::from(0b101i8).checked_ilog2(), Some(2));
+    assert_eq!(IBig::from(1i128 << 100).checked_ilog2(), Some(100));
+    // Non-positive values have no logarithm.
+    assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
+}
+
+#[test]
 fn ubig_bit() {
     // Single digit (fast path).
     let a = UBig::from(0b10010u8);
