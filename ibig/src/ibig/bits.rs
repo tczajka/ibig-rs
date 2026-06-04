@@ -75,7 +75,7 @@ impl IBig {
             // The bit is the sign bit or higher and is not changing, nothing to do.
             return;
         }
-        let mut digits = mem::replace(self, IBig::ZERO).into_digits();
+        let mut digits = mem::take(self).into_digits();
         if len < min_len {
             digits.resize(min_len, Digit::ZERO);
             ibig_core::extend_signed(&mut digits, len);

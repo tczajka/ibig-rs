@@ -3,3 +3,4 @@
 mod bits;
 mod bitwise;
 mod convert;
+mod misc;

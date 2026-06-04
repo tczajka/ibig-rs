@@ -90,7 +90,7 @@ impl UBig {
 
         // Slow path: the value or position spans multiple digits.
         let digit_index = position / DIGIT_BITS_USIZE;
-        let mut digits = mem::replace(self, UBig::ZERO).into_digits();
+        let mut digits = mem::take(self).into_digits();
         if digit_index >= digits.len() {
             if value {
                 digits.resize(digit_index + 1, Digit::ZERO);

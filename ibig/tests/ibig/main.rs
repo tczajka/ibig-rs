@@ -2,4 +2,5 @@
 
 mod bits;
 mod convert;
+mod misc;
 mod sign;
