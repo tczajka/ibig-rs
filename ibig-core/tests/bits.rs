@@ -171,6 +171,14 @@ fn test_next_power_of_two_in_place() {
     assert!(!next_power_of_two_in_place(&mut d));
     assert_eq!(d, [digit(0), high_bit]);
 
+    let mut d = [digit(0), digit(1), digit(0), digit(8)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), digit(0), digit(0), digit(16)]);
+
+    let mut d = [digit(0), digit(0), digit(0), digit(8)];
+    assert!(!next_power_of_two_in_place(&mut d));
+    assert_eq!(d, [digit(0), digit(0), digit(0), digit(8)]);
+
     // Overflow: all-ones has no fitting next power of two, so the value becomes zero.
     let mut d = [Digit::MAX];
     assert!(next_power_of_two_in_place(&mut d));

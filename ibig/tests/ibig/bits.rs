@@ -2,6 +2,13 @@
 
 use ibig::IBig;
 
+/// `2^k` as a positive `IBig`. The extra high zero byte keeps the sign bit clear.
+fn pow2(k: usize) -> IBig {
+    let mut bytes = vec![0u8; k / 8 + 2];
+    bytes[k / 8] = 1u8 << (k % 8);
+    IBig::from_le_bytes(&bytes)
+}
+
 #[test]
 fn bit() {
     // Single-digit non-negative (fast path).
@@ -144,4 +151,33 @@ fn is_power_of_two() {
     assert!(!IBig::from(3i128 << 100).is_power_of_two());
     assert!(!IBig::from(-1i128 << 100).is_power_of_two());
     assert!(!IBig::from(i128::MIN).is_power_of_two());
+}
+
+#[test]
+fn next_power_of_two() {
+    assert_eq!(IBig::ZERO.next_power_of_two(), IBig::from(1i8));
+    assert_eq!(IBig::from(1i8).next_power_of_two(), IBig::from(1i8));
+    assert_eq!(IBig::from(5i8).next_power_of_two(), IBig::from(8i8));
+    assert_eq!(IBig::from(8i8).next_power_of_two(), IBig::from(8i8));
+    // Non-positive values round up to one.
+    assert_eq!(IBig::from(-1i8).next_power_of_two(), IBig::from(1i8));
+    assert_eq!(IBig::from(-8i8).next_power_of_two(), IBig::from(1i8));
+    assert_eq!(IBig::from(i64::MIN).next_power_of_two(), IBig::from(1i8));
+    // Multi-digit positive.
+    assert_eq!(
+        IBig::from((1i128 << 100) + 1).next_power_of_two(),
+        IBig::from(1i128 << 101)
+    );
+
+    // Large exact powers of two round up to themselves; one more rounds to the next power.
+    for k in [63usize, 64, 127, 128, 200, 255, 256, 500] {
+        assert_eq!(pow2(k).next_power_of_two(), pow2(k));
+        let mut above = pow2(k); // 2^k + 1 (bit 0 is clear for k > 0)
+        above.set_bit(0, true);
+        assert_eq!(above.next_power_of_two(), pow2(k + 1));
+    }
+
+    // The consuming variant agrees.
+    let n = IBig::from(-5i8);
+    assert_eq!(n.clone().into_next_power_of_two(), n.next_power_of_two());
 }

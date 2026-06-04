@@ -2,6 +2,13 @@
 
 use ibig::UBig;
 
+/// `2^k` as a `UBig`.
+fn pow2(k: usize) -> UBig {
+    let mut bytes = vec![0u8; k / 8 + 1];
+    bytes[k / 8] = 1u8 << (k % 8);
+    UBig::from_le_bytes(&bytes)
+}
+
 #[test]
 fn bit_width() {
     assert_eq!(UBig::ZERO.bit_width(), 0);
@@ -115,4 +122,42 @@ fn is_power_of_two() {
     assert!(UBig::from(1u128 << 100).is_power_of_two());
     assert!(!UBig::from(3u128 << 100).is_power_of_two());
     assert!(!UBig::from(u128::MAX).is_power_of_two());
+}
+
+#[test]
+fn next_power_of_two() {
+    assert_eq!(UBig::ZERO.next_power_of_two(), UBig::from(1u8));
+    assert_eq!(UBig::from(1u8).next_power_of_two(), UBig::from(1u8));
+    assert_eq!(UBig::from(5u8).next_power_of_two(), UBig::from(8u8));
+    assert_eq!(UBig::from(8u8).next_power_of_two(), UBig::from(8u8));
+    // A digit with the high bit set rounds up past the digit width (fast-path overflow on
+    // 64-bit, where `u64::MAX` is a single digit).
+    assert_eq!(
+        UBig::from(u64::MAX).next_power_of_two(),
+        UBig::from(1u128 << 64)
+    );
+    // Multi-digit and growing past the current width.
+    assert_eq!(
+        UBig::from((1u128 << 100) + 1).next_power_of_two(),
+        UBig::from(1u128 << 101)
+    );
+    // u128::MAX rounds up to 2^128 (a single bit one byte above u128).
+    let mut bytes = [0u8; 17];
+    bytes[16] = 1;
+    assert_eq!(
+        UBig::from(u128::MAX).next_power_of_two(),
+        UBig::from_le_bytes(&bytes)
+    );
+
+    // Large exact powers of two round up to themselves; one more rounds to the next power.
+    for k in [63usize, 64, 127, 128, 200, 255, 256, 500] {
+        assert_eq!(pow2(k).next_power_of_two(), pow2(k));
+        let mut above = pow2(k); // 2^k + 1 (bit 0 is clear for k > 0)
+        above.set_bit(0, true);
+        assert_eq!(above.next_power_of_two(), pow2(k + 1));
+    }
+
+    // The consuming variant agrees.
+    let n = UBig::from(5u8);
+    assert_eq!(n.clone().into_next_power_of_two(), n.next_power_of_two());
 }

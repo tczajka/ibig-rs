@@ -2,7 +2,7 @@
 
 use core::mem;
 
-use crate::{DIGIT_BITS_USIZE, IBig};
+use crate::{DIGIT_BITS_USIZE, IBig, UBig};
 use ibig_core::{Digit, SignedDigit};
 
 impl IBig {
@@ -158,6 +158,40 @@ impl IBig {
                 let digits = self.as_digits();
                 !ibig_core::is_negative(digits) && ibig_core::is_power_of_two(digits)
             }
+        }
+    }
+
+    /// Returns the smallest power of two greater than or equal to the value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(5i8).next_power_of_two(), IBig::from(8i8));
+    /// assert_eq!(IBig::from(16i8).next_power_of_two(), IBig::from(16i8));
+    /// assert_eq!(IBig::from(-5i8).next_power_of_two(), IBig::from(1i8));
+    /// assert_eq!(IBig::ZERO.next_power_of_two(), IBig::from(1i8));
+    /// ```
+    pub fn next_power_of_two(&self) -> IBig {
+        self.clone().into_next_power_of_two()
+    }
+
+    /// Consumes the value and returns the smallest power of two greater than or equal to it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(5i8).into_next_power_of_two(), IBig::from(8i8));
+    /// assert_eq!(IBig::from(16i8).into_next_power_of_two(), IBig::from(16i8));
+    /// assert_eq!(IBig::from(-5i8).into_next_power_of_two(), IBig::from(1i8));
+    /// assert_eq!(IBig::ZERO.into_next_power_of_two(), IBig::from(1i8));
+    /// ```
+    pub fn into_next_power_of_two(self) -> IBig {
+        match UBig::try_from(self) {
+            Ok(value) => IBig::from(value.into_next_power_of_two()),
+            // A negative value.
+            Err(_) => IBig::from(1i8),
         }
     }
 }

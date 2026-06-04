@@ -160,4 +160,46 @@ impl UBig {
             None => ibig_core::is_power_of_two(self.as_digits()),
         }
     }
+
+    /// Returns the smallest power of two greater than or equal to the value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(5u8).next_power_of_two(), UBig::from(8u8));
+    /// assert_eq!(UBig::from(8u8).next_power_of_two(), UBig::from(8u8));
+    /// assert_eq!(UBig::ZERO.next_power_of_two(), UBig::from(1u8));
+    /// ```
+    pub fn next_power_of_two(&self) -> UBig {
+        self.clone().into_next_power_of_two()
+    }
+
+    /// Consumes the value and returns the smallest power of two greater than or equal to it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(5u8).into_next_power_of_two(), UBig::from(8u8));
+    /// assert_eq!(UBig::from(8u8).into_next_power_of_two(), UBig::from(8u8));
+    /// assert_eq!(UBig::ZERO.into_next_power_of_two(), UBig::from(1u8));
+    /// ```
+    pub fn into_next_power_of_two(self) -> UBig {
+        // Fast path: a single digit.
+        if let Some(digit) = self.try_to_digit() {
+            return match digit.checked_next_power_of_two() {
+                Some(power) => UBig::from_digit(power),
+                None => UBig::const_from_digits(&[Digit::ZERO, Digit::from_u8(1)]),
+            };
+        }
+
+        // Slow path: multiple digits.
+        let mut digits = self.into_digits();
+        if ibig_core::next_power_of_two_in_place(&mut digits) {
+            // Overflow.
+            digits.push(Digit::from_u8(1));
+        }
+        UBig::from_digits(digits)
+    }
 }
