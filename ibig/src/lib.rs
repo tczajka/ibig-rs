@@ -13,6 +13,7 @@ mod error;
 mod ibig;
 mod macros;
 mod repr;
+mod sign;
 mod ubig;
 
 #[cfg(test)]
