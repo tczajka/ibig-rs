@@ -10,13 +10,12 @@ pub use repr::{IBig, UBig};
 mod bits;
 mod bitwise;
 mod bytes;
+mod convert;
 mod error;
-mod ibig;
 mod macros;
 mod misc;
 mod repr;
 mod sign;
-mod ubig;
 
 #[cfg(test)]
 mod tests;

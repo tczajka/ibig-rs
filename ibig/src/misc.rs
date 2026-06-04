@@ -1,6 +1,17 @@
-//! Miscellaneous standard trait implementations for [`UBig`] and [`IBig`].
+//! Miscellaneous functionality.
 
 use crate::{IBig, UBig};
+use ibig_core::{Digit, SignedDigit};
+
+impl UBig {
+    /// The number zero.
+    pub const ZERO: UBig = UBig::from_digit(Digit::ZERO);
+}
+
+impl IBig {
+    /// The number zero.
+    pub const ZERO: IBig = IBig::from_digit(SignedDigit::ZERO);
+}
 
 /// The default value is zero.
 impl Default for UBig {
