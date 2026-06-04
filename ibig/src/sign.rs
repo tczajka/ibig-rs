@@ -1,6 +1,7 @@
 //! Sign operations on [`IBig`].
 
 use crate::IBig;
+use crate::repr::AsDigits;
 
 impl IBig {
     /// Returns `true` if the number is negative (less than zero).

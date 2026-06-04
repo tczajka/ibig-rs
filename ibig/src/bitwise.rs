@@ -2,6 +2,7 @@
 
 use crate::UBig;
 use crate::macros::forward_commutative_ref_val;
+use crate::repr::AsDigits;
 use core::ops::BitAnd;
 
 impl BitAnd<UBig> for UBig {

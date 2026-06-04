@@ -1,6 +1,6 @@
 //! Tests of the `UBig` and `IBig` internal representations.
 
-use crate::repr::Digits;
+use crate::repr::{AsDigits, Digits};
 use crate::{IBig, UBig};
 use ibig_core::{Digit, SignedDigit};
 use smallvec::{SmallVec, smallvec};

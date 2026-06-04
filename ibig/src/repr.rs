@@ -88,28 +88,6 @@ impl UBig {
         }
         UBig(digits)
     }
-
-    /// The value as a single digit, if it fits in one.
-    #[inline]
-    pub(crate) fn try_to_digit(&self) -> Option<Digit> {
-        if !self.0.spilled() && self.0.len() == 1 {
-            Some(self.0[0])
-        } else {
-            None
-        }
-    }
-
-    /// The little-endian digits, by reference.
-    #[inline]
-    pub(crate) fn as_digits(&self) -> &[Digit] {
-        &self.0
-    }
-
-    /// Consume into the little-endian digits.
-    #[inline]
-    pub(crate) fn into_digits(self) -> Digits {
-        self.0
-    }
 }
 
 /// Signed big integer.
@@ -174,10 +152,51 @@ impl IBig {
         }
         IBig(digits)
     }
+}
 
-    /// The value as a single signed digit, if it fits in one.
+/// Access to the digit representation.
+pub(crate) trait AsDigits: Sized {
+    /// The single-digit type.
+    type SingleDigit;
+
+    /// The value as a single digit, if it fits in one.
+    fn try_to_digit(&self) -> Option<Self::SingleDigit>;
+
+    /// The little-endian digits, by reference.
+    fn as_digits(&self) -> &[Digit];
+
+    /// Consume into the little-endian digits.
+    fn into_digits(self) -> Digits;
+}
+
+impl AsDigits for UBig {
+    type SingleDigit = Digit;
+
     #[inline]
-    pub(crate) fn try_to_digit(&self) -> Option<SignedDigit> {
+    fn try_to_digit(&self) -> Option<Digit> {
+        if !self.0.spilled() && self.0.len() == 1 {
+            Some(self.0[0])
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn as_digits(&self) -> &[Digit] {
+        &self.0
+    }
+
+    #[inline]
+    fn into_digits(self) -> Digits {
+        self.0
+    }
+}
+
+impl AsDigits for IBig {
+    type SingleDigit = SignedDigit;
+
+    #[inline]
+    fn try_to_digit(&self) -> Option<SignedDigit> {
         if !self.0.spilled() && self.0.len() == 1 {
             Some(self.0[0].cast_signed())
         } else {
@@ -185,15 +204,13 @@ impl IBig {
         }
     }
 
-    /// The little-endian digits of the two's complement representation, by reference.
     #[inline]
-    pub(crate) fn as_digits(&self) -> &[Digit] {
+    fn as_digits(&self) -> &[Digit] {
         &self.0
     }
 
-    /// Consume into the little-endian digits of the two's complement representation.
     #[inline]
-    pub(crate) fn into_digits(self) -> Digits {
+    fn into_digits(self) -> Digits {
         self.0
     }
 }

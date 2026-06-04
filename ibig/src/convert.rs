@@ -1,5 +1,6 @@
 //! Conversions to and from [`UBig`] and [`IBig`].
 
+use crate::repr::AsDigits;
 use crate::{IBig, TryFromBigError, UBig};
 use core::num::TryFromIntError;
 use ibig_core::{Digit, SignedDigit};
