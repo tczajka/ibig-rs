@@ -6,14 +6,16 @@
 #![no_std]
 
 mod bits;
+mod bitwise;
 mod bytes;
 mod len;
 mod sign;
 
 pub use bits::{
-    and_same_len_in_place, bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place,
-    set_bit, trailing_ones, trailing_zeros,
+    bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place, set_bit,
+    trailing_ones, trailing_zeros,
 };
+pub use bitwise::and_same_len_in_place;
 pub use bytes::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
 };

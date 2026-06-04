@@ -13,6 +13,7 @@ pub use ubig::UBig;
 
 mod error;
 mod ibig;
+mod macros;
 mod ubig;
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.

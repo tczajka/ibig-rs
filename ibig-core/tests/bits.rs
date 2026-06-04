@@ -1,8 +1,8 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    Digit, and_same_len_in_place, bit, bit_signed, bit_width, is_power_of_two,
-    next_power_of_two_in_place, trailing_ones, trailing_zeros,
+    Digit, bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place, trailing_ones,
+    trailing_zeros,
 };
 
 fn digit(n: u8) -> Digit {
@@ -191,22 +191,4 @@ fn test_next_power_of_two_in_place() {
     let mut d = [digit(1), high_bit]; // 2^(2*BITS - 1) + 1
     assert!(next_power_of_two_in_place(&mut d));
     assert_eq!(d, [digit(0), digit(0)]);
-}
-
-#[test]
-fn test_and_same_len_in_place() {
-    let mut a = [digit(0b1100), Digit::MAX, digit(0)];
-    and_same_len_in_place(&mut a, &[digit(0b1010), digit(0b1111), Digit::MAX]);
-    assert_eq!(a, [digit(0b1000), digit(0b1111), digit(0)]);
-
-    // Empty slices are allowed.
-    let mut a: [Digit; 0] = [];
-    and_same_len_in_place(&mut a, &[]);
-    assert_eq!(a, []);
-}
-
-#[test]
-#[should_panic]
-fn test_and_same_len_in_place_mismatched() {
-    and_same_len_in_place(&mut [Digit::ZERO], &[Digit::ZERO, Digit::ZERO]);
 }
