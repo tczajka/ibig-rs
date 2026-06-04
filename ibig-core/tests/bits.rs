@@ -1,6 +1,8 @@
 //! Integration tests for bit operations.
 
-use ibig_core::{Digit, bit, bit_signed, bit_width, trailing_ones, trailing_zeros};
+use ibig_core::{
+    Digit, bit, bit_signed, bit_width, is_power_of_two, trailing_ones, trailing_zeros,
+};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
@@ -107,4 +109,25 @@ fn test_trailing_ones() {
     // All ones: the full width.
     assert_eq!(trailing_ones(&[]), 0);
     assert_eq!(trailing_ones(&[Digit::MAX, Digit::MAX]), 2 * BITS);
+}
+
+#[test]
+fn test_is_power_of_two() {
+    // Zero and all-zero slices are not powers of two.
+    assert!(!is_power_of_two(&[]));
+    assert!(!is_power_of_two(&[digit(0)]));
+    assert!(!is_power_of_two(&[digit(0), digit(0)]));
+    // Single-digit powers of two and non-powers.
+    assert!(is_power_of_two(&[digit(1)]));
+    assert!(is_power_of_two(&[digit(8)]));
+    assert!(!is_power_of_two(&[digit(6)]));
+    assert!(!is_power_of_two(&[Digit::MAX]));
+    // The high bit of a digit is a power of two.
+    assert!(is_power_of_two(&[Digit::MAX / digit(2) + digit(1)]));
+    // A single set bit in a higher digit (lower digits zero).
+    assert!(is_power_of_two(&[digit(0), digit(0), digit(4)]));
+    // More than one set bit, across digits or within one.
+    assert!(!is_power_of_two(&[digit(1), digit(1)]));
+    assert!(!is_power_of_two(&[digit(0), digit(3)]));
+    assert!(!is_power_of_two(&[digit(1), digit(0), digit(4)]));
 }

@@ -174,6 +174,32 @@ pub fn trailing_ones(digits: &[Digit]) -> usize {
     }
 }
 
+/// Returns `true` if the unsigned value held in the little-endian `digits` is a power of two,
+/// i.e. exactly one bit is set. Returns `false` for zero.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, is_power_of_two};
+/// assert!(is_power_of_two(&[Digit::from(8u8)]));
+/// assert!(!is_power_of_two(&[Digit::from(6u8)]));
+/// assert!(!is_power_of_two(&[Digit::ZERO]));
+/// assert!(is_power_of_two(&[Digit::ZERO, Digit::from(4u8)]));
+/// assert!(!is_power_of_two(&[Digit::from(1u8), Digit::from(1u8)]));
+/// ```
+pub fn is_power_of_two(digits: &[Digit]) -> bool {
+    let mut found = false;
+    for &digit in digits {
+        if digit != Digit::ZERO {
+            if found || !digit.is_power_of_two() {
+                return false;
+            }
+            found = true;
+        }
+    }
+    found
+}
+
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
 fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO
