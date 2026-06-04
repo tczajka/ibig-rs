@@ -2,4 +2,3 @@
 
 mod bitwise;
 mod convert;
-mod misc;

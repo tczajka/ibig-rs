@@ -12,6 +12,7 @@ mod bytes;
 mod error;
 mod ibig;
 mod macros;
+mod misc;
 mod repr;
 mod sign;
 mod ubig;
