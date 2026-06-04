@@ -1,11 +1,35 @@
-//! Bitwise operators for [`UBig`].
+//! Bitwise operators for [`UBig`] and [`IBig`].
 
-use core::ops::{BitAnd, BitAndAssign};
-
-use crate::UBig;
-use crate::ops::{CommutativeBinaryOpDigits, impl_binary_operator};
+use crate::ops::{
+    CommutativeBinaryOpDigits, UnaryOpDigits, impl_binary_operator, impl_unary_operator,
+};
 use crate::repr::Digits;
-use ibig_core::Digit;
+use crate::{IBig, UBig};
+use core::ops::{BitAnd, BitAndAssign, Not};
+use ibig_core::{Digit, SignedDigit};
+
+/// Bitwise NOT operation.
+enum NotOperation {}
+
+impl UnaryOpDigits<IBig> for NotOperation {
+    #[inline]
+    fn apply_digit(operand: SignedDigit) -> IBig {
+        IBig::from_digit(!operand)
+    }
+
+    #[inline]
+    fn apply_ref(operand: &[Digit]) -> IBig {
+        Self::apply_val(Digits::from_slice(operand))
+    }
+
+    #[inline]
+    fn apply_val(mut operand: Digits) -> IBig {
+        ibig_core::not(&mut operand);
+        IBig::from_digits(operand)
+    }
+}
+
+impl_unary_operator!(IBig, Not::not, NotOperation);
 
 /// Bitwise AND operation.
 enum BitAndOperation {}

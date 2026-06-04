@@ -1,6 +1,38 @@
-//! Integration tests for `UBig` bitwise operators.
+//! Integration tests for `UBig` and `IBig` bitwise operators.
 
-use ibig::UBig;
+use ibig::{IBig, UBig};
+
+#[test]
+fn not() {
+    // `!x == -x - 1`, so for any primitive `v`, `!IBig::from(v) == IBig::from(!v)`.
+    let cases = [
+        // Single-digit fast path (both signs, and the extremes that flip into each other).
+        0i128,
+        1,
+        -1,
+        2,
+        -2,
+        5,
+        -6,
+        0xff,
+        -0x100,
+        i64::MAX as i128,
+        i64::MIN as i128,
+        // Multi-digit (spans multiple digits at every word size).
+        1 << 100,
+        -1 << 100,
+        (1 << 100) + 12345,
+        i128::MIN,
+        i128::MAX,
+    ];
+
+    for v in cases {
+        let x = IBig::from(v);
+        let expected = IBig::from(!v);
+        assert_eq!(!&x, expected);
+        assert_eq!(!x, expected);
+    }
+}
 
 #[test]
 fn bitand() {
