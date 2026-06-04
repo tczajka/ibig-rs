@@ -1,6 +1,6 @@
 //! Integration tests for bit operations.
 
-use ibig_core::{Digit, bit, bit_signed, bit_width};
+use ibig_core::{Digit, bit, bit_signed, bit_width, trailing_ones, trailing_zeros};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
@@ -79,4 +79,32 @@ fn test_bit_signed() {
 #[should_panic]
 fn test_bit_signed_empty() {
     bit_signed(&[], 0);
+}
+
+#[test]
+fn test_trailing_zeros() {
+    // Within the low digit.
+    assert_eq!(trailing_zeros(&[digit(0b1100)]), 2);
+    assert_eq!(trailing_zeros(&[digit(1)]), 0);
+    assert_eq!(trailing_zeros(&[Digit::MAX]), 0);
+    // A zero low digit contributes a full digit, then count into the next.
+    assert_eq!(trailing_zeros(&[digit(0), digit(0b100)]), BITS + 2);
+    assert_eq!(trailing_zeros(&[digit(0), digit(0), digit(1)]), 2 * BITS);
+    // All zeros (the value zero): the full width.
+    assert_eq!(trailing_zeros(&[]), 0);
+    assert_eq!(trailing_zeros(&[digit(0), digit(0)]), 2 * BITS);
+}
+
+#[test]
+fn test_trailing_ones() {
+    // Within the low digit.
+    assert_eq!(trailing_ones(&[digit(0b1011)]), 2);
+    assert_eq!(trailing_ones(&[digit(0)]), 0);
+    assert_eq!(trailing_ones(&[Digit::MAX]), BITS);
+    // An all-ones low digit contributes a full digit, then count into the next.
+    assert_eq!(trailing_ones(&[Digit::MAX, digit(0b1011)]), BITS + 2);
+    assert_eq!(trailing_ones(&[Digit::MAX, Digit::MAX, digit(0)]), 2 * BITS);
+    // All ones: the full width.
+    assert_eq!(trailing_ones(&[]), 0);
+    assert_eq!(trailing_ones(&[Digit::MAX, Digit::MAX]), 2 * BITS);
 }

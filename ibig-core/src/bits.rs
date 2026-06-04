@@ -108,6 +108,72 @@ pub fn set_bit(digits: &mut [Digit], position: usize, value: bool) {
     }
 }
 
+/// Returns the number of trailing zero bits of the unsigned value held in the little-endian
+/// `digits`.
+///
+/// # Overflow
+///
+/// For extremely long slices, the result may overflow `usize` (panics in debug builds, wraps in
+/// release builds).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, trailing_zeros};
+/// assert_eq!(trailing_zeros(&[Digit::from(0b1100u8)]), 2);
+/// assert_eq!(trailing_zeros(&[Digit::from(1u8)]), 0);
+/// assert_eq!(
+///     trailing_zeros(&[Digit::ZERO, Digit::from(1u8)]),
+///     usize::try_from(Digit::BITS).unwrap());
+/// assert_eq!(
+///     trailing_zeros(&[Digit::ZERO, Digit::ZERO]),
+///     2 * usize::try_from(Digit::BITS).unwrap());
+/// ```
+pub fn trailing_zeros(digits: &[Digit]) -> usize {
+    match digits
+        .iter()
+        .enumerate()
+        .find(|&(_, &digit)| digit != Digit::ZERO)
+    {
+        Some((i, &digit)) => {
+            i * DIGIT_BITS_USIZE + usize::try_from(digit.trailing_zeros()).unwrap()
+        }
+        None => digits.len() * DIGIT_BITS_USIZE,
+    }
+}
+
+/// Returns the number of trailing one bits of the unsigned value held in the little-endian
+/// `digits`.
+///
+/// # Overflow
+///
+/// For extremely long slices, the result may overflow `usize` (panics in debug builds, wraps in
+/// release builds).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, trailing_ones};
+/// assert_eq!(trailing_ones(&[Digit::from(0b1011u8)]), 2);
+/// assert_eq!(trailing_ones(&[Digit::ZERO]), 0);
+/// assert_eq!(
+///     trailing_ones(&[Digit::MAX, Digit::from(0b10u8)]),
+///     usize::try_from(Digit::BITS).unwrap());
+/// assert_eq!(
+///     trailing_ones(&[Digit::MAX, Digit::MAX]),
+///     2 * usize::try_from(Digit::BITS).unwrap());
+/// ```
+pub fn trailing_ones(digits: &[Digit]) -> usize {
+    match digits
+        .iter()
+        .enumerate()
+        .find(|&(_, &digit)| digit != Digit::MAX)
+    {
+        Some((i, &digit)) => i * DIGIT_BITS_USIZE + usize::try_from(digit.trailing_ones()).unwrap(),
+        None => digits.len() * DIGIT_BITS_USIZE,
+    }
+}
+
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
 fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO
