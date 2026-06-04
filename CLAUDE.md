@@ -53,8 +53,11 @@ Always consider whether a change behaves correctly at all three word sizes, sinc
 
 ### Number representation (`ibig`)
 
-- `UBig` (`src/ubig.rs`) wraps a private `Repr` enum: `Small(Digit)` for single-digit values, `Large(Vec<Digit>)` otherwise. The representation is **canonical** — every value has exactly one representation, so derived `Eq`/`Hash` are correct. `Large` invariants: length ≥ 2, no leading zero digit. Construct via `from_digits`, which normalizes (strips leading zeros, collapses to `Small`, shrinks heavily over-allocated buffers) — preserve these invariants when building a `Large` directly. Access the representation with `repr()` / `into_repr()`.
-- `Digit` (`ibig-core`) is the architecture's native unsigned integer (`UNative`, 16/32/64 bits); numbers are little-endian `Digit` slices.
+- `UBig` (`src/ubig/repr.rs`) and `IBig` (`src/ibig/repr.rs`) each wrap a private `Digits` — a `SmallVec<[Digit; INLINE_DIGITS]>` (`INLINE_DIGITS = 4`, in `src/lib.rs`) holding the little-endian digits inline up to 4 digits and spilling to the heap beyond that.
+- The representation is **canonical** — every value has exactly one representation, so derived `Eq`/`Hash` are correct. The buffer is never empty (zero is the single digit `[0]`); for `UBig` the most-significant digit is nonzero (except zero), and for `IBig` the digits are two's complement with a most-significant digit that is not a redundant sign-extension of the one below it (the sign lives in its top bit).
+- Construct via `from_digits`, which normalizes (trims to the canonical length, keeps small values inline, shrinks heavily over-allocated heap buffers) — preserve these invariants when building `Digits` directly. `from_digit` / `const_from_digits` build small values (usable in `const`). Read the digits with `as_digits()` (`&[Digit]`) or `into_digits()` (owned `Digits`); `try_to_digit()` returns the value as a single `Digit`/`SignedDigit` when it fits, which is the basis of the single-digit fast path.
+- The digit count is capped at `MAX_DIGITS` (chosen so the total bit length fits in `usize`); `from_digits` panics beyond it.
+- `Digit` (`ibig-core`) is the architecture's native unsigned integer (`UNative`, 16/32/64 bits) and `SignedDigit` is its signed counterpart (`INative`); numbers are little-endian `Digit` slices.
 
 ### Core algorithms (`ibig-core`)
 
