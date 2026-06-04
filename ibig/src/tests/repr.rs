@@ -5,11 +5,11 @@ use crate::{IBig, UBig};
 use ibig_core::{Digit, SignedDigit};
 use smallvec::{SmallVec, smallvec};
 
-fn digit(n: u8) -> Digit {
+const fn digit(n: u8) -> Digit {
     Digit::from(n)
 }
 
-fn signed(n: i8) -> SignedDigit {
+const fn signed(n: i8) -> SignedDigit {
     SignedDigit::from(n)
 }
 
@@ -19,6 +19,37 @@ fn ubig_from_digit() {
     assert_eq!(UBig::from_digit(Digit::ZERO).as_digits(), &[Digit::ZERO]);
     assert_eq!(UBig::from_digit(digit(42)).as_digits(), &[digit(42)]);
     assert!(!UBig::from_digit(digit(42)).into_digits().spilled());
+}
+
+#[test]
+fn ubig_const_from_digits() {
+    // Usable in a `const` context.
+    const FIVE: UBig = UBig::const_from_digits(&[digit(5)]);
+    assert_eq!(FIVE.as_digits(), &[digit(5)]);
+
+    // An empty slice normalizes to the single digit `[0]`.
+    assert_eq!(UBig::const_from_digits(&[]).as_digits(), &[Digit::ZERO]);
+    // An all-zero slice also normalizes to `[0]`.
+    assert_eq!(
+        UBig::const_from_digits(&[Digit::ZERO, Digit::ZERO]).as_digits(),
+        &[Digit::ZERO]
+    );
+    // Most-significant zero digits are stripped.
+    assert_eq!(
+        UBig::const_from_digits(&[digit(7), Digit::ZERO]).as_digits(),
+        &[digit(7)]
+    );
+    // A full `INLINE_DIGITS`-length slice is kept verbatim and stays inline.
+    const FULL: UBig = UBig::const_from_digits(&[digit(1), digit(2), digit(3), digit(4)]);
+    assert_eq!(FULL.as_digits(), &[digit(1), digit(2), digit(3), digit(4)]);
+    assert!(!FULL.into_digits().spilled());
+}
+
+#[test]
+#[should_panic]
+fn ubig_const_from_digits_panics_when_too_long() {
+    // More than `INLINE_DIGITS` (= 4) digits cannot be stored inline.
+    UBig::const_from_digits(&[digit(1), digit(2), digit(3), digit(4), digit(5)]);
 }
 
 #[test]
@@ -87,6 +118,51 @@ fn ibig_from_digit() {
     // -1 is all-ones in two's complement.
     assert_eq!(IBig::from_digit(signed(-1)).as_digits(), &[Digit::MAX]);
     assert!(!IBig::from_digit(signed(-1)).into_digits().spilled());
+}
+
+#[test]
+fn ibig_const_from_digits() {
+    // Usable in a `const` context.
+    const FIVE: IBig = IBig::const_from_digits(&[digit(5)]);
+    assert_eq!(FIVE.as_digits(), &[digit(5)]);
+
+    // A single two's complement digit is kept as-is, positive or negative.
+    assert_eq!(
+        IBig::const_from_digits(&[digit(42)]).as_digits(),
+        &[digit(42)]
+    );
+    assert_eq!(
+        IBig::const_from_digits(&[Digit::MAX]).as_digits(),
+        &[Digit::MAX]
+    );
+    // A redundant zero sign-extension above a non-negative digit is stripped.
+    assert_eq!(
+        IBig::const_from_digits(&[digit(5), digit(0)]).as_digits(),
+        &[digit(5)]
+    );
+    // An all-ones sign-extension above a negative digit is stripped.
+    assert_eq!(
+        IBig::const_from_digits(&[Digit::MAX, Digit::MAX]).as_digits(),
+        &[Digit::MAX]
+    );
+    // A leading zero digit needed to keep `2^W - 1` positive is preserved.
+    assert_eq!(
+        IBig::const_from_digits(&[Digit::MAX, digit(0)]).as_digits(),
+        &[Digit::MAX, digit(0)]
+    );
+}
+
+#[test]
+#[should_panic]
+fn ibig_const_from_digits_panics_on_empty() {
+    IBig::const_from_digits(&[]);
+}
+
+#[test]
+#[should_panic]
+fn ibig_const_from_digits_panics_when_too_long() {
+    // More than `INLINE_DIGITS` (= 4) digits cannot be stored inline.
+    IBig::const_from_digits(&[digit(1), digit(2), digit(3), digit(4), digit(5)]);
 }
 
 #[test]
