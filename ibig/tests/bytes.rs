@@ -5,7 +5,7 @@ use ibig::{IBig, UBig};
 /// Little-endian byte sequences that are already normalized (no most-significant zero
 /// byte), chosen to exercise sub-digit, single-digit and multi-digit values at every digit
 /// width.
-fn ubig_normalized_le() -> Vec<Vec<u8>> {
+fn ubig_canonical_le() -> Vec<Vec<u8>> {
     vec![
         vec![1],
         vec![0xff],
@@ -15,58 +15,6 @@ fn ubig_normalized_le() -> Vec<Vec<u8>> {
         vec![1, 0, 0, 0, 0, 0, 0, 0, 2], // spans more than one 64-bit digit
         (1..=121).collect(),
     ]
-}
-
-#[test]
-fn ubig_zero() {
-    assert_eq!(UBig::from_le_bytes(&[]), UBig::ZERO);
-    assert_eq!(UBig::from_le_bytes(&[0, 0, 0]), UBig::ZERO);
-    assert_eq!(UBig::from_be_bytes(&[]), UBig::ZERO);
-    assert_eq!(UBig::from_be_bytes(&[0, 0, 0]), UBig::ZERO);
-    assert_eq!(UBig::ZERO.to_le_bytes(), []);
-    assert_eq!(UBig::ZERO.to_be_bytes(), []);
-}
-
-#[test]
-fn ubig_le_round_trip() {
-    for bytes in ubig_normalized_le() {
-        assert_eq!(UBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
-    }
-}
-
-#[test]
-fn ubig_be_round_trip() {
-    for le in ubig_normalized_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        assert_eq!(UBig::from_be_bytes(&be).to_be_bytes(), be);
-    }
-}
-
-#[test]
-fn ubig_le_normalizes_trailing_zeros() {
-    assert_eq!(UBig::from_le_bytes(&[5, 0, 0]).to_le_bytes(), [5]);
-    assert_eq!(UBig::from_le_bytes(&[1, 2, 0, 0, 0]).to_le_bytes(), [1, 2]);
-}
-
-#[test]
-fn ubig_be_normalizes_leading_zeros() {
-    assert_eq!(UBig::from_be_bytes(&[0, 0, 5]).to_be_bytes(), [5]);
-    assert_eq!(UBig::from_be_bytes(&[0, 0, 0, 1, 2]).to_be_bytes(), [1, 2]);
-}
-
-#[test]
-fn ubig_le_be_agree() {
-    for le in ubig_normalized_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        // Same magnitude whether read little-endian or as the reversed big-endian bytes.
-        assert_eq!(UBig::from_le_bytes(&le), UBig::from_be_bytes(&be));
-
-        // `to_be_bytes` is `to_le_bytes` reversed.
-        let n = UBig::from_le_bytes(&le);
-        let mut le_reversed = n.to_le_bytes();
-        le_reversed.reverse();
-        assert_eq!(n.to_be_bytes(), le_reversed);
-    }
 }
 
 /// Little-endian two's complement byte sequences that are already canonical (no redundant
@@ -88,6 +36,29 @@ fn ibig_canonical_le() -> Vec<Vec<u8>> {
 }
 
 #[test]
+fn ubig_zero() {
+    assert_eq!(UBig::from_le_bytes(&[]), UBig::ZERO);
+    assert_eq!(UBig::from_le_bytes(&[0, 0, 0]), UBig::ZERO);
+    assert_eq!(UBig::from_be_bytes(&[]), UBig::ZERO);
+    assert_eq!(UBig::from_be_bytes(&[0, 0, 0]), UBig::ZERO);
+    assert_eq!(UBig::ZERO.to_le_bytes(), []);
+    assert_eq!(UBig::ZERO.to_be_bytes(), []);
+}
+
+#[test]
+fn ubig_le_round_trip() {
+    for bytes in ubig_canonical_le() {
+        assert_eq!(UBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
+    }
+}
+
+#[test]
+fn ubig_le_normalizes_trailing_zeros() {
+    assert_eq!(UBig::from_le_bytes(&[5, 0, 0]).to_le_bytes(), [5]);
+    assert_eq!(UBig::from_le_bytes(&[1, 2, 0, 0, 0]).to_le_bytes(), [1, 2]);
+}
+
+#[test]
 fn ibig_le_round_trip() {
     for bytes in ibig_canonical_le() {
         assert_eq!(IBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
@@ -95,10 +66,39 @@ fn ibig_le_round_trip() {
 }
 
 #[test]
+fn ubig_be_round_trip() {
+    for le in ubig_canonical_le() {
+        let be: Vec<u8> = le.iter().rev().copied().collect();
+        assert_eq!(UBig::from_be_bytes(&be).to_be_bytes(), be);
+    }
+}
+
+#[test]
+fn ubig_be_normalizes_leading_zeros() {
+    assert_eq!(UBig::from_be_bytes(&[0, 0, 5]).to_be_bytes(), [5]);
+    assert_eq!(UBig::from_be_bytes(&[0, 0, 0, 1, 2]).to_be_bytes(), [1, 2]);
+}
+
+#[test]
 fn ibig_be_round_trip() {
     for le in ibig_canonical_le() {
         let be: Vec<u8> = le.iter().rev().copied().collect();
         assert_eq!(IBig::from_be_bytes(&be).to_be_bytes(), be);
+    }
+}
+
+#[test]
+fn ubig_le_be_agree() {
+    for le in ubig_canonical_le() {
+        let be: Vec<u8> = le.iter().rev().copied().collect();
+        // Same magnitude whether read little-endian or as the reversed big-endian bytes.
+        assert_eq!(UBig::from_le_bytes(&le), UBig::from_be_bytes(&be));
+
+        // `to_be_bytes` is `to_le_bytes` reversed.
+        let n = UBig::from_le_bytes(&le);
+        let mut le_reversed = n.to_le_bytes();
+        le_reversed.reverse();
+        assert_eq!(n.to_be_bytes(), le_reversed);
     }
 }
 
