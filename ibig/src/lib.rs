@@ -7,6 +7,9 @@ extern crate alloc;
 pub use error::TryFromBigError;
 pub use repr::{IBig, UBig};
 
+#[cfg(feature = "proptest")]
+pub mod proptest;
+
 mod bits;
 mod bitwise;
 mod bytes;

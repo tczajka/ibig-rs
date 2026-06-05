@@ -20,3 +20,13 @@ include = [
 [dependencies]
 ibig-core = { version = "0.0.1", path = "../ibig-core" }
 smallvec = { version = "1.15", features = ["union", "const_generics", "const_new"] }
+proptest = { version = "1.6", optional = true }
+unative = { version = "0.2.6", optional = true }
+
+[features]
+# Includes `proptest` support.
+proptest = ["dep:proptest", "unative/proptest"]
+
+[dev-dependencies]
+# Enable the `proptest` feature whenever this crate's own tests are built.
+ibig = { path = ".", features = ["proptest"] }
