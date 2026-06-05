@@ -83,3 +83,25 @@ pub fn bitxor_same_len(a: &mut [Digit], b: &[Digit]) {
         *x ^= y;
     }
 }
+
+/// Computes the bitwise AND-NOT (`a & !b`) of two equal-length digit slices, storing the
+/// result in `a`.
+///
+/// # Panics
+///
+/// Panics if `a` and `b` have different lengths.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, bitandnot_same_len};
+/// let mut a = [Digit::from(0b1100u8), Digit::MAX];
+/// bitandnot_same_len(&mut a, &[Digit::from(0b1010u8), Digit::from(0b11u8)]);
+/// assert_eq!(a, [Digit::from(0b0100u8), !Digit::from(0b11u8)]);
+/// ```
+pub fn bitandnot_same_len(a: &mut [Digit], b: &[Digit]) {
+    assert_eq!(a.len(), b.len());
+    for (x, &y) in a.iter_mut().zip(b) {
+        *x &= !y;
+    }
+}
