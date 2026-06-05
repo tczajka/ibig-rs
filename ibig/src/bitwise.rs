@@ -5,7 +5,7 @@ use crate::ops::{
 };
 use crate::repr::Digits;
 use crate::{IBig, UBig};
-use core::ops::{BitAnd, BitAndAssign, Not};
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 use ibig_core::{Digit, SignedDigit};
 
 /// Bitwise NOT operation.
@@ -171,4 +171,156 @@ impl_binary_operator!(
     BitAnd::bitand,
     BitAndAssign::bitand_assign,
     BitAndOperation
+);
+
+/// Bitwise OR operation.
+enum BitOrOperation {}
+
+impl CommutativeBinaryOpDigits<UBig> for BitOrOperation {
+    #[inline]
+    fn apply_digit_digit(lhs: Digit, rhs: Digit) -> UBig {
+        UBig::from_digit(lhs | rhs)
+    }
+
+    #[inline]
+    fn apply_ref_digit(lhs: &[Digit], rhs: Digit) -> UBig {
+        Self::apply_val_digit(Digits::from_slice(lhs), rhs)
+    }
+
+    #[inline]
+    fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
+        // OR with a single digit only touches the low digit; the high digits are kept.
+        lhs[0] |= rhs;
+        UBig::from_digits(lhs)
+    }
+
+    #[inline]
+    fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> UBig {
+        let (longer, shorter) = if lhs.len() >= rhs.len() {
+            (lhs, rhs)
+        } else {
+            (rhs, lhs)
+        };
+        Self::apply_val_ref(Digits::from_slice(longer), shorter)
+    }
+
+    #[inline]
+    fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
+        // The high digits of the longer operand are kept (OR with the zero-extension).
+        if lhs.len() >= rhs.len() {
+            ibig_core::bitor_same_len(&mut lhs[..rhs.len()], rhs);
+        } else {
+            let (rhs_low, rhs_high) = rhs.split_at(lhs.len());
+            ibig_core::bitor_same_len(&mut lhs, rhs_low);
+            lhs.extend_from_slice(rhs_high);
+        }
+        UBig::from_digits(lhs)
+    }
+
+    #[inline]
+    fn apply_val_val(lhs: Digits, rhs: Digits) -> UBig {
+        // Reuse storage from the longer operand.
+        if lhs.len() >= rhs.len() {
+            Self::apply_val_ref(lhs, &rhs)
+        } else {
+            Self::apply_val_ref(rhs, &lhs)
+        }
+    }
+}
+
+impl_binary_operator!(
+    UBig,
+    BitOr::bitor,
+    BitOrAssign::bitor_assign,
+    BitOrOperation
+);
+
+impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
+    #[inline]
+    fn apply_digit_digit(lhs: SignedDigit, rhs: SignedDigit) -> IBig {
+        IBig::from_digit(lhs | rhs)
+    }
+
+    #[inline]
+    fn apply_ref_digit(lhs: &[Digit], rhs: SignedDigit) -> IBig {
+        if rhs.is_negative() {
+            // OR with a negative value sets every high bit, collapsing to a single digit.
+            Self::apply_digit_digit(lhs[0].cast_signed(), rhs)
+        } else {
+            // High digits are preserved.
+            Self::apply_val_digit(Digits::from_slice(lhs), rhs)
+        }
+    }
+
+    #[inline]
+    fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
+        if rhs.is_negative() {
+            // OR with a negative value sets every high bit, collapsing to a single digit.
+            Self::apply_digit_digit(lhs[0].cast_signed(), rhs)
+        } else {
+            // High digits are preserved.
+            lhs[0] |= rhs.cast_unsigned();
+            IBig::from_digits(lhs)
+        }
+    }
+
+    #[inline]
+    fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
+        let (longer, shorter) = if lhs.len() >= rhs.len() {
+            (lhs, rhs)
+        } else {
+            (rhs, lhs)
+        };
+        if ibig_core::is_negative(shorter) {
+            // The high digits become redundant ones: the result has the shorter length.
+            Self::apply_val_ref(Digits::from_slice(shorter), longer)
+        } else {
+            // High digits are preserved: clone the longer operand.
+            Self::apply_val_ref(Digits::from_slice(longer), shorter)
+        }
+    }
+
+    #[inline]
+    fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
+        if lhs.len() >= rhs.len() {
+            if ibig_core::is_negative(rhs) {
+                // The shorter `rhs` is negative: its high digits are all ones, so they fill (and
+                // make redundant) the high digits of `lhs`.
+                lhs.truncate(rhs.len());
+            }
+            ibig_core::bitor_same_len(&mut lhs[..rhs.len()], rhs);
+        } else {
+            let (rhs_low, rhs_high) = rhs.split_at(lhs.len());
+            let lhs_negative = ibig_core::is_negative(&lhs);
+            ibig_core::bitor_same_len(&mut lhs, rhs_low);
+            if !lhs_negative {
+                // The shorter `lhs` is non-negative: keep the high digits from `rhs`.
+                lhs.extend_from_slice(rhs_high);
+            }
+        }
+        IBig::from_digits(lhs)
+    }
+
+    #[inline]
+    fn apply_val_val(lhs: Digits, rhs: Digits) -> IBig {
+        let (longer, shorter) = if lhs.len() >= rhs.len() {
+            (lhs, rhs)
+        } else {
+            (rhs, lhs)
+        };
+        if ibig_core::is_negative(&shorter) {
+            // The result has the shorter length: reuse the shorter operand.
+            Self::apply_val_ref(shorter, &longer)
+        } else {
+            // High digits are preserved: reuse the longer operand.
+            Self::apply_val_ref(longer, &shorter)
+        }
+    }
+}
+
+impl_binary_operator!(
+    IBig,
+    BitOr::bitor,
+    BitOrAssign::bitor_assign,
+    BitOrOperation
 );
