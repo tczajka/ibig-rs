@@ -20,6 +20,6 @@ include = [
 unative = "0.2.6"
 
 [dev-dependencies]
-proptest = "1.11"
+proptest = "1.6"
 # Enables proptest support for `unative`'s native integer types, used only in tests.
 unative = { version = "0.2.6", features = ["proptest"] }
