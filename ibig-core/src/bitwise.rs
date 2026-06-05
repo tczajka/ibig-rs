@@ -18,7 +18,7 @@ pub fn not(a: &mut [Digit]) {
     }
 }
 
-/// Computes the bitwise AND of two equal-length little-endian digit slices, storing the
+/// Computes the bitwise AND of two equal-length digit slices, storing the
 /// result in `a`.
 ///
 /// # Panics
@@ -37,5 +37,49 @@ pub fn bitand_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {
         *x &= y;
+    }
+}
+
+/// Computes the bitwise OR of two equal-length digit slices, storing the
+/// result in `a`.
+///
+/// # Panics
+///
+/// Panics if `a` and `b` have different lengths.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, bitor_same_len};
+/// let mut a = [Digit::from(0b1100u8), Digit::ZERO];
+/// bitor_same_len(&mut a, &[Digit::from(0b1010u8), Digit::MAX]);
+/// assert_eq!(a, [Digit::from(0b1110u8), Digit::MAX]);
+/// ```
+pub fn bitor_same_len(a: &mut [Digit], b: &[Digit]) {
+    assert_eq!(a.len(), b.len());
+    for (x, &y) in a.iter_mut().zip(b) {
+        *x |= y;
+    }
+}
+
+/// Computes the bitwise XOR of two equal-length digit slices, storing the
+/// result in `a`.
+///
+/// # Panics
+///
+/// Panics if `a` and `b` have different lengths.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, bitxor_same_len};
+/// let mut a = [Digit::from(0b1100u8), Digit::MAX];
+/// bitxor_same_len(&mut a, &[Digit::from(0b1010u8), Digit::MAX]);
+/// assert_eq!(a, [Digit::from(0b0110u8), Digit::ZERO]);
+/// ```
+pub fn bitxor_same_len(a: &mut [Digit], b: &[Digit]) {
+    assert_eq!(a.len(), b.len());
+    for (x, &y) in a.iter_mut().zip(b) {
+        *x ^= y;
     }
 }
