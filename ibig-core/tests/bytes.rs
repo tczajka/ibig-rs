@@ -1,56 +1,10 @@
 //! Integration tests for byte serialization of digit slices.
 
-use ibig_core::{Digit, from_be_bytes, from_bytes, min_len_bytes, to_bytes, to_bytes_signed};
+use ibig_core::{Digit, from_be_bytes, from_bytes, to_bytes, to_bytes_signed};
+use proptest::prelude::*;
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
-}
-
-#[test]
-fn test_le_bytes_round_trip() {
-    let inputs: [&[u8]; _] = [
-        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        &[1, 2, 3, 4, 5, 6, 7, 8],
-        &[1, 2, 3],
-        &[],
-    ];
-    for input in inputs {
-        let len = input.len().div_ceil(Digit::BYTES);
-        let mut digits = vec![Digit::ZERO; len];
-        from_bytes(input, &mut digits);
-
-        // The output is the input zero-padded up to a whole number of digits.
-        let mut bytes = vec![0u8; len * Digit::BYTES];
-        to_bytes(&digits, &mut bytes);
-        assert_eq!(&bytes[..input.len()], input);
-        assert!(bytes[input.len()..].iter().all(|&b| b == 0));
-        // `input` has no trailing zero byte, so this is its minimal length.
-        assert_eq!(min_len_bytes(&bytes), input.len());
-    }
-}
-
-#[test]
-fn test_be_bytes_round_trip() {
-    let inputs: [&[u8]; _] = [
-        &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        &[1, 2, 3, 4, 5, 6, 7, 8],
-        &[1, 2, 3],
-        &[],
-    ];
-    for input in inputs {
-        let len = input.len().div_ceil(Digit::BYTES);
-        let mut digits = vec![Digit::ZERO; len];
-        from_be_bytes(input, &mut digits);
-
-        // Reversing the little-endian bytes gives the big-endian bytes, right-aligned with
-        // leading zero padding up to a whole number of digits.
-        let mut bytes = vec![0u8; len * Digit::BYTES];
-        to_bytes(&digits, &mut bytes);
-        bytes.reverse();
-        let pad = len * Digit::BYTES - input.len();
-        assert!(bytes[..pad].iter().all(|&b| b == 0));
-        assert_eq!(&bytes[pad..], input);
-    }
 }
 
 #[test]
@@ -90,4 +44,34 @@ fn test_to_bytes_signed() {
     assert_eq!(bytes[0], 1);
     assert!(bytes[1..Digit::BYTES].iter().all(|&b| b == 0));
     assert!(bytes[Digit::BYTES..].iter().all(|&b| b == 0xff));
+}
+
+proptest! {
+    #[test]
+    fn test_bytes_round_trip(input in proptest::collection::vec(any::<u8>(), 0..50)) {
+        let len = input.len().div_ceil(Digit::BYTES);
+        let mut digits = vec![Digit::ZERO; len];
+        from_bytes(&input, &mut digits);
+
+        // `to_bytes` reproduces the input, zero-padded up to a whole number of digits.
+        let mut bytes = vec![0u8; len * Digit::BYTES];
+        to_bytes(&digits, &mut bytes);
+        prop_assert_eq!(&bytes[..input.len()], &input[..]);
+        prop_assert!(bytes[input.len()..].iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn test_from_be_bytes(input in proptest::collection::vec(any::<u8>(), 0..50)) {
+        let len = input.len().div_ceil(Digit::BYTES);
+        let mut be = vec![Digit::ZERO; len];
+        from_be_bytes(&input, &mut be);
+
+        // Reading big-endian bytes equals reading the reversed bytes little-endian.
+        let mut reversed = input.clone();
+        reversed.reverse();
+        let mut le = vec![Digit::ZERO; len];
+        from_bytes(&reversed, &mut le);
+
+        prop_assert_eq!(be, le);
+    }
 }

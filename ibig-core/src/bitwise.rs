@@ -2,6 +2,22 @@
 
 use crate::Digit;
 
+/// Negates (bitwise NOT) a little-endian digit slice in place, flipping every bit.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, not};
+/// let mut a = [Digit::from(0b1100u8), Digit::ZERO];
+/// not(&mut a);
+/// assert_eq!(a, [!Digit::from(0b1100u8), Digit::MAX]);
+/// ```
+pub fn not(a: &mut [Digit]) {
+    for x in a {
+        *x = !*x;
+    }
+}
+
 /// Computes the bitwise AND of two equal-length little-endian digit slices, storing the
 /// result in `a`.
 ///
@@ -21,21 +37,5 @@ pub fn bitand_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {
         *x &= y;
-    }
-}
-
-/// Negates (bitwise NOT) a little-endian digit slice in place, flipping every bit.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{Digit, not};
-/// let mut a = [Digit::from(0b1100u8), Digit::ZERO];
-/// not(&mut a);
-/// assert_eq!(a, [!Digit::from(0b1100u8), Digit::MAX]);
-/// ```
-pub fn not(a: &mut [Digit]) {
-    for x in a {
-        *x = !*x;
     }
 }
