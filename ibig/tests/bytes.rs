@@ -1,39 +1,8 @@
 //! Integration tests for `UBig` and `IBig` <-> byte-sequence conversions.
 
+use ibig::proptest::{ibig_up_to_bits, ubig_up_to_bits};
 use ibig::{IBig, UBig};
-
-/// Little-endian byte sequences that are already normalized (no most-significant zero
-/// byte), chosen to exercise sub-digit, single-digit and multi-digit values at every digit
-/// width.
-fn ubig_canonical_le() -> Vec<Vec<u8>> {
-    vec![
-        vec![1],
-        vec![0xff],
-        vec![1, 2],
-        vec![0, 1], // a zero low byte is kept; only top zeros are not
-        vec![0xff, 0xff, 0xff],
-        vec![1, 0, 0, 0, 0, 0, 0, 0, 2], // spans more than one 64-bit digit
-        (1..=121).collect(),
-    ]
-}
-
-/// Little-endian two's complement byte sequences that are already canonical (no redundant
-/// most-significant sign-extension byte), covering zero, both signs, and multi-digit
-/// values at every digit width.
-fn ibig_canonical_le() -> Vec<Vec<u8>> {
-    vec![
-        vec![0],                                              // 0
-        vec![5],                                              // +5
-        vec![0x7f],                                           // +127
-        vec![0xff],                                           // -1
-        vec![0x80],                                           // -128
-        vec![0xc8, 0x00], // +200 (needs the leading zero to stay positive)
-        vec![0x00, 0x80], // -32768
-        vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // a multi-digit positive value
-        vec![0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe], // a multi-digit negative value
-        (1..=121).collect(),
-    ]
-}
+use proptest::prelude::*;
 
 #[test]
 fn ubig_zero() {
@@ -46,31 +15,9 @@ fn ubig_zero() {
 }
 
 #[test]
-fn ubig_le_round_trip() {
-    for bytes in ubig_canonical_le() {
-        assert_eq!(UBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
-    }
-}
-
-#[test]
 fn ubig_le_normalizes_trailing_zeros() {
     assert_eq!(UBig::from_le_bytes(&[5, 0, 0]).to_le_bytes(), [5]);
     assert_eq!(UBig::from_le_bytes(&[1, 2, 0, 0, 0]).to_le_bytes(), [1, 2]);
-}
-
-#[test]
-fn ibig_le_round_trip() {
-    for bytes in ibig_canonical_le() {
-        assert_eq!(IBig::from_le_bytes(&bytes).to_le_bytes(), bytes);
-    }
-}
-
-#[test]
-fn ubig_be_round_trip() {
-    for le in ubig_canonical_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        assert_eq!(UBig::from_be_bytes(&be).to_be_bytes(), be);
-    }
 }
 
 #[test]
@@ -79,40 +26,56 @@ fn ubig_be_normalizes_leading_zeros() {
     assert_eq!(UBig::from_be_bytes(&[0, 0, 0, 1, 2]).to_be_bytes(), [1, 2]);
 }
 
-#[test]
-fn ibig_be_round_trip() {
-    for le in ibig_canonical_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        assert_eq!(IBig::from_be_bytes(&be).to_be_bytes(), be);
+proptest! {
+    // Round-trip `value -> bytes -> value` for random values up to 1000 bits.
+    #[test]
+    fn ubig_le_round_trip(x in ubig_up_to_bits(1000)) {
+        prop_assert_eq!(UBig::from_le_bytes(&x.to_le_bytes()), x);
     }
-}
 
-#[test]
-fn ubig_le_be_agree() {
-    for le in ubig_canonical_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        // Same magnitude whether read little-endian or as the reversed big-endian bytes.
-        assert_eq!(UBig::from_le_bytes(&le), UBig::from_be_bytes(&be));
-
-        // `to_be_bytes` is `to_le_bytes` reversed.
-        let n = UBig::from_le_bytes(&le);
-        let mut le_reversed = n.to_le_bytes();
-        le_reversed.reverse();
-        assert_eq!(n.to_be_bytes(), le_reversed);
+    #[test]
+    fn ubig_be_round_trip(x in ubig_up_to_bits(1000)) {
+        prop_assert_eq!(UBig::from_be_bytes(&x.to_be_bytes()), x);
     }
-}
 
-#[test]
-fn ibig_le_be_agree() {
-    for le in ibig_canonical_le() {
-        let be: Vec<u8> = le.iter().rev().copied().collect();
-        assert_eq!(IBig::from_le_bytes(&le), IBig::from_be_bytes(&be));
+    #[test]
+    fn ibig_le_round_trip(x in ibig_up_to_bits(1000)) {
+        prop_assert_eq!(IBig::from_le_bytes(&x.to_le_bytes()), x);
+    }
 
-        // `to_be_bytes` is `to_le_bytes` reversed.
-        let n = IBig::from_le_bytes(&le);
-        let mut le_reversed = n.to_le_bytes();
-        le_reversed.reverse();
-        assert_eq!(n.to_be_bytes(), le_reversed);
+    #[test]
+    fn ibig_be_round_trip(x in ibig_up_to_bits(1000)) {
+        prop_assert_eq!(IBig::from_be_bytes(&x.to_be_bytes()), x);
+    }
+
+    // Reading little-endian bytes equals reading the reversed bytes big-endian.
+    #[test]
+    fn ubig_from_le_be_agree(bytes in proptest::collection::vec(any::<u8>(), 0..=100)) {
+        let mut reversed = bytes.clone();
+        reversed.reverse();
+        prop_assert_eq!(UBig::from_le_bytes(&bytes), UBig::from_be_bytes(&reversed));
+    }
+
+    #[test]
+    fn ibig_from_le_be_agree(bytes in proptest::collection::vec(any::<u8>(), 1..=100)) {
+        let mut reversed = bytes.clone();
+        reversed.reverse();
+        prop_assert_eq!(IBig::from_le_bytes(&bytes), IBig::from_be_bytes(&reversed));
+    }
+
+    // `to_be_bytes` is `to_le_bytes` reversed.
+    #[test]
+    fn ubig_to_le_be_agree(x in ubig_up_to_bits(1000)) {
+        let mut reversed = x.to_le_bytes();
+        reversed.reverse();
+        prop_assert_eq!(x.to_be_bytes(), reversed);
+    }
+
+    #[test]
+    fn ibig_to_le_be_agree(x in ibig_up_to_bits(1000)) {
+        let mut reversed = x.to_le_bytes();
+        reversed.reverse();
+        prop_assert_eq!(x.to_be_bytes(), reversed);
     }
 }
 

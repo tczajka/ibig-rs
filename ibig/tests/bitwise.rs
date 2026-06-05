@@ -1,6 +1,8 @@
 //! Integration tests for `UBig` and `IBig` bitwise operators.
 
+use ibig::proptest::ibig_up_to_bits;
 use ibig::{IBig, UBig};
+use proptest::prelude::*;
 
 #[test]
 fn not() {
@@ -31,6 +33,14 @@ fn not() {
         let expected = IBig::from(!v);
         assert_eq!(!&x, expected);
         assert_eq!(!x, expected);
+    }
+}
+
+proptest! {
+    // Bitwise NOT is an involution: `!!x == x`.
+    #[test]
+    fn ibig_not_not(x in ibig_up_to_bits(1000)) {
+        prop_assert_eq!(!!&x, x);
     }
 }
 

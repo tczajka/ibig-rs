@@ -1,6 +1,8 @@
 //! Integration tests for `UBig` and `IBig` bit operations.
 
+use ibig::proptest::{ibig_up_to_bits, ubig_up_to_bits};
 use ibig::{IBig, UBig};
+use proptest::prelude::*;
 
 /// `2^k` as a `UBig`.
 fn ubig_pow2(k: usize) -> UBig {
@@ -45,6 +47,17 @@ fn ubig_checked_ilog2() {
     assert_eq!(UBig::from(1u8).checked_ilog2(), Some(0));
     assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
     assert_eq!(UBig::from(1u128 << 100).checked_ilog2(), Some(100));
+}
+
+proptest! {
+    // A power of two `2^k`: bit_width is `k + 1`, ilog2 is `k`.
+    #[test]
+    fn ubig_pow2_logs(k in 0usize..1000) {
+        let p = ubig_pow2(k);
+        prop_assert_eq!(p.bit_width(), k + 1);
+        prop_assert_eq!(p.ilog2(), k);
+        prop_assert_eq!(p.checked_ilog2(), Some(k));
+    }
 }
 
 #[test]
@@ -100,6 +113,16 @@ fn ibig_checked_ilog2() {
     assert_eq!(IBig::from(1i128 << 100).checked_ilog2(), Some(100));
     // Non-positive values have no logarithm.
     assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
+}
+
+proptest! {
+    #[test]
+    fn ibig_pow2_logs(k in 0usize..1000) {
+        let p = ibig_pow2(k);
+        prop_assert_eq!(p.bit_width(), k + 1);
+        prop_assert_eq!(p.ilog2(), k);
+        prop_assert_eq!(p.checked_ilog2(), Some(k));
+    }
 }
 
 #[test]
@@ -282,6 +305,15 @@ fn ibig_trailing_zeros_zero() {
     IBig::ZERO.trailing_zeros();
 }
 
+proptest! {
+    // A power of two `2^k` has exactly `k` trailing zeros.
+    #[test]
+    fn pow2_trailing_zeros(k in 0usize..1000) {
+        prop_assert_eq!(ubig_pow2(k).trailing_zeros(), k);
+        prop_assert_eq!(ibig_pow2(k).trailing_zeros(), k);
+    }
+}
+
 #[test]
 fn ubig_trailing_ones() {
     assert_eq!(UBig::ZERO.trailing_ones(), 0);
@@ -404,5 +436,24 @@ fn ibig_next_power_of_two() {
     for (value, expected) in cases {
         assert_eq!(value.next_power_of_two(), expected);
         assert_eq!(value.into_next_power_of_two(), expected);
+    }
+}
+
+proptest! {
+    // The next power of two of any value is a power of two, and both forms agree.
+    #[test]
+    fn ubig_next_power_of_two_is_power(x in ubig_up_to_bits(1000)) {
+        let by_ref = x.next_power_of_two();
+        let by_val = x.clone().into_next_power_of_two();
+        prop_assert!(by_ref.is_power_of_two());
+        prop_assert_eq!(by_ref, by_val);
+    }
+
+    #[test]
+    fn ibig_next_power_of_two_is_power(x in ibig_up_to_bits(1000)) {
+        let by_ref = x.next_power_of_two();
+        let by_val = x.clone().into_next_power_of_two();
+        prop_assert!(by_ref.is_power_of_two());
+        prop_assert_eq!(by_ref, by_val);
     }
 }
