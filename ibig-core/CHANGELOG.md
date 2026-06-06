@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `count_ones`: population count
 
+### Changed
+
+- Renamed `next_power_of_two_in_place` to `next_power_of_two`.
+
 ## [0.0.1] - 2026-06-05
 
 Work in progress. Low-level big-integer algorithms operating on slices of digits.

@@ -212,7 +212,7 @@ impl UBig {
 
         // Slow path: multiple digits.
         let mut digits = self.clone().into_digits();
-        if ibig_core::next_power_of_two_in_place(&mut digits) {
+        if ibig_core::next_power_of_two(&mut digits) {
             // Overflow.
             digits.push(Digit::from_u8(1));
         }

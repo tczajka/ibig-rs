@@ -228,20 +228,20 @@ pub fn is_power_of_two(digits: &[Digit]) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, next_power_of_two_in_place};
+/// # use ibig_core::{Digit, next_power_of_two};
 /// let mut digits = [Digit::from(5u8), Digit::from(5u8)];
-/// assert!(!next_power_of_two_in_place(&mut digits));
+/// assert!(!next_power_of_two(&mut digits));
 /// assert_eq!(digits, [Digit::ZERO, Digit::from(8u8)]);
 /// let mut digits = [];
-/// assert!(next_power_of_two_in_place(&mut digits));
+/// assert!(next_power_of_two(&mut digits));
 /// let mut digits = [Digit::ZERO];
-/// assert!(!next_power_of_two_in_place(&mut digits));
+/// assert!(!next_power_of_two(&mut digits));
 /// assert_eq!(digits, [Digit::from(1u8)]);
 /// let mut digits = [Digit::MAX];
-/// assert!(next_power_of_two_in_place(&mut digits));
+/// assert!(next_power_of_two(&mut digits));
 /// assert_eq!(digits, [Digit::ZERO]);
 /// ```
-pub fn next_power_of_two_in_place(digits: &mut [Digit]) -> bool {
+pub fn next_power_of_two(digits: &mut [Digit]) -> bool {
     // Find the top non-zero digit.
     let Some(top) = digits.iter().rposition(|&digit| digit != Digit::ZERO) else {
         // `digits` is all zeros

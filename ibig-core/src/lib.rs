@@ -12,7 +12,7 @@ mod len;
 mod sign;
 
 pub use bits::{
-    bit, bit_signed, bit_width, count_ones, is_power_of_two, next_power_of_two_in_place, set_bit,
+    bit, bit_signed, bit_width, count_ones, is_power_of_two, next_power_of_two, set_bit,
     trailing_ones, trailing_zeros,
 };
 pub use bitwise::{bitand_same_len, bitandnot_same_len, bitor_same_len, bitxor_same_len, not};
