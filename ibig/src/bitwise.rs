@@ -3,10 +3,47 @@
 use crate::ops::{
     CommutativeBinaryOpDigits, UnaryOpDigits, impl_binary_operator, impl_unary_operator,
 };
-use crate::repr::Digits;
+use crate::repr::{AsDigits, Digits};
 use crate::{IBig, UBig};
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 use ibig_core::{Digit, SignedDigit};
+
+impl UBig {
+    /// Returns `self & !rhs`: the value `self` with every bit that is set in `rhs` cleared.
+    ///
+    /// This is what `self & !rhs` would compute, but [`UBig`] has no bitwise-NOT operator:
+    /// `!rhs` would have infinitely many leading one bits and is not representable as a
+    /// [`UBig`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(
+    ///     UBig::from(0b1110u8).bitandnot(&UBig::from(0b0101u8)),
+    ///     UBig::from(0b1010u8)
+    /// );
+    /// ```
+    #[inline]
+    pub fn bitandnot(&self, rhs: &UBig) -> UBig {
+        match (self.try_to_digit(), rhs.try_to_digit()) {
+            (Some(a), Some(b)) => UBig::from_digit(a & !b),
+            (Some(a), None) => UBig::from_digit(a & !rhs.as_digits()[0]),
+            (None, Some(b)) => {
+                let mut digits = Digits::from_slice(self.as_digits());
+                digits[0] &= !b;
+                UBig::from_digits(digits)
+            }
+            (None, None) => {
+                let mut digits = Digits::from_slice(self.as_digits());
+                let rhs = rhs.as_digits();
+                let n = digits.len().min(rhs.len());
+                ibig_core::bitandnot_same_len(&mut digits[..n], &rhs[..n]);
+                UBig::from_digits(digits)
+            }
+        }
+    }
+}
 
 /// Bitwise NOT operation.
 enum NotOperation {}

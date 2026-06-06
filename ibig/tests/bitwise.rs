@@ -95,7 +95,6 @@ proptest! {
         prop_assert_eq!((&a ^ &b) ^ &b, a);
     }
 
-    // XOR is self-inverse: `a ^ b ^ b == a`.
     #[test]
     fn ibig_xor_inverse(a in ibig_up_to_bits(1000), b in ibig_up_to_bits(1000)) {
         prop_assert_eq!((&a ^ &b) ^ &b, a);
@@ -107,7 +106,6 @@ proptest! {
         prop_assert_eq!(&a ^ &a, UBig::ZERO);
     }
 
-    // A value XORed with itself is zero (exercises high-digit cancellation).
     #[test]
     fn ibig_xor_self(a in ibig_up_to_bits(1000)) {
         prop_assert_eq!(&a ^ &a, IBig::ZERO);
@@ -117,5 +115,32 @@ proptest! {
     #[test]
     fn ibig_xor_identity(a in ibig_up_to_bits(1000), b in ibig_up_to_bits(1000)) {
         prop_assert_eq!(&a ^ &b, (&a & !&b) | (!&a & &b));
+    }
+
+    // `UBig::bitandnot(a, b) == a & !b`, for every pair of `u16`/`u128` operand widths.
+    #[test]
+    fn ubig_bitandnot_16_16(a: u16, b: u16) {
+        prop_assert_eq!(UBig::from(a).bitandnot(&UBig::from(b)), UBig::from(a & !b));
+    }
+
+    #[test]
+    fn ubig_bitandnot_16_128(a: u16, b: u128) {
+        prop_assert_eq!(UBig::from(a).bitandnot(&UBig::from(b)), UBig::from(u128::from(a) & !b));
+    }
+
+    #[test]
+    fn ubig_bitandnot_128_16(a: u128, b: u16) {
+        prop_assert_eq!(UBig::from(a).bitandnot(&UBig::from(b)), UBig::from(a & !u128::from(b)));
+    }
+
+    #[test]
+    fn ubig_bitandnot_128_128(a: u128, b: u128) {
+        prop_assert_eq!(UBig::from(a).bitandnot(&UBig::from(b)), UBig::from(a & !b));
+    }
+
+    // `UBig::bitandnot` agrees with the signed `a & !b`.
+    #[test]
+    fn ubig_bitandnot_vs_signed(a in ubig_up_to_bits(1000), b in ubig_up_to_bits(1000)) {
+        prop_assert_eq!(IBig::from(&a.bitandnot(&b)), IBig::from(&a) & !IBig::from(&b));
     }
 }
