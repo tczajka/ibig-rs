@@ -1,150 +1,177 @@
 # Changelog
 
-This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to this project will be documented in this file.
 
-## 0.4.0 - unreleased
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 Work in progress. This release is a ground-up rewrite of the library, with
 substantial internal changes to representation and algorithms. Expect breaking
 API changes; they will be documented here as the rewrite progresses.
 
-## 0.3.6 - 2022-09-18
+## [0.3.6] - 2022-09-18
 
-### Features
-* GCD, greatest common divisor.
-* Extended GCD (GCD with Bézout coefficients).
-* Modular inverse.
-* Modular division.
+### Added
 
-## 0.3.5 - 2022-03-12
+- GCD, greatest common divisor.
+- Extended GCD (GCD with Bézout coefficients).
+- Modular inverse.
+- Modular division.
 
-### Bugfixes
-* Corrected too-strict lifetimes in modular exponentiation.
+## [0.3.5] - 2022-03-12
 
-### Dependencies
-* Removed the dependency on `const_fn_assert`.
+### Changed
 
-## 0.3.4 - 2021-11-03
+- Removed the dependency on `const_fn_assert`.
 
-### Features
-* Optional `serde` support for `UBig` and `IBig`.
+### Fixed
 
-### Toolchain
-* Rust 1.49+ is now required.
+- Corrected too-strict lifetimes in modular exponentiation.
 
-### Dependencies
-* Added an optional dependency on `serde`.
+## [0.3.4] - 2021-11-03
 
-## 0.3.3 - 2021-10-28
+### Added
 
-### Features
-* Mixed-type arithmetic with primitive integer types.
+- Optional `serde` support for `UBig` and `IBig`.
+
+### Changed
+
+- Rust 1.49+ is now required.
+- Added an optional dependency on `serde`.
+
+## [0.3.3] - 2021-10-28
+
+### Added
+
+- Mixed-type arithmetic with primitive integer types.
 
   Allows `x + 1` instead of `x + ubig!(1)`.
-  
+
   This breaks with the convention that arithmetic operators require same type on both sides. A better alternative would be user-defined custom integer literals, so that `1` could be inferred to have type `UBig`. But Rust does not support this yet. So this is a workaround for the sake of ergonomics.
 
-## 0.3.2 - 2021-05-02
+## [0.3.2] - 2021-05-02
 
-### Toolchain
-* Rust 1.47+ is now supported.
+### Changed
 
-### Dependencies
-* Added a dependency on `cfg-if`.
+- Rust 1.47+ is now supported.
+- Added a dependency on `cfg-if`.
 
-## 0.3.1 - 2021-04-03
+## [0.3.1] - 2021-04-03
 
-### Features
-* Maximum supported length in bits: `UBig::MAX_BIT_LEN`.
+### Added
 
-### Fixes
-* Broken build for `aarch64`, `mips64` and` powerpc64` fixed.
+- Maximum supported length in bits: `UBig::MAX_BIT_LEN`.
 
-### Dependencies
-* Added a dependency on `const_fn_assert`.
+### Changed
 
-## 0.3.0 - 2021-03-29
+- Added a dependency on `const_fn_assert`.
 
-### Breaking changes
-* Removed `prelude`.
-* Split into modules:
-  * Moved `InRadix` to `fmt`.
-  * Moved operator traits to `ops`.
-  * Moved errors to `error`.
-  * Moved distributions to `rand`.
-* Removed deprecated `IBig::is_positive`, `IBig::is_negative`.
-  Just compare with `ibig!(0)` instead.
-* Shift left and right now only accepts `usize` for the number of bits, for consistency
-  with other bit addressing operations and exponents.
+### Fixed
 
-## 0.2.2 - 2021-03-28
+- Broken build for `aarch64`, `mips64` and `powerpc64` fixed.
 
-### Features
-* Modular arithmetic: `ModuloRing`, `Modulo`.
-* Conversions to floating point: `to_f32`, `to_f64`. Rounds to nearest, breaking ties to even.
-* `From<bool>` for `IBig`.
+## [0.3.0] - 2021-03-29
 
-## 0.2.1 - 2021-03-14
+### Changed
 
-### License
+- Split into modules:
+  - Moved `InRadix` to `fmt`.
+  - Moved operator traits to `ops`.
+  - Moved errors to `error`.
+  - Moved distributions to `rand`.
+- Shift left and right now only accepts `usize` for the number of bits, for consistency with other bit addressing operations and exponents.
 
-* Loosened the license to either MIT or Apache-2.0.
+### Removed
 
-### Features
-* Implemented num-traits traits.
+- Removed `prelude`.
+- Removed deprecated `IBig::is_positive`, `IBig::is_negative`. Just compare with `ibig!(0)` instead.
 
-### Deprecated features
-* `IBig::is_positive`, `IBig::is_negative`. Just use `> ibig!(0)`, `< ibig!(0)`.
+## [0.2.2] - 2021-03-28
 
-### Dependencies
-* Added optional dependency on `num-traits 0.2.14`.
-* Removed dependency on `ascii`.
+### Added
 
-## 0.2.0 - 2021-03-11
+- Modular arithmetic: `ModuloRing`, `Modulo`.
+- Conversions to floating point: `to_f32`, `to_f64`. Rounds to nearest, breaking ties to even.
+- `From<bool>` for `IBig`.
 
-### Removed features
-* Removed deprecated functions `to_str_radix`, `to_str_radix_uppercase`, `ilog2`.
+## [0.2.1] - 2021-03-14
 
-## 0.1.2 - 2021-03-09
+### Added
 
-### New features
-* `bit_len`
+- Implemented num-traits traits.
 
-### Deprecated features
-* `to_str_radix`, `to_str_radix_uppercase`. Use `in_radix(...)` instead.
-* `ilog2`. Use `bit_len` instead.
+### Changed
 
-### Dependencies
-* Added a dependency on `static_assertions 1.1`.
-* Bumped `rand` to `0.8.3`.
+- Loosened the license to either MIT or Apache-2.0.
+- Added an optional dependency on `num-traits 0.2.14`.
+- Removed the dependency on `ascii`.
 
-### Performance
-* Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
-* Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
-* Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
-* Other minor performance improvements.
+### Deprecated
 
-## 0.1.1 - 2021-03-03
+- `IBig::is_positive`, `IBig::is_negative`. Just use `> ibig!(0)`, `< ibig!(0)`.
 
-### New features
-* Hashing.
-* Exponentiation.
-* Random sampling (optional dependency on `rand 0.8`).
+## [0.2.0] - 2021-03-11
 
-### Performance
-* Multiplication improved, now uses Karatsuba and Toom-Cook-3 algorithms, O(n^1.47).
+### Removed
 
-### Examples
-* `factorial` prints 1000000! in hexadecimal.
+- Removed deprecated functions `to_str_radix`, `to_str_radix_uppercase`, `ilog2`.
 
-## 0.1.0 - 2021-02-25
+## [0.1.2] - 2021-03-09
 
-The initial usable version.
+### Added
 
-### Features
-* All basic arithmetic and bitwise operations.
-* Parsing and formatting.
-* Constructor macros.
+- `bit_len`.
 
-### Performance
-* Operations on very large numbers are still slow.
+### Changed
+
+- Added a dependency on `static_assertions 1.1`.
+- Bumped `rand` to `0.8.3`.
+- Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
+- Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
+- Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
+- Other minor performance improvements.
+
+### Deprecated
+
+- `to_str_radix`, `to_str_radix_uppercase`. Use `in_radix(...)` instead.
+- `ilog2`. Use `bit_len` instead.
+
+## [0.1.1] - 2021-03-03
+
+### Added
+
+- Hashing.
+- Exponentiation.
+- Random sampling (optional dependency on `rand 0.8`).
+- `factorial` example prints 1000000! in hexadecimal.
+
+### Changed
+
+- Multiplication improved, now uses Karatsuba and Toom-Cook-3 algorithms, O(n^1.47).
+
+## [0.1.0] - 2021-02-25
+
+The initial usable version. Operations on very large numbers are still slow.
+
+### Added
+
+- All basic arithmetic and bitwise operations.
+- Parsing and formatting.
+- Constructor macros.
+
+[Unreleased]: https://github.com/tczajka/ibig/compare/0.3.6...HEAD
+[0.3.6]: https://github.com/tczajka/ibig/compare/0.3.5...0.3.6
+[0.3.5]: https://github.com/tczajka/ibig/compare/0.3.4...0.3.5
+[0.3.4]: https://github.com/tczajka/ibig/compare/0.3.3...0.3.4
+[0.3.3]: https://github.com/tczajka/ibig/compare/0.3.2...0.3.3
+[0.3.2]: https://github.com/tczajka/ibig/compare/0.3.1...0.3.2
+[0.3.1]: https://github.com/tczajka/ibig/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/tczajka/ibig/compare/0.2.2...0.3.0
+[0.2.2]: https://github.com/tczajka/ibig/compare/0.2.1...0.2.2
+[0.2.1]: https://github.com/tczajka/ibig/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/tczajka/ibig/compare/0.1.2...0.2.0
+[0.1.2]: https://github.com/tczajka/ibig/compare/0.1.1...0.1.2
+[0.1.1]: https://github.com/tczajka/ibig/compare/0.1.0...0.1.1
+[0.1.0]: https://github.com/tczajka/ibig/releases/tag/0.1.0

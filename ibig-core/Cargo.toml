@@ -12,6 +12,7 @@ repository = "https://github.com/tczajka/ibig"
 include = [
     "src/**/*.rs",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE-APACHE",
     "LICENSE-MIT",
 ]
