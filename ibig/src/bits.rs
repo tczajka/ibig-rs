@@ -158,6 +158,22 @@ impl UBig {
         }
     }
 
+    /// Returns the number of one bits (the population count).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::ZERO.count_ones(), 0);
+    /// assert_eq!(UBig::from(0b10110u8).count_ones(), 3);
+    /// ```
+    pub fn count_ones(&self) -> usize {
+        match self.try_to_digit() {
+            Some(digit) => digit.count_ones().try_into().unwrap(),
+            None => ibig_core::count_ones(self.as_digits()),
+        }
+    }
+
     /// Returns `true` if the value is a power of two (exactly one bit set).
     ///
     /// # Examples

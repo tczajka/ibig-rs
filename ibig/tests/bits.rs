@@ -314,6 +314,19 @@ fn ibig_trailing_ones_minus_one() {
 }
 
 #[test]
+fn ubig_count_ones() {
+    assert_eq!(UBig::ZERO.count_ones(), 0);
+    assert_eq!(UBig::from(0b10110u8).count_ones(), 3);
+    assert_eq!(UBig::from(u128::MAX).count_ones(), 128);
+    // Multi-digit values, counting set bits across every digit.
+    assert_eq!(UBig::from_le_bytes(&[0xff; 20]).count_ones(), 160);
+    assert_eq!(
+        UBig::from_le_bytes(&[0b101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0b11]).count_ones(),
+        4
+    );
+}
+
+#[test]
 fn ubig_is_power_of_two() {
     let cases = [
         (UBig::ZERO, false),
