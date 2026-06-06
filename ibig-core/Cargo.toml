@@ -11,6 +11,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/tczajka/ibig"
 include = [
     "src/**/*.rs",
+    "tests/**/*.rs",
     "README.md",
     "CHANGELOG.md",
     "LICENSE-APACHE",
