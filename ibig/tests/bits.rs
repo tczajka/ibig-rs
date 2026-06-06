@@ -1,6 +1,6 @@
 //! Integration tests for `UBig` and `IBig` bit operations.
 
-use ibig::proptest::{ibig_up_to_bits, ubig_up_to_bits};
+use ibig::proptest::ubig_up_to_bits;
 use ibig::{IBig, UBig};
 use proptest::prelude::*;
 
@@ -358,29 +358,6 @@ fn ubig_is_power_of_two() {
 }
 
 #[test]
-fn ibig_is_power_of_two() {
-    let cases = [
-        (IBig::ZERO, false),
-        (IBig::from(1i8), true),
-        (IBig::from(8i8), true),
-        (IBig::from(6i8), false),
-        // Negative values are never powers of two.
-        (IBig::from(-8i8), false),
-        (IBig::from(-1i8), false),
-        // The most-negative value is a single high bit, but it is negative, so still false.
-        (IBig::from(i64::MIN), false),
-        // Multi-digit.
-        (IBig::from(1i128 << 100), true),
-        (IBig::from(3i128 << 100), false),
-        (IBig::from(-1i128 << 100), false),
-        (IBig::from(i128::MIN), false),
-    ];
-    for (n, expected) in cases {
-        assert_eq!(n.is_power_of_two(), expected);
-    }
-}
-
-#[test]
 fn ubig_next_power_of_two() {
     // (value, smallest power of two >= value).
     let mut cases: Vec<(UBig, UBig)> = vec![
@@ -406,54 +383,13 @@ fn ubig_next_power_of_two() {
 
     for (value, expected) in cases {
         assert_eq!(value.next_power_of_two(), expected);
-        assert_eq!(value.into_next_power_of_two(), expected);
-    }
-}
-
-#[test]
-fn ibig_next_power_of_two() {
-    // (value, smallest power of two >= value; non-positive values give one).
-    let mut cases: Vec<(IBig, IBig)> = vec![
-        (IBig::ZERO, IBig::from(1i8)),
-        (IBig::from(1i8), IBig::from(1i8)),
-        (IBig::from(5i8), IBig::from(8i8)),
-        (IBig::from(8i8), IBig::from(8i8)),
-        // Non-positive values round up to one.
-        (IBig::from(-1i8), IBig::from(1i8)),
-        (IBig::from(-8i8), IBig::from(1i8)),
-        (IBig::from(i64::MIN), IBig::from(1i8)),
-        // Multi-digit positive.
-        (IBig::from((1i128 << 100) + 1), IBig::from(1i128 << 101)),
-    ];
-    // Large exact powers of two round up to themselves; one more rounds to the next power.
-    for k in [63usize, 64, 127, 128, 200, 255, 256, 500] {
-        cases.push((ibig_pow2(k), ibig_pow2(k)));
-        let mut above = ibig_pow2(k); // 2^k + 1 (bit 0 is clear for k > 0)
-        above.set_bit(0, true);
-        cases.push((above, ibig_pow2(k + 1)));
-    }
-
-    for (value, expected) in cases {
-        assert_eq!(value.next_power_of_two(), expected);
-        assert_eq!(value.into_next_power_of_two(), expected);
     }
 }
 
 proptest! {
-    // The next power of two of any value is a power of two, and both forms agree.
+    // The next power of two of any value is a power of two.
     #[test]
     fn ubig_next_power_of_two_is_power(x in ubig_up_to_bits(1000)) {
-        let by_ref = x.next_power_of_two();
-        let by_val = x.clone().into_next_power_of_two();
-        prop_assert!(by_ref.is_power_of_two());
-        prop_assert_eq!(by_ref, by_val);
-    }
-
-    #[test]
-    fn ibig_next_power_of_two_is_power(x in ibig_up_to_bits(1000)) {
-        let by_ref = x.next_power_of_two();
-        let by_val = x.clone().into_next_power_of_two();
-        prop_assert!(by_ref.is_power_of_two());
-        prop_assert_eq!(by_ref, by_val);
+        prop_assert!(x.next_power_of_two().is_power_of_two());
     }
 }
