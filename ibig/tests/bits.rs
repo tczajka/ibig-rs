@@ -61,32 +61,6 @@ proptest! {
 }
 
 #[test]
-fn ibig_bit_width() {
-    assert_eq!(IBig::ZERO.bit_width(), 0);
-    assert_eq!(IBig::from(1i8).bit_width(), 1);
-    assert_eq!(IBig::from(0b101i8).bit_width(), 3);
-    // Multi-digit positive: `u64::MAX` is a positive `2^64 - 1`.
-    assert_eq!(IBig::from(u64::MAX).bit_width(), 64);
-    assert_eq!(IBig::from(1i128 << 100).bit_width(), 101);
-}
-
-#[test]
-#[should_panic]
-fn ibig_bit_width_negative() {
-    IBig::from(-1i8).bit_width();
-}
-
-#[test]
-fn ibig_checked_bit_width() {
-    assert_eq!(IBig::ZERO.checked_bit_width(), Some(0));
-    assert_eq!(IBig::from(0b101i8).checked_bit_width(), Some(3));
-    assert_eq!(IBig::from(1i128 << 100).checked_bit_width(), Some(101));
-    // Negative values have no defined bit width.
-    assert_eq!(IBig::from(-1i8).checked_bit_width(), None);
-    assert_eq!(IBig::from(-1i128 << 100).checked_bit_width(), None);
-}
-
-#[test]
 fn ibig_ilog2() {
     assert_eq!(IBig::from(1i8).ilog2(), 0);
     assert_eq!(IBig::from(0b101i8).ilog2(), 2);
@@ -119,7 +93,6 @@ proptest! {
     #[test]
     fn ibig_pow2_logs(k in 0usize..1000) {
         let p = ibig_pow2(k);
-        prop_assert_eq!(p.bit_width(), k + 1);
         prop_assert_eq!(p.ilog2(), k);
         prop_assert_eq!(p.checked_ilog2(), Some(k));
     }

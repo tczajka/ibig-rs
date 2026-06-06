@@ -205,61 +205,6 @@ impl UBig {
 }
 
 impl IBig {
-    /// Returns the number of bits needed to represent the value: the position of the
-    /// most-significant set bit plus one, or 0 for the value zero.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is negative.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::ZERO.bit_width(), 0);
-    /// assert_eq!(IBig::from(0b101i8).bit_width(), 3);
-    /// ```
-    #[inline]
-    pub fn bit_width(&self) -> usize {
-        self.checked_bit_width()
-            .expect("bit_width is not defined for negative values")
-    }
-
-    /// Returns the number of bits needed to represent the value (the position of the
-    /// most-significant set bit plus one, or 0 for zero), or `None` if the value is negative.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(0b101i8).checked_bit_width(), Some(3));
-    /// assert_eq!(IBig::ZERO.checked_bit_width(), Some(0));
-    /// assert_eq!(IBig::from(-1i8).checked_bit_width(), None);
-    /// ```
-    #[inline]
-    pub fn checked_bit_width(&self) -> Option<usize> {
-        match self.try_to_digit() {
-            Some(digit) => {
-                if digit.is_negative() {
-                    None
-                } else {
-                    Some(
-                        DIGIT_BITS_USIZE
-                            - usize::try_from(digit.cast_unsigned().leading_zeros()).unwrap(),
-                    )
-                }
-            }
-            None => {
-                let digits = self.as_digits();
-                if ibig_core::is_negative(digits) {
-                    None
-                } else {
-                    Some(ibig_core::bit_width(digits))
-                }
-            }
-        }
-    }
-
     /// Returns the base-2 logarithm, rounded down.
     ///
     /// # Panics
@@ -291,7 +236,18 @@ impl IBig {
     /// ```
     #[inline]
     pub fn checked_ilog2(&self) -> Option<usize> {
-        self.checked_bit_width()?.checked_sub(1)
+        match self.try_to_digit() {
+            Some(digit) => digit.checked_ilog2().map(|x| usize::try_from(x).unwrap()),
+            None => {
+                let digits = self.as_digits();
+                if ibig_core::is_negative(digits) {
+                    None
+                } else {
+                    // A multi-digit value is nonzero, so its bit width is at least one.
+                    Some(ibig_core::bit_width(digits) - 1)
+                }
+            }
+        }
     }
 
     /// Returns the bit at `position` of the two's complement representation, counting from the
