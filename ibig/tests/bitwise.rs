@@ -69,12 +69,16 @@ proptest! {
     // Bitwise NOT vs the primitive: `!IBig::from(v) == IBig::from(!v)`.
     #[test]
     fn ibig_not_vs_i16(v: i16) {
-        prop_assert_eq!(!IBig::from(v), IBig::from(!v));
+        let expected = IBig::from(!v);
+        prop_assert_eq!(&!IBig::from(v), &expected);
+        prop_assert_eq!(&!&IBig::from(v), &expected);
     }
 
     #[test]
     fn ibig_not_vs_i128(v: i128) {
-        prop_assert_eq!(!IBig::from(v), IBig::from(!v));
+        let expected = IBig::from(!v);
+        prop_assert_eq!(&!IBig::from(v), &expected);
+        prop_assert_eq!(&!&IBig::from(v), &expected);
     }
 
     // Bitwise NOT is an involution: `!!x == x`.
@@ -103,18 +107,28 @@ proptest! {
     // A value XORed with itself is zero (exercises high-digit cancellation).
     #[test]
     fn ubig_xor_self(a in ubig_up_to_bits(1000)) {
+        prop_assert_eq!(a.clone() ^ a.clone(), UBig::ZERO);
+        prop_assert_eq!(a.clone() ^ &a, UBig::ZERO);
+        prop_assert_eq!(&a ^ a.clone(), UBig::ZERO);
         prop_assert_eq!(&a ^ &a, UBig::ZERO);
     }
 
     #[test]
     fn ibig_xor_self(a in ibig_up_to_bits(1000)) {
+        prop_assert_eq!(a.clone() ^ a.clone(), IBig::ZERO);
+        prop_assert_eq!(a.clone() ^ &a, IBig::ZERO);
+        prop_assert_eq!(&a ^ a.clone(), IBig::ZERO);
         prop_assert_eq!(&a ^ &a, IBig::ZERO);
     }
 
     // XOR in terms of AND, OR and NOT: `a ^ b == (a & !b) | (!a & b)`.
     #[test]
     fn ibig_xor_identity(a in ibig_up_to_bits(1000), b in ibig_up_to_bits(1000)) {
-        prop_assert_eq!(&a ^ &b, (&a & !&b) | (!&a & &b));
+        let expected = (&a & !&b) | (!&a & &b);
+        prop_assert_eq!(&(a.clone() ^ b.clone()), &expected);
+        prop_assert_eq!(&(a.clone() ^ &b), &expected);
+        prop_assert_eq!(&(&a ^ b.clone()), &expected);
+        prop_assert_eq!(&(&a ^ &b), &expected);
     }
 
     // `UBig::bitandnot(a, b) == a & !b`, for every pair of `u16`/`u128` operand widths.
