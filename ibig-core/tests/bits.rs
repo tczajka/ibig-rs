@@ -1,8 +1,8 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    Digit, bit, bit_signed, bit_width, is_power_of_two, next_power_of_two_in_place, trailing_ones,
-    trailing_zeros,
+    Digit, bit, bit_signed, bit_width, count_ones, is_power_of_two, next_power_of_two_in_place,
+    trailing_ones, trailing_zeros,
 };
 
 const fn digit(n: u16) -> Digit {
@@ -124,6 +124,23 @@ fn test_trailing_ones() {
     ];
     for &(digits, expected) in cases {
         assert_eq!(trailing_ones(digits), expected);
+    }
+}
+
+#[test]
+fn test_count_ones() {
+    let cases: &[(&[Digit], usize)] = &[
+        (&[], 0),
+        (&[digit(0)], 0),
+        (&[digit(0b101)], 2),
+        (&[Digit::MAX], BITS),
+        // Counts across every digit, including most-significant zeros.
+        (&[digit(0b11), digit(0b1)], 3),
+        (&[Digit::MAX, digit(0)], BITS),
+        (&[Digit::MAX, Digit::MAX], 2 * BITS),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(count_ones(digits), expected);
     }
 }
 

@@ -113,8 +113,7 @@ pub fn set_bit(digits: &mut [Digit], position: usize, value: bool) {
 ///
 /// # Overflow
 ///
-/// For extremely long slices, the result may overflow `usize` (panics in debug builds, wraps in
-/// release builds).
+/// For extremely long slices, the result may overflow `usize`.
 ///
 /// # Examples
 ///
@@ -147,8 +146,7 @@ pub fn trailing_zeros(digits: &[Digit]) -> usize {
 ///
 /// # Overflow
 ///
-/// For extremely long slices, the result may overflow `usize` (panics in debug builds, wraps in
-/// release builds).
+/// For extremely long slices, the result may overflow `usize`.
 ///
 /// # Examples
 ///
@@ -172,6 +170,28 @@ pub fn trailing_ones(digits: &[Digit]) -> usize {
         Some((i, &digit)) => i * DIGIT_BITS_USIZE + usize::try_from(digit.trailing_ones()).unwrap(),
         None => digits.len() * DIGIT_BITS_USIZE,
     }
+}
+
+/// Returns the number of one bits (the population count) in `digits`.
+///
+/// # Overflow
+///
+/// For extremely long slices, the result may overflow `usize`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, count_ones};
+/// assert_eq!(count_ones(&[]), 0);
+/// assert_eq!(count_ones(&[Digit::from(0b101u8)]), 2);
+/// assert_eq!(count_ones(&[Digit::MAX]), Digit::BITS as usize);
+/// assert_eq!(count_ones(&[Digit::from(0b11u8), Digit::from(0b1u8)]), 3);
+/// ```
+pub fn count_ones(digits: &[Digit]) -> usize {
+    digits
+        .iter()
+        .map(|&digit| usize::try_from(digit.count_ones()).unwrap())
+        .sum()
 }
 
 /// Returns `true` if the unsigned value held in the little-endian `digits` is a power of two,
