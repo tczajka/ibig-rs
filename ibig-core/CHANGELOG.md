@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `count_ones`: population count
+- Bit operations: `DIGIT_BITS_USIZE`, `count_ones`, `split_bit_index`
 
 ### Changed
 

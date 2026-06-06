@@ -1,9 +1,9 @@
 //! Bit operations on [`UBig`] and [`IBig`].
 
-use crate::repr::{AsDigits, DIGIT_BITS_USIZE};
+use crate::repr::AsDigits;
 use crate::{IBig, UBig};
 use core::mem;
-use ibig_core::{Digit, SignedDigit};
+use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit};
 
 impl UBig {
     /// Returns the number of bits needed to represent the value: the position of the
@@ -325,11 +325,12 @@ impl IBig {
 
         // Slow path.
         // Number of digits needed for the modified bit to sit strictly below the sign bit,
-        // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`.
-        // `min_len = (position + 1) / DIGIT_BITS_USIZE + 1`
-        // Written this way to avoid `position + 1` overflowing.
+        // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`. This is
+        // `digit_index + 1`, plus one more digit when the bit is the top bit of its digit (so it
+        // would otherwise land on the sign bit). Avoids `position + 1` overflowing.
+        let (digit_index, bit_index) = ibig_core::split_bit_index(position);
         let min_len =
-            position / DIGIT_BITS_USIZE + 1 + (position % DIGIT_BITS_USIZE + 1) / DIGIT_BITS_USIZE;
+            digit_index + 1 + (usize::try_from(bit_index).unwrap() + 1) / DIGIT_BITS_USIZE;
         let len = self.as_digits().len();
         if len < min_len && value == self.is_negative() {
             // The bit is the sign bit or higher and is not changing, nothing to do.

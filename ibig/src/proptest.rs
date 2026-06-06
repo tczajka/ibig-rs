@@ -1,10 +1,10 @@
 //! [`proptest`](::proptest) strategies for generating big integers.
 
-use crate::repr::{DIGIT_BITS_USIZE, Digits};
+use crate::repr::Digits;
 use crate::{IBig, UBig};
 use ::proptest::collection::vec;
 use ::proptest::prelude::*;
-use ibig_core::Digit;
+use ibig_core::{DIGIT_BITS_USIZE, Digit};
 use unative::proptest::unative_in_range;
 
 /// A strategy that generates a [`UBig`] of at most `n` bits.

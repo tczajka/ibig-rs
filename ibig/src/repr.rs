@@ -1,13 +1,10 @@
 //! Contains the definitions of [`UBig`] and [`IBig`] and maintains their invariants.
 
-use ibig_core::{Digit, SignedDigit, min_len, min_len_signed};
+use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed};
 use smallvec::SmallVec;
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.
 pub(crate) const INLINE_DIGITS: usize = 4;
-
-/// The number of bits in a [`Digit`], as a `usize`.
-pub(crate) const DIGIT_BITS_USIZE: usize = Digit::BITS as usize;
 
 /// Maximum number of [`Digit`]s in a value, chosen so that the total bit length
 /// (`MAX_DIGITS * Digit::BITS`) still fits in a `usize`.
