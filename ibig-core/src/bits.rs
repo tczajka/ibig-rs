@@ -5,29 +5,6 @@ use crate::{Digit, is_negative, min_len};
 /// The width of a [`Digit`] in bits, as a `usize`.
 pub const DIGIT_BITS_USIZE: usize = Digit::BITS as usize;
 
-/// Splits a bit `position` into the index of the [`Digit`] that holds it and the index of the
-/// bit within that digit.
-///
-/// Returns `(digit_index, bit_index)` such that
-/// `position == digit_index * DIGIT_BITS_USIZE + bit_index`, with `bit_index` in
-/// `0..Digit::BITS`.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{split_bit_index, DIGIT_BITS_USIZE};
-/// assert_eq!(split_bit_index(0), (0, 0));
-/// assert_eq!(split_bit_index(5), (0, 5));
-/// assert_eq!(split_bit_index(DIGIT_BITS_USIZE), (1, 0));
-/// assert_eq!(split_bit_index(DIGIT_BITS_USIZE + 3), (1, 3));
-/// ```
-pub fn split_bit_index(position: usize) -> (usize, u32) {
-    (
-        position / DIGIT_BITS_USIZE,
-        (position % DIGIT_BITS_USIZE).try_into().unwrap(),
-    )
-}
-
 /// A bit position within a digit slice.
 ///
 /// # Examples
@@ -84,16 +61,15 @@ impl BitIndex {
 
 impl From<usize> for BitIndex {
     #[inline]
-    fn from(position: usize) -> BitIndex {
-        let (digit_index, bit_index) = split_bit_index(position);
+    fn from(index: usize) -> BitIndex {
         BitIndex {
-            digit_index,
-            bit_index,
+            digit_index: index / DIGIT_BITS_USIZE,
+            bit_index: (index % DIGIT_BITS_USIZE).try_into().unwrap(),
         }
     }
 }
 
-/// The error returned when converting a [`BitIndex`] to a `usize` whose bit position would
+/// The error returned when converting a [`BitIndex`] to a `usize` that would
 /// overflow `usize`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BitIndexOutOfRange;
@@ -153,29 +129,28 @@ pub fn bit_width(digits: &[Digit]) -> usize {
     }
 }
 
-/// Returns the bit at `position`. Positions at or above the value's bit width read as `false`,
-/// since the value is zero-extended.
+/// Returns the bit at `index`. An `index` whose digit is at or above the value's length reads as
+/// `false`, since the value is zero-extended.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, bit};
-/// assert!(bit(&[Digit::from(0b101u8)], 0));
-/// assert!(!bit(&[Digit::from(0b101u8)], 1));
-/// assert!(bit(&[Digit::from(0b101u8)], 2));
+/// # use ibig_core::{BitIndex, Digit, bit};
+/// assert!(bit(&[Digit::from(0b101u8)], BitIndex::from(0)));
+/// assert!(!bit(&[Digit::from(0b101u8)], BitIndex::from(1)));
+/// assert!(bit(&[Digit::from(0b101u8)], BitIndex::from(2)));
 /// // Above the value's bits.
-/// assert!(!bit(&[Digit::from(5u8)], 100));
+/// assert!(!bit(&[Digit::from(5u8)], BitIndex::from(100)));
 /// // The low bit of the second digit.
-/// assert!(bit(&[Digit::ZERO, Digit::from(1u8)], Digit::BITS.try_into().unwrap()));
+/// assert!(bit(&[Digit::ZERO, Digit::from(1u8)], BitIndex::new(1, 0)));
 /// ```
-pub fn bit(digits: &[Digit], position: usize) -> bool {
-    let (digit_index, bit_index) = split_bit_index(position);
-    digit_index < digits.len() && digit_bit(digits[digit_index], bit_index)
+pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
+    index.digit_index() < digits.len() && digit_bit(digits[index.digit_index()], index.bit_index())
 }
 
-/// Returns the bit at `position` of the two's complement signed value held in the non-empty
-/// little-endian `digits`. Positions at or above `digits.len() * Digit::BITS` read as the sign
-/// bit, since the value is sign-extended.
+/// Returns the bit at `index` of the two's complement signed value held in the non-empty
+/// little-endian `digits`. An `index` whose digit is at or above `digits.len()` reads as the
+/// sign bit, since the value is sign-extended.
 ///
 /// # Panics
 ///
@@ -184,47 +159,44 @@ pub fn bit(digits: &[Digit], position: usize) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, bit_signed};
+/// # use ibig_core::{BitIndex, Digit, bit_signed};
 /// // -1 is all ones, including the sign-extended positions.
-/// assert!(bit_signed(&[Digit::MAX], 0));
-/// assert!(bit_signed(&[Digit::MAX], 100));
+/// assert!(bit_signed(&[Digit::MAX], BitIndex::from(0)));
+/// assert!(bit_signed(&[Digit::MAX], BitIndex::from(100)));
 /// // 0b101 is non-negative, so high positions read as zero.
-/// assert!(bit_signed(&[Digit::from(0b101u8)], 0));
-/// assert!(!bit_signed(&[Digit::from(0b101u8)], 100));
+/// assert!(bit_signed(&[Digit::from(0b101u8)], BitIndex::from(0)));
+/// assert!(!bit_signed(&[Digit::from(0b101u8)], BitIndex::from(100)));
 /// ```
-pub fn bit_signed(digits: &[Digit], position: usize) -> bool {
-    let (digit_index, bit_index) = split_bit_index(position);
-    if digit_index < digits.len() {
-        digit_bit(digits[digit_index], bit_index)
+pub fn bit_signed(digits: &[Digit], index: BitIndex) -> bool {
+    if index.digit_index() < digits.len() {
+        digit_bit(digits[index.digit_index()], index.bit_index())
     } else {
         is_negative(digits)
     }
 }
 
-/// Sets the bit at `position` to `value`.
+/// Sets the bit at `index` to `value`.
 ///
 /// # Panics
 ///
-/// Panics if `position` is not within `digits`, that is if
-/// `position >= digits.len() * Digit::BITS`.
+/// Panics if `index.digit_index() >= digits.len()`.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, set_bit};
+/// # use ibig_core::{BitIndex, Digit, set_bit};
 /// let mut digits = [Digit::from(0b100u8)];
-/// set_bit(&mut digits, 0, true);
+/// set_bit(&mut digits, BitIndex::from(0), true);
 /// assert_eq!(digits, [Digit::from(0b101u8)]);
-/// set_bit(&mut digits, 2, false);
+/// set_bit(&mut digits, BitIndex::from(2), false);
 /// assert_eq!(digits, [Digit::from(0b001u8)]);
 /// ```
-pub fn set_bit(digits: &mut [Digit], position: usize, value: bool) {
-    let (digit_index, bit_index) = split_bit_index(position);
-    let mask = Digit::from_u8(1) << bit_index;
+pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
+    let mask = Digit::from_u8(1) << index.bit_index();
     if value {
-        digits[digit_index] |= mask;
+        digits[index.digit_index()] |= mask;
     } else {
-        digits[digit_index] &= !mask;
+        digits[index.digit_index()] &= !mask;
     }
 }
 

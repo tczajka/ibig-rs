@@ -3,7 +3,7 @@
 use crate::repr::AsDigits;
 use crate::{IBig, UBig};
 use core::mem;
-use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit};
+use ibig_core::{BitIndex, DIGIT_BITS_USIZE, Digit, SignedDigit};
 
 impl UBig {
     /// Returns the number of bits needed to represent the value: the position of the
@@ -70,13 +70,12 @@ impl UBig {
     /// assert!(!UBig::from(0b10010u8).bit(100));
     /// ```
     #[inline]
-    pub fn bit(&self, position: usize) -> bool {
+    pub fn bit(&self, index: usize) -> bool {
         match self.try_to_digit() {
             Some(digit) => {
-                position < DIGIT_BITS_USIZE
-                    && (digit >> position) & Digit::from_u8(1) != Digit::ZERO
+                index < DIGIT_BITS_USIZE && (digit >> index) & Digit::from_u8(1) != Digit::ZERO
             }
-            None => ibig_core::bit(self.as_digits(), position),
+            None => ibig_core::bit(self.as_digits(), BitIndex::from(index)),
         }
     }
 
@@ -92,26 +91,27 @@ impl UBig {
     /// a.set_bit(2, false);
     /// assert_eq!(a, UBig::from(0b001u8));
     /// ```
-    pub fn set_bit(&mut self, position: usize, value: bool) {
+    pub fn set_bit(&mut self, index: usize, value: bool) {
         // Fast path: a single digit that stays a single digit.
         if let Some(digit) = self.try_to_digit()
-            && position < DIGIT_BITS_USIZE
+            && index < DIGIT_BITS_USIZE
         {
-            let mask = Digit::from_u8(1) << position;
+            let mask = Digit::from_u8(1) << index;
             *self = UBig::from_digit(if value { digit | mask } else { digit & !mask });
             return;
         }
 
         // Slow path: the value or position spans multiple digits.
-        let digit_index = position / DIGIT_BITS_USIZE;
+        let index = BitIndex::from(index);
+        let digit_index = index.digit_index();
         let mut digits = mem::take(self).into_digits();
         if digit_index >= digits.len() {
             if value {
                 digits.resize(digit_index + 1, Digit::ZERO);
-                ibig_core::set_bit(&mut digits, position, true);
+                ibig_core::set_bit(&mut digits, index, true);
             }
         } else {
-            ibig_core::set_bit(&mut digits, position, value);
+            ibig_core::set_bit(&mut digits, index, value);
         }
         *self = UBig::from_digits(digits);
     }
@@ -284,17 +284,17 @@ impl IBig {
     /// assert!(!IBig::from(2i8).bit(100));
     /// ```
     #[inline]
-    pub fn bit(&self, position: usize) -> bool {
+    pub fn bit(&self, index: usize) -> bool {
         match self.try_to_digit() {
             Some(digit) => {
-                if position < DIGIT_BITS_USIZE {
-                    (digit.cast_unsigned() >> position) & Digit::from_u8(1) != Digit::ZERO
+                if index < DIGIT_BITS_USIZE {
+                    (digit >> index) & SignedDigit::from_i8(1) != SignedDigit::ZERO
                 } else {
                     // Positions above the digit read the sign bit.
                     digit.is_negative()
                 }
             }
-            None => ibig_core::bit_signed(self.as_digits(), position),
+            None => ibig_core::bit_signed(self.as_digits(), BitIndex::from(index)),
         }
     }
 
@@ -328,9 +328,10 @@ impl IBig {
         // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`. This is
         // `digit_index + 1`, plus one more digit when the bit is the top bit of its digit (so it
         // would otherwise land on the sign bit). Avoids `position + 1` overflowing.
-        let (digit_index, bit_index) = ibig_core::split_bit_index(position);
-        let min_len =
-            digit_index + 1 + (usize::try_from(bit_index).unwrap() + 1) / DIGIT_BITS_USIZE;
+        let index = BitIndex::from(position);
+        let min_len = index.digit_index()
+            + 1
+            + (usize::try_from(index.bit_index()).unwrap() + 1) / DIGIT_BITS_USIZE;
         let len = self.as_digits().len();
         if len < min_len && value == self.is_negative() {
             // The bit is the sign bit or higher and is not changing, nothing to do.
@@ -341,7 +342,7 @@ impl IBig {
             digits.resize(min_len, Digit::ZERO);
             ibig_core::extend_signed(&mut digits, len);
         }
-        ibig_core::set_bit(&mut digits, position, value);
+        ibig_core::set_bit(&mut digits, index, value);
         *self = IBig::from_digits(digits);
     }
 

@@ -12,6 +12,10 @@ const fn digit(n: u16) -> Digit {
 
 const BITS: usize = Digit::BITS as usize;
 
+fn idx(position: usize) -> BitIndex {
+    BitIndex::from(position)
+}
+
 #[test]
 fn test_bit_width() {
     let cases: &[(&[Digit], usize)] = &[
@@ -63,55 +67,55 @@ fn test_bit_index_new_bad_bit() {
 fn test_bit() {
     // 0b101 = 5.
     let d = [digit(0b101)];
-    assert!(bit(&d, 0));
-    assert!(!bit(&d, 1));
-    assert!(bit(&d, 2));
-    assert!(!bit(&d, 3));
+    assert!(bit(&d, idx(0)));
+    assert!(!bit(&d, idx(1)));
+    assert!(bit(&d, idx(2)));
+    assert!(!bit(&d, idx(3)));
     // The value is zero-extended above its bits.
-    assert!(!bit(&d, BITS - 1));
-    assert!(!bit(&d, BITS));
-    assert!(!bit(&d, 1000));
+    assert!(!bit(&d, idx(BITS - 1)));
+    assert!(!bit(&d, idx(BITS)));
+    assert!(!bit(&d, idx(1000)));
     // An empty slice is the value zero: every bit is clear.
-    assert!(!bit(&[], 0));
-    assert!(!bit(&[], 1000));
+    assert!(!bit(&[], idx(0)));
+    assert!(!bit(&[], idx(1000)));
     // Bits across a digit boundary: low digit all ones, high digit 0b10.
     let d2 = [Digit::MAX, digit(0b10)];
-    assert!(bit(&d2, 0));
-    assert!(bit(&d2, BITS - 1));
-    assert!(!bit(&d2, BITS)); // bit 0 of 0b10
-    assert!(bit(&d2, BITS + 1)); // bit 1 of 0b10
-    assert!(!bit(&d2, BITS + 2));
+    assert!(bit(&d2, idx(0)));
+    assert!(bit(&d2, idx(BITS - 1)));
+    assert!(!bit(&d2, idx(BITS))); // bit 0 of 0b10
+    assert!(bit(&d2, idx(BITS + 1))); // bit 1 of 0b10
+    assert!(!bit(&d2, idx(BITS + 2)));
 }
 
 #[test]
 fn test_bit_signed() {
     // -1 is all ones, including every sign-extended position.
-    assert!(bit_signed(&[Digit::MAX], 0));
-    assert!(bit_signed(&[Digit::MAX], BITS - 1));
-    assert!(bit_signed(&[Digit::MAX], BITS));
-    assert!(bit_signed(&[Digit::MAX], 1000));
+    assert!(bit_signed(&[Digit::MAX], idx(0)));
+    assert!(bit_signed(&[Digit::MAX], idx(BITS - 1)));
+    assert!(bit_signed(&[Digit::MAX], idx(BITS)));
+    assert!(bit_signed(&[Digit::MAX], idx(1000)));
     // 0b101 is non-negative: the sign bit and everything above it are zero.
     let p = [digit(0b101)];
-    assert!(bit_signed(&p, 0));
-    assert!(!bit_signed(&p, 1));
-    assert!(bit_signed(&p, 2));
-    assert!(!bit_signed(&p, BITS - 1));
-    assert!(!bit_signed(&p, BITS));
-    assert!(!bit_signed(&p, 1000));
+    assert!(bit_signed(&p, idx(0)));
+    assert!(!bit_signed(&p, idx(1)));
+    assert!(bit_signed(&p, idx(2)));
+    assert!(!bit_signed(&p, idx(BITS - 1)));
+    assert!(!bit_signed(&p, idx(BITS)));
+    assert!(!bit_signed(&p, idx(1000)));
     // A negative two-digit value [0, MAX]: low digit zero, high digit all ones, sign negative.
     let neg = [digit(0), Digit::MAX];
-    assert!(!bit_signed(&neg, 0));
-    assert!(!bit_signed(&neg, BITS - 1));
-    assert!(bit_signed(&neg, BITS));
-    assert!(bit_signed(&neg, 2 * BITS - 1));
-    assert!(bit_signed(&neg, 2 * BITS)); // sign-extended
-    assert!(bit_signed(&neg, 1000));
+    assert!(!bit_signed(&neg, idx(0)));
+    assert!(!bit_signed(&neg, idx(BITS - 1)));
+    assert!(bit_signed(&neg, idx(BITS)));
+    assert!(bit_signed(&neg, idx(2 * BITS - 1)));
+    assert!(bit_signed(&neg, idx(2 * BITS))); // sign-extended
+    assert!(bit_signed(&neg, idx(1000)));
 }
 
 #[test]
 #[should_panic]
 fn test_bit_signed_empty() {
-    bit_signed(&[], 0);
+    bit_signed(&[], idx(0));
 }
 
 #[test]

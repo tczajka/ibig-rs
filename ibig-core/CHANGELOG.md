@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`, `split_bit_index`
+- Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`
 
 ### Changed
 
 - Renamed `next_power_of_two_in_place` to `next_power_of_two`.
+- `bit`, `bit_signed` and `set_bit` now take a `BitIndex` instead of a bit position `usize`.
 
 ## [0.0.1] - 2026-06-05
 
