@@ -312,12 +312,12 @@ impl IBig {
     /// b.set_bit(0, false);
     /// assert_eq!(b, IBig::from(-2i8));
     /// ```
-    pub fn set_bit(&mut self, position: usize, value: bool) {
+    pub fn set_bit(&mut self, index: usize, value: bool) {
         // Fast path: a single digit whose modification is within a single digit.
         if let Some(digit) = self.try_to_digit()
-            && position < DIGIT_BITS_USIZE - 1
+            && index < DIGIT_BITS_USIZE - 1
         {
-            let mask = SignedDigit::from_i8(1) << position;
+            let mask = SignedDigit::from_i8(1) << index;
             let new = if value { digit | mask } else { digit & !mask };
             *self = IBig::from_digit(new);
             return;
@@ -328,7 +328,7 @@ impl IBig {
         // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`. This is
         // `digit_index + 1`, plus one more digit when the bit is the top bit of its digit (so it
         // would otherwise land on the sign bit). Avoids `position + 1` overflowing.
-        let index = BitIndex::from(position);
+        let index = BitIndex::from(index);
         let min_len = index.digit_index()
             + 1
             + (usize::try_from(index.bit_index()).unwrap() + 1) / DIGIT_BITS_USIZE;
