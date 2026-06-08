@@ -325,9 +325,9 @@ impl IBig {
 
         // Slow path.
         // Number of digits needed for the modified bit to sit strictly below the sign bit,
-        // i.e. the smallest `min_len` with `position < min_len * DIGIT_BITS_USIZE - 1`. This is
+        // i.e. the smallest `min_len` with `index < min_len * DIGIT_BITS_USIZE - 1`. This is
         // `digit_index + 1`, plus one more digit when the bit is the top bit of its digit (so it
-        // would otherwise land on the sign bit). Avoids `position + 1` overflowing.
+        // would otherwise land on the sign bit). Avoids `index + 1` overflowing.
         let index = BitIndex::from(index);
         let min_len = index.digit_index()
             + 1
