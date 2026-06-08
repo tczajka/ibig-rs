@@ -3,8 +3,7 @@
 use crate::Digit;
 use crate::sign::{sign_extension, sign_extension_byte};
 
-/// Given a little-endian slice of unsigned digits, returns the minimum number of digits
-/// needed to represent the value.
+/// Returns the minimum number of digits needed to represent the value held in `digits`.
 ///
 /// This is the length with the most-significant zero digits removed. It is 0 for the value
 /// zero (an empty slice, or a slice of only zero digits).
@@ -26,8 +25,8 @@ pub const fn min_len(digits: &[Digit]) -> usize {
     len
 }
 
-/// Given a non-empty little-endian slice of two's complement digits, returns the minimum
-/// number of digits needed to represent the value.
+/// Given non-empty two's complement `digits`, returns the minimum number of digits needed to
+/// represent the value.
 ///
 /// This is the length with redundant most-significant sign-extension digits removed (a top
 /// digit that merely repeats the sign of the digit below it), but always at least 1 (a

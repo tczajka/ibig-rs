@@ -2,6 +2,14 @@
 //!
 //! This crate implements the fundamental arithmetic algorithms — addition, subtraction,
 //! multiplication and division — operating on sequences of [`Digit`]s.
+//!
+//! Numbers are represented as slices of [`Digit`]s in little-endian order — the
+//! least-significant digit first — regardless of the platform's native byte order (so the
+//! layout is the same on big-endian machines).
+//!
+//! Unless a function's documentation states otherwise, the digits are interpreted as an
+//! unsigned (non-negative) value. Functions that work with signed two's complement values say
+//! so explicitly (and typically have a `_signed` suffix).
 
 #![no_std]
 

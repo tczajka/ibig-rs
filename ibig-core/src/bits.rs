@@ -117,9 +117,9 @@ pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
     index.digit_index() < digits.len() && digit_bit(digits[index.digit_index()], index.bit_index())
 }
 
-/// Returns the bit at `index` of the two's complement signed value held in the non-empty
-/// little-endian `digits`. An `index` whose digit is at or above `digits.len()` reads as the
-/// sign bit, since the value is sign-extended.
+/// Returns the bit at `index` of the non-empty `digits`, interpreted as a two's complement
+/// signed value. An `index` whose digit is at or above `digits.len()` reads as the sign bit,
+/// since the value is sign-extended.
 ///
 /// # Panics
 ///
@@ -169,8 +169,7 @@ pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
     }
 }
 
-/// Returns the index of the highest set bit of the unsigned value held in the little-endian
-/// `digits`, or `None` if the value is zero.
+/// Returns the index of the highest set bit of `digits`, or `None` if the value is zero.
 ///
 /// # Examples
 ///
@@ -192,8 +191,7 @@ pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
     }
 }
 
-/// Returns the index of the lowest set bit of the unsigned value held in the little-endian
-/// `digits`, or `None` if the value is zero.
+/// Returns the index of the lowest set bit of `digits`, or `None` if the value is zero.
 ///
 /// # Examples
 ///
@@ -210,8 +208,8 @@ pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
         .map(|digit_index| BitIndex::new(digit_index, digits[digit_index].trailing_zeros()))
 }
 
-/// Returns the index of the lowest unset bit of the unsigned value held in the little-endian
-/// `digits`, or `None` if every bit is set (the slice is all ones, or empty).
+/// Returns the index of the lowest unset bit of `digits`, or `None` if every bit is set (the
+/// slice is all ones, or empty).
 ///
 /// # Examples
 ///
@@ -250,8 +248,8 @@ pub fn count_ones(digits: &[Digit]) -> usize {
         .sum()
 }
 
-/// Returns `true` if the unsigned value held in the little-endian `digits` is a power of two,
-/// i.e. exactly one bit is set. Returns `false` for zero.
+/// Returns `true` if `digits` is a power of two, i.e. exactly one bit is set. Returns `false`
+/// for zero.
 ///
 /// # Examples
 ///
@@ -271,7 +269,7 @@ pub fn is_power_of_two(digits: &[Digit]) -> bool {
     top.is_power_of_two() && min_len(low) == 0
 }
 
-/// Replaces the unsigned value with the smallest power of two greater than or equal to it.
+/// Replaces the value with the smallest power of two greater than or equal to it.
 ///
 /// Returns `true` on overflow — when that power of two does not fit in
 /// `digits.len() * Digit::BITS` bits — in which case `digits` is set to zero.

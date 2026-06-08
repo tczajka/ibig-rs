@@ -2,8 +2,8 @@
 
 use crate::Digit;
 
-/// Returns `true` if the non-empty little-endian slice of two's complement `digits`
-/// represents a negative value (the most-significant digit's sign bit is set).
+/// Returns `true` if the non-empty two's complement `digits` represent a negative value (the
+/// most-significant digit's sign bit is set).
 ///
 /// # Panics
 ///

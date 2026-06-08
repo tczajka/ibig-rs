@@ -2,7 +2,7 @@
 
 use crate::Digit;
 
-/// Negates (bitwise NOT) a little-endian digit slice in place, flipping every bit.
+/// Negates (bitwise NOT) a digit slice in place, flipping every bit.
 ///
 /// # Examples
 ///

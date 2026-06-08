@@ -3,8 +3,8 @@
 use crate::Digit;
 use crate::sign::{is_negative, sign_extension_byte};
 
-/// Writes the little-endian byte representation of the unsigned value held in `digits` into
-/// `bytes`, zero-extending to fill `bytes`.
+/// Writes the little-endian byte representation of `digits` into `bytes`, zero-extending to
+/// fill `bytes`.
 ///
 /// # Panics
 ///
@@ -23,8 +23,8 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
     to_bytes_fill(digits, bytes, 0);
 }
 
-/// Writes the little-endian two's complement byte representation of the signed value held in
-/// `digits` into `bytes`, sign-extending to fill `bytes`.
+/// Writes the little-endian two's complement byte representation of `digits` into `bytes`,
+/// sign-extending to fill `bytes`.
 ///
 /// `bytes.len()` must be at least `digits.len() * Digit::BYTES`.
 ///
