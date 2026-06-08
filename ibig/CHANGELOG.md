@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Work in progress. This release is a ground-up rewrite of the library, with
 substantial internal changes to representation and algorithms. Expect breaking
-API changes; they will be documented here as the rewrite progresses.
+API changes.
 
 ## [0.3.6] - 2022-09-18
 
@@ -45,11 +45,7 @@ API changes; they will be documented here as the rewrite progresses.
 
 ### Added
 
-- Mixed-type arithmetic with primitive integer types.
-
-  Allows `x + 1` instead of `x + ubig!(1)`.
-
-  This breaks with the convention that arithmetic operators require same type on both sides. A better alternative would be user-defined custom integer literals, so that `1` could be inferred to have type `UBig`. But Rust does not support this yet. So this is a workaround for the sake of ergonomics.
+- Mixed-type arithmetic with primitive integer types. Allows `x + 1` instead of `x + ubig!(1)`.
 
 ## [0.3.2] - 2021-05-02
 
