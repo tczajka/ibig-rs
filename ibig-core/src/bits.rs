@@ -98,37 +98,6 @@ impl TryFrom<BitIndex> for usize {
     }
 }
 
-/// Returns the minimum number of bits needed to represent the unsigned value held in the
-/// little-endian `digits`: the position of the most-significant set bit plus one, or 0 for
-/// the value zero.
-///
-/// # Overflow
-///
-/// The result is up to `digits.len() * Digit::BITS`, which overflows `usize` for a value of
-/// more than `usize::MAX` bits. On overflow this panics in debug builds and wraps in release
-/// builds.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{Digit, bit_width};
-/// assert_eq!(bit_width(&[]), 0);
-/// assert_eq!(bit_width(&[Digit::from(1u8)]), 1);
-/// assert_eq!(bit_width(&[Digit::from(1u8), Digit::ZERO]), 1);
-/// assert_eq!(bit_width(&[Digit::from(5u8)]), 3); // 0b101
-/// assert_eq!(bit_width(&[Digit::ZERO, Digit::from(1u8)]), Digit::BITS as usize + 1);
-/// ```
-pub fn bit_width(digits: &[Digit]) -> usize {
-    let len = min_len(digits);
-    if len == 0 {
-        0
-    } else {
-        let top_width =
-            DIGIT_BITS_USIZE - usize::try_from(digits[len - 1].leading_zeros()).unwrap();
-        (len - 1) * DIGIT_BITS_USIZE + top_width
-    }
-}
-
 /// Returns the bit at `index`. An `index` whose digit is at or above the value's length reads as
 /// `false`, since the value is zero-extended.
 ///
@@ -200,68 +169,63 @@ pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
     }
 }
 
-/// Returns the number of trailing zero bits of the unsigned value held in the little-endian
-/// `digits`.
-///
-/// # Overflow
-///
-/// For extremely long slices, the result may overflow `usize`.
+/// Returns the index of the highest set bit of the unsigned value held in the little-endian
+/// `digits`, or `None` if the value is zero.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, trailing_zeros};
-/// assert_eq!(trailing_zeros(&[Digit::from(0b1100u8)]), 2);
-/// assert_eq!(trailing_zeros(&[Digit::from(1u8)]), 0);
-/// assert_eq!(
-///     trailing_zeros(&[Digit::ZERO, Digit::from(1u8)]),
-///     usize::try_from(Digit::BITS).unwrap());
-/// assert_eq!(
-///     trailing_zeros(&[Digit::ZERO, Digit::ZERO]),
-///     2 * usize::try_from(Digit::BITS).unwrap());
+/// # use ibig_core::{BitIndex, Digit, highest_one};
+/// assert_eq!(highest_one(&[]), None);
+/// assert_eq!(highest_one(&[Digit::ZERO, Digit::ZERO]), None);
+/// assert_eq!(highest_one(&[Digit::from(0b101u8)]), Some(BitIndex::new(0, 2)));
+/// assert_eq!(highest_one(&[Digit::from(5u8), Digit::ZERO]), Some(BitIndex::new(0, 2)));
+/// assert_eq!(highest_one(&[Digit::ZERO, Digit::from(1u8)]), Some(BitIndex::new(1, 0)));
 /// ```
-pub fn trailing_zeros(digits: &[Digit]) -> usize {
-    match digits
-        .iter()
-        .enumerate()
-        .find(|&(_, &digit)| digit != Digit::ZERO)
-    {
-        Some((i, &digit)) => {
-            i * DIGIT_BITS_USIZE + usize::try_from(digit.trailing_zeros()).unwrap()
-        }
-        None => digits.len() * DIGIT_BITS_USIZE,
+pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
+    let len = min_len(digits);
+    if len == 0 {
+        None
+    } else {
+        let bit_index = Digit::BITS - 1 - digits[len - 1].leading_zeros();
+        Some(BitIndex::new(len - 1, bit_index))
     }
 }
 
-/// Returns the number of trailing one bits of the unsigned value held in the little-endian
-/// `digits`.
-///
-/// # Overflow
-///
-/// For extremely long slices, the result may overflow `usize`.
+/// Returns the index of the lowest set bit of the unsigned value held in the little-endian
+/// `digits`, or `None` if the value is zero.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, trailing_ones};
-/// assert_eq!(trailing_ones(&[Digit::from(0b1011u8)]), 2);
-/// assert_eq!(trailing_ones(&[Digit::ZERO]), 0);
-/// assert_eq!(
-///     trailing_ones(&[Digit::MAX, Digit::from(0b10u8)]),
-///     usize::try_from(Digit::BITS).unwrap());
-/// assert_eq!(
-///     trailing_ones(&[Digit::MAX, Digit::MAX]),
-///     2 * usize::try_from(Digit::BITS).unwrap());
+/// # use ibig_core::{BitIndex, Digit, lowest_one};
+/// assert_eq!(lowest_one(&[Digit::ZERO]), None);
+/// assert_eq!(lowest_one(&[Digit::from(0b1100u8)]), Some(BitIndex::new(0, 2)));
+/// assert_eq!(lowest_one(&[Digit::ZERO, Digit::from(1u8)]), Some(BitIndex::new(1, 0)));
 /// ```
-pub fn trailing_ones(digits: &[Digit]) -> usize {
-    match digits
+pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
+    digits
         .iter()
-        .enumerate()
-        .find(|&(_, &digit)| digit != Digit::MAX)
-    {
-        Some((i, &digit)) => i * DIGIT_BITS_USIZE + usize::try_from(digit.trailing_ones()).unwrap(),
-        None => digits.len() * DIGIT_BITS_USIZE,
-    }
+        .position(|&digit| digit != Digit::ZERO)
+        .map(|digit_index| BitIndex::new(digit_index, digits[digit_index].trailing_zeros()))
+}
+
+/// Returns the index of the lowest unset bit of the unsigned value held in the little-endian
+/// `digits`, or `None` if every bit is set (the slice is all ones, or empty).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{BitIndex, Digit, lowest_zero};
+/// assert_eq!(lowest_zero(&[Digit::MAX]), None);
+/// assert_eq!(lowest_zero(&[Digit::from(0b1011u8)]), Some(BitIndex::new(0, 2)));
+/// assert_eq!(lowest_zero(&[Digit::MAX, Digit::from(0b10u8)]), Some(BitIndex::new(1, 0)));
+/// ```
+pub fn lowest_zero(digits: &[Digit]) -> Option<BitIndex> {
+    digits
+        .iter()
+        .position(|&digit| digit != Digit::MAX)
+        .map(|digit_index| BitIndex::new(digit_index, digits[digit_index].trailing_ones()))
 }
 
 /// Returns the number of one bits (the population count) in `digits`.

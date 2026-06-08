@@ -19,86 +19,6 @@ fn ibig_pow2(k: usize) -> IBig {
 }
 
 #[test]
-fn ubig_bit_width() {
-    assert_eq!(UBig::ZERO.bit_width(), 0);
-    assert_eq!(UBig::from(1u8).bit_width(), 1);
-    assert_eq!(UBig::from(0b101u8).bit_width(), 3);
-    assert_eq!(UBig::from(u128::MAX).bit_width(), 128);
-    assert_eq!(UBig::from(1u128 << 100).bit_width(), 101);
-}
-
-#[test]
-fn ubig_ilog2() {
-    assert_eq!(UBig::from(1u8).ilog2(), 0);
-    assert_eq!(UBig::from(0b101u8).ilog2(), 2);
-    assert_eq!(UBig::from(u128::MAX).ilog2(), 127);
-    assert_eq!(UBig::from(1u128 << 100).ilog2(), 100);
-}
-
-#[test]
-#[should_panic]
-fn ubig_ilog2_zero() {
-    UBig::ZERO.ilog2();
-}
-
-#[test]
-fn ubig_checked_ilog2() {
-    assert_eq!(UBig::ZERO.checked_ilog2(), None);
-    assert_eq!(UBig::from(1u8).checked_ilog2(), Some(0));
-    assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
-    assert_eq!(UBig::from(1u128 << 100).checked_ilog2(), Some(100));
-}
-
-proptest! {
-    // A power of two `2^k`: bit_width is `k + 1`, ilog2 is `k`.
-    #[test]
-    fn ubig_pow2_logs(k in 0usize..1000) {
-        let p = ubig_pow2(k);
-        prop_assert_eq!(p.bit_width(), k + 1);
-        prop_assert_eq!(p.ilog2(), k);
-        prop_assert_eq!(p.checked_ilog2(), Some(k));
-    }
-}
-
-#[test]
-fn ibig_ilog2() {
-    assert_eq!(IBig::from(1i8).ilog2(), 0);
-    assert_eq!(IBig::from(0b101i8).ilog2(), 2);
-    assert_eq!(IBig::from(1i128 << 100).ilog2(), 100);
-}
-
-#[test]
-#[should_panic]
-fn ibig_ilog2_zero() {
-    IBig::ZERO.ilog2();
-}
-
-#[test]
-#[should_panic]
-fn ibig_ilog2_negative() {
-    IBig::from(-4i8).ilog2();
-}
-
-#[test]
-fn ibig_checked_ilog2() {
-    assert_eq!(IBig::ZERO.checked_ilog2(), None);
-    assert_eq!(IBig::from(1i8).checked_ilog2(), Some(0));
-    assert_eq!(IBig::from(0b101i8).checked_ilog2(), Some(2));
-    assert_eq!(IBig::from(1i128 << 100).checked_ilog2(), Some(100));
-    // Non-positive values have no logarithm.
-    assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
-}
-
-proptest! {
-    #[test]
-    fn ibig_pow2_logs(k in 0usize..1000) {
-        let p = ibig_pow2(k);
-        prop_assert_eq!(p.ilog2(), k);
-        prop_assert_eq!(p.checked_ilog2(), Some(k));
-    }
-}
-
-#[test]
 fn ubig_bit() {
     // Single digit (fast path).
     let a = UBig::from(0b10010u8);
@@ -248,6 +168,86 @@ fn ibig_set_bit() {
     assert_eq!(big, IBig::from(u64::MAX - 1));
     big.set_bit(0, true);
     assert_eq!(big, IBig::from(u64::MAX));
+}
+
+#[test]
+fn ubig_bit_width() {
+    assert_eq!(UBig::ZERO.bit_width(), 0);
+    assert_eq!(UBig::from(1u8).bit_width(), 1);
+    assert_eq!(UBig::from(0b101u8).bit_width(), 3);
+    assert_eq!(UBig::from(u128::MAX).bit_width(), 128);
+    assert_eq!(UBig::from(1u128 << 100).bit_width(), 101);
+}
+
+#[test]
+fn ubig_ilog2() {
+    assert_eq!(UBig::from(1u8).ilog2(), 0);
+    assert_eq!(UBig::from(0b101u8).ilog2(), 2);
+    assert_eq!(UBig::from(u128::MAX).ilog2(), 127);
+    assert_eq!(UBig::from(1u128 << 100).ilog2(), 100);
+}
+
+#[test]
+#[should_panic]
+fn ubig_ilog2_zero() {
+    UBig::ZERO.ilog2();
+}
+
+#[test]
+fn ubig_checked_ilog2() {
+    assert_eq!(UBig::ZERO.checked_ilog2(), None);
+    assert_eq!(UBig::from(1u8).checked_ilog2(), Some(0));
+    assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
+    assert_eq!(UBig::from(1u128 << 100).checked_ilog2(), Some(100));
+}
+
+proptest! {
+    // A power of two `2^k`: bit_width is `k + 1`, ilog2 is `k`.
+    #[test]
+    fn ubig_pow2_logs(k in 0usize..1000) {
+        let p = ubig_pow2(k);
+        prop_assert_eq!(p.bit_width(), k + 1);
+        prop_assert_eq!(p.ilog2(), k);
+        prop_assert_eq!(p.checked_ilog2(), Some(k));
+    }
+}
+
+#[test]
+fn ibig_ilog2() {
+    assert_eq!(IBig::from(1i8).ilog2(), 0);
+    assert_eq!(IBig::from(0b101i8).ilog2(), 2);
+    assert_eq!(IBig::from(1i128 << 100).ilog2(), 100);
+}
+
+#[test]
+#[should_panic]
+fn ibig_ilog2_zero() {
+    IBig::ZERO.ilog2();
+}
+
+#[test]
+#[should_panic]
+fn ibig_ilog2_negative() {
+    IBig::from(-4i8).ilog2();
+}
+
+#[test]
+fn ibig_checked_ilog2() {
+    assert_eq!(IBig::ZERO.checked_ilog2(), None);
+    assert_eq!(IBig::from(1i8).checked_ilog2(), Some(0));
+    assert_eq!(IBig::from(0b101i8).checked_ilog2(), Some(2));
+    assert_eq!(IBig::from(1i128 << 100).checked_ilog2(), Some(100));
+    // Non-positive values have no logarithm.
+    assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
+}
+
+proptest! {
+    #[test]
+    fn ibig_pow2_logs(k in 0usize..1000) {
+        let p = ibig_pow2(k);
+        prop_assert_eq!(p.ilog2(), k);
+        prop_assert_eq!(p.checked_ilog2(), Some(k));
+    }
 }
 
 #[test]

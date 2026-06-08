@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed `next_power_of_two_in_place` to `next_power_of_two`.
 - `bit`, `bit_signed` and `set_bit` now take a `BitIndex` instead of a bit position `usize`.
+- Replaced `bit_width`, `trailing_zeros` and `trailing_ones` with `highest_one`, `lowest_one`
+  and `lowest_zero`, which return `Option<BitIndex>`.
 
 ## [0.0.1] - 2026-06-05
 

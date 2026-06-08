@@ -12,8 +12,8 @@ mod len;
 mod sign;
 
 pub use bits::{
-    BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit, bit_signed, bit_width, count_ones,
-    is_power_of_two, next_power_of_two, set_bit, trailing_ones, trailing_zeros,
+    BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit, bit_signed, count_ones, highest_one,
+    is_power_of_two, lowest_one, lowest_zero, next_power_of_two, set_bit,
 };
 pub use bitwise::{bitand_same_len, bitandnot_same_len, bitor_same_len, bitxor_same_len, not};
 pub use bytes::{

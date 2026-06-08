@@ -6,58 +6,6 @@ use core::mem;
 use ibig_core::{BitIndex, DIGIT_BITS_USIZE, Digit, SignedDigit};
 
 impl UBig {
-    /// Returns the number of bits needed to represent the value: the position of the
-    /// most-significant set bit plus one, or 0 for the value zero.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0u8).bit_width(), 0);
-    /// assert_eq!(UBig::from(1u8).bit_width(), 1);
-    /// assert_eq!(UBig::from(0b101u8).bit_width(), 3);
-    /// ```
-    #[inline]
-    pub fn bit_width(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => DIGIT_BITS_USIZE - usize::try_from(digit.leading_zeros()).unwrap(),
-            None => ibig_core::bit_width(self.as_digits()),
-        }
-    }
-
-    /// Returns the base-2 logarithm, rounded down.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is zero.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(1u8).ilog2(), 0);
-    /// assert_eq!(UBig::from(0b101u8).ilog2(), 2);
-    /// ```
-    #[inline]
-    pub fn ilog2(&self) -> usize {
-        self.checked_ilog2()
-            .expect("argument of ilog2 must be positive")
-    }
-
-    /// Returns the base-2 logarithm, rounded down, or `None` if the value is zero.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::UBig;
-    /// assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
-    /// assert_eq!(UBig::ZERO.checked_ilog2(), None);
-    /// ```
-    #[inline]
-    pub fn checked_ilog2(&self) -> Option<usize> {
-        self.bit_width().checked_sub(1)
-    }
-
     /// Returns the bit at `position`, counting from the least-significant bit. Positions at or
     /// above [`bit_width`](UBig::bit_width) read as `false`, since the value is zero-extended.
     ///
@@ -116,6 +64,61 @@ impl UBig {
         *self = UBig::from_digits(digits);
     }
 
+    /// Returns the number of bits needed to represent the value: the position of the
+    /// most-significant set bit plus one, or 0 for the value zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(0u8).bit_width(), 0);
+    /// assert_eq!(UBig::from(1u8).bit_width(), 1);
+    /// assert_eq!(UBig::from(0b101u8).bit_width(), 3);
+    /// ```
+    #[inline]
+    pub fn bit_width(&self) -> usize {
+        if let Some(digit) = self.try_to_digit() {
+            return DIGIT_BITS_USIZE - usize::try_from(digit.leading_zeros()).unwrap();
+        }
+        // A multi-digit value is nonzero, so it has a highest set bit.
+        let highest = ibig_core::highest_one(self.as_digits()).unwrap();
+        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+        usize::try_from(highest).unwrap() + 1
+    }
+
+    /// Returns the base-2 logarithm, rounded down.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(1u8).ilog2(), 0);
+    /// assert_eq!(UBig::from(0b101u8).ilog2(), 2);
+    /// ```
+    #[inline]
+    pub fn ilog2(&self) -> usize {
+        self.checked_ilog2()
+            .expect("argument of ilog2 must be positive")
+    }
+
+    /// Returns the base-2 logarithm, rounded down, or `None` if the value is zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(0b101u8).checked_ilog2(), Some(2));
+    /// assert_eq!(UBig::ZERO.checked_ilog2(), None);
+    /// ```
+    #[inline]
+    pub fn checked_ilog2(&self) -> Option<usize> {
+        self.bit_width().checked_sub(1)
+    }
+
     /// Returns the number of trailing zero bits.
     ///
     /// # Panics
@@ -130,16 +133,17 @@ impl UBig {
     /// assert_eq!(UBig::from(0b101000u8).trailing_zeros(), 3);
     /// ```
     pub fn trailing_zeros(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => {
-                assert!(
-                    digit != Digit::ZERO,
-                    "zero has infinitely many trailing zeros"
-                );
-                digit.trailing_zeros().try_into().unwrap()
-            }
-            None => ibig_core::trailing_zeros(self.as_digits()),
+        if let Some(digit) = self.try_to_digit() {
+            assert!(
+                digit != Digit::ZERO,
+                "zero has infinitely many trailing zeros"
+            );
+            return digit.trailing_zeros().try_into().unwrap();
         }
+        // A multi-digit value is nonzero, so it has a lowest set bit.
+        let lowest = ibig_core::lowest_one(self.as_digits()).unwrap();
+        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+        lowest.try_into().unwrap()
     }
 
     /// Returns the number of trailing one bits.
@@ -152,9 +156,14 @@ impl UBig {
     /// assert_eq!(UBig::from(0b100111u8).trailing_ones(), 3);
     /// ```
     pub fn trailing_ones(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => digit.trailing_ones().try_into().unwrap(),
-            None => ibig_core::trailing_ones(self.as_digits()),
+        if let Some(digit) = self.try_to_digit() {
+            return digit.trailing_ones().try_into().unwrap();
+        }
+        let digits = self.as_digits();
+        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+        match ibig_core::lowest_zero(digits) {
+            Some(bit_index) => bit_index.try_into().unwrap(),
+            None => digits.len() * DIGIT_BITS_USIZE,
         }
     }
 
@@ -221,51 +230,6 @@ impl UBig {
 }
 
 impl IBig {
-    /// Returns the base-2 logarithm, rounded down.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the value is not positive (zero or negative).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(1i8).ilog2(), 0);
-    /// assert_eq!(IBig::from(0b101i8).ilog2(), 2);
-    /// ```
-    #[inline]
-    pub fn ilog2(&self) -> usize {
-        self.checked_ilog2()
-            .expect("argument of ilog2 must be positive")
-    }
-
-    /// Returns the base-2 logarithm, rounded down, or `None` if the value is not positive.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ibig::IBig;
-    /// assert_eq!(IBig::from(0b101i8).checked_ilog2(), Some(2));
-    /// assert_eq!(IBig::ZERO.checked_ilog2(), None);
-    /// assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
-    /// ```
-    #[inline]
-    pub fn checked_ilog2(&self) -> Option<usize> {
-        match self.try_to_digit() {
-            Some(digit) => digit.checked_ilog2().map(|x| usize::try_from(x).unwrap()),
-            None => {
-                let digits = self.as_digits();
-                if ibig_core::is_negative(digits) {
-                    None
-                } else {
-                    // A multi-digit value is nonzero, so its bit width is at least one.
-                    Some(ibig_core::bit_width(digits) - 1)
-                }
-            }
-        }
-    }
-
     /// Returns the bit at `position` of the two's complement representation, counting from the
     /// least-significant bit. Positions at or above the stored width read as the sign bit,
     /// since the value is sign-extended: `false` for a non-negative value and `true` for a
@@ -346,6 +310,52 @@ impl IBig {
         *self = IBig::from_digits(digits);
     }
 
+    /// Returns the base-2 logarithm, rounded down.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is not positive (zero or negative).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(1i8).ilog2(), 0);
+    /// assert_eq!(IBig::from(0b101i8).ilog2(), 2);
+    /// ```
+    #[inline]
+    pub fn ilog2(&self) -> usize {
+        self.checked_ilog2()
+            .expect("argument of ilog2 must be positive")
+    }
+
+    /// Returns the base-2 logarithm, rounded down, or `None` if the value is not positive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::IBig;
+    /// assert_eq!(IBig::from(0b101i8).checked_ilog2(), Some(2));
+    /// assert_eq!(IBig::ZERO.checked_ilog2(), None);
+    /// assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
+    /// ```
+    #[inline]
+    pub fn checked_ilog2(&self) -> Option<usize> {
+        if let Some(digit) = self.try_to_digit() {
+            return digit.checked_ilog2().map(|x| x.try_into().unwrap());
+        }
+
+        let digits = self.as_digits();
+        if ibig_core::is_negative(digits) {
+            None
+        } else {
+            // A multi-digit non-negative value is nonzero, so it has a highest set bit.
+            let highest = ibig_core::highest_one(digits).unwrap();
+            // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+            Some(highest.try_into().unwrap())
+        }
+    }
+
     /// Returns the number of trailing zero bits of the two's complement representation.
     ///
     /// # Panics
@@ -361,16 +371,18 @@ impl IBig {
     /// assert_eq!(IBig::from(-4i8).trailing_zeros(), 2);
     /// ```
     pub fn trailing_zeros(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => {
-                assert!(
-                    digit != SignedDigit::ZERO,
-                    "zero has infinitely many trailing zeros"
-                );
-                digit.trailing_zeros().try_into().unwrap()
-            }
-            None => ibig_core::trailing_zeros(self.as_digits()),
+        if let Some(digit) = self.try_to_digit() {
+            assert!(
+                digit != SignedDigit::ZERO,
+                "zero has infinitely many trailing zeros"
+            );
+            return digit.trailing_zeros().try_into().unwrap();
         }
+
+        // A multi-digit value is nonzero, so it has a lowest set bit.
+        let lowest = ibig_core::lowest_one(self.as_digits()).unwrap();
+        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+        lowest.try_into().unwrap()
     }
 
     /// Returns the number of trailing one bits of the two's complement representation.
@@ -388,15 +400,17 @@ impl IBig {
     /// assert_eq!(IBig::from(-3i8).trailing_ones(), 1);
     /// ```
     pub fn trailing_ones(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => {
-                assert!(
-                    digit != SignedDigit::from_i8(-1),
-                    "-1 has infinitely many trailing ones"
-                );
-                digit.trailing_ones().try_into().unwrap()
-            }
-            None => ibig_core::trailing_ones(self.as_digits()),
+        if let Some(digit) = self.try_to_digit() {
+            assert!(
+                digit != SignedDigit::from_i8(-1),
+                "-1 has infinitely many trailing ones"
+            );
+            return digit.trailing_ones().try_into().unwrap();
         }
+        let digits = self.as_digits();
+        // A multi-digit two's complement value is never all ones, so it has a lowest zero.
+        let lowest = ibig_core::lowest_zero(digits).unwrap();
+        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+        lowest.try_into().unwrap()
     }
 }

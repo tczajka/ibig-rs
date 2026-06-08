@@ -1,8 +1,8 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    BitIndex, BitIndexOutOfRange, Digit, bit, bit_signed, bit_width, count_ones, is_power_of_two,
-    next_power_of_two, trailing_ones, trailing_zeros,
+    BitIndex, BitIndexOutOfRange, Digit, bit, bit_signed, count_ones, highest_one, is_power_of_two,
+    lowest_one, lowest_zero, next_power_of_two,
 };
 use proptest::prelude::*;
 
@@ -14,29 +14,6 @@ const BITS: usize = Digit::BITS as usize;
 
 fn idx(position: usize) -> BitIndex {
     BitIndex::from(position)
-}
-
-#[test]
-fn test_bit_width() {
-    let cases: &[(&[Digit], usize)] = &[
-        // Zero in any form needs no bits.
-        (&[], 0),
-        (&[digit(0)], 0),
-        (&[digit(0), digit(0)], 0),
-        // Small values.
-        (&[digit(1)], 1),
-        (&[digit(0b101)], 3),
-        (&[Digit::MAX], BITS),
-        // Most-significant zero digits don't count.
-        (&[digit(5), digit(0)], 3),
-        // A set bit in a higher digit, above a zero low digit.
-        (&[digit(0), digit(1)], BITS + 1),
-        (&[digit(0), Digit::MAX], 2 * BITS),
-        (&[Digit::MAX, Digit::MAX], 2 * BITS),
-    ];
-    for &(digits, expected) in cases {
-        assert_eq!(bit_width(digits), expected);
-    }
 }
 
 proptest! {
@@ -119,40 +96,71 @@ fn test_bit_signed_empty() {
 }
 
 #[test]
-fn test_trailing_zeros() {
-    let cases: &[(&[Digit], usize)] = &[
-        // Within the low digit.
-        (&[digit(0b1100)], 2),
-        (&[digit(1)], 0),
-        (&[Digit::MAX], 0),
-        // A zero low digit contributes a full digit, then count into the next.
-        (&[digit(0), digit(0b100)], BITS + 2),
-        (&[digit(0), digit(0), digit(1)], 2 * BITS),
-        // All zeros (the value zero): the full width.
-        (&[], 0),
-        (&[digit(0), digit(0)], 2 * BITS),
+fn test_highest_one() {
+    let cases: &[(&[Digit], Option<BitIndex>)] = &[
+        // Zero in any form has no set bit.
+        (&[], None),
+        (&[digit(0)], None),
+        (&[digit(0), digit(0)], None),
+        // Small values.
+        (&[digit(1)], Some(BitIndex::new(0, 0))),
+        (&[digit(0b101)], Some(BitIndex::new(0, 2))),
+        (&[Digit::MAX], Some(BitIndex::new(0, Digit::BITS - 1))),
+        // Most-significant zero digits don't count.
+        (&[digit(5), digit(0)], Some(BitIndex::new(0, 2))),
+        // A set bit in a higher digit, above a zero low digit.
+        (&[digit(0), digit(1)], Some(BitIndex::new(1, 0))),
+        (
+            &[digit(0), Digit::MAX],
+            Some(BitIndex::new(1, Digit::BITS - 1)),
+        ),
+        (
+            &[Digit::MAX, Digit::MAX],
+            Some(BitIndex::new(1, Digit::BITS - 1)),
+        ),
     ];
     for &(digits, expected) in cases {
-        assert_eq!(trailing_zeros(digits), expected);
+        assert_eq!(highest_one(digits), expected);
     }
 }
 
 #[test]
-fn test_trailing_ones() {
-    let cases: &[(&[Digit], usize)] = &[
+fn test_lowest_one() {
+    let cases: &[(&[Digit], Option<BitIndex>)] = &[
         // Within the low digit.
-        (&[digit(0b1011)], 2),
-        (&[digit(0)], 0),
-        (&[Digit::MAX], BITS),
-        // An all-ones low digit contributes a full digit, then count into the next.
-        (&[Digit::MAX, digit(0b1011)], BITS + 2),
-        (&[Digit::MAX, Digit::MAX, digit(0)], 2 * BITS),
-        // All ones (no zero bit): the full width.
-        (&[], 0),
-        (&[Digit::MAX, Digit::MAX], 2 * BITS),
+        (&[digit(0b1100)], Some(BitIndex::new(0, 2))),
+        (&[digit(1)], Some(BitIndex::new(0, 0))),
+        (&[Digit::MAX], Some(BitIndex::new(0, 0))),
+        // A zero low digit skips to the next.
+        (&[digit(0), digit(0b100)], Some(BitIndex::new(1, 2))),
+        (&[digit(0), digit(0), digit(1)], Some(BitIndex::new(2, 0))),
+        // All zeros (the value zero): no set bit.
+        (&[], None),
+        (&[digit(0), digit(0)], None),
     ];
     for &(digits, expected) in cases {
-        assert_eq!(trailing_ones(digits), expected);
+        assert_eq!(lowest_one(digits), expected);
+    }
+}
+
+#[test]
+fn test_lowest_zero() {
+    let cases: &[(&[Digit], Option<BitIndex>)] = &[
+        // Within the low digit.
+        (&[digit(0b1011)], Some(BitIndex::new(0, 2))),
+        (&[digit(0)], Some(BitIndex::new(0, 0))),
+        // An all-ones low digit skips to the next.
+        (&[Digit::MAX, digit(0b1011)], Some(BitIndex::new(1, 2))),
+        (
+            &[Digit::MAX, Digit::MAX, digit(0)],
+            Some(BitIndex::new(2, 0)),
+        ),
+        // All ones (no zero bit): None.
+        (&[], None),
+        (&[Digit::MAX, Digit::MAX], None),
+    ];
+    for &(digits, expected) in cases {
+        assert_eq!(lowest_zero(digits), expected);
     }
 }
 
