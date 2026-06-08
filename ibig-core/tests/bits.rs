@@ -1,9 +1,10 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    Digit, bit, bit_signed, bit_width, count_ones, is_power_of_two, next_power_of_two,
-    trailing_ones, trailing_zeros,
+    BitIndex, BitIndexOutOfRange, Digit, bit, bit_signed, bit_width, count_ones, is_power_of_two,
+    next_power_of_two, trailing_ones, trailing_zeros,
 };
+use proptest::prelude::*;
 
 const fn digit(n: u16) -> Digit {
     Digit::from_u16(n)
@@ -32,6 +33,30 @@ fn test_bit_width() {
     for &(digits, expected) in cases {
         assert_eq!(bit_width(digits), expected);
     }
+}
+
+proptest! {
+    // Converting any `usize` into  `BitIndex` and back recovers the same index.
+    #[test]
+    fn test_bit_index_roundtrip(position: usize) {
+        let index = BitIndex::from(position);
+        prop_assert!(index.bit_index() < Digit::BITS);
+        prop_assert_eq!(usize::try_from(index).unwrap(), position);
+    }
+}
+
+#[test]
+fn test_bit_index_overflow() {
+    // `digit_index * DIGIT_BITS_USIZE` overflows `usize`, so recombination fails.
+    let index = BitIndex::new(usize::MAX, 1);
+    assert_eq!(usize::try_from(index), Err(BitIndexOutOfRange));
+}
+
+#[test]
+#[should_panic]
+fn test_bit_index_new_bad_bit() {
+    // A bit index at or above the digit width is rejected.
+    BitIndex::new(0, Digit::BITS);
 }
 
 #[test]

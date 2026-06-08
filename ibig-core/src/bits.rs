@@ -28,6 +28,100 @@ pub fn split_bit_index(position: usize) -> (usize, u32) {
     )
 }
 
+/// A bit position within a digit slice.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{BitIndex, DIGIT_BITS_USIZE};
+/// let index = BitIndex::from(DIGIT_BITS_USIZE + 3);
+/// assert_eq!(index.digit_index(), 1);
+/// assert_eq!(index.bit_index(), 3);
+/// assert_eq!(usize::try_from(index).unwrap(), DIGIT_BITS_USIZE + 3);
+/// ```
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub struct BitIndex {
+    digit_index: usize,
+    bit_index: u32,
+}
+
+impl BitIndex {
+    /// Creates a `BitIndex` from a digit index and a bit index within that digit.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `bit_index >= Digit::BITS`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig_core::BitIndex;
+    /// let index = BitIndex::new(1, 3);
+    /// assert_eq!(index.digit_index(), 1);
+    /// assert_eq!(index.bit_index(), 3);
+    /// ```
+    #[inline]
+    pub fn new(digit_index: usize, bit_index: u32) -> BitIndex {
+        assert!(bit_index < Digit::BITS, "bit index out of range");
+        BitIndex {
+            digit_index,
+            bit_index,
+        }
+    }
+
+    /// The index of the [`Digit`] that holds the bit.
+    #[inline]
+    pub fn digit_index(self) -> usize {
+        self.digit_index
+    }
+
+    /// The index of the bit within its [`Digit`], in the range `0..Digit::BITS`.
+    #[inline]
+    pub fn bit_index(self) -> u32 {
+        self.bit_index
+    }
+}
+
+impl From<usize> for BitIndex {
+    #[inline]
+    fn from(position: usize) -> BitIndex {
+        let (digit_index, bit_index) = split_bit_index(position);
+        BitIndex {
+            digit_index,
+            bit_index,
+        }
+    }
+}
+
+/// The error returned when converting a [`BitIndex`] to a `usize` whose bit position would
+/// overflow `usize`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct BitIndexOutOfRange;
+
+impl core::fmt::Display for BitIndexOutOfRange {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("bit index does not fit in a usize")
+    }
+}
+
+impl core::error::Error for BitIndexOutOfRange {}
+
+impl TryFrom<BitIndex> for usize {
+    type Error = BitIndexOutOfRange;
+
+    #[inline]
+    fn try_from(index: BitIndex) -> Result<usize, BitIndexOutOfRange> {
+        const {
+            assert!(Digit::BITS.is_power_of_two());
+        }
+        let high = index
+            .digit_index
+            .checked_mul(DIGIT_BITS_USIZE)
+            .ok_or(BitIndexOutOfRange)?;
+        Ok(high | usize::try_from(index.bit_index).unwrap())
+    }
+}
+
 /// Returns the minimum number of bits needed to represent the unsigned value held in the
 /// little-endian `digits`: the position of the most-significant set bit plus one, or 0 for
 /// the value zero.
