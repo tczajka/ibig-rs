@@ -21,12 +21,11 @@ pub(crate) type Digits = SmallVec<[Digit; INLINE_DIGITS]>;
 /// An arbitrarily large unsigned integer.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UBig(
-    /// The little-endian digits in canonical form: the buffer is never empty, and its
-    /// most-significant digit is nonzero except for the value zero, which is the single
-    /// digit `[0]`. So every value has exactly one representation and the derived
-    /// `Eq`/`Hash` are correct. Every value of at most [`INLINE_DIGITS`] digits — in
-    /// particular every single-digit value — is stored inline, and heap buffers are not
-    /// heavily over-allocated.
+    /// The little-endian digits in canonical form:
+    /// * the buffer is never empty
+    /// * most-significant digit is nonzero except for the value zero
+    /// * heap buffer is at least 25% used
+    /// * a single digit is always stored inline
     Digits,
 );
 
@@ -79,7 +78,7 @@ impl UBig {
         if digits.spilled() {
             let len = digits.len();
             assert!(len <= MAX_DIGITS, "number too large");
-            if len <= INLINE_DIGITS || len < digits.capacity() / 4 {
+            if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();
             }
         }
@@ -93,13 +92,10 @@ impl UBig {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct IBig(
     /// The little-endian digits of the two's complement representation in canonical form:
-    /// the buffer is never empty, and its most-significant digit is not a redundant
-    /// sign-extension of the digit below it (so the representation uses the fewest possible
-    /// digits, with the sign carried by the top digit's most-significant bit). The value
-    /// zero is the single digit `[0]`. So every value has exactly one representation and
-    /// the derived `Eq`/`Hash` are correct. Every value of at most [`INLINE_DIGITS`]
-    /// digits — in particular every single-digit value — is stored inline, and heap buffers
-    /// are not heavily over-allocated.
+    /// * the buffer is never empty
+    /// * most-significant digit is not a redundant sign-extension of the digit below it
+    /// * heap buffer is at least 25% used
+    /// * a single digit is always stored inline
     Digits,
 );
 
@@ -143,7 +139,7 @@ impl IBig {
         if digits.spilled() {
             let len = digits.len();
             assert!(len <= MAX_DIGITS, "number too large");
-            if len <= INLINE_DIGITS || len < digits.capacity() / 4 {
+            if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();
             }
         }
