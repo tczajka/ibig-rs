@@ -12,6 +12,7 @@ use crate::Digit;
 /// not(&mut a);
 /// assert_eq!(a, [!Digit::from(0b1100u8), Digit::MAX]);
 /// ```
+#[inline]
 pub fn not(a: &mut [Digit]) {
     for x in a {
         *x = !*x;
@@ -33,6 +34,7 @@ pub fn not(a: &mut [Digit]) {
 /// bitand_same_len(&mut a, &[Digit::from(0b1010u8), Digit::ZERO]);
 /// assert_eq!(a, [Digit::from(0b1000u8), Digit::ZERO]);
 /// ```
+#[inline]
 pub fn bitand_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {
@@ -55,6 +57,7 @@ pub fn bitand_same_len(a: &mut [Digit], b: &[Digit]) {
 /// bitor_same_len(&mut a, &[Digit::from(0b1010u8), Digit::MAX]);
 /// assert_eq!(a, [Digit::from(0b1110u8), Digit::MAX]);
 /// ```
+#[inline]
 pub fn bitor_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {
@@ -77,6 +80,7 @@ pub fn bitor_same_len(a: &mut [Digit], b: &[Digit]) {
 /// bitxor_same_len(&mut a, &[Digit::from(0b1010u8), Digit::MAX]);
 /// assert_eq!(a, [Digit::from(0b0110u8), Digit::ZERO]);
 /// ```
+#[inline]
 pub fn bitxor_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {
@@ -99,6 +103,7 @@ pub fn bitxor_same_len(a: &mut [Digit], b: &[Digit]) {
 /// bitandnot_same_len(&mut a, &[Digit::from(0b1010u8), Digit::from(0b11u8)]);
 /// assert_eq!(a, [Digit::from(0b0100u8), !Digit::from(0b11u8)]);
 /// ```
+#[inline]
 pub fn bitandnot_same_len(a: &mut [Digit], b: &[Digit]) {
     assert_eq!(a.len(), b.len());
     for (x, &y) in a.iter_mut().zip(b) {

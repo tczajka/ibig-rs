@@ -19,6 +19,7 @@ use crate::sign::{is_negative, sign_extension_byte};
 /// assert_eq!(&bytes[..2], &[0x02, 0x01]);
 /// assert!(bytes[2..].iter().all(|&b| b == 0));
 /// ```
+#[inline]
 pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
     to_bytes_fill(digits, bytes, 0);
 }
@@ -40,6 +41,7 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
 /// to_bytes_signed(&[Digit::MAX], &mut bytes);
 /// assert!(bytes.iter().all(|&b| b == 0xff));
 /// ```
+#[inline]
 pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
     to_bytes_fill(digits, bytes, sign_extension_byte(is_negative(digits)));
 }

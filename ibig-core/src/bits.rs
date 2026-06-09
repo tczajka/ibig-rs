@@ -113,6 +113,7 @@ impl TryFrom<BitIndex> for usize {
 /// // The low bit of the second digit.
 /// assert!(bit(&[Digit::ZERO, Digit::from(1u8)], BitIndex::new(1, 0)));
 /// ```
+#[inline]
 pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
     index.digit_index() < digits.len() && digit_bit(digits[index.digit_index()], index.bit_index())
 }
@@ -136,6 +137,7 @@ pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
 /// assert!(bit_signed(&[Digit::from(0b101u8)], BitIndex::from(0)));
 /// assert!(!bit_signed(&[Digit::from(0b101u8)], BitIndex::from(100)));
 /// ```
+#[inline]
 pub fn bit_signed(digits: &[Digit], index: BitIndex) -> bool {
     if index.digit_index() < digits.len() {
         digit_bit(digits[index.digit_index()], index.bit_index())
@@ -160,6 +162,7 @@ pub fn bit_signed(digits: &[Digit], index: BitIndex) -> bool {
 /// set_bit(&mut digits, BitIndex::from(2), false);
 /// assert_eq!(digits, [Digit::from(0b001u8)]);
 /// ```
+#[inline]
 pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
     let mask = Digit::from_u8(1) << index.bit_index();
     if value {
@@ -181,6 +184,7 @@ pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
 /// assert_eq!(highest_one(&[Digit::from(5u8), Digit::ZERO]), Some(BitIndex::new(0, 2)));
 /// assert_eq!(highest_one(&[Digit::ZERO, Digit::from(1u8)]), Some(BitIndex::new(1, 0)));
 /// ```
+#[inline]
 pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
     let len = min_len(digits);
     if len == 0 {
@@ -201,6 +205,7 @@ pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(lowest_one(&[Digit::from(0b1100u8)]), Some(BitIndex::new(0, 2)));
 /// assert_eq!(lowest_one(&[Digit::ZERO, Digit::from(1u8)]), Some(BitIndex::new(1, 0)));
 /// ```
+#[inline]
 pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
     digits
         .iter()
@@ -219,6 +224,7 @@ pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(lowest_zero(&[Digit::from(0b1011u8)]), Some(BitIndex::new(0, 2)));
 /// assert_eq!(lowest_zero(&[Digit::MAX, Digit::from(0b10u8)]), Some(BitIndex::new(1, 0)));
 /// ```
+#[inline]
 pub fn lowest_zero(digits: &[Digit]) -> Option<BitIndex> {
     digits
         .iter()
@@ -241,6 +247,7 @@ pub fn lowest_zero(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(count_ones(&[Digit::MAX]), Digit::BITS as usize);
 /// assert_eq!(count_ones(&[Digit::from(0b11u8), Digit::from(0b1u8)]), 3);
 /// ```
+#[inline]
 pub fn count_ones(digits: &[Digit]) -> usize {
     digits
         .iter()
@@ -261,6 +268,7 @@ pub fn count_ones(digits: &[Digit]) -> usize {
 /// assert!(is_power_of_two(&[Digit::ZERO, Digit::from(4u8)]));
 /// assert!(!is_power_of_two(&[Digit::from(1u8), Digit::from(1u8)]));
 /// ```
+#[inline]
 pub fn is_power_of_two(digits: &[Digit]) -> bool {
     let len = min_len(digits);
     let Some((top, low)) = digits[..len].split_last() else {
@@ -329,6 +337,7 @@ pub fn next_power_of_two(digits: &mut [Digit]) -> bool {
 }
 
 /// Returns the bit at `bit_index` (which must be less than `Digit::BITS`) of a single digit.
+#[inline]
 fn digit_bit(digit: Digit, bit_index: u32) -> bool {
     (digit >> bit_index) & Digit::from_u8(1) != Digit::ZERO
 }
