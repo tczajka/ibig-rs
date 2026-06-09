@@ -3,7 +3,11 @@
 use crate::ops::{
     CommutativeBinaryOpDigits, UnaryOpDigits, impl_binary_operator, impl_unary_operator,
 };
-use crate::repr::{AsDigits, Digits};
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+    Digits,
+};
 use crate::{IBig, UBig};
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 use ibig_core::{Digit, SignedDigit};
@@ -26,17 +30,16 @@ impl UBig {
     /// ```
     #[inline]
     pub fn bitandnot(&self, rhs: &UBig) -> UBig {
-        match (self.try_to_digit(), rhs.try_to_digit()) {
-            (Some(a), Some(b)) => UBig::from_digit(a & !b),
-            (Some(a), None) => UBig::from_digit(a & !rhs.as_digits()[0]),
-            (None, Some(b)) => {
-                let mut digits = Digits::from_slice(self.as_digits());
+        match (self.as_digits(), rhs.as_digits()) {
+            (Small(a), Small(b)) => UBig::from_digit(a & !b),
+            (Small(a), Large(rhs)) => UBig::from_digit(a & !rhs[0]),
+            (Large(lhs), Small(b)) => {
+                let mut digits = Digits::from_slice(lhs);
                 digits[0] &= !b;
                 UBig::from_digits(digits)
             }
-            (None, None) => {
-                let mut digits = Digits::from_slice(self.as_digits());
-                let rhs = rhs.as_digits();
+            (Large(lhs), Large(rhs)) => {
+                let mut digits = Digits::from_slice(lhs);
                 let n = digits.len().min(rhs.len());
                 ibig_core::bitandnot_same_len(&mut digits[..n], &rhs[..n]);
                 UBig::from_digits(digits)

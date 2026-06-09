@@ -1,5 +1,6 @@
 //! Contains the definitions of [`UBig`] and [`IBig`] and maintains their invariants.
 
+use core::hint::assert_unchecked;
 use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed};
 use smallvec::SmallVec;
 
@@ -147,41 +148,51 @@ impl IBig {
     }
 }
 
+/// Result of `AsDigits::as_digits` and `AsDigits::into_digits`.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub(crate) enum AsDigitsResult<S, L> {
+    /// The value fits in one digit.
+    Small(S),
+    /// The value doesn't fit in one digit.
+    Large(L),
+}
+
 /// Access to the digit representation.
 pub(crate) trait AsDigits: Default {
     /// The single-digit type.
     type SingleDigit;
 
-    /// The value as a single digit, if it fits in one.
-    fn try_to_digit(&self) -> Option<Self::SingleDigit>;
-
     /// The little-endian digits, by reference.
-    fn as_digits(&self) -> &[Digit];
+    fn as_digits(&self) -> AsDigitsResult<Self::SingleDigit, &[Digit]>;
 
     /// Consume into the little-endian digits.
-    fn into_digits(self) -> Digits;
+    fn into_digits(self) -> AsDigitsResult<Self::SingleDigit, Digits>;
 }
 
 impl AsDigits for UBig {
     type SingleDigit = Digit;
 
     #[inline]
-    fn try_to_digit(&self) -> Option<Digit> {
+    fn as_digits(&self) -> AsDigitsResult<Digit, &[Digit]> {
         if !self.0.spilled() && self.0.len() == 1 {
-            Some(self.0[0])
+            AsDigitsResult::Small(self.0[0])
         } else {
-            None
+            let res = self.0.as_slice();
+            // SAFETY: We never have 0 digits and 1 digit is always inline.
+            unsafe { assert_unchecked(res.len() > 1) };
+            AsDigitsResult::Large(res)
         }
     }
 
     #[inline]
-    fn as_digits(&self) -> &[Digit] {
-        &self.0
-    }
-
-    #[inline]
-    fn into_digits(self) -> Digits {
-        self.0
+    fn into_digits(self) -> AsDigitsResult<Digit, Digits> {
+        if !self.0.spilled() && self.0.len() == 1 {
+            AsDigitsResult::Small(self.0[0])
+        } else {
+            // SAFETY: We never have 0 digits and 1 digit is always inline.
+            unsafe { assert_unchecked(self.0.len() > 1) };
+            AsDigitsResult::Large(self.0)
+        }
     }
 }
 
@@ -189,21 +200,25 @@ impl AsDigits for IBig {
     type SingleDigit = SignedDigit;
 
     #[inline]
-    fn try_to_digit(&self) -> Option<SignedDigit> {
+    fn as_digits(&self) -> AsDigitsResult<SignedDigit, &[Digit]> {
         if !self.0.spilled() && self.0.len() == 1 {
-            Some(self.0[0].cast_signed())
+            AsDigitsResult::Small(self.0[0].cast_signed())
         } else {
-            None
+            let res = self.0.as_slice();
+            // SAFETY: We never have 0 digits and 1 digit is always inline.
+            unsafe { assert_unchecked(res.len() > 1) };
+            AsDigitsResult::Large(res)
         }
     }
 
     #[inline]
-    fn as_digits(&self) -> &[Digit] {
-        &self.0
-    }
-
-    #[inline]
-    fn into_digits(self) -> Digits {
-        self.0
+    fn into_digits(self) -> AsDigitsResult<SignedDigit, Digits> {
+        if !self.0.spilled() && self.0.len() == 1 {
+            AsDigitsResult::Small(self.0[0].cast_signed())
+        } else {
+            // SAFETY: We never have 0 digits and 1 digit is always inline.
+            unsafe { assert_unchecked(self.0.len() > 1) };
+            AsDigitsResult::Large(self.0)
+        }
     }
 }

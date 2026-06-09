@@ -1,6 +1,10 @@
 //! Byte-sequence conversions for [`UBig`] and [`IBig`].
 
-use crate::repr::{AsDigits, Digits, INLINE_DIGITS};
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+    Digits, INLINE_DIGITS,
+};
 use crate::{IBig, UBig};
 use alloc::{vec, vec::Vec};
 use ibig_core::Digit;
@@ -17,9 +21,14 @@ impl UBig {
     /// assert_eq!(UBig::from(0u8).to_le_bytes(), []);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
-        let digits = self.as_digits();
-        let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-        ibig_core::to_bytes(digits, &mut bytes);
+        let mut bytes = match self.as_digits() {
+            Small(digit) => digit.to_le_bytes().to_vec(),
+            Large(digits) => {
+                let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
+                ibig_core::to_bytes(digits, &mut bytes);
+                bytes
+            }
+        };
         bytes.truncate(ibig_core::min_len_bytes(&bytes));
         bytes
     }
@@ -104,9 +113,14 @@ impl IBig {
     /// assert_eq!(IBig::from(-1i8).to_le_bytes(), [0xff]);
     /// ```
     pub fn to_le_bytes(&self) -> Vec<u8> {
-        let digits = self.as_digits();
-        let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-        ibig_core::to_bytes(digits, &mut bytes);
+        let mut bytes = match self.as_digits() {
+            Small(digit) => digit.to_le_bytes().to_vec(),
+            Large(digits) => {
+                let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
+                ibig_core::to_bytes(digits, &mut bytes);
+                bytes
+            }
+        };
         bytes.truncate(ibig_core::min_len_bytes_signed(&bytes));
         bytes
     }

@@ -1,6 +1,10 @@
 //! Internal traits describing unary and binary operations.
 
-use crate::repr::{AsDigits, Digits};
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+    Digits,
+};
 use ibig_core::Digit;
 
 /// A unary operation on a value of type `T`.
@@ -33,17 +37,17 @@ pub(crate) trait UnaryOpDigits<T: AsDigits> {
 impl<T: AsDigits, Op: UnaryOpDigits<T>> UnaryOp<T> for Op {
     #[inline]
     fn apply_ref(value: &T) -> T {
-        match value.try_to_digit() {
-            Some(d) => <Op as UnaryOpDigits<T>>::apply_digit(d),
-            None => <Op as UnaryOpDigits<T>>::apply_ref(value.as_digits()),
+        match value.as_digits() {
+            Small(d) => <Op as UnaryOpDigits<T>>::apply_digit(d),
+            Large(digits) => <Op as UnaryOpDigits<T>>::apply_ref(digits),
         }
     }
 
     #[inline]
     fn apply_val(value: T) -> T {
-        match value.try_to_digit() {
-            Some(d) => <Op as UnaryOpDigits<T>>::apply_digit(d),
-            None => <Op as UnaryOpDigits<T>>::apply_val(value.into_digits()),
+        match value.into_digits() {
+            Small(d) => <Op as UnaryOpDigits<T>>::apply_digit(d),
+            Large(digits) => <Op as UnaryOpDigits<T>>::apply_val(digits),
         }
     }
 }
@@ -154,49 +158,41 @@ pub(crate) trait CommutativeBinaryOpDigits<T: AsDigits> {
 impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T> for Op {
     #[inline]
     fn apply_ref_ref(lhs: &T, rhs: &T) -> T {
-        match (lhs.try_to_digit(), rhs.try_to_digit()) {
-            (Some(a), Some(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
-            (Some(a), None) => <Op as BinaryOpDigits<T>>::apply_digit_ref(a, rhs.as_digits()),
-            (None, Some(b)) => <Op as BinaryOpDigits<T>>::apply_ref_digit(lhs.as_digits(), b),
-            (None, None) => {
-                <Op as BinaryOpDigits<T>>::apply_ref_ref(lhs.as_digits(), rhs.as_digits())
-            }
+        match (lhs.as_digits(), rhs.as_digits()) {
+            (Small(a), Small(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
+            (Small(a), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_digit_ref(a, rhs),
+            (Large(lhs), Small(b)) => <Op as BinaryOpDigits<T>>::apply_ref_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_ref_ref(lhs, rhs),
         }
     }
 
     #[inline]
     fn apply_ref_val(lhs: &T, rhs: T) -> T {
-        match (lhs.try_to_digit(), rhs.try_to_digit()) {
-            (Some(a), Some(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
-            (Some(a), None) => <Op as BinaryOpDigits<T>>::apply_digit_val(a, rhs.into_digits()),
-            (None, Some(b)) => <Op as BinaryOpDigits<T>>::apply_ref_digit(lhs.as_digits(), b),
-            (None, None) => {
-                <Op as BinaryOpDigits<T>>::apply_ref_val(lhs.as_digits(), rhs.into_digits())
-            }
+        match (lhs.as_digits(), rhs.into_digits()) {
+            (Small(a), Small(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
+            (Small(a), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_digit_val(a, rhs),
+            (Large(lhs), Small(b)) => <Op as BinaryOpDigits<T>>::apply_ref_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_ref_val(lhs, rhs),
         }
     }
 
     #[inline]
     fn apply_val_ref(lhs: T, rhs: &T) -> T {
-        match (lhs.try_to_digit(), rhs.try_to_digit()) {
-            (Some(a), Some(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
-            (Some(a), None) => <Op as BinaryOpDigits<T>>::apply_digit_ref(a, rhs.as_digits()),
-            (None, Some(b)) => <Op as BinaryOpDigits<T>>::apply_val_digit(lhs.into_digits(), b),
-            (None, None) => {
-                <Op as BinaryOpDigits<T>>::apply_val_ref(lhs.into_digits(), rhs.as_digits())
-            }
+        match (lhs.into_digits(), rhs.as_digits()) {
+            (Small(a), Small(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
+            (Small(a), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_digit_ref(a, rhs),
+            (Large(lhs), Small(b)) => <Op as BinaryOpDigits<T>>::apply_val_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_val_ref(lhs, rhs),
         }
     }
 
     #[inline]
     fn apply_val_val(lhs: T, rhs: T) -> T {
-        match (lhs.try_to_digit(), rhs.try_to_digit()) {
-            (Some(a), Some(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
-            (Some(a), None) => <Op as BinaryOpDigits<T>>::apply_digit_val(a, rhs.into_digits()),
-            (None, Some(b)) => <Op as BinaryOpDigits<T>>::apply_val_digit(lhs.into_digits(), b),
-            (None, None) => {
-                <Op as BinaryOpDigits<T>>::apply_val_val(lhs.into_digits(), rhs.into_digits())
-            }
+        match (lhs.into_digits(), rhs.into_digits()) {
+            (Small(a), Small(b)) => <Op as BinaryOpDigits<T>>::apply_digit_digit(a, b),
+            (Small(a), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_digit_val(a, rhs),
+            (Large(lhs), Small(b)) => <Op as BinaryOpDigits<T>>::apply_val_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_val_val(lhs, rhs),
         }
     }
 }

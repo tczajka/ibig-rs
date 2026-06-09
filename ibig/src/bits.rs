@@ -1,9 +1,14 @@
 //! Bit operations on [`UBig`] and [`IBig`].
 
-use crate::repr::AsDigits;
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+    Digits,
+};
 use crate::{IBig, UBig};
 use core::mem;
 use ibig_core::{BitIndex, DIGIT_BITS_USIZE, Digit, SignedDigit};
+use smallvec::smallvec;
 
 impl UBig {
     /// Returns the bit at `position`, counting from the least-significant bit. Positions at or
@@ -19,11 +24,11 @@ impl UBig {
     /// ```
     #[inline]
     pub fn bit(&self, index: usize) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => {
+        match self.as_digits() {
+            Small(digit) => {
                 index < DIGIT_BITS_USIZE && (digit >> index) & Digit::from_u8(1) != Digit::ZERO
             }
-            None => ibig_core::bit(self.as_digits(), BitIndex::from(index)),
+            Large(digits) => ibig_core::bit(digits, BitIndex::from(index)),
         }
     }
 
@@ -40,22 +45,28 @@ impl UBig {
     /// assert_eq!(a, UBig::from(0b001u8));
     /// ```
     pub fn set_bit(&mut self, index: usize, value: bool) {
-        // Fast path: a single digit that stays a single digit.
-        if let Some(digit) = self.try_to_digit()
-            && index < DIGIT_BITS_USIZE
-        {
-            let mask = Digit::from_u8(1) << index;
-            *self = UBig::from_digit(if value { digit | mask } else { digit & !mask });
-            return;
-        }
-
-        // Slow path: the value or position spans multiple digits.
         let index = BitIndex::from(index);
-        let digit_index = index.digit_index();
-        let mut digits = mem::take(self).into_digits();
-        if digit_index >= digits.len() {
+
+        let mut digits = match mem::take(self).into_digits() {
+            Small(digit) => {
+                if index.digit_index() == 0 {
+                    let mask = Digit::from_u8(1) << index.bit_index();
+                    let new_digit = if value { digit | mask } else { digit & !mask };
+                    *self = UBig::from_digit(new_digit);
+                    return;
+                } else if !value {
+                    *self = UBig::from_digit(digit);
+                    return;
+                } else {
+                    smallvec![digit]
+                }
+            }
+            Large(digits) => digits,
+        };
+
+        if index.digit_index() >= digits.len() {
             if value {
-                digits.resize(digit_index + 1, Digit::ZERO);
+                digits.resize(index.digit_index() + 1, Digit::ZERO);
                 ibig_core::set_bit(&mut digits, index, true);
             }
         } else {
@@ -77,13 +88,15 @@ impl UBig {
     /// ```
     #[inline]
     pub fn bit_width(&self) -> usize {
-        if let Some(digit) = self.try_to_digit() {
-            return DIGIT_BITS_USIZE - usize::try_from(digit.leading_zeros()).unwrap();
+        match self.as_digits() {
+            Small(digit) => DIGIT_BITS_USIZE - usize::try_from(digit.leading_zeros()).unwrap(),
+            Large(digits) => {
+                // A multi-digit value is nonzero, so it has a highest set bit.
+                let highest = ibig_core::highest_one(digits).unwrap();
+                // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                usize::try_from(highest).unwrap() + 1
+            }
         }
-        // A multi-digit value is nonzero, so it has a highest set bit.
-        let highest = ibig_core::highest_one(self.as_digits()).unwrap();
-        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-        usize::try_from(highest).unwrap() + 1
     }
 
     /// Returns the base-2 logarithm, rounded down.
@@ -133,17 +146,21 @@ impl UBig {
     /// assert_eq!(UBig::from(0b101000u8).trailing_zeros(), 3);
     /// ```
     pub fn trailing_zeros(&self) -> usize {
-        if let Some(digit) = self.try_to_digit() {
-            assert!(
-                digit != Digit::ZERO,
-                "zero has infinitely many trailing zeros"
-            );
-            return digit.trailing_zeros().try_into().unwrap();
+        match self.as_digits() {
+            Small(digit) => {
+                assert!(
+                    digit != Digit::ZERO,
+                    "zero has infinitely many trailing zeros"
+                );
+                digit.trailing_zeros().try_into().unwrap()
+            }
+            Large(digits) => {
+                // A multi-digit value is nonzero, so it has a lowest set bit.
+                let lowest = ibig_core::lowest_one(digits).unwrap();
+                // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                lowest.try_into().unwrap()
+            }
         }
-        // A multi-digit value is nonzero, so it has a lowest set bit.
-        let lowest = ibig_core::lowest_one(self.as_digits()).unwrap();
-        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-        lowest.try_into().unwrap()
     }
 
     /// Returns the number of trailing one bits.
@@ -156,14 +173,15 @@ impl UBig {
     /// assert_eq!(UBig::from(0b100111u8).trailing_ones(), 3);
     /// ```
     pub fn trailing_ones(&self) -> usize {
-        if let Some(digit) = self.try_to_digit() {
-            return digit.trailing_ones().try_into().unwrap();
-        }
-        let digits = self.as_digits();
-        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-        match ibig_core::lowest_zero(digits) {
-            Some(bit_index) => bit_index.try_into().unwrap(),
-            None => digits.len() * DIGIT_BITS_USIZE,
+        match self.as_digits() {
+            Small(digit) => digit.trailing_ones().try_into().unwrap(),
+            Large(digits) => {
+                // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                match ibig_core::lowest_zero(digits) {
+                    Some(bit_index) => bit_index.try_into().unwrap(),
+                    None => digits.len() * DIGIT_BITS_USIZE,
+                }
+            }
         }
     }
 
@@ -177,9 +195,9 @@ impl UBig {
     /// assert_eq!(UBig::from(0b10110u8).count_ones(), 3);
     /// ```
     pub fn count_ones(&self) -> usize {
-        match self.try_to_digit() {
-            Some(digit) => digit.count_ones().try_into().unwrap(),
-            None => ibig_core::count_ones(self.as_digits()),
+        match self.as_digits() {
+            Small(digit) => digit.count_ones().try_into().unwrap(),
+            Large(digits) => ibig_core::count_ones(digits),
         }
     }
 
@@ -194,9 +212,9 @@ impl UBig {
     /// assert!(!UBig::ZERO.is_power_of_two());
     /// ```
     pub fn is_power_of_two(&self) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => digit.is_power_of_two(),
-            None => ibig_core::is_power_of_two(self.as_digits()),
+        match self.as_digits() {
+            Small(digit) => digit.is_power_of_two(),
+            Large(digits) => ibig_core::is_power_of_two(digits),
         }
     }
 
@@ -211,21 +229,22 @@ impl UBig {
     /// assert_eq!(UBig::ZERO.next_power_of_two(), UBig::from(1u8));
     /// ```
     pub fn next_power_of_two(&self) -> UBig {
-        // Fast path: a single digit.
-        if let Some(digit) = self.try_to_digit() {
-            return match digit.checked_next_power_of_two() {
+        match self.as_digits() {
+            // Fast path: a single digit.
+            Small(digit) => match digit.checked_next_power_of_two() {
                 Some(power) => UBig::from_digit(power),
                 None => UBig::const_from_digits(&[Digit::ZERO, Digit::from_u8(1)]),
-            };
+            },
+            // Slow path: multiple digits.
+            Large(slice) => {
+                let mut digits = Digits::from_slice(slice);
+                if ibig_core::next_power_of_two(&mut digits) {
+                    // Overflow.
+                    digits.push(Digit::from_u8(1));
+                }
+                UBig::from_digits(digits)
+            }
         }
-
-        // Slow path: multiple digits.
-        let mut digits = self.clone().into_digits();
-        if ibig_core::next_power_of_two(&mut digits) {
-            // Overflow.
-            digits.push(Digit::from_u8(1));
-        }
-        UBig::from_digits(digits)
     }
 }
 
@@ -249,8 +268,8 @@ impl IBig {
     /// ```
     #[inline]
     pub fn bit(&self, index: usize) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => {
+        match self.as_digits() {
+            Small(digit) => {
                 if index < DIGIT_BITS_USIZE {
                     (digit >> index) & SignedDigit::from_i8(1) != SignedDigit::ZERO
                 } else {
@@ -258,7 +277,7 @@ impl IBig {
                     digit.is_negative()
                 }
             }
-            None => ibig_core::bit_signed(self.as_digits(), BitIndex::from(index)),
+            Large(digits) => ibig_core::bit_signed(digits, BitIndex::from(index)),
         }
     }
 
@@ -277,17 +296,23 @@ impl IBig {
     /// assert_eq!(b, IBig::from(-2i8));
     /// ```
     pub fn set_bit(&mut self, index: usize, value: bool) {
-        // Fast path: a single digit whose modification is within a single digit.
-        if let Some(digit) = self.try_to_digit()
-            && index < DIGIT_BITS_USIZE - 1
-        {
-            let mask = SignedDigit::from_i8(1) << index;
-            let new = if value { digit | mask } else { digit & !mask };
-            *self = IBig::from_digit(new);
-            return;
-        }
+        let mut digits = match mem::take(self).into_digits() {
+            Small(digit) => {
+                if index < DIGIT_BITS_USIZE - 1 {
+                    let mask = SignedDigit::from_i8(1) << index;
+                    let new = if value { digit | mask } else { digit & !mask };
+                    *self = IBig::from_digit(new);
+                    return;
+                } else if value == digit.is_negative() {
+                    *self = IBig::from_digit(digit);
+                    return;
+                } else {
+                    smallvec![digit.cast_unsigned()]
+                }
+            }
+            Large(digits) => digits,
+        };
 
-        // Slow path.
         // Number of digits needed for the modified bit to sit strictly below the sign bit,
         // i.e. the smallest `min_len` with `index < min_len * DIGIT_BITS_USIZE - 1`. This is
         // `digit_index + 1`, plus one more digit when the bit is the top bit of its digit (so it
@@ -296,13 +321,13 @@ impl IBig {
         let min_len = index.digit_index()
             + 1
             + (usize::try_from(index.bit_index()).unwrap() + 1) / DIGIT_BITS_USIZE;
-        let len = self.as_digits().len();
-        if len < min_len && value == self.is_negative() {
-            // The bit is the sign bit or higher and is not changing, nothing to do.
-            return;
-        }
-        let mut digits = mem::take(self).into_digits();
+
+        let len = digits.len();
         if len < min_len {
+            if value == ibig_core::is_negative(&digits) {
+                *self = IBig::from_digits(digits);
+                return;
+            }
             digits.resize(min_len, Digit::ZERO);
             ibig_core::extend_signed(&mut digits, len);
         }
@@ -341,18 +366,18 @@ impl IBig {
     /// ```
     #[inline]
     pub fn checked_ilog2(&self) -> Option<usize> {
-        if let Some(digit) = self.try_to_digit() {
-            return digit.checked_ilog2().map(|x| x.try_into().unwrap());
-        }
-
-        let digits = self.as_digits();
-        if ibig_core::is_negative(digits) {
-            None
-        } else {
-            // A multi-digit non-negative value is nonzero, so it has a highest set bit.
-            let highest = ibig_core::highest_one(digits).unwrap();
-            // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-            Some(highest.try_into().unwrap())
+        match self.as_digits() {
+            Small(digit) => digit.checked_ilog2().map(|x| x.try_into().unwrap()),
+            Large(digits) => {
+                if ibig_core::is_negative(digits) {
+                    None
+                } else {
+                    // A multi-digit non-negative value is nonzero, so it has a highest set bit.
+                    let highest = ibig_core::highest_one(digits).unwrap();
+                    // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                    Some(highest.try_into().unwrap())
+                }
+            }
         }
     }
 
@@ -371,18 +396,21 @@ impl IBig {
     /// assert_eq!(IBig::from(-4i8).trailing_zeros(), 2);
     /// ```
     pub fn trailing_zeros(&self) -> usize {
-        if let Some(digit) = self.try_to_digit() {
-            assert!(
-                digit != SignedDigit::ZERO,
-                "zero has infinitely many trailing zeros"
-            );
-            return digit.trailing_zeros().try_into().unwrap();
+        match self.as_digits() {
+            Small(digit) => {
+                assert!(
+                    digit != SignedDigit::ZERO,
+                    "zero has infinitely many trailing zeros"
+                );
+                digit.trailing_zeros().try_into().unwrap()
+            }
+            Large(digits) => {
+                // A multi-digit value is nonzero, so it has a lowest set bit.
+                let lowest = ibig_core::lowest_one(digits).unwrap();
+                // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                lowest.try_into().unwrap()
+            }
         }
-
-        // A multi-digit value is nonzero, so it has a lowest set bit.
-        let lowest = ibig_core::lowest_one(self.as_digits()).unwrap();
-        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-        lowest.try_into().unwrap()
     }
 
     /// Returns the number of trailing one bits of the two's complement representation.
@@ -400,17 +428,20 @@ impl IBig {
     /// assert_eq!(IBig::from(-3i8).trailing_ones(), 1);
     /// ```
     pub fn trailing_ones(&self) -> usize {
-        if let Some(digit) = self.try_to_digit() {
-            assert!(
-                digit != SignedDigit::from_i8(-1),
-                "-1 has infinitely many trailing ones"
-            );
-            return digit.trailing_ones().try_into().unwrap();
+        match self.as_digits() {
+            Small(digit) => {
+                assert!(
+                    digit != SignedDigit::from_i8(-1),
+                    "-1 has infinitely many trailing ones"
+                );
+                digit.trailing_ones().try_into().unwrap()
+            }
+            Large(digits) => {
+                // A multi-digit two's complement value is never all ones, so it has a lowest zero.
+                let lowest = ibig_core::lowest_zero(digits).unwrap();
+                // This will not overflow because our numbers are never longer than `usize::MAX` bits.
+                lowest.try_into().unwrap()
+            }
         }
-        let digits = self.as_digits();
-        // A multi-digit two's complement value is never all ones, so it has a lowest zero.
-        let lowest = ibig_core::lowest_zero(digits).unwrap();
-        // This will not overflow because our numbers are never longer than `usize::MAX` bits.
-        lowest.try_into().unwrap()
     }
 }

@@ -1,25 +1,28 @@
 //! Sign operations on [`IBig`].
 
 use crate::IBig;
-use crate::repr::AsDigits;
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+};
 
 impl IBig {
     /// Returns `true` if the number is negative (less than zero).
     #[inline]
     pub fn is_negative(&self) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => digit.is_negative(),
-            None => ibig_core::is_negative(self.as_digits()),
+        match self.as_digits() {
+            Small(digit) => digit.is_negative(),
+            Large(digits) => ibig_core::is_negative(digits),
         }
     }
 
     /// Returns `true` if the number is positive (greater than zero).
     #[inline]
     pub fn is_positive(&self) -> bool {
-        match self.try_to_digit() {
-            Some(digit) => digit.is_positive(),
+        match self.as_digits() {
+            Small(digit) => digit.is_positive(),
             // A multi-digit value is never zero, so it is positive iff not negative.
-            None => !ibig_core::is_negative(self.as_digits()),
+            Large(digits) => !ibig_core::is_negative(digits),
         }
     }
 
@@ -38,11 +41,11 @@ impl IBig {
     /// ```
     #[inline]
     pub fn signum(&self) -> IBig {
-        match self.try_to_digit() {
-            Some(digit) => IBig::from_digit(digit.signum()),
-            None => {
+        match self.as_digits() {
+            Small(digit) => IBig::from_digit(digit.signum()),
+            Large(digits) => {
                 // A multi-digit value is never zero.
-                if ibig_core::is_negative(self.as_digits()) {
+                if ibig_core::is_negative(digits) {
                     IBig::from_i8(-1)
                 } else {
                     IBig::from_i8(1)
