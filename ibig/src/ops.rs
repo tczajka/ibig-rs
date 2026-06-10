@@ -80,21 +80,22 @@ macro_rules! impl_unary_operator {
 
 pub(crate) use impl_unary_operator;
 
-/// A binary operation on values of type `T`.
+/// A binary operation taking a left operand of type `L` and a right operand of type `R`,
+/// producing a value of type `L`.
 ///
 /// Each operand appears can be borrowed or owned.
-pub(crate) trait BinaryOp<T: Default> {
+pub(crate) trait BinaryOp<L: Default, R> {
     /// Both operands are borrowed.
-    fn apply_ref_ref(lhs: &T, rhs: &T) -> T;
+    fn apply_ref_ref(lhs: &L, rhs: &R) -> L;
 
     /// Left operand is borrowed, right operand owned.
-    fn apply_ref_val(lhs: &T, rhs: T) -> T;
+    fn apply_ref_val(lhs: &L, rhs: R) -> L;
 
     /// Left operand is owned, right operand borrowed.
-    fn apply_val_ref(lhs: T, rhs: &T) -> T;
+    fn apply_val_ref(lhs: L, rhs: &R) -> L;
 
     /// Both operands are owned.
-    fn apply_val_val(lhs: T, rhs: T) -> T;
+    fn apply_val_val(lhs: L, rhs: R) -> L;
 }
 
 /// A binary operation implemented on the digit representation of a number.
@@ -154,8 +155,8 @@ pub(crate) trait CommutativeBinaryOpDigits<T: AsDigits> {
     fn apply_val_val(lhs: Digits, rhs: Digits) -> T;
 }
 
-/// Every [`BinaryOpDigits`] induces a [`BinaryOp`].
-impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T> for Op {
+/// Every [`BinaryOpDigits`] induces a [`BinaryOp`] over a single type.
+impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T, T> for Op {
     #[inline]
     fn apply_ref_ref(lhs: &T, rhs: &T) -> T {
         match (lhs.as_digits(), rhs.as_digits()) {
@@ -245,63 +246,67 @@ impl<T: AsDigits, Op: CommutativeBinaryOpDigits<T>> BinaryOpDigits<T> for Op {
     }
 }
 
-/// Implements a binary operator and its assigning counterpart for a value type `$t`, deriving
-/// every owned/borrowed operand combination from an [`BinaryOp`] implemented by the marker type
-/// `$op`.
+/// Implements a binary operator and its assigning counterpart for a left operand type `$left` and
+/// right operand type `$right`, deriving every owned/borrowed operand combination from a
+/// [`BinaryOp`] implemented by the marker type `$op`. The output type is `$left`.
 ///
 /// `$trait`/`$method` and `$assign_trait`/`$assign_method` are the operator and assigning-operator
 /// traits; they must be in scope at the call site.
 macro_rules! impl_binary_operator {
-    ($t:ty, $trait:ident :: $method:ident, $assign_trait:ident :: $assign_method:ident, $op:ty) => {
-        impl $trait<$t> for $t {
-            type Output = $t;
+    ($left:ty, $right:ty, $trait:ident :: $method:ident, $assign_trait:ident :: $assign_method:ident, $op:ty) => {
+        impl $trait<$right> for $left {
+            type Output = $left;
 
             #[inline]
-            fn $method(self, rhs: $t) -> $t {
-                <$op as $crate::ops::BinaryOp<$t>>::apply_val_val(self, rhs)
+            fn $method(self, rhs: $right) -> $left {
+                <$op as $crate::ops::BinaryOp<$left, $right>>::apply_val_val(self, rhs)
             }
         }
 
-        impl $trait<&$t> for $t {
-            type Output = $t;
+        impl $trait<&$right> for $left {
+            type Output = $left;
 
             #[inline]
-            fn $method(self, rhs: &$t) -> $t {
-                <$op as $crate::ops::BinaryOp<$t>>::apply_val_ref(self, rhs)
+            fn $method(self, rhs: &$right) -> $left {
+                <$op as $crate::ops::BinaryOp<$left, $right>>::apply_val_ref(self, rhs)
             }
         }
 
-        impl $trait<$t> for &$t {
-            type Output = $t;
+        impl $trait<$right> for &$left {
+            type Output = $left;
 
             #[inline]
-            fn $method(self, rhs: $t) -> $t {
-                <$op as $crate::ops::BinaryOp<$t>>::apply_ref_val(self, rhs)
+            fn $method(self, rhs: $right) -> $left {
+                <$op as $crate::ops::BinaryOp<$left, $right>>::apply_ref_val(self, rhs)
             }
         }
 
-        impl $trait<&$t> for &$t {
-            type Output = $t;
+        impl $trait<&$right> for &$left {
+            type Output = $left;
 
             #[inline]
-            fn $method(self, rhs: &$t) -> $t {
-                <$op as $crate::ops::BinaryOp<$t>>::apply_ref_ref(self, rhs)
+            fn $method(self, rhs: &$right) -> $left {
+                <$op as $crate::ops::BinaryOp<$left, $right>>::apply_ref_ref(self, rhs)
             }
         }
 
-        impl $assign_trait<$t> for $t {
+        impl $assign_trait<$right> for $left {
             #[inline]
-            fn $assign_method(&mut self, rhs: $t) {
-                *self =
-                    <$op as $crate::ops::BinaryOp<$t>>::apply_val_val(::core::mem::take(self), rhs);
+            fn $assign_method(&mut self, rhs: $right) {
+                *self = <$op as $crate::ops::BinaryOp<$left, $right>>::apply_val_val(
+                    ::core::mem::take(self),
+                    rhs,
+                );
             }
         }
 
-        impl $assign_trait<&$t> for $t {
+        impl $assign_trait<&$right> for $left {
             #[inline]
-            fn $assign_method(&mut self, rhs: &$t) {
-                *self =
-                    <$op as $crate::ops::BinaryOp<$t>>::apply_val_ref(::core::mem::take(self), rhs);
+            fn $assign_method(&mut self, rhs: &$right) {
+                *self = <$op as $crate::ops::BinaryOp<$left, $right>>::apply_val_ref(
+                    ::core::mem::take(self),
+                    rhs,
+                );
             }
         }
     };

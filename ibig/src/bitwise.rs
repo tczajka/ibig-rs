@@ -119,6 +119,7 @@ impl CommutativeBinaryOpDigits<UBig> for BitAndOperation {
 
 impl_binary_operator!(
     UBig,
+    UBig,
     BitAnd::bitand,
     BitAndAssign::bitand_assign,
     BitAndOperation
@@ -208,6 +209,7 @@ impl CommutativeBinaryOpDigits<IBig> for BitAndOperation {
 
 impl_binary_operator!(
     IBig,
+    IBig,
     BitAnd::bitand,
     BitAndAssign::bitand_assign,
     BitAndOperation
@@ -269,6 +271,7 @@ impl CommutativeBinaryOpDigits<UBig> for BitOrOperation {
 }
 
 impl_binary_operator!(
+    UBig,
     UBig,
     BitOr::bitor,
     BitOrAssign::bitor_assign,
@@ -360,6 +363,7 @@ impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
 
 impl_binary_operator!(
     IBig,
+    IBig,
     BitOr::bitor,
     BitOrAssign::bitor_assign,
     BitOrOperation
@@ -421,6 +425,7 @@ impl CommutativeBinaryOpDigits<UBig> for BitXorOperation {
 }
 
 impl_binary_operator!(
+    UBig,
     UBig,
     BitXor::bitxor,
     BitXorAssign::bitxor_assign,
@@ -494,6 +499,7 @@ impl CommutativeBinaryOpDigits<IBig> for BitXorOperation {
 }
 
 impl_binary_operator!(
+    IBig,
     IBig,
     BitXor::bitxor,
     BitXorAssign::bitxor_assign,
