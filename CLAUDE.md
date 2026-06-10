@@ -69,6 +69,7 @@ Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the
 - **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions and the private `Repr` enum).
 - **Single-digit fast path**: `UBig`/`IBig` methods commonly special-case the inline single-digit representation via `try_to_digit()`, operating directly on the `Digit`/`SignedDigit` and only falling back to the `ibig_core` slice routine (over `self.as_digits()`) for multi-digit values. Mirror this pattern when adding new operations.
 - The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`).
+- **`ibig-core` doc comments**: don't restate "little-endian" or "unsigned" on individual functions — both are established at the crate top level (`src/lib.rs`). Functions on signed two's complement values still say "signed two's complement" explicitly, but without "little-endian".
 
 ### Tests
 

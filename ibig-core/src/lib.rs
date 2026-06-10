@@ -17,6 +17,7 @@ mod bits;
 mod bitwise;
 mod bytes;
 mod len;
+mod shift;
 mod sign;
 
 pub use bits::{
@@ -28,6 +29,7 @@ pub use bytes::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
 };
 pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
+pub use shift::{shl_small, shl_small_signed, shr_small, shr_small_signed};
 pub use sign::{extend_signed, is_negative};
 use unative::{INative, UNative};
 
