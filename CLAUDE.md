@@ -8,6 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The repository is currently a **ground-up rewrite**. The new crates (`ibig-core`, `ibig`) are early-stage; the previous full implementation lives in `ibig-old` and is the reference for the algorithms still to be ported.
 
+## Tools
+
+- **Reading/editing files**: use the Read/Edit/Write tools, not shell commands (`cat`, `sed`, `head`, `echo`, etc.).
+
 ## Repository layout
 
 A Cargo workspace (`Cargo.toml`) with two active members plus two excluded reference directories:
