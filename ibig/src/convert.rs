@@ -24,30 +24,38 @@ macro_rules! try_from_big_value {
 }
 
 impl UBig {
-    /// Constructs from a `u8`.
+    /// Constructs from a `u8` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_u8(value: u8) -> UBig {
+    pub const fn const_from_u8(value: u8) -> UBig {
         UBig::const_from_digit(Digit::from_u8(value))
     }
 
-    /// Constructs from a `u16`.
+    /// Constructs from a `u16` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_u16(value: u16) -> UBig {
+    pub const fn const_from_u16(value: u16) -> UBig {
         UBig::const_from_digit(Digit::from_u16(value))
     }
 
-    /// Constructs from a `u32`.
+    /// Constructs from a `u32` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_u32(value: u32) -> UBig {
+    pub const fn const_from_u32(value: u32) -> UBig {
         match Digit::try_from_u32(value) {
             Some(digit) => UBig::const_from_digit(digit),
             None => UBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
-    /// Constructs from a `u64`.
+    /// Constructs from a `u64` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_u64(value: u64) -> UBig {
+    pub const fn const_from_u64(value: u64) -> UBig {
         match Digit::try_from_u64(value) {
             Some(digit) => UBig::const_from_digit(digit),
             None => UBig::const_from_le_bytes(&value.to_le_bytes()),
@@ -223,30 +231,38 @@ impl TryFrom<&UBig> for bool {
 try_from_big_value!(bool, UBig);
 
 impl IBig {
-    /// Constructs from an `i8`.
+    /// Constructs from an `i8` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_i8(value: i8) -> IBig {
+    pub const fn const_from_i8(value: i8) -> IBig {
         IBig::const_from_digit(SignedDigit::from_i8(value))
     }
 
-    /// Constructs from an `i16`.
+    /// Constructs from an `i16` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_i16(value: i16) -> IBig {
+    pub const fn const_from_i16(value: i16) -> IBig {
         IBig::const_from_digit(SignedDigit::from_i16(value))
     }
 
-    /// Constructs from an `i32`.
+    /// Constructs from an `i32` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_i32(value: i32) -> IBig {
+    pub const fn const_from_i32(value: i32) -> IBig {
         match SignedDigit::try_from_i32(value) {
             Some(digit) => IBig::const_from_digit(digit),
             None => IBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
 
-    /// Constructs from an `i64`.
+    /// Constructs from an `i64` in a `const` context.
+    ///
+    /// Outside of `const` contexts, use [`From`].
     #[inline]
-    pub const fn from_i64(value: i64) -> IBig {
+    pub const fn const_from_i64(value: i64) -> IBig {
         match SignedDigit::try_from_i64(value) {
             Some(digit) => IBig::const_from_digit(digit),
             None => IBig::const_from_le_bytes(&value.to_le_bytes()),

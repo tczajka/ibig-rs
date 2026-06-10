@@ -46,9 +46,9 @@ impl IBig {
             Large(digits) => {
                 // A multi-digit value is never zero.
                 if ibig_core::is_negative(digits) {
-                    IBig::from_i8(-1)
+                    IBig::from(-1i8)
                 } else {
-                    IBig::from_i8(1)
+                    IBig::from(1i8)
                 }
             }
         }

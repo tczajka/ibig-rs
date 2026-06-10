@@ -29,11 +29,11 @@ macro_rules! from_roundtrip {
     };
 }
 
-// `UBig` from unsigned primitives (`from_uN` const constructors for the fixed-width types).
-from_roundtrip!(ubig_from_u8, u8, UBig, from_u8);
-from_roundtrip!(ubig_from_u16, u16, UBig, from_u16);
-from_roundtrip!(ubig_from_u32, u32, UBig, from_u32);
-from_roundtrip!(ubig_from_u64, u64, UBig, from_u64);
+// `UBig` from unsigned primitives (`const_from_uN` const constructors for the fixed-width types).
+from_roundtrip!(ubig_from_u8, u8, UBig, const_from_u8);
+from_roundtrip!(ubig_from_u16, u16, UBig, const_from_u16);
+from_roundtrip!(ubig_from_u32, u32, UBig, const_from_u32);
+from_roundtrip!(ubig_from_u64, u64, UBig, const_from_u64);
 from_roundtrip!(ubig_from_u128, u128, UBig);
 from_roundtrip!(ubig_from_usize, usize, UBig);
 from_roundtrip!(ubig_from_bool, bool, UBig);
@@ -47,11 +47,11 @@ from_roundtrip!(ibig_from_u128, u128, IBig);
 from_roundtrip!(ibig_from_usize, usize, IBig);
 from_roundtrip!(ibig_from_bool, bool, IBig);
 
-// `IBig` from signed primitives (`from_iN` const constructors for the fixed-width types).
-from_roundtrip!(ibig_from_i8, i8, IBig, from_i8);
-from_roundtrip!(ibig_from_i16, i16, IBig, from_i16);
-from_roundtrip!(ibig_from_i32, i32, IBig, from_i32);
-from_roundtrip!(ibig_from_i64, i64, IBig, from_i64);
+// `IBig` from signed primitives (`const_from_iN` const constructors for the fixed-width types).
+from_roundtrip!(ibig_from_i8, i8, IBig, const_from_i8);
+from_roundtrip!(ibig_from_i16, i16, IBig, const_from_i16);
+from_roundtrip!(ibig_from_i32, i32, IBig, const_from_i32);
+from_roundtrip!(ibig_from_i64, i64, IBig, const_from_i64);
 from_roundtrip!(ibig_from_i128, i128, IBig);
 from_roundtrip!(ibig_from_isize, isize, IBig);
 
@@ -118,7 +118,7 @@ fn ibig_try_into_primitive_fails() {
 
 #[test]
 fn ibig_try_into_unsigned_fails() {
-    let big_neg = IBig::from_i8(-1);
+    let big_neg = IBig::from(-1i8);
     assert!(u8::try_from(&big_neg).is_err());
     assert!(u16::try_from(&big_neg).is_err());
     assert!(u32::try_from(&big_neg).is_err());
