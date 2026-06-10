@@ -2,7 +2,7 @@
 
 use core::hint::assert_unchecked;
 use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed};
-use smallvec::SmallVec;
+use smallvec::{SmallVec, smallvec};
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.
 pub(crate) const INLINE_DIGITS: usize = 4;
@@ -33,13 +33,41 @@ pub struct UBig(
 impl UBig {
     /// Construct from a single digit.
     #[inline]
-    pub(crate) const fn from_digit(digit: Digit) -> UBig {
+    pub(crate) fn from_digit(digit: Digit) -> UBig {
+        // A single digit is always canonical.
+        UBig(smallvec![digit])
+    }
+
+    /// Construct from a single digit, usable in `const` contexts.
+    #[inline]
+    pub(crate) const fn const_from_digit(digit: Digit) -> UBig {
         const { assert!(INLINE_DIGITS >= 1) };
         let mut digits = [Digit::ZERO; INLINE_DIGITS];
         digits[0] = digit;
         // A single digit is always canonical.
         // SAFETY: `1 <= INLINE_DIGITS`.
         UBig(unsafe { Digits::from_const_with_len_unchecked(digits, 1) })
+    }
+
+    /// Construct from little-endian digits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if, after normalization, the value has more than [`MAX_DIGITS`] digits.
+    pub(crate) fn from_digits(mut digits: Digits) -> UBig {
+        digits.truncate(min_len(&digits));
+        // `min_len` returns 0 for zero, but `UBig` always keeps at least one digit.
+        if digits.is_empty() {
+            digits.push(Digit::ZERO);
+        }
+        if digits.spilled() {
+            let len = digits.len();
+            assert!(len <= MAX_DIGITS, "number too large");
+            if len <= digits.capacity() / 4 || len == 1 {
+                digits.shrink_to_fit();
+            }
+        }
+        UBig(digits)
     }
 
     /// Construct from at most `INLINE_DIGITS` little-endian digits.
@@ -64,27 +92,6 @@ impl UBig {
         // SAFETY: `len <= INLINE_DIGITS`.
         UBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
     }
-
-    /// Construct from little-endian digits.
-    ///
-    /// # Panics
-    ///
-    /// Panics if, after normalization, the value has more than [`MAX_DIGITS`] digits.
-    pub(crate) fn from_digits(mut digits: Digits) -> UBig {
-        digits.truncate(min_len(&digits));
-        // `min_len` returns 0 for zero, but `UBig` always keeps at least one digit.
-        if digits.is_empty() {
-            digits.push(Digit::ZERO);
-        }
-        if digits.spilled() {
-            let len = digits.len();
-            assert!(len <= MAX_DIGITS, "number too large");
-            if len <= digits.capacity() / 4 || len == 1 {
-                digits.shrink_to_fit();
-            }
-        }
-        UBig(digits)
-    }
 }
 
 /// Signed big integer.
@@ -103,30 +110,19 @@ pub struct IBig(
 impl IBig {
     /// Construct from a single signed digit.
     #[inline]
-    pub(crate) const fn from_digit(digit: SignedDigit) -> IBig {
+    pub(crate) fn from_digit(digit: SignedDigit) -> IBig {
+        // A single signed digit is always canonical.
+        IBig(smallvec![digit.cast_unsigned()])
+    }
+
+    /// Construct from a single signed digit, usable in `const` contexts.
+    #[inline]
+    pub(crate) const fn const_from_digit(digit: SignedDigit) -> IBig {
         let mut buffer = [Digit::ZERO; INLINE_DIGITS];
         buffer[0] = digit.cast_unsigned();
         // A single signed digit is always canonical.
         // SAFETY: `1 <= INLINE_DIGITS`.
         IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, 1) })
-    }
-
-    /// Construct from at most `INLINE_DIGITS` little-endian two's complement digits.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `digits` is empty or longer than `INLINE_DIGITS`.
-    #[inline]
-    pub(crate) const fn const_from_digits(digits: &[Digit]) -> IBig {
-        assert!(!digits.is_empty() && digits.len() <= INLINE_DIGITS);
-        let mut buffer = [Digit::ZERO; INLINE_DIGITS];
-        // `min_len_signed` is always at least 1, so the buffer keeps a sign-carrying digit.
-        let len = min_len_signed(digits);
-        let (dest, _) = buffer.split_at_mut(len);
-        let (src, _) = digits.split_at(len);
-        dest.copy_from_slice(src);
-        // SAFETY: `1 <= len <= INLINE_DIGITS`.
-        IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
     }
 
     /// Construct from the little-endian digits of a two's complement representation.
@@ -145,6 +141,24 @@ impl IBig {
             }
         }
         IBig(digits)
+    }
+
+    /// Construct from at most `INLINE_DIGITS` little-endian two's complement digits.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` is empty or longer than `INLINE_DIGITS`.
+    #[inline]
+    pub(crate) const fn const_from_digits(digits: &[Digit]) -> IBig {
+        assert!(!digits.is_empty() && digits.len() <= INLINE_DIGITS);
+        let mut buffer = [Digit::ZERO; INLINE_DIGITS];
+        // `min_len_signed` is always at least 1, so the buffer keeps a sign-carrying digit.
+        let len = min_len_signed(digits);
+        let (dest, _) = buffer.split_at_mut(len);
+        let (src, _) = digits.split_at(len);
+        dest.copy_from_slice(src);
+        // SAFETY: `1 <= len <= INLINE_DIGITS`.
+        IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
     }
 }
 

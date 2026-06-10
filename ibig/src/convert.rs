@@ -27,20 +27,20 @@ impl UBig {
     /// Constructs from a `u8`.
     #[inline]
     pub const fn from_u8(value: u8) -> UBig {
-        UBig::from_digit(Digit::from_u8(value))
+        UBig::const_from_digit(Digit::from_u8(value))
     }
 
     /// Constructs from a `u16`.
     #[inline]
     pub const fn from_u16(value: u16) -> UBig {
-        UBig::from_digit(Digit::from_u16(value))
+        UBig::const_from_digit(Digit::from_u16(value))
     }
 
     /// Constructs from a `u32`.
     #[inline]
     pub const fn from_u32(value: u32) -> UBig {
         match Digit::try_from_u32(value) {
-            Some(digit) => UBig::from_digit(digit),
+            Some(digit) => UBig::const_from_digit(digit),
             None => UBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
@@ -49,7 +49,7 @@ impl UBig {
     #[inline]
     pub const fn from_u64(value: u64) -> UBig {
         match Digit::try_from_u64(value) {
-            Some(digit) => UBig::from_digit(digit),
+            Some(digit) => UBig::const_from_digit(digit),
             None => UBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
@@ -226,20 +226,20 @@ impl IBig {
     /// Constructs from an `i8`.
     #[inline]
     pub const fn from_i8(value: i8) -> IBig {
-        IBig::from_digit(SignedDigit::from_i8(value))
+        IBig::const_from_digit(SignedDigit::from_i8(value))
     }
 
     /// Constructs from an `i16`.
     #[inline]
     pub const fn from_i16(value: i16) -> IBig {
-        IBig::from_digit(SignedDigit::from_i16(value))
+        IBig::const_from_digit(SignedDigit::from_i16(value))
     }
 
     /// Constructs from an `i32`.
     #[inline]
     pub const fn from_i32(value: i32) -> IBig {
         match SignedDigit::try_from_i32(value) {
-            Some(digit) => IBig::from_digit(digit),
+            Some(digit) => IBig::const_from_digit(digit),
             None => IBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }
@@ -248,7 +248,7 @@ impl IBig {
     #[inline]
     pub const fn from_i64(value: i64) -> IBig {
         match SignedDigit::try_from_i64(value) {
-            Some(digit) => IBig::from_digit(digit),
+            Some(digit) => IBig::const_from_digit(digit),
             None => IBig::const_from_le_bytes(&value.to_le_bytes()),
         }
     }

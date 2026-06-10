@@ -5,12 +5,12 @@ use ibig_core::{Digit, SignedDigit};
 
 impl UBig {
     /// The number zero.
-    pub const ZERO: UBig = UBig::from_digit(Digit::ZERO);
+    pub const ZERO: UBig = UBig::const_from_digit(Digit::ZERO);
 }
 
 impl IBig {
     /// The number zero.
-    pub const ZERO: IBig = IBig::from_digit(SignedDigit::ZERO);
+    pub const ZERO: IBig = IBig::const_from_digit(SignedDigit::ZERO);
 }
 
 /// The default value is zero.
