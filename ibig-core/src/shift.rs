@@ -1,9 +1,6 @@
 //! Bit shifts.
 
-use crate::{
-    Digit,
-    sign::{is_negative, sign_extension},
-};
+use crate::{Digit, sign::sign_extension};
 
 /// Shifts `digits` left by `shift` bits in place, returning the overflow.
 ///
@@ -106,10 +103,10 @@ pub fn shr_small(digits: &mut [Digit], shift: u32) {
 #[inline]
 pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> Digit {
     assert!(shift < Digit::BITS);
-    let negative = is_negative(digits);
+    let high = *digits.last().unwrap();
     let overflow = shl_small(digits, shift);
     // Fill the high `BITS - shift` bits of the overflow with the sign.
-    overflow | (sign_extension(negative) << shift)
+    overflow | (sign_extension(high) << shift)
 }
 
 /// Shifts the signed two's complement value in `digits` right by `shift` bits in place (an
@@ -138,7 +135,7 @@ pub fn shr_small_signed(digits: &mut [Digit], shift: u32) {
         return;
     }
     // The bits shifted into the top of the most-significant digit are the sign extension.
-    let mut carry = sign_extension(is_negative(digits)) << (Digit::BITS - shift);
+    let mut carry = sign_extension(*digits.last().unwrap()) << (Digit::BITS - shift);
     for d in digits.iter_mut().rev() {
         let new_carry = *d << (Digit::BITS - shift);
         *d = (*d >> shift) | carry;

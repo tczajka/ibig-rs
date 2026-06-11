@@ -1,4 +1,4 @@
-//! Sign and sign-extension of two's complement digit slices.
+//! Sign and sign-extension of two's complement digit and byte slices.
 
 use crate::Digit;
 
@@ -45,20 +45,68 @@ pub const fn is_negative(digits: &[Digit]) -> bool {
 /// ```
 #[inline]
 pub fn extend_signed(digits: &mut [Digit], len: usize) {
-    let fill = sign_extension(is_negative(&digits[..len]));
+    assert!(
+        len > 0 && len <= digits.len(),
+        "len must be in 1..=digits.len()"
+    );
+    let fill = sign_extension(digits[len - 1]);
     digits[len..].fill(fill);
 }
 
-/// The sign-extension digit for a value of the given sign: all-ones if negative, zero
-/// otherwise.
+/// Sign-extends the two's complement value held in `bytes[..len]` to fill the rest of `bytes`
+/// in place: every byte from index `len` onward is set to the value's sign (all-ones if
+/// negative, zero otherwise).
+///
+/// # Panics
+///
+/// Panics if `len` is 0 or greater than `bytes.len()`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::extend_signed_bytes;
+/// // -1 occupies the low byte; extend it across the buffer.
+/// let mut bytes = [0xffu8, 0, 0];
+/// extend_signed_bytes(&mut bytes, 1);
+/// assert_eq!(bytes, [0xff, 0xff, 0xff]);
+/// // A non-negative value extends with zeros.
+/// let mut bytes = [5u8, 0xff];
+/// extend_signed_bytes(&mut bytes, 1);
+/// assert_eq!(bytes, [5, 0]);
+/// ```
 #[inline]
-pub(crate) const fn sign_extension(is_negative: bool) -> Digit {
-    if is_negative { Digit::MAX } else { Digit::ZERO }
+pub fn extend_signed_bytes(bytes: &mut [u8], len: usize) {
+    assert!(
+        len > 0 && len <= bytes.len(),
+        "len must be in 1..=bytes.len()"
+    );
+    let fill = sign_extension_byte(bytes[len - 1]);
+    bytes[len..].fill(fill);
 }
 
-/// The sign-extension byte for a value of the given sign: all-ones if negative, zero
-/// otherwise.
+/// The sign-extension digit for a two's complement value whose most-significant digit is
+/// `high`: all-ones (`Digit::MAX`) if `high` is negative (its sign bit is set), zero otherwise.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, sign_extension};
+/// assert_eq!(sign_extension(Digit::MAX), Digit::MAX); // a negative top digit
+/// assert_eq!(sign_extension(Digit::from(5u8)), Digit::ZERO); // a non-negative top digit
+/// ```
 #[inline]
-pub(crate) const fn sign_extension_byte(is_negative: bool) -> u8 {
-    if is_negative { u8::MAX } else { 0 }
+pub const fn sign_extension(high: Digit) -> Digit {
+    // Smear the sign bit across the whole digit: arithmetic-shifting it down to every bit
+    // yields all-ones for a negative `high` and all-zeros otherwise.
+    high.cast_signed()
+        .checked_shr(Digit::BITS - 1)
+        .unwrap()
+        .cast_unsigned()
+}
+
+/// The sign-extension byte for a two's complement value whose most-significant byte is `high`:
+/// all-ones if `high` is negative (its sign bit is set), zero otherwise.
+#[inline]
+pub(crate) const fn sign_extension_byte(high: u8) -> u8 {
+    (high.cast_signed() >> (u8::BITS - 1)).cast_unsigned()
 }

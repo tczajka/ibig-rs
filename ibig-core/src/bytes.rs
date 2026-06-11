@@ -1,7 +1,7 @@
 //! Byte serialization of digit slices.
 
 use crate::Digit;
-use crate::sign::{is_negative, sign_extension_byte};
+use crate::sign::{extend_signed_bytes, sign_extension_byte};
 
 /// Writes the little-endian byte representation of `digits` into `bytes`, zero-extending to
 /// fill `bytes`.
@@ -21,7 +21,8 @@ use crate::sign::{is_negative, sign_extension_byte};
 /// ```
 #[inline]
 pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
-    to_bytes_fill(digits, bytes, 0);
+    let len = to_bytes_prefix(digits, bytes);
+    bytes[len..].fill(0);
 }
 
 /// Writes the little-endian two's complement byte representation of `digits` into `bytes`,
@@ -43,23 +44,24 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
 /// ```
 #[inline]
 pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
-    to_bytes_fill(digits, bytes, sign_extension_byte(is_negative(digits)));
+    let len = to_bytes_prefix(digits, bytes);
+    extend_signed_bytes(bytes, len);
 }
 
-/// Writes `digits` little-endian into the low bytes of `bytes` and fills the rest with
-/// `fill` (the sign-extension byte).
+/// Writes `digits` into the low `digits.len() * Digit::BYTES` bytes of `bytes`,
+/// returning that count. The remaining bytes are left unchanged.
 ///
 /// # Panics
 ///
 /// Panics if `bytes.len() < digits.len() * Digit::BYTES`.
 #[inline]
-fn to_bytes_fill(digits: &[Digit], bytes: &mut [u8], fill: u8) {
-    let (low, high) = bytes.split_at_mut(digits.len() * Digit::BYTES);
-    let (chunks, _) = low.as_chunks_mut::<{ Digit::BYTES }>();
+fn to_bytes_prefix(digits: &[Digit], bytes: &mut [u8]) -> usize {
+    let len = digits.len() * Digit::BYTES;
+    let (chunks, _) = bytes[..len].as_chunks_mut::<{ Digit::BYTES }>();
     for (chunk, &digit) in chunks.iter_mut().zip(digits) {
         *chunk = digit.to_le_bytes();
     }
-    high.fill(fill);
+    len
 }
 
 /// Fills `digits` from the little-endian `bytes`.
@@ -152,8 +154,8 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         digits[i] = Digit::from_le_bytes(chunks[i]);
         i += 1;
     }
-    if !rem.is_empty() {
-        let fill = sign_extension_byte(bytes.last().unwrap().cast_signed().is_negative());
+    if let Some(&last) = rem.last() {
+        let fill = sign_extension_byte(last);
         let mut arr = [fill; Digit::BYTES];
         let (dest, _) = arr.split_at_mut(rem.len());
         dest.copy_from_slice(rem);
@@ -192,8 +194,8 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     for &chunk in chunks.iter().rev() {
         *digit_iter.next().unwrap() = Digit::from_be_bytes(chunk);
     }
-    if !rem.is_empty() {
-        let fill = sign_extension_byte(bytes[0].cast_signed().is_negative());
+    if let Some(&first) = rem.first() {
+        let fill = sign_extension_byte(first);
         let mut arr = [fill; Digit::BYTES];
         arr[Digit::BYTES - rem.len()..].copy_from_slice(rem);
         *digit_iter.next().unwrap() = Digit::from_be_bytes(arr);

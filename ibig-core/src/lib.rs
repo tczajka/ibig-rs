@@ -30,7 +30,7 @@ pub use bytes::{
 };
 pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
 pub use shift::{shl_small, shl_small_signed, shr_small, shr_small_signed};
-pub use sign::{extend_signed, is_negative};
+pub use sign::{extend_signed, extend_signed_bytes, is_negative, sign_extension};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

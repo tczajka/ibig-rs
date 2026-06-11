@@ -1,6 +1,6 @@
 //! Integration tests for sign operations.
 
-use ibig_core::{Digit, extend_signed, is_negative};
+use ibig_core::{Digit, extend_signed, extend_signed_bytes, is_negative, sign_extension};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
@@ -65,4 +65,40 @@ fn test_extend_signed() {
 #[should_panic]
 fn test_extend_signed_empty() {
     extend_signed(&mut [Digit::ZERO], 0);
+}
+
+#[test]
+fn test_extend_signed_bytes() {
+    // `(value bytes, value length, expected after extension)`.
+    let cases: &[(&[u8], usize, &[u8])] = &[
+        // A negative value extends with all-ones.
+        (&[0xff, 0, 0], 1, &[0xff, 0xff, 0xff]),
+        // A non-negative value extends with zeros.
+        (&[5, 0xff, 0xff], 1, &[5, 0, 0]),
+        // The sign comes from the most-significant byte of the value part.
+        (&[1, 0xff, 0], 2, &[1, 0xff, 0xff]),
+        // `len == bytes.len()` leaves the buffer unchanged.
+        (&[7, 8], 2, &[7, 8]),
+    ];
+    for &(input, len, expected) in cases {
+        let mut bytes = input.to_vec();
+        extend_signed_bytes(&mut bytes, len);
+        assert_eq!(bytes, expected);
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_extend_signed_bytes_empty() {
+    extend_signed_bytes(&mut [0u8], 0);
+}
+
+#[test]
+fn sign_extension_digit() {
+    // A negative top digit extends with all-ones; a non-negative one with zeros.
+    assert_eq!(sign_extension(Digit::MAX), Digit::MAX); // -1
+    assert_eq!(sign_extension(digit(5)), Digit::ZERO);
+    assert_eq!(sign_extension(Digit::ZERO), Digit::ZERO);
+    // Only the high (sign) bit matters, not the lower bits.
+    assert_eq!(sign_extension(Digit::MAX ^ Digit::from(1u8)), Digit::MAX);
 }

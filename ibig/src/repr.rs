@@ -9,7 +9,14 @@ pub(crate) const INLINE_DIGITS: usize = 4;
 
 /// Maximum number of [`Digit`]s in a value, chosen so that the total bit length
 /// (`MAX_DIGITS * Digit::BITS`) still fits in a `usize`.
-const MAX_DIGITS: usize = usize::MAX / DIGIT_BITS_USIZE;
+pub(crate) const MAX_DIGITS: usize = usize::MAX / DIGIT_BITS_USIZE;
+
+/// Panics because a value would exceed [`MAX_DIGITS`]. The single source of the "number too
+/// large" panic message.
+#[cold]
+pub(crate) fn number_too_large() -> ! {
+    panic!("number too large")
+}
 
 /// Storage for little-endian digits.
 ///
@@ -62,7 +69,9 @@ impl UBig {
         }
         if digits.spilled() {
             let len = digits.len();
-            assert!(len <= MAX_DIGITS, "number too large");
+            if len > MAX_DIGITS {
+                number_too_large();
+            }
             if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();
             }
@@ -135,7 +144,9 @@ impl IBig {
         digits.truncate(min_len_signed(&digits));
         if digits.spilled() {
             let len = digits.len();
-            assert!(len <= MAX_DIGITS, "number too large");
+            if len > MAX_DIGITS {
+                number_too_large();
+            }
             if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();
             }

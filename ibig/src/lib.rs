@@ -18,6 +18,7 @@ mod error;
 mod misc;
 mod ops;
 mod repr;
+mod shift;
 mod sign;
 
 #[cfg(test)]
