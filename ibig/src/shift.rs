@@ -55,9 +55,9 @@ impl UBig {
         }
         let index = BitIndex::from(rhs);
         let (low, high) = ibig_core::shl_small_digit(digit, index.bit_index());
-        // Fast path: the result is still a single digit.
-        if index.digit_index() == 0 && high == Digit::ZERO {
-            return UBig::from_digit(low);
+        // With no whole-digit offset, the pair is the entire result.
+        if index.digit_index() == 0 {
+            return UBig::from_two_digits(low, high);
         }
         if index.digit_index() >= MAX_DIGITS {
             number_too_large();
@@ -138,9 +138,9 @@ impl IBig {
         }
         let index = BitIndex::from(rhs);
         let (low, high) = ibig_core::shl_small_signed_digit(digit, index.bit_index());
-        // Fast path: the result still fits in a single digit.
-        if index.digit_index() == 0 && high == ibig_core::sign_extension(low.cast_signed()) {
-            return IBig::from_digit(low.cast_signed());
+        // With no whole-digit offset, the pair is the entire result.
+        if index.digit_index() == 0 {
+            return IBig::from_two_digits(low, high);
         }
         if index.digit_index() >= MAX_DIGITS {
             number_too_large();

@@ -43,6 +43,55 @@ fn ibig_from_digit() {
 }
 
 #[test]
+fn ubig_from_two_digits() {
+    // A zero high digit is redundant and dropped.
+    assert_eq!(
+        UBig::from_two_digits(digit(5), Digit::ZERO).into_digits(),
+        Small(digit(5))
+    );
+    assert_eq!(
+        UBig::from_two_digits(Digit::ZERO, Digit::ZERO).into_digits(),
+        Small(Digit::ZERO)
+    );
+    // A nonzero high digit is kept, even above a zero low digit.
+    assert_eq!(
+        UBig::from_two_digits(digit(5), digit(1)).into_digits(),
+        Large(smallvec![digit(5), digit(1)])
+    );
+    assert_eq!(
+        UBig::from_two_digits(Digit::ZERO, Digit::MAX).into_digits(),
+        Large(smallvec![Digit::ZERO, Digit::MAX])
+    );
+}
+
+#[test]
+fn ibig_from_two_digits() {
+    // A high digit that is a redundant sign extension of the low digit is dropped.
+    assert_eq!(
+        IBig::from_two_digits(digit(5), signed(0)).into_digits(),
+        Small(signed(5))
+    );
+    assert_eq!(
+        IBig::from_two_digits(Digit::MAX, signed(-1)).into_digits(),
+        Small(signed(-1))
+    );
+    // A high digit needed to carry the sign is kept.
+    assert_eq!(
+        IBig::from_two_digits(Digit::MAX, signed(0)).into_digits(),
+        Large(smallvec![Digit::MAX, digit(0)])
+    );
+    assert_eq!(
+        IBig::from_two_digits(digit(0), signed(-1)).into_digits(),
+        Large(smallvec![digit(0), Digit::MAX])
+    );
+    // A high digit with significant bits of its own is kept.
+    assert_eq!(
+        IBig::from_two_digits(digit(5), signed(2)).into_digits(),
+        Large(smallvec![digit(5), digit(2)])
+    );
+}
+
+#[test]
 fn ubig_const_from_digits() {
     // Usable in a `const` context.
     const FIVE: UBig = UBig::const_from_digits(&[digit(5)]);

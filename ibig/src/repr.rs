@@ -1,7 +1,7 @@
 //! Contains the definitions of [`UBig`] and [`IBig`] and maintains their invariants.
 
 use core::hint::assert_unchecked;
-use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed};
+use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed, sign_extension};
 use smallvec::{SmallVec, smallvec};
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.
@@ -54,6 +54,17 @@ impl UBig {
         // A single digit is always canonical.
         // SAFETY: `1 <= INLINE_DIGITS`.
         UBig(unsafe { Digits::from_const_with_len_unchecked(digits, 1) })
+    }
+
+    /// Construct from two digits.
+    #[inline]
+    pub(crate) fn from_two_digits(low: Digit, high: Digit) -> UBig {
+        if high == Digit::ZERO {
+            UBig::from_digit(low)
+        } else {
+            // Two digits with a nonzero most-significant digit are canonical.
+            UBig(smallvec![low, high])
+        }
     }
 
     /// Construct from little-endian digits.
@@ -132,6 +143,17 @@ impl IBig {
         // A single signed digit is always canonical.
         // SAFETY: `1 <= INLINE_DIGITS`.
         IBig(unsafe { Digits::from_const_with_len_unchecked(buffer, 1) })
+    }
+
+    /// Construct from the two little-endian digits of a two's complement representation,
+    /// where `high` carries the sign.
+    #[inline]
+    pub(crate) fn from_two_digits(low: Digit, high: SignedDigit) -> IBig {
+        if high == sign_extension(low.cast_signed()) {
+            IBig::from_digit(low.cast_signed())
+        } else {
+            IBig(smallvec![low, high.cast_unsigned()])
+        }
     }
 
     /// Construct from the little-endian digits of a two's complement representation.

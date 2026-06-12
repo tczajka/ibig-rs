@@ -7,7 +7,6 @@ use crate::repr::{
 use crate::{IBig, TryFromBigError, UBig};
 use core::num::TryFromIntError;
 use ibig_core::{Digit, SignedDigit};
-use smallvec::smallvec;
 
 /// Forwards `TryFrom<$to> for $from` to the by-reference conversion.
 macro_rules! try_from_big_value {
@@ -496,17 +495,8 @@ impl From<UBig> for IBig {
     #[inline]
     fn from(value: UBig) -> IBig {
         match value.into_digits() {
-            // A single digit whose sign bit is clear is already a canonical non-negative
-            // two's complement digit.
-            Small(digit) => {
-                let signed = digit.cast_signed();
-                if signed.is_negative() {
-                    // The sign bit is set; append a zero digit so the value stays positive.
-                    IBig::from_digits(smallvec![digit, Digit::ZERO])
-                } else {
-                    IBig::from_digit(signed)
-                }
-            }
+            // A zero high digit keeps the value non-negative.
+            Small(digit) => IBig::from_two_digits(digit, SignedDigit::ZERO),
             // The unsigned digits are non-negative. If the most-significant digit's sign bit
             // is set, the two's complement reading would be negative, so append a zero digit.
             Large(mut digits) => {
