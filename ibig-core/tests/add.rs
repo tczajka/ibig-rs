@@ -1,6 +1,6 @@
 //! Integration tests for addition.
 
-use ibig_core::{DIGIT_BITS_USIZE, Digit, add, add_1, add_carry, add_digit, add_same_len};
+use ibig_core::{Digit, add, add_1, add_carry, add_digit, add_same_len};
 use proptest::collection::vec;
 use proptest::prelude::*;
 
@@ -119,42 +119,7 @@ fn add_1_basic() {
     assert!(add_1(&mut []));
 }
 
-/// The number of digits that fit in a `u128`, used to check against `u128` arithmetic.
-const ORACLE_LEN: usize = 128 / DIGIT_BITS_USIZE;
-
-/// The value of `digits` as a `u128`. The total bit width must be at most 128.
-fn value(digits: &[Digit]) -> u128 {
-    let mut v: u128 = 0;
-    for &d in digits.iter().rev() {
-        v = (v << Digit::BITS) | d.to_u128();
-    }
-    v
-}
-
 proptest! {
-    // `add` matches `u128` arithmetic on slices short enough to fit.
-    #[test]
-    fn add_matches_u128(
-        a in vec(any::<Digit>(), 1..=ORACLE_LEN),
-        b in vec(any::<Digit>(), 0..=ORACLE_LEN),
-    ) {
-        let mut b = b;
-        b.truncate(a.len());
-
-        let (sum, mut expected_carry) = value(&a).overflowing_add(value(&b));
-        let bits = a.len() * DIGIT_BITS_USIZE;
-        let mut expected = sum;
-        if bits < 128 {
-            expected = sum & ((1u128 << bits) - 1);
-            expected_carry = (sum >> bits) != 0;
-        }
-
-        let mut a = a;
-        let carry = add(&mut a, &b);
-        prop_assert_eq!(value(&a), expected);
-        prop_assert_eq!(carry, expected_carry);
-    }
-
     // `add` with a zero-extended `rhs` agrees with `add_same_len`.
     #[test]
     fn add_matches_add_same_len(

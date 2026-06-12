@@ -20,6 +20,7 @@ mod bytes;
 mod len;
 mod shift;
 mod sign;
+mod sub;
 
 pub use add::{add, add_1, add_carry, add_digit, add_same_len};
 pub use bits::{
@@ -38,6 +39,7 @@ pub use shift::{
 pub use sign::{
     extend_signed, extend_signed_bytes, is_negative, sign_extension, sign_extension_byte,
 };
+pub use sub::{sub, sub_1, sub_borrow, sub_digit, sub_same_len};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.
