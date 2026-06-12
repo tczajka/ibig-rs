@@ -19,7 +19,6 @@ use crate::sign::{extend_signed_bytes, sign_extension_byte};
 /// assert_eq!(&bytes[..2], &[0x02, 0x01]);
 /// assert!(bytes[2..].iter().all(|&b| b == 0));
 /// ```
-#[inline]
 pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
     let len = to_bytes_prefix(digits, bytes);
     bytes[len..].fill(0);
@@ -54,7 +53,6 @@ pub fn to_bytes_signed(digits: &[Digit], bytes: &mut [u8]) {
 /// # Panics
 ///
 /// Panics if `bytes.len() < digits.len() * Digit::BYTES`.
-#[inline]
 fn to_bytes_prefix(digits: &[Digit], bytes: &mut [u8]) -> usize {
     let len = digits.len() * Digit::BYTES;
     let (chunks, _) = bytes[..len].as_chunks_mut::<{ Digit::BYTES }>();
@@ -77,7 +75,6 @@ fn to_bytes_prefix(digits: &[Digit], bytes: &mut [u8]) -> usize {
 /// from_bytes(&[0x02, 0x01], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
 /// ```
-#[inline]
 pub const fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
     assert!(digits.len() == bytes.len().div_ceil(Digit::BYTES));
     let (chunks, rem) = bytes.as_chunks::<{ Digit::BYTES }>();
@@ -109,7 +106,6 @@ pub const fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
 /// from_be_bytes(&[0x01, 0x02], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
 /// ```
-#[inline]
 pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
     assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
     let mut digit_iter = digits.iter_mut();
@@ -143,7 +139,6 @@ pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
 /// from_bytes_signed(&[0xff], &mut digits);
 /// assert_eq!(digits, [Digit::MAX]);
 /// ```
-#[inline]
 pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     assert!(!bytes.is_empty());
     assert!(digits.len() == bytes.len().div_ceil(Digit::BYTES));
@@ -185,7 +180,6 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
 /// from_be_bytes_signed(&[0xff], &mut digits);
 /// assert_eq!(digits, [Digit::MAX]);
 /// ```
-#[inline]
 pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     assert!(!bytes.is_empty());
     assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));

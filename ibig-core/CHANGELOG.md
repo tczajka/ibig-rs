@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`
-- Addition: `add`, `add_same_len`, `add_digit`, `add_carry`.
+- Addition: `add`, `add_same_len`, `add_digit`, `add_carry`, `add_1`.
 - Small bit shifts (less than a digit): `shl_small`, `shr_small`, `shl_small_signed`,
   `shr_small_signed`, `shl_small_digit`, `shl_small_signed_digit`.
 - The sign-extension byte for a most-significant byte: `sign_extension_byte`.

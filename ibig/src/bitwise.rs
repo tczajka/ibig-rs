@@ -28,7 +28,6 @@ impl UBig {
     ///     UBig::from(0b1010u8)
     /// );
     /// ```
-    #[inline]
     pub fn bitandnot(&self, rhs: &UBig) -> UBig {
         match (self.as_digits(), rhs.as_digits()) {
             (Small(a), Small(b)) => UBig::from_digit(a & !b),
@@ -154,7 +153,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitAndOperation {
         }
     }
 
-    #[inline]
     fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
         let (longer, shorter) = if lhs.len() >= rhs.len() {
             (lhs, rhs)
@@ -170,7 +168,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitAndOperation {
         }
     }
 
-    #[inline]
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
         if lhs.len() >= rhs.len() {
             if !ibig_core::is_negative(rhs) {
@@ -190,7 +187,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitAndOperation {
         IBig::from_digits(lhs)
     }
 
-    #[inline]
     fn apply_val_val(lhs: Digits, rhs: Digits) -> IBig {
         let (longer, shorter) = if lhs.len() >= rhs.len() {
             (lhs, rhs)
@@ -307,7 +303,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
         }
     }
 
-    #[inline]
     fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
         let (longer, shorter) = if lhs.len() >= rhs.len() {
             (lhs, rhs)
@@ -323,7 +318,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
         }
     }
 
-    #[inline]
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
         if lhs.len() >= rhs.len() {
             if ibig_core::is_negative(rhs) {
@@ -344,7 +338,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
         IBig::from_digits(lhs)
     }
 
-    #[inline]
     fn apply_val_val(lhs: Digits, rhs: Digits) -> IBig {
         let (longer, shorter) = if lhs.len() >= rhs.len() {
             (lhs, rhs)
@@ -464,7 +457,6 @@ impl CommutativeBinaryOpDigits<IBig> for BitXorOperation {
         }
     }
 
-    #[inline]
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
         if lhs.len() >= rhs.len() {
             let (lhs_low, lhs_high) = lhs.split_at_mut(rhs.len());

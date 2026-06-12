@@ -43,7 +43,6 @@ pub const fn is_negative(digits: &[Digit]) -> bool {
 /// extend_signed(&mut digits, 1);
 /// assert_eq!(digits, [Digit::from(5u8), Digit::ZERO]);
 /// ```
-#[inline]
 pub fn extend_signed(digits: &mut [Digit], len: usize) {
     assert!(
         len > 0 && len <= digits.len(),
@@ -74,7 +73,6 @@ pub fn extend_signed(digits: &mut [Digit], len: usize) {
 /// extend_signed_bytes(&mut bytes, 1);
 /// assert_eq!(bytes, [5, 0]);
 /// ```
-#[inline]
 pub fn extend_signed_bytes(bytes: &mut [u8], len: usize) {
     assert!(
         len > 0 && len <= bytes.len(),

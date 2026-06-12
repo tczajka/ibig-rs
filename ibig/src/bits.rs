@@ -194,6 +194,7 @@ impl UBig {
     /// assert_eq!(UBig::ZERO.count_ones(), 0);
     /// assert_eq!(UBig::from(0b10110u8).count_ones(), 3);
     /// ```
+    #[inline]
     pub fn count_ones(&self) -> usize {
         match self.as_digits() {
             Small(digit) => digit.count_ones().try_into().unwrap(),
@@ -211,6 +212,7 @@ impl UBig {
     /// assert!(!UBig::from(6u8).is_power_of_two());
     /// assert!(!UBig::ZERO.is_power_of_two());
     /// ```
+    #[inline]
     pub fn is_power_of_two(&self) -> bool {
         match self.as_digits() {
             Small(digit) => digit.is_power_of_two(),
@@ -268,7 +270,6 @@ impl IBig {
     /// // A non-negative value reads as zero above its bits.
     /// assert!(!IBig::from(2i8).bit(100));
     /// ```
-    #[inline]
     pub fn bit(&self, index: usize) -> bool {
         match self.as_digits() {
             Small(digit) => {
@@ -366,7 +367,6 @@ impl IBig {
     /// assert_eq!(IBig::ZERO.checked_ilog2(), None);
     /// assert_eq!(IBig::from(-4i8).checked_ilog2(), None);
     /// ```
-    #[inline]
     pub fn checked_ilog2(&self) -> Option<usize> {
         match self.as_digits() {
             Small(digit) => digit.checked_ilog2().map(|x| x.try_into().unwrap()),

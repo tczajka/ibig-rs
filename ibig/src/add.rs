@@ -24,6 +24,7 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
         Self::apply_val_digit(digits, rhs)
     }
 
+    #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
         let carry = ibig_core::add_digit(&mut lhs, rhs);
         push_carry(&mut lhs, carry);

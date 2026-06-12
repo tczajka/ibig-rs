@@ -16,7 +16,6 @@ use crate::sign::{sign_extension, sign_extension_byte};
 /// assert_eq!(min_len(&[Digit::from(5u8), Digit::ZERO]), 1);
 /// assert_eq!(min_len(&[Digit::ZERO, Digit::ZERO]), 0);
 /// ```
-#[inline]
 pub const fn min_len(digits: &[Digit]) -> usize {
     let mut len = digits.len();
     while len > 0 && digits[len - 1].const_eq(Digit::ZERO) {
@@ -48,7 +47,6 @@ pub const fn min_len(digits: &[Digit]) -> usize {
 /// // this value positive, so it is not dropped.
 /// assert_eq!(min_len_signed(&[Digit::MAX, Digit::ZERO]), 2);
 /// ```
-#[inline]
 pub const fn min_len_signed(digits: &[Digit]) -> usize {
     assert!(!digits.is_empty());
     let mut len = digits.len();
@@ -75,7 +73,6 @@ pub const fn min_len_signed(digits: &[Digit]) -> usize {
 /// assert_eq!(min_len_bytes(&[5, 0]), 1);
 /// assert_eq!(min_len_bytes(&[0, 1]), 2);
 /// ```
-#[inline]
 pub fn min_len_bytes(bytes: &[u8]) -> usize {
     let mut len = bytes.len();
     while len > 0 && bytes[len - 1] == 0 {
@@ -105,7 +102,6 @@ pub fn min_len_bytes(bytes: &[u8]) -> usize {
 /// // 0xc8 alone is negative, so a leading zero byte is needed to stay positive (200).
 /// assert_eq!(min_len_bytes_signed(&[0xc8, 0x00]), 2);
 /// ```
-#[inline]
 pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
     assert!(!bytes.is_empty());
     let mut len = bytes.len();

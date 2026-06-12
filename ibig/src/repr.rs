@@ -95,7 +95,6 @@ impl UBig {
     /// # Panics
     ///
     /// Panics if `digits.len() > INLINE_DIGITS`.
-    #[inline]
     pub(crate) const fn const_from_digits(digits: &[Digit]) -> UBig {
         assert!(digits.len() <= INLINE_DIGITS);
 

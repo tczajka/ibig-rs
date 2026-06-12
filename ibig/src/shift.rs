@@ -11,7 +11,6 @@ use ibig_core::{BitIndex, DIGIT_BITS_USIZE, Digit, SignedDigit};
 struct ShlOperation;
 
 impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
-    #[inline]
     fn apply_digit(lhs: Digit, rhs: usize) -> UBig {
         // Shifting zero is zero (and avoids allocating `rhs / DIGIT_BITS` zero digits).
         if lhs == Digit::ZERO {
@@ -71,7 +70,6 @@ impl_binary_operator!(
 );
 
 impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
-    #[inline]
     fn apply_digit(lhs: SignedDigit, rhs: usize) -> IBig {
         // Shifting zero is zero (and avoids allocating `rhs / DIGIT_BITS` zero digits).
         if lhs == SignedDigit::ZERO {
@@ -145,6 +143,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShrOperation {
         UBig::from_digit(lhs >> index.bit_index())
     }
 
+    #[inline]
     fn apply_ref(lhs: &[Digit], rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() >= lhs.len() {
@@ -156,6 +155,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShrOperation {
         UBig::from_digits(digits)
     }
 
+    #[inline]
     fn apply_val(mut lhs: Digits, rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() >= lhs.len() {
@@ -183,6 +183,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShrOperation {
         IBig::from_digit(lhs >> small)
     }
 
+    #[inline]
     fn apply_ref(lhs: &[Digit], rhs: usize) -> IBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() >= lhs.len() {
@@ -194,6 +195,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShrOperation {
         IBig::from_digits(digits)
     }
 
+    #[inline]
     fn apply_val(mut lhs: Digits, rhs: usize) -> IBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() >= lhs.len() {

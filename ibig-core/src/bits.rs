@@ -205,7 +205,6 @@ pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(lowest_one(&[Digit::from(0b1100u8)]), Some(BitIndex::new(0, 2)));
 /// assert_eq!(lowest_one(&[Digit::ZERO, Digit::from(1u8)]), Some(BitIndex::new(1, 0)));
 /// ```
-#[inline]
 pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
     digits
         .iter()
@@ -224,7 +223,6 @@ pub fn lowest_one(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(lowest_zero(&[Digit::from(0b1011u8)]), Some(BitIndex::new(0, 2)));
 /// assert_eq!(lowest_zero(&[Digit::MAX, Digit::from(0b10u8)]), Some(BitIndex::new(1, 0)));
 /// ```
-#[inline]
 pub fn lowest_zero(digits: &[Digit]) -> Option<BitIndex> {
     digits
         .iter()
@@ -247,7 +245,6 @@ pub fn lowest_zero(digits: &[Digit]) -> Option<BitIndex> {
 /// assert_eq!(count_ones(&[Digit::MAX]), Digit::BITS as usize);
 /// assert_eq!(count_ones(&[Digit::from(0b11u8), Digit::from(0b1u8)]), 3);
 /// ```
-#[inline]
 pub fn count_ones(digits: &[Digit]) -> usize {
     digits
         .iter()

@@ -27,7 +27,6 @@ use crate::{Digit, SignedDigit, sign::sign_extension};
 /// assert_eq!(a, [!Digit::from(1u8), Digit::from(1u8)]);
 /// assert_eq!(overflow, Digit::ZERO);
 /// ```
-#[inline]
 pub fn shl_small(digits: &mut [Digit], shift: u32) -> Digit {
     assert!(shift < Digit::BITS);
     if shift == 0 {
@@ -91,7 +90,6 @@ pub fn shl_small_digit(digit: Digit, shift: u32) -> (Digit, Digit) {
 /// shr_small(&mut a, 1);
 /// assert_eq!(a, [Digit::from(1u8) << (Digit::BITS - 1), Digit::ZERO]);
 /// ```
-#[inline]
 pub fn shr_small(digits: &mut [Digit], shift: u32) {
     assert!(shift < Digit::BITS);
     if shift == 0 {
@@ -190,7 +188,6 @@ pub fn shl_small_signed_digit(digit: SignedDigit, shift: u32) -> (Digit, SignedD
 /// shr_small_signed(&mut a, 1);
 /// assert_eq!(a, [!Digit::from(1u8)]); // -2
 /// ```
-#[inline]
 pub fn shr_small_signed(digits: &mut [Digit], shift: u32) {
     assert!(!digits.is_empty());
     assert!(shift < Digit::BITS);

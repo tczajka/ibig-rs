@@ -132,7 +132,6 @@ macro_rules! try_from_ubig_unsigned {
         impl TryFrom<&UBig> for $t {
             type Error = TryFromBigError;
 
-            #[inline]
             fn try_from(value: &UBig) -> Result<$t, TryFromBigError> {
                 match value.as_digits() {
                     Small(digit) => <$t>::try_from(digit).map_err(|_| TryFromBigError),
@@ -327,7 +326,6 @@ macro_rules! signed_from_ibig {
         impl TryFrom<&IBig> for $t {
             type Error = TryFromBigError;
 
-            #[inline]
             fn try_from(value: &IBig) -> Result<$t, TryFromBigError> {
                 match value.as_digits() {
                     Small(digit) => <$t>::try_from(digit).map_err(|_| TryFromBigError),
@@ -388,7 +386,6 @@ macro_rules! unsigned_from_ibig {
         impl TryFrom<&IBig> for $t {
             type Error = TryFromBigError;
 
-            #[inline]
             fn try_from(value: &IBig) -> Result<$t, TryFromBigError> {
                 match value.as_digits() {
                     Small(digit) => <$t>::try_from(digit).map_err(|_| TryFromBigError),
@@ -493,7 +490,6 @@ impl TryFrom<&IBig> for UBig {
 }
 
 impl From<UBig> for IBig {
-    #[inline]
     fn from(value: UBig) -> IBig {
         match value.into_digits() {
             // A zero high digit keeps the value non-negative.
@@ -511,7 +507,6 @@ impl From<UBig> for IBig {
 }
 
 impl From<&UBig> for IBig {
-    #[inline]
     fn from(value: &UBig) -> IBig {
         match value.as_digits() {
             Small(digit) => IBig::from_two_digits(digit, SignedDigit::ZERO),

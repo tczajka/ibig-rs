@@ -73,6 +73,7 @@ Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the
 - **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions).
 - The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`).
 - **No `as` for numeric conversions**: use `into()` when the conversion is lossless, or `try_into().unwrap()` when the value is known to fit. (`as` silently truncates and hides bugs when types change, e.g. across the 16/32/64-bit `Digit` widths.)
+- **`#[inline]`**: mark a function `#[inline]` exactly when it is at most 10 lines, contains no loop (neither `for`/`while`/`loop` nor iteration via iterator/slice methods such as `.iter()` chains or `.fill()`), and is not on a cold path (error formatting, `#[cold]` panic helpers). Functions that merely call looping functions still qualify.
 - **`ibig-core` doc comments**: don't restate "little-endian" or "unsigned" on individual functions — both are established at the crate top level (`src/lib.rs`). Functions on signed two's complement values still say "signed two's complement" explicitly, but without "little-endian".
 
 ### Tests

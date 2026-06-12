@@ -1,6 +1,6 @@
 //! Integration tests for addition.
 
-use ibig_core::{DIGIT_BITS_USIZE, Digit, add, add_carry, add_digit, add_same_len};
+use ibig_core::{DIGIT_BITS_USIZE, Digit, add, add_1, add_carry, add_digit, add_same_len};
 use proptest::collection::vec;
 use proptest::prelude::*;
 
@@ -97,6 +97,26 @@ fn add_carry_basic() {
     // An empty slice passes the carry through.
     assert!(add_carry(&mut [], true));
     assert!(!add_carry(&mut [], false));
+}
+
+#[test]
+fn add_1_basic() {
+    let mut a = [digit(1), digit(2)];
+    assert!(!add_1(&mut a));
+    assert_eq!(a, [digit(2), digit(2)]);
+
+    // The increment ripples through all-ones digits.
+    let mut a = [Digit::MAX, Digit::MAX, digit(3)];
+    assert!(!add_1(&mut a));
+    assert_eq!(a, [Digit::ZERO, Digit::ZERO, digit(4)]);
+
+    // All ones overflows.
+    let mut a = [Digit::MAX, Digit::MAX];
+    assert!(add_1(&mut a));
+    assert_eq!(a, [Digit::ZERO, Digit::ZERO]);
+
+    // An empty slice overflows immediately.
+    assert!(add_1(&mut []));
 }
 
 /// The number of digits that fit in a `u128`, used to check against `u128` arithmetic.

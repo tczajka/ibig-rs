@@ -39,7 +39,6 @@ impl IBig {
     /// assert_eq!(IBig::ZERO.signum(), IBig::ZERO);
     /// assert_eq!(IBig::from(5i8).signum(), IBig::from(1i8));
     /// ```
-    #[inline]
     pub fn signum(&self) -> IBig {
         match self.as_digits() {
             Small(digit) => IBig::from_digit(digit.signum()),

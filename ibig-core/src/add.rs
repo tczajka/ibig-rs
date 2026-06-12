@@ -42,7 +42,6 @@ pub fn add(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
 /// assert_eq!(a, [Digit::ZERO, Digit::ZERO]);
 /// assert!(carry);
 /// ```
-#[inline]
 pub fn add_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
     assert_eq!(lhs.len(), rhs.len());
     let mut carry = false;
@@ -96,9 +95,22 @@ pub fn add_digit(lhs: &mut [Digit], rhs: Digit) -> bool {
 /// ```
 #[inline]
 pub fn add_carry(lhs: &mut [Digit], carry: bool) -> bool {
-    if !carry {
-        return false;
-    }
+    carry && add_1(lhs)
+}
+
+/// Adds 1 to `lhs` in place, returning the carry out of the most-significant digit (`true`
+/// exactly when `lhs` is all ones).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, add_1};
+/// let mut a = [Digit::MAX, Digit::ZERO];
+/// let carry = add_1(&mut a);
+/// assert_eq!(a, [Digit::ZERO, Digit::from(1u8)]);
+/// assert!(!carry);
+/// ```
+pub fn add_1(lhs: &mut [Digit]) -> bool {
     for d in lhs.iter_mut() {
         let (sum, overflow) = d.overflowing_add(Digit::from(1u8));
         *d = sum;
