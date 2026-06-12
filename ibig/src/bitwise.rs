@@ -28,22 +28,31 @@ impl UBig {
     ///     UBig::from(0b1010u8)
     /// );
     /// ```
+    #[inline]
     pub fn bitandnot(&self, rhs: &UBig) -> UBig {
         match (self.as_digits(), rhs.as_digits()) {
             (Small(a), Small(b)) => UBig::from_digit(a & !b),
             (Small(a), Large(rhs)) => UBig::from_digit(a & !rhs[0]),
-            (Large(lhs), Small(b)) => {
-                let mut digits = Digits::from_slice(lhs);
-                digits[0] &= !b;
-                UBig::from_digits(digits)
-            }
-            (Large(lhs), Large(rhs)) => {
-                let mut digits = Digits::from_slice(lhs);
-                let n = digits.len().min(rhs.len());
-                ibig_core::bitandnot_same_len(&mut digits[..n], &rhs[..n]);
-                UBig::from_digits(digits)
-            }
+            (Large(lhs), Small(b)) => UBig::bitandnot_ref_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => UBig::bitandnot_ref_ref(lhs, rhs),
         }
+    }
+
+    /// [`UBig::bitandnot`] for a borrowed slice and a single digit.
+    #[inline]
+    fn bitandnot_ref_digit(lhs: &[Digit], rhs: Digit) -> UBig {
+        let mut digits = Digits::from_slice(lhs);
+        digits[0] &= !rhs;
+        UBig::from_digits(digits)
+    }
+
+    /// [`UBig::bitandnot`] for two borrowed slices.
+    #[inline]
+    fn bitandnot_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> UBig {
+        let mut digits = Digits::from_slice(lhs);
+        let n = digits.len().min(rhs.len());
+        ibig_core::bitandnot_same_len(&mut digits[..n], &rhs[..n]);
+        UBig::from_digits(digits)
     }
 }
 

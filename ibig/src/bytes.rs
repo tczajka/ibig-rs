@@ -20,16 +20,21 @@ impl UBig {
     /// assert_eq!(UBig::from(0x0105u16).to_le_bytes(), [5, 1]);
     /// assert_eq!(UBig::from(0u8).to_le_bytes(), []);
     /// ```
+    #[inline]
     pub fn to_le_bytes(&self) -> Vec<u8> {
         let mut bytes = match self.as_digits() {
             Small(digit) => digit.to_le_bytes().to_vec(),
-            Large(digits) => {
-                let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-                ibig_core::to_bytes(digits, &mut bytes);
-                bytes
-            }
+            Large(digits) => UBig::to_le_bytes_ref(digits),
         };
         bytes.truncate(ibig_core::min_len_bytes(&bytes));
+        bytes
+    }
+
+    /// [`UBig::to_le_bytes`] for a borrowed slice, without trimming.
+    #[inline]
+    fn to_le_bytes_ref(digits: &[Digit]) -> Vec<u8> {
+        let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
+        ibig_core::to_bytes(digits, &mut bytes);
         bytes
     }
 
@@ -115,16 +120,21 @@ impl IBig {
     /// assert_eq!(IBig::from(0xffffi32).to_le_bytes(), [0xff, 0xff, 0]);
     /// assert_eq!(IBig::from(-1i8).to_le_bytes(), [0xff]);
     /// ```
+    #[inline]
     pub fn to_le_bytes(&self) -> Vec<u8> {
         let mut bytes = match self.as_digits() {
             Small(digit) => digit.to_le_bytes().to_vec(),
-            Large(digits) => {
-                let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-                ibig_core::to_bytes(digits, &mut bytes);
-                bytes
-            }
+            Large(digits) => IBig::to_le_bytes_ref(digits),
         };
         bytes.truncate(ibig_core::min_len_bytes_signed(&bytes));
+        bytes
+    }
+
+    /// [`IBig::to_le_bytes`] for a borrowed slice, without trimming.
+    #[inline]
+    fn to_le_bytes_ref(digits: &[Digit]) -> Vec<u8> {
+        let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
+        ibig_core::to_bytes(digits, &mut bytes);
         bytes
     }
 

@@ -490,37 +490,49 @@ impl TryFrom<&IBig> for UBig {
 }
 
 impl From<UBig> for IBig {
+    #[inline]
     fn from(value: UBig) -> IBig {
         match value.into_digits() {
             // A zero high digit keeps the value non-negative.
             Small(digit) => IBig::from_two_digits(digit, SignedDigit::ZERO),
-            // The unsigned digits are non-negative. If the most-significant digit's sign bit
-            // is set, the two's complement reading would be negative, so append a zero digit.
-            Large(mut digits) => {
-                if ibig_core::is_negative(&digits) {
-                    digits.push(Digit::ZERO);
-                }
-                IBig::from_digits(digits)
-            }
+            Large(digits) => IBig::from_ubig_val(digits),
         }
     }
 }
 
 impl From<&UBig> for IBig {
+    #[inline]
     fn from(value: &UBig) -> IBig {
         match value.as_digits() {
             Small(digit) => IBig::from_two_digits(digit, SignedDigit::ZERO),
-            Large(digits) => {
-                // If the top digit's sign bit is set, a zero digit is appended to keep the
-                // two's complement reading positive; clone with room for it.
-                let negative = ibig_core::is_negative(digits);
-                let mut new_digits = Digits::with_capacity(digits.len() + usize::from(negative));
-                new_digits.extend_from_slice(digits);
-                if negative {
-                    new_digits.push(Digit::ZERO);
-                }
-                IBig::from_digits(new_digits)
-            }
+            Large(digits) => IBig::from_ubig_ref(digits),
         }
+    }
+}
+
+impl IBig {
+    /// [`From<UBig>`] for an owned buffer of unsigned digits.
+    #[inline]
+    fn from_ubig_val(mut digits: Digits) -> IBig {
+        // The unsigned digits are non-negative. If the most-significant digit's sign bit
+        // is set, the two's complement reading would be negative, so append a zero digit.
+        if ibig_core::is_negative(&digits) {
+            digits.push(Digit::ZERO);
+        }
+        IBig::from_digits(digits)
+    }
+
+    /// [`From<&UBig>`] for a borrowed slice of unsigned digits.
+    #[inline]
+    fn from_ubig_ref(digits: &[Digit]) -> IBig {
+        // If the top digit's sign bit is set, a zero digit is appended to keep the
+        // two's complement reading positive; clone with room for it.
+        let negative = ibig_core::is_negative(digits);
+        let mut new_digits = Digits::with_capacity(digits.len() + usize::from(negative));
+        new_digits.extend_from_slice(digits);
+        if negative {
+            new_digits.push(Digit::ZERO);
+        }
+        IBig::from_digits(new_digits)
     }
 }

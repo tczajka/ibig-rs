@@ -5,6 +5,7 @@ use crate::repr::{
     AsDigits,
     AsDigitsResult::{Large, Small},
 };
+use ibig_core::Digit;
 
 impl IBig {
     /// Returns `true` if the number is negative (less than zero).
@@ -39,17 +40,22 @@ impl IBig {
     /// assert_eq!(IBig::ZERO.signum(), IBig::ZERO);
     /// assert_eq!(IBig::from(5i8).signum(), IBig::from(1i8));
     /// ```
+    #[inline]
     pub fn signum(&self) -> IBig {
         match self.as_digits() {
             Small(digit) => IBig::from_digit(digit.signum()),
-            Large(digits) => {
-                // A multi-digit value is never zero.
-                if ibig_core::is_negative(digits) {
-                    IBig::from(-1i8)
-                } else {
-                    IBig::from(1i8)
-                }
-            }
+            Large(digits) => IBig::signum_ref(digits),
+        }
+    }
+
+    /// [`IBig::signum`] for a borrowed slice.
+    #[inline]
+    fn signum_ref(digits: &[Digit]) -> IBig {
+        // A multi-digit value is never zero.
+        if ibig_core::is_negative(digits) {
+            IBig::from(-1i8)
+        } else {
+            IBig::from(1i8)
         }
     }
 }
