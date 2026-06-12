@@ -237,7 +237,9 @@ impl UBig {
             },
             // Slow path: multiple digits.
             Large(slice) => {
-                let mut digits = Digits::from_slice(slice);
+                // Clone with room for one more digit in case rounding up overflows.
+                let mut digits = Digits::with_capacity(slice.len() + 1);
+                digits.extend_from_slice(slice);
                 if ibig_core::next_power_of_two(&mut digits) {
                     // Overflow.
                     digits.push(Digit::from_u8(1));

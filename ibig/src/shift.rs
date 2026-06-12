@@ -52,6 +52,8 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
         if index.digit_index() > MAX_DIGITS - lhs.len() {
             number_too_large();
         }
+        // The result grows by exactly the prepended zero digits plus the overflow digit.
+        lhs.reserve_exact(index.digit_index() + 1);
         // Shift the bits in place, then prepend the whole zero digits.
         let overflow = ibig_core::shl_small(&mut lhs, index.bit_index());
         lhs.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
@@ -112,6 +114,8 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
         if index.digit_index() > MAX_DIGITS - lhs.len() {
             number_too_large();
         }
+        // The result grows by exactly the prepended zero digits plus the overflow digit.
+        lhs.reserve_exact(index.digit_index() + 1);
         // Shift the bits in place (sign-extending the overflow), then prepend zeros.
         let overflow = ibig_core::shl_small_signed(&mut lhs, index.bit_index());
         lhs.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));

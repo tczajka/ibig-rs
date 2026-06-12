@@ -3,6 +3,7 @@
 use crate::repr::{
     AsDigits,
     AsDigitsResult::{Large, Small},
+    Digits,
 };
 use crate::{IBig, TryFromBigError, UBig};
 use core::num::TryFromIntError;
@@ -512,6 +513,19 @@ impl From<UBig> for IBig {
 impl From<&UBig> for IBig {
     #[inline]
     fn from(value: &UBig) -> IBig {
-        IBig::from(value.clone())
+        match value.as_digits() {
+            Small(digit) => IBig::from_two_digits(digit, SignedDigit::ZERO),
+            Large(digits) => {
+                // If the top digit's sign bit is set, a zero digit is appended to keep the
+                // two's complement reading positive; clone with room for it.
+                let negative = ibig_core::is_negative(digits);
+                let mut new_digits = Digits::with_capacity(digits.len() + usize::from(negative));
+                new_digits.extend_from_slice(digits);
+                if negative {
+                    new_digits.push(Digit::ZERO);
+                }
+                IBig::from_digits(new_digits)
+            }
+        }
     }
 }

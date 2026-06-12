@@ -18,7 +18,10 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
 
     #[inline]
     fn apply_ref_digit(lhs: &[Digit], rhs: Digit) -> UBig {
-        Self::apply_val_digit(Digits::from_slice(lhs), rhs)
+        // Clone with room for a possible carry digit.
+        let mut digits = Digits::with_capacity(lhs.len() + 1);
+        digits.extend_from_slice(lhs);
+        Self::apply_val_digit(digits, rhs)
     }
 
     fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
@@ -29,12 +32,16 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
 
     #[inline]
     fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> UBig {
-        // Clone the longer operand and add the shorter one to it.
-        if lhs.len() >= rhs.len() {
-            Self::apply_val_ref(Digits::from_slice(lhs), rhs)
+        // Clone the longer operand, with room for a possible carry digit, and add
+        // the shorter one to it.
+        let (longer, shorter) = if lhs.len() >= rhs.len() {
+            (lhs, rhs)
         } else {
-            Self::apply_val_ref(Digits::from_slice(rhs), lhs)
-        }
+            (rhs, lhs)
+        };
+        let mut digits = Digits::with_capacity(longer.len() + 1);
+        digits.extend_from_slice(longer);
+        Self::apply_val_ref(digits, shorter)
     }
 
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
@@ -42,8 +49,10 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
             ibig_core::add(&mut lhs, rhs)
         } else {
             // Add the overlapping low digits, then append the high digits of `rhs` and
-            // propagate the carry through them.
+            // propagate the carry through them. Reserve for the appended digits and a
+            // possible carry digit.
             let lhs_len = lhs.len();
+            lhs.reserve(rhs.len() - lhs_len + 1);
             let (rhs_low, rhs_high) = rhs.split_at(lhs_len);
             let low_carry = ibig_core::add_same_len(&mut lhs, rhs_low);
             lhs.extend_from_slice(rhs_high);
