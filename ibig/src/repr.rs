@@ -14,7 +14,7 @@ pub(crate) const MAX_DIGITS: usize = usize::MAX / DIGIT_BITS_USIZE;
 /// Panics because a value would exceed [`MAX_DIGITS`]. The single source of the "number too
 /// large" panic message.
 #[cold]
-pub(crate) fn number_too_large() -> ! {
+pub(crate) fn panic_number_too_large() -> ! {
     panic!("number too large")
 }
 
@@ -27,6 +27,9 @@ pub(crate) type Digits = SmallVec<[Digit; INLINE_DIGITS]>;
 /// Unsigned big integer.
 ///
 /// An arbitrarily large unsigned integer.
+///
+/// Operations whose result would be negative (e.g. subtracting a larger number from a smaller
+/// one) panic.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UBig(
     /// The little-endian digits in canonical form:
@@ -81,7 +84,7 @@ impl UBig {
         if digits.spilled() {
             let len = digits.len();
             if len > MAX_DIGITS {
-                number_too_large();
+                panic_number_too_large();
             }
             if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();
@@ -110,6 +113,13 @@ impl UBig {
         }
         // SAFETY: `len <= INLINE_DIGITS`.
         UBig(unsafe { Digits::from_const_with_len_unchecked(buffer, len) })
+    }
+
+    /// Panics because a result would be negative. The single source of the "negative UBig"
+    /// panic message.
+    #[cold]
+    pub(crate) fn panic_negative() -> ! {
+        panic!("negative UBig")
     }
 }
 
@@ -166,7 +176,7 @@ impl IBig {
         if digits.spilled() {
             let len = digits.len();
             if len > MAX_DIGITS {
-                number_too_large();
+                panic_number_too_large();
             }
             if len <= digits.capacity() / 4 || len == 1 {
                 digits.shrink_to_fit();

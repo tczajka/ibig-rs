@@ -5,12 +5,16 @@ use ibig::proptest::ubig_up_to_bits;
 use proptest::prelude::*;
 
 proptest! {
-    // `UBig` addition matches the corresponding primitive addition, across every operand form.
+    // `UBig` addition matches `u128` addition, across every operand form.
     #[test]
-    fn ubig_vs_primitive(a: u64, b: u64) {
+    fn ubig_vs_u128(a: u128, b: u128) {
         let x = UBig::from(a);
         let y = UBig::from(b);
-        let sum = UBig::from(u128::from(a) + u128::from(b));
+        let (low, carry) = a.overflowing_add(b);
+        let mut sum = UBig::from(low);
+        if carry {
+            sum |= UBig::from(1u8) << 128;
+        }
 
         prop_assert_eq!(&(x.clone() + y.clone()), &sum);
         prop_assert_eq!(&(x.clone() + &y), &sum);

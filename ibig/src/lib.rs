@@ -21,6 +21,7 @@ mod ops;
 mod repr;
 mod shift;
 mod sign;
+mod sub;
 
 #[cfg(test)]
 mod tests;

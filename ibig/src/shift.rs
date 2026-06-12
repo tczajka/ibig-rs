@@ -1,7 +1,7 @@
 //! Bit shift operators (`Shl`, `Shr`) for [`UBig`] and [`IBig`] by a `usize` amount.
 
 use crate::ops::{BinaryOpDigitsPrimitive, PrimitiveRhs, impl_binary_operator};
-use crate::repr::{Digits, MAX_DIGITS, number_too_large};
+use crate::repr::{Digits, MAX_DIGITS, panic_number_too_large};
 use crate::{IBig, UBig};
 use core::iter::repeat_n;
 use core::ops::{Shl, ShlAssign, Shr, ShrAssign};
@@ -23,7 +23,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
             return UBig::from_two_digits(low, high);
         }
         if index.digit_index() >= MAX_DIGITS {
-            number_too_large();
+            panic_number_too_large();
         }
         // The shifted pair sits above `digit_index` prepended zero digits.
         let mut digits = Digits::with_capacity(index.digit_index() + 2);
@@ -36,7 +36,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
     fn apply_ref(lhs: &[Digit], rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() > MAX_DIGITS - lhs.len() {
-            number_too_large();
+            panic_number_too_large();
         }
         let mut digits = Digits::with_capacity(index.digit_index() + lhs.len() + 1);
         digits.resize(index.digit_index(), Digit::ZERO);
@@ -49,7 +49,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
     fn apply_val(mut lhs: Digits, rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() > MAX_DIGITS - lhs.len() {
-            number_too_large();
+            panic_number_too_large();
         }
         // The result grows by exactly the prepended zero digits plus the overflow digit.
         lhs.reserve_exact(index.digit_index() + 1);
@@ -82,7 +82,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
             return IBig::from_two_digits(low, high);
         }
         if index.digit_index() >= MAX_DIGITS {
-            number_too_large();
+            panic_number_too_large();
         }
         // The shifted pair sits above `digit_index` prepended zero digits.
         let mut digits = Digits::with_capacity(index.digit_index() + 2);
@@ -95,7 +95,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
     fn apply_ref(lhs: &[Digit], rhs: usize) -> IBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() > MAX_DIGITS - lhs.len() {
-            number_too_large();
+            panic_number_too_large();
         }
         let mut digits = Digits::with_capacity(index.digit_index() + lhs.len() + 1);
         digits.resize(index.digit_index(), Digit::ZERO);
@@ -110,7 +110,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
     fn apply_val(mut lhs: Digits, rhs: usize) -> IBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() > MAX_DIGITS - lhs.len() {
-            number_too_large();
+            panic_number_too_large();
         }
         // The result grows by exactly the prepended zero digits plus the overflow digit.
         lhs.reserve_exact(index.digit_index() + 1);

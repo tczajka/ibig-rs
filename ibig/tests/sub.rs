@@ -1,0 +1,77 @@
+//! Integration tests for the `UBig` subtraction operator.
+
+use ibig::UBig;
+use ibig::proptest::ubig_up_to_bits;
+use proptest::prelude::*;
+
+proptest! {
+    // `UBig` subtraction matches `u128` subtraction, across every operand form.
+    #[test]
+    fn ubig_vs_u128(a: u128, b: u128) {
+        let (a, b) = (a.max(b), a.min(b));
+        let x = UBig::from(a);
+        let y = UBig::from(b);
+        let diff = UBig::from(a - b);
+
+        prop_assert_eq!(&(x.clone() - y.clone()), &diff);
+        prop_assert_eq!(&(x.clone() - &y), &diff);
+        prop_assert_eq!(&(&x - y.clone()), &diff);
+        prop_assert_eq!(&(&x - &y), &diff);
+        let mut t = x.clone();
+        t -= y.clone();
+        prop_assert_eq!(&t, &diff);
+        let mut t = x.clone();
+        t -= &y;
+        prop_assert_eq!(&t, &diff);
+    }
+
+    // Subtraction undoes addition, zero is the right identity, and a value minus itself is zero.
+    #[test]
+    fn ubig_algebra(
+        a in ubig_up_to_bits(300),
+        b in ubig_up_to_bits(300),
+    ) {
+        prop_assert_eq!(&((&a + &b) - &b), &a);
+        prop_assert_eq!(&(&a - UBig::ZERO), &a);
+        prop_assert_eq!(&a - &a, UBig::ZERO);
+    }
+}
+
+#[test]
+fn sub_basic() {
+    assert_eq!(UBig::from(5u8) - UBig::from(3u8), UBig::from(2u8));
+    assert_eq!(UBig::ZERO - UBig::ZERO, UBig::ZERO);
+    // A borrow shrinks the value by a digit.
+    assert_eq!(
+        UBig::from(u128::from(u64::MAX) + 1) - UBig::from(1u8),
+        UBig::from(u64::MAX)
+    );
+    // A borrow propagates through many all-zeros digits.
+    let big = UBig::from(1u8) << 256;
+    let almost = UBig::from_le_bytes(&[0xff; 32]);
+    assert_eq!(big - UBig::from(1u8), almost);
+}
+
+#[test]
+#[should_panic]
+fn sub_underflow_small_small() {
+    let _ = UBig::from(2u8) - UBig::from(3u8);
+}
+
+#[test]
+#[should_panic]
+fn sub_underflow_small_large() {
+    let _ = UBig::from(3u8) - (UBig::from(1u8) << 100);
+}
+
+#[test]
+#[should_panic]
+fn sub_underflow_large_large() {
+    let _ = (UBig::from(1u8) << 100) - (UBig::from(1u8) << 200);
+}
+
+#[test]
+#[should_panic]
+fn sub_underflow_large_large_same_len() {
+    let _ = (UBig::from(1u8) << 100) - ((UBig::from(1u8) << 100) + UBig::from(1u8));
+}
