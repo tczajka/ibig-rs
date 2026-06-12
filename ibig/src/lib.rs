@@ -10,6 +10,7 @@ pub use repr::{IBig, UBig};
 #[cfg(feature = "proptest")]
 pub mod proptest;
 
+mod add;
 mod bits;
 mod bitwise;
 mod bytes;
