@@ -22,13 +22,13 @@ API changes.
 
 ## [0.3.5] - 2022-03-12
 
-### Changed
-
-- Removed the dependency on `const_fn_assert`.
-
 ### Fixed
 
 - Corrected too-strict lifetimes in modular exponentiation.
+
+### Internals
+
+- Removed the dependency on `const_fn_assert`.
 
 ## [0.3.4] - 2021-11-03
 
@@ -39,7 +39,6 @@ API changes.
 ### Changed
 
 - Rust 1.49+ is now required.
-- Added an optional dependency on `serde`.
 
 ## [0.3.3] - 2021-10-28
 
@@ -52,6 +51,9 @@ API changes.
 ### Changed
 
 - Rust 1.47+ is now supported.
+
+### Internals
+
 - Added a dependency on `cfg-if`.
 
 ## [0.3.1] - 2021-04-03
@@ -60,13 +62,13 @@ API changes.
 
 - Maximum supported length in bits: `UBig::MAX_BIT_LEN`.
 
-### Changed
-
-- Added a dependency on `const_fn_assert`.
-
 ### Fixed
 
 - Broken build for `aarch64`, `mips64` and `powerpc64` fixed.
+
+### Internals
+
+- Added a dependency on `const_fn_assert`.
 
 ## [0.3.0] - 2021-03-29
 
@@ -101,12 +103,15 @@ API changes.
 ### Changed
 
 - Loosened the license to either MIT or Apache-2.0.
-- Added an optional dependency on `num-traits 0.2.14`.
-- Removed the dependency on `ascii`.
+- Added optional support for `num-traits 0.2.14`.
 
 ### Deprecated
 
 - `IBig::is_positive`, `IBig::is_negative`. Just use `> ibig!(0)`, `< ibig!(0)`.
+
+### Internals
+
+- Removed the dependency on `ascii`.
 
 ## [0.2.0] - 2021-03-11
 
@@ -122,17 +127,20 @@ API changes.
 
 ### Changed
 
-- Added a dependency on `static_assertions 1.1`.
 - Bumped `rand` to `0.8.3`.
-- Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
-- Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
-- Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
-- Other minor performance improvements.
 
 ### Deprecated
 
 - `to_str_radix`, `to_str_radix_uppercase`. Use `in_radix(...)` instead.
 - `ilog2`. Use `bit_len` instead.
+
+### Internals
+
+- Added a dependency on `static_assertions 1.1`.
+- Large division improved. Now uses a divide and conquer algorithm, O(n^1.47).
+- Large `parse` improved using a divide and conquer algorithm, O(n^1.47).
+- Large `to_string` improved using a divide and conquer algorithm, O(n^1.47).
+- Other minor performance improvements.
 
 ## [0.1.1] - 2021-03-03
 
@@ -140,10 +148,10 @@ API changes.
 
 - Hashing.
 - Exponentiation.
-- Random sampling (optional dependency on `rand 0.8`).
+- Random sampling (optional support for `rand 0.8`).
 - `factorial` example prints 1000000! in hexadecimal.
 
-### Changed
+### Internals
 
 - Multiplication improved, now uses Karatsuba and Toom-Cook-3 algorithms, O(n^1.47).
 

@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`
+- Small bit shifts (less than a digit): `shl_small`, `shr_small`, `shl_small_signed`,
+  `shr_small_signed`, `shl_small_digit`, `shl_small_signed_digit`.
+- The sign-extension byte for a most-significant byte: `sign_extension_byte`.
 
 ### Changed
 
@@ -17,10 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bit`, `bit_signed` and `set_bit` now take a `BitIndex` instead of a bit position `usize`.
 - Replaced `bit_width`, `trailing_zeros` and `trailing_ones` with `highest_one`, `lowest_one`
   and `lowest_zero`, which return `Option<BitIndex>`.
+- `sign_extension` now takes and returns `SignedDigit` instead of `Digit`.
 
 ## [0.0.1] - 2026-06-05
 
-Work in progress. Low-level big-integer algorithms operating on slices of digits.
+Initial version with very little functionality.
 
 ### Added
 
