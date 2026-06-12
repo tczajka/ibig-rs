@@ -52,7 +52,9 @@ pub const fn min_len(digits: &[Digit]) -> usize {
 pub const fn min_len_signed(digits: &[Digit]) -> usize {
     assert!(!digits.is_empty());
     let mut len = digits.len();
-    while len > 1 && digits[len - 1].const_eq(sign_extension(digits[len - 2])) {
+    while len > 1
+        && digits[len - 1].const_eq(sign_extension(digits[len - 2].cast_signed()).cast_unsigned())
+    {
         len -= 1;
     }
     len
@@ -107,7 +109,9 @@ pub fn min_len_bytes(bytes: &[u8]) -> usize {
 pub fn min_len_bytes_signed(bytes: &[u8]) -> usize {
     assert!(!bytes.is_empty());
     let mut len = bytes.len();
-    while len > 1 && bytes[len - 1] == sign_extension_byte(bytes[len - 2]) {
+    while len > 1
+        && bytes[len - 1] == sign_extension_byte(bytes[len - 2].cast_signed()).cast_unsigned()
+    {
         len -= 1;
     }
     len

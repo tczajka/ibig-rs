@@ -1,6 +1,6 @@
 //! Bit shifts.
 
-use crate::{Digit, sign::sign_extension};
+use crate::{Digit, SignedDigit, sign::sign_extension};
 
 /// Shifts `digits` left by `shift` bits in place, returning the overflow.
 ///
@@ -42,6 +42,33 @@ pub fn shl_small(digits: &mut [Digit], shift: u32) -> Digit {
     carry
 }
 
+/// Shifts a single `digit` left by `shift` bits, returning the two-digit result `(low, high)`.
+///
+/// `shift` must be less than [`Digit::BITS`]. The bits shifted out of `digit` end up in the
+/// low `shift` bits of `high` (its high bits are zero).
+///
+/// # Panics
+///
+/// Panics if `shift >= Digit::BITS`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, shl_small_digit};
+/// assert_eq!(shl_small_digit(Digit::from(0b101u8), 2), (Digit::from(0b10100u8), Digit::ZERO));
+///
+/// // The top bit shifts into the high digit.
+/// assert_eq!(shl_small_digit(Digit::MAX, 1), (!Digit::from(1u8), Digit::from(1u8)));
+/// ```
+#[inline]
+pub fn shl_small_digit(digit: Digit, shift: u32) -> (Digit, Digit) {
+    assert!(shift < Digit::BITS);
+    if shift == 0 {
+        return (digit, Digit::ZERO);
+    }
+    (digit << shift, digit >> (Digit::BITS - shift))
+}
+
 /// Shifts `digits` right by `shift` bits in place. The bits shifted out below the
 /// least-significant digit are discarded.
 ///
@@ -81,11 +108,9 @@ pub fn shr_small(digits: &mut [Digit], shift: u32) {
 /// Shifts the signed two's complement value in `digits` left by `shift` bits in place,
 /// returning the sign-extended overflow.
 ///
-/// `shift` must be less than [`Digit::BITS`]. Like [`shl_small`], the low `shift` bits of the
-/// returned digit are the bits shifted out beyond the most-significant digit; unlike it, the
-/// high `BITS - shift` bits are filled with the sign of the value. The `(len + 1)`-digit
-/// two's complement number formed by the shifted digits followed by the overflow equals the
-/// original value shifted left by `shift`.
+/// `shift` must be less than [`Digit::BITS`]. The `(len + 1)`-digit two's complement number
+/// formed by the shifted digits followed by the overflow equals the original value shifted
+/// left by `shift`.
 ///
 /// # Panics
 ///
@@ -94,19 +119,56 @@ pub fn shr_small(digits: &mut [Digit], shift: u32) {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, shl_small_signed};
+/// # use ibig_core::{Digit, SignedDigit, shl_small_signed};
 /// let mut a = [Digit::MAX]; // -1
 /// let overflow = shl_small_signed(&mut a, 1);
 /// assert_eq!(a, [!Digit::from(1u8)]); // -2
-/// assert_eq!(overflow, Digit::MAX); // sign-extension of -1
+/// assert_eq!(overflow, SignedDigit::from(-1i8)); // sign extension of -1
 /// ```
 #[inline]
-pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> Digit {
+pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> SignedDigit {
+    let (top, low) = digits.split_last_mut().expect("digits is empty");
+    // Shift the lower digits as unsigned and the top digit as signed, stitching the carry
+    // into the top digit.
+    let carry = shl_small(low, shift);
+    let (new_top, overflow) = shl_small_signed_digit(top.cast_signed(), shift);
+    *top = new_top | carry;
+    overflow
+}
+
+/// Shifts a single signed two's complement `digit` left by `shift` bits, returning the
+/// two-digit result `(low, high)`.
+///
+/// `shift` must be less than [`Digit::BITS`]. The two-digit two's complement number formed by
+/// `low` and `high` equals `digit` shifted left by `shift`; the high `BITS - shift` bits of
+/// `high` are filled with the sign of `digit`.
+///
+/// # Panics
+///
+/// Panics if `shift >= Digit::BITS`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, shl_small_signed_digit};
+/// // -1 << 1 == -2, spanning two digits.
+/// assert_eq!(
+///     shl_small_signed_digit(SignedDigit::from(-1i8), 1),
+///     (!Digit::from(1u8), SignedDigit::from(-1i8))
+/// );
+/// ```
+#[inline]
+pub fn shl_small_signed_digit(digit: SignedDigit, shift: u32) -> (Digit, SignedDigit) {
     assert!(shift < Digit::BITS);
-    let high = *digits.last().unwrap();
-    let overflow = shl_small(digits, shift);
-    // Fill the high `BITS - shift` bits of the overflow with the sign.
-    overflow | (sign_extension(high) << shift)
+    if shift == 0 {
+        // The high digit is pure sign extension.
+        return (digit.cast_unsigned(), sign_extension(digit));
+    }
+    // The arithmetic shift sign-extends the high digit.
+    (
+        digit.cast_unsigned() << shift,
+        digit >> (SignedDigit::BITS - shift),
+    )
 }
 
 /// Shifts the signed two's complement value in `digits` right by `shift` bits in place (an
@@ -130,13 +192,17 @@ pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> Digit {
 /// ```
 #[inline]
 pub fn shr_small_signed(digits: &mut [Digit], shift: u32) {
+    assert!(!digits.is_empty());
     assert!(shift < Digit::BITS);
     if shift == 0 {
         return;
     }
-    // The bits shifted into the top of the most-significant digit are the sign extension.
-    let mut carry = sign_extension(*digits.last().unwrap()) << (Digit::BITS - shift);
-    for d in digits.iter_mut().rev() {
+    // Shift the top digit separately: the arithmetic shift fills its vacated high bits with
+    // the sign.
+    let (top, low) = digits.split_last_mut().expect("digits is empty");
+    let mut carry = *top << (Digit::BITS - shift);
+    *top = (top.cast_signed() >> shift).cast_unsigned();
+    for d in low.iter_mut().rev() {
         let new_carry = *d << (Digit::BITS - shift);
         *d = (*d >> shift) | carry;
         carry = new_carry;

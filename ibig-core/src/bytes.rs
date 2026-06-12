@@ -155,7 +155,7 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         i += 1;
     }
     if let Some(&last) = rem.last() {
-        let fill = sign_extension_byte(last);
+        let fill = sign_extension_byte(last.cast_signed()).cast_unsigned();
         let mut arr = [fill; Digit::BYTES];
         let (dest, _) = arr.split_at_mut(rem.len());
         dest.copy_from_slice(rem);
@@ -195,7 +195,7 @@ pub fn from_be_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
         *digit_iter.next().unwrap() = Digit::from_be_bytes(chunk);
     }
     if let Some(&first) = rem.first() {
-        let fill = sign_extension_byte(first);
+        let fill = sign_extension_byte(first.cast_signed()).cast_unsigned();
         let mut arr = [fill; Digit::BYTES];
         arr[Digit::BYTES - rem.len()..].copy_from_slice(rem);
         *digit_iter.next().unwrap() = Digit::from_be_bytes(arr);

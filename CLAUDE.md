@@ -65,13 +65,14 @@ Always consider whether a change behaves correctly at all three word sizes, sinc
 
 ### Core algorithms (`ibig-core`)
 
-Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the word size. As the port progresses this is where the size-dispatched algorithms land (schoolbook → Karatsuba → Toom-3 → NTT multiplication; schoolbook vs divide-and-conquer division; power-of-two vs general radix conversion). See `ibig-old/src/{mul,div,parse,fmt}` for the reference implementations, including the threshold `const`s and the `const_assert!`s that wire adjacent thresholds together. Recursive algorithms should use the up-front scratch-allocation pattern (`*_memory_requirement` + `Memory` regions) rather than allocating per recursion — see `ibig-old/src/memory.rs`.
+Low-level routines work on `&[Digit]` / `&mut [Digit]` and stay generic over the word size. As the port progresses this is where the size-dispatched algorithms land (schoolbook → Karatsuba → Toom-3 → NTT multiplication; schoolbook vs divide-and-conquer division; power-of-two vs general radix conversion). See `ibig-old/src/{mul,div,parse,fmt}` for the reference implementations, including the threshold `const`s and the `const_assert!`s that wire adjacent thresholds together.
 
 ## Conventions
 
 - Public API changes must be recorded in `ibig/CHANGELOG.md`; note breaking changes explicitly. The top section is `## 0.4.0 - unreleased`.
-- **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions and the private `Repr` enum).
+- **Item ordering**: within a module, public items should generally come before private items (e.g. the `pub` type and its `pub`/`pub(crate)` methods before private helper functions).
 - The crates are `no_std`; use `alloc` (e.g. `alloc::vec::Vec`).
+- **No `as` for numeric conversions**: use `into()` when the conversion is lossless, or `try_into().unwrap()` when the value is known to fit. (`as` silently truncates and hides bugs when types change, e.g. across the 16/32/64-bit `Digit` widths.)
 - **`ibig-core` doc comments**: don't restate "little-endian" or "unsigned" on individual functions — both are established at the crate top level (`src/lib.rs`). Functions on signed two's complement values still say "signed two's complement" explicitly, but without "little-endian".
 
 ### Tests

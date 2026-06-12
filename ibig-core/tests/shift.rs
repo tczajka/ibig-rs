@@ -1,11 +1,18 @@
 //! Integration tests for small bit shifts (by less than a digit's width).
 
-use ibig_core::{Digit, is_negative, shl_small, shl_small_signed, shr_small, shr_small_signed};
+use ibig_core::{
+    Digit, SignedDigit, is_negative, shl_small, shl_small_digit, shl_small_signed,
+    shl_small_signed_digit, shr_small, shr_small_signed,
+};
 use proptest::collection::vec;
 use proptest::prelude::*;
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
+}
+
+fn signed(n: i8) -> SignedDigit {
+    SignedDigit::from(n)
 }
 
 #[test]
@@ -51,24 +58,63 @@ fn shr_small_basic() {
 }
 
 #[test]
+fn shl_small_digit_basic() {
+    assert_eq!(
+        shl_small_digit(digit(0b101), 2),
+        (digit(0b10100), Digit::ZERO)
+    );
+
+    // The top bit shifts into the high digit.
+    assert_eq!(shl_small_digit(Digit::MAX, 1), (!digit(1), digit(1)));
+
+    // A zero shift is the identity with a zero high digit.
+    assert_eq!(shl_small_digit(digit(7), 0), (digit(7), Digit::ZERO));
+}
+
+#[test]
 fn shl_small_signed_basic() {
     // -1 << 1 == -2, with a sign-extended overflow.
     let mut a = [Digit::MAX];
-    assert_eq!(shl_small_signed(&mut a, 1), Digit::MAX);
+    assert_eq!(shl_small_signed(&mut a, 1), signed(-1));
     assert_eq!(a, [!digit(1)]);
 
     // A non-negative value sign-extends to zero overflow.
     let mut a = [digit(0b101)];
-    assert_eq!(shl_small_signed(&mut a, 2), Digit::ZERO);
+    assert_eq!(shl_small_signed(&mut a, 2), SignedDigit::ZERO);
     assert_eq!(a, [digit(0b10100)]);
 
     // A zero shift yields the sign extension as the overflow digit.
     let mut a = [Digit::MAX]; // -1
-    assert_eq!(shl_small_signed(&mut a, 0), Digit::MAX);
+    assert_eq!(shl_small_signed(&mut a, 0), signed(-1));
     assert_eq!(a, [Digit::MAX]);
     let mut a = [digit(7)]; // +7
-    assert_eq!(shl_small_signed(&mut a, 0), Digit::ZERO);
+    assert_eq!(shl_small_signed(&mut a, 0), SignedDigit::ZERO);
     assert_eq!(a, [digit(7)]);
+}
+
+#[test]
+fn shl_small_signed_digit_basic() {
+    // -1 << 1 == -2, spanning two digits.
+    assert_eq!(
+        shl_small_signed_digit(signed(-1), 1),
+        (!digit(1), signed(-1))
+    );
+
+    // A non-negative value has a sign-extended (zero) high digit.
+    assert_eq!(
+        shl_small_signed_digit(signed(0b101), 2),
+        (digit(0b10100), SignedDigit::ZERO)
+    );
+
+    // A zero shift yields the sign extension as the high digit.
+    assert_eq!(
+        shl_small_signed_digit(signed(-1), 0),
+        (Digit::MAX, signed(-1))
+    );
+    assert_eq!(
+        shl_small_signed_digit(signed(7), 0),
+        (digit(7), SignedDigit::ZERO)
+    );
 }
 
 #[test]
@@ -105,11 +151,26 @@ proptest! {
     fn shl_then_shr_signed(digits in vec(any::<Digit>(), 1..20), shift in 0u32..Digit::BITS) {
         let mut a = digits.clone();
         let overflow = shl_small_signed(&mut a, shift);
-        a.push(overflow);
+        a.push(overflow.cast_unsigned());
         shr_small_signed(&mut a, shift);
 
         let mut expected = digits.clone();
         expected.push(if is_negative(&digits) { Digit::MAX } else { Digit::ZERO });
         prop_assert_eq!(a, expected);
+    }
+
+    // The single-digit shifts match the slice shifts on a one-digit slice.
+    #[test]
+    fn shl_small_digit_matches_slice(d: Digit, shift in 0u32..Digit::BITS) {
+        let mut a = [d];
+        let overflow = shl_small(&mut a, shift);
+        prop_assert_eq!(shl_small_digit(d, shift), (a[0], overflow));
+    }
+
+    #[test]
+    fn shl_small_signed_digit_matches_slice(d: SignedDigit, shift in 0u32..Digit::BITS) {
+        let mut a = [d.cast_unsigned()];
+        let overflow = shl_small_signed(&mut a, shift);
+        prop_assert_eq!(shl_small_signed_digit(d, shift), (a[0], overflow));
     }
 }

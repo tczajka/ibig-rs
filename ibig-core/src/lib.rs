@@ -29,7 +29,10 @@ pub use bytes::{
     from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
 };
 pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
-pub use shift::{shl_small, shl_small_signed, shr_small, shr_small_signed};
+pub use shift::{
+    shl_small, shl_small_digit, shl_small_signed, shl_small_signed_digit, shr_small,
+    shr_small_signed,
+};
 pub use sign::{extend_signed, extend_signed_bytes, is_negative, sign_extension};
 use unative::{INative, UNative};
 

@@ -1,9 +1,15 @@
 //! Integration tests for sign operations.
 
-use ibig_core::{Digit, extend_signed, extend_signed_bytes, is_negative, sign_extension};
+use ibig_core::{
+    Digit, SignedDigit, extend_signed, extend_signed_bytes, is_negative, sign_extension,
+};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
+}
+
+fn signed(n: i8) -> SignedDigit {
+    SignedDigit::from(n)
 }
 
 #[test]
@@ -95,10 +101,11 @@ fn test_extend_signed_bytes_empty() {
 
 #[test]
 fn sign_extension_digit() {
-    // A negative top digit extends with all-ones; a non-negative one with zeros.
-    assert_eq!(sign_extension(Digit::MAX), Digit::MAX); // -1
-    assert_eq!(sign_extension(digit(5)), Digit::ZERO);
-    assert_eq!(sign_extension(Digit::ZERO), Digit::ZERO);
-    // Only the high (sign) bit matters, not the lower bits.
-    assert_eq!(sign_extension(Digit::MAX ^ Digit::from(1u8)), Digit::MAX);
+    // A negative top digit extends with all-ones (-1); a non-negative one with zeros.
+    assert_eq!(sign_extension(signed(-1)), signed(-1));
+    assert_eq!(sign_extension(signed(5)), SignedDigit::ZERO);
+    assert_eq!(sign_extension(SignedDigit::ZERO), SignedDigit::ZERO);
+    // Only the sign bit matters, not the lower bits.
+    assert_eq!(sign_extension(SignedDigit::MIN), signed(-1));
+    assert_eq!(sign_extension(SignedDigit::MAX), SignedDigit::ZERO);
 }

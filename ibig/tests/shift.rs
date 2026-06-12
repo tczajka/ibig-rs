@@ -13,9 +13,9 @@ proptest! {
     #[test]
     fn ubig_shl_shr_round_trip(x in ubig_up_to_bits(300), n in 0usize..300) {
         let shl = &x << n;
-        prop_assert_eq!(x.clone() << n, shl.clone());
-        prop_assert_eq!(x.clone() << &n, shl.clone());
-        prop_assert_eq!(&x << &n, shl.clone());
+        prop_assert_eq!(&(x.clone() << n), &shl);
+        prop_assert_eq!(&(x.clone() << &n), &shl);
+        prop_assert_eq!(&(&x << &n), &shl);
         let mut t = x.clone();
         t <<= n;
         prop_assert_eq!(&t, &shl);
@@ -24,9 +24,9 @@ proptest! {
         prop_assert_eq!(&t, &shl);
 
         let shr = &shl >> n;
-        prop_assert_eq!(shl.clone() >> n, shr.clone());
-        prop_assert_eq!(shl.clone() >> &n, shr.clone());
-        prop_assert_eq!(&shl >> &n, shr.clone());
+        prop_assert_eq!(&(shl.clone() >> n), &shr);
+        prop_assert_eq!(&(shl.clone() >> &n), &shr);
+        prop_assert_eq!(&(&shl >> &n), &shr);
         let mut t = shl.clone();
         t >>= n;
         prop_assert_eq!(&t, &shr);
@@ -41,9 +41,9 @@ proptest! {
     #[test]
     fn ibig_shl_shr_round_trip(x in ibig_up_to_bits(300), n in 0usize..300) {
         let shl = &x << n;
-        prop_assert_eq!(x.clone() << n, shl.clone());
-        prop_assert_eq!(x.clone() << &n, shl.clone());
-        prop_assert_eq!(&x << &n, shl.clone());
+        prop_assert_eq!(&(x.clone() << n), &shl);
+        prop_assert_eq!(&(x.clone() << &n), &shl);
+        prop_assert_eq!(&(&x << &n), &shl);
         let mut t = x.clone();
         t <<= n;
         prop_assert_eq!(&t, &shl);
@@ -52,9 +52,9 @@ proptest! {
         prop_assert_eq!(&t, &shl);
 
         let shr = &shl >> n;
-        prop_assert_eq!(shl.clone() >> n, shr.clone());
-        prop_assert_eq!(shl.clone() >> &n, shr.clone());
-        prop_assert_eq!(&shl >> &n, shr.clone());
+        prop_assert_eq!(&(shl.clone() >> n), &shr);
+        prop_assert_eq!(&(shl.clone() >> &n), &shr);
+        prop_assert_eq!(&(&shl >> &n), &shr);
         let mut t = shl.clone();
         t >>= n;
         prop_assert_eq!(&t, &shr);
@@ -69,13 +69,12 @@ proptest! {
     #[test]
     fn ubig_vs_primitive(a: u64, n in 0usize..64) {
         let x = UBig::from(a);
-        let shl = UBig::from((a as u128) << n);
+        let shl = UBig::from(u128::from(a) << n);
         let shr = UBig::from(a >> n);
 
-        prop_assert_eq!(x.clone() << n, shl.clone());
-        prop_assert_eq!(x.clone() << &n, shl.clone());
-        prop_assert_eq!(&x << n, shl.clone());
-        prop_assert_eq!(&x << &n, shl.clone());
+        prop_assert_eq!(&(x.clone() << n), &shl);
+        prop_assert_eq!(&(x.clone() << &n), &shl);
+        prop_assert_eq!(&(&x << &n), &shl);
         let mut t = x.clone();
         t <<= n;
         prop_assert_eq!(&t, &shl);
@@ -83,10 +82,9 @@ proptest! {
         t <<= &n;
         prop_assert_eq!(&t, &shl);
 
-        prop_assert_eq!(x.clone() >> n, shr.clone());
-        prop_assert_eq!(x.clone() >> &n, shr.clone());
-        prop_assert_eq!(&x >> n, shr.clone());
-        prop_assert_eq!(&x >> &n, shr.clone());
+        prop_assert_eq!(&(x.clone() >> n), &shr);
+        prop_assert_eq!(&(x.clone() >> &n), &shr);
+        prop_assert_eq!(&(&x >> &n), &shr);
         let mut t = x.clone();
         t >>= n;
         prop_assert_eq!(&t, &shr);
@@ -97,15 +95,14 @@ proptest! {
 
     // `IBig` shifts match the corresponding primitive (arithmetic) shifts, across every form.
     #[test]
-    fn ibig_vs_primitive(a: i64, n in 0usize..63) {
+    fn ibig_vs_primitive(a: i64, n in 0usize..64) {
         let x = IBig::from(a);
-        let shl = IBig::from((a as i128) << n);
+        let shl = IBig::from(i128::from(a) << n);
         let shr = IBig::from(a >> n);
 
-        prop_assert_eq!(x.clone() << n, shl.clone());
-        prop_assert_eq!(x.clone() << &n, shl.clone());
-        prop_assert_eq!(&x << n, shl.clone());
-        prop_assert_eq!(&x << &n, shl.clone());
+        prop_assert_eq!(&(x.clone() << n), &shl);
+        prop_assert_eq!(&(x.clone() << &n), &shl);
+        prop_assert_eq!(&(&x << &n), &shl);
         let mut t = x.clone();
         t <<= n;
         prop_assert_eq!(&t, &shl);
@@ -113,10 +110,9 @@ proptest! {
         t <<= &n;
         prop_assert_eq!(&t, &shl);
 
-        prop_assert_eq!(x.clone() >> n, shr.clone());
-        prop_assert_eq!(x.clone() >> &n, shr.clone());
-        prop_assert_eq!(&x >> n, shr.clone());
-        prop_assert_eq!(&x >> &n, shr.clone());
+        prop_assert_eq!(&(x.clone() >> n), &shr);
+        prop_assert_eq!(&(x.clone() >> &n), &shr);
+        prop_assert_eq!(&(&x >> &n), &shr);
         let mut t = x.clone();
         t >>= n;
         prop_assert_eq!(&t, &shr);

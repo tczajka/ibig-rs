@@ -1,6 +1,6 @@
 //! Sign and sign-extension of two's complement digit and byte slices.
 
-use crate::Digit;
+use crate::{Digit, SignedDigit};
 
 /// Returns `true` if the non-empty two's complement `digits` represent a negative value (the
 /// most-significant digit's sign bit is set).
@@ -49,7 +49,7 @@ pub fn extend_signed(digits: &mut [Digit], len: usize) {
         len > 0 && len <= digits.len(),
         "len must be in 1..=digits.len()"
     );
-    let fill = sign_extension(digits[len - 1]);
+    let fill = sign_extension(digits[len - 1].cast_signed()).cast_unsigned();
     digits[len..].fill(fill);
 }
 
@@ -80,33 +80,30 @@ pub fn extend_signed_bytes(bytes: &mut [u8], len: usize) {
         len > 0 && len <= bytes.len(),
         "len must be in 1..=bytes.len()"
     );
-    let fill = sign_extension_byte(bytes[len - 1]);
+    let fill = sign_extension_byte(bytes[len - 1].cast_signed()).cast_unsigned();
     bytes[len..].fill(fill);
 }
 
 /// The sign-extension digit for a two's complement value whose most-significant digit is
-/// `high`: all-ones (`Digit::MAX`) if `high` is negative (its sign bit is set), zero otherwise.
+/// `high`: `-1` (all-ones) if `high` is negative, `0` otherwise.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sign_extension};
-/// assert_eq!(sign_extension(Digit::MAX), Digit::MAX); // a negative top digit
-/// assert_eq!(sign_extension(Digit::from(5u8)), Digit::ZERO); // a non-negative top digit
+/// # use ibig_core::{SignedDigit, sign_extension};
+/// assert_eq!(sign_extension(SignedDigit::from(-2i8)), SignedDigit::from(-1i8));
+/// assert_eq!(sign_extension(SignedDigit::from(5i8)), SignedDigit::ZERO);
 /// ```
 #[inline]
-pub const fn sign_extension(high: Digit) -> Digit {
+pub const fn sign_extension(high: SignedDigit) -> SignedDigit {
     // Smear the sign bit across the whole digit: arithmetic-shifting it down to every bit
     // yields all-ones for a negative `high` and all-zeros otherwise.
-    high.cast_signed()
-        .checked_shr(Digit::BITS - 1)
-        .unwrap()
-        .cast_unsigned()
+    high.checked_shr(SignedDigit::BITS - 1).unwrap()
 }
 
 /// The sign-extension byte for a two's complement value whose most-significant byte is `high`:
-/// all-ones if `high` is negative (its sign bit is set), zero otherwise.
+/// `-1` (all-ones) if `high` is negative, `0` otherwise.
 #[inline]
-pub(crate) const fn sign_extension_byte(high: u8) -> u8 {
-    (high.cast_signed() >> (u8::BITS - 1)).cast_unsigned()
+pub(crate) const fn sign_extension_byte(high: i8) -> i8 {
+    high >> (i8::BITS - 1)
 }
