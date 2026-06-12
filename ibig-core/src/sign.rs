@@ -103,7 +103,15 @@ pub const fn sign_extension(high: SignedDigit) -> SignedDigit {
 
 /// The sign-extension byte for a two's complement value whose most-significant byte is `high`:
 /// `-1` (all-ones) if `high` is negative, `0` otherwise.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::sign_extension_byte;
+/// assert_eq!(sign_extension_byte(-2), -1);
+/// assert_eq!(sign_extension_byte(5), 0);
+/// ```
 #[inline]
-pub(crate) const fn sign_extension_byte(high: i8) -> i8 {
+pub const fn sign_extension_byte(high: i8) -> i8 {
     high >> (i8::BITS - 1)
 }

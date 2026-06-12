@@ -2,6 +2,7 @@
 
 use ibig_core::{
     Digit, SignedDigit, extend_signed, extend_signed_bytes, is_negative, sign_extension,
+    sign_extension_byte,
 };
 
 fn digit(n: u8) -> Digit {
@@ -108,4 +109,15 @@ fn sign_extension_digit() {
     // Only the sign bit matters, not the lower bits.
     assert_eq!(sign_extension(SignedDigit::MIN), signed(-1));
     assert_eq!(sign_extension(SignedDigit::MAX), SignedDigit::ZERO);
+}
+
+#[test]
+fn sign_extension_byte_basic() {
+    // A negative top byte extends with all-ones (-1); a non-negative one with zeros.
+    assert_eq!(sign_extension_byte(-1), -1);
+    assert_eq!(sign_extension_byte(5), 0);
+    assert_eq!(sign_extension_byte(0), 0);
+    // Only the sign bit matters, not the lower bits.
+    assert_eq!(sign_extension_byte(i8::MIN), -1);
+    assert_eq!(sign_extension_byte(i8::MAX), 0);
 }

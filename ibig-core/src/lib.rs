@@ -33,7 +33,9 @@ pub use shift::{
     shl_small, shl_small_digit, shl_small_signed, shl_small_signed_digit, shr_small,
     shr_small_signed,
 };
-pub use sign::{extend_signed, extend_signed_bytes, is_negative, sign_extension};
+pub use sign::{
+    extend_signed, extend_signed_bytes, is_negative, sign_extension, sign_extension_byte,
+};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.
