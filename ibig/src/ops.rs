@@ -131,6 +131,22 @@ pub(crate) trait BinaryOpDigits<T: AsDigits> {
     fn apply_val_val(lhs: Digits, rhs: Digits) -> T;
 }
 
+/// A binary operation implemented on the digit representation of a number, with a primitive
+/// `Copy` right operand (e.g. a shift amount).
+///
+/// The left operand appears in one of three forms: a single digit (`digit`), a borrowed
+/// slice (`ref`), or an owned buffer (`val`); the right operand is passed by value.
+pub(crate) trait BinaryOpDigitsPrimitive<L: AsDigits, R: Copy> {
+    /// The left operand is a single digit.
+    fn apply_digit(lhs: L::SingleDigit, rhs: R) -> L;
+
+    /// The left operand is a borrowed slice.
+    fn apply_ref(lhs: &[Digit], rhs: R) -> L;
+
+    /// The left operand is an owned buffer.
+    fn apply_val(lhs: Digits, rhs: R) -> L;
+}
+
 /// A commutative binary operation implemented on the digit representation of a number.
 ///
 /// Each operand appears in one of three forms: a single digit (`digit`), a borrowed slice
@@ -155,8 +171,15 @@ pub(crate) trait CommutativeBinaryOpDigits<T: AsDigits> {
     fn apply_val_val(lhs: Digits, rhs: Digits) -> T;
 }
 
+/// Selects the [`BinaryOpDigits`] derivation of [`BinaryOp`] for the marker type `Op`.
+pub(crate) struct DigitsRhs<Op>(Op);
+
+/// Selects the [`BinaryOpDigitsPrimitive`] derivation of [`BinaryOp`] for the marker type
+/// `Op`.
+pub(crate) struct PrimitiveRhs<Op>(Op);
+
 /// Every [`BinaryOpDigits`] induces a [`BinaryOp`] over a single type.
-impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T, T> for Op {
+impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T, T> for DigitsRhs<Op> {
     #[inline]
     fn apply_ref_ref(lhs: &T, rhs: &T) -> T {
         match (lhs.as_digits(), rhs.as_digits()) {
@@ -194,6 +217,35 @@ impl<T: AsDigits, Op: BinaryOpDigits<T>> BinaryOp<T, T> for Op {
             (Small(a), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_digit_val(a, rhs),
             (Large(lhs), Small(b)) => <Op as BinaryOpDigits<T>>::apply_val_digit(lhs, b),
             (Large(lhs), Large(rhs)) => <Op as BinaryOpDigits<T>>::apply_val_val(lhs, rhs),
+        }
+    }
+}
+
+/// Every [`BinaryOpDigitsPrimitive`] induces a [`BinaryOp`] with a primitive right operand.
+impl<L: AsDigits, R: Copy, Op: BinaryOpDigitsPrimitive<L, R>> BinaryOp<L, R> for PrimitiveRhs<Op> {
+    #[inline]
+    fn apply_ref_ref(lhs: &L, rhs: &R) -> L {
+        Self::apply_ref_val(lhs, *rhs)
+    }
+
+    #[inline]
+    fn apply_ref_val(lhs: &L, rhs: R) -> L {
+        match lhs.as_digits() {
+            Small(digit) => <Op as BinaryOpDigitsPrimitive<L, R>>::apply_digit(digit, rhs),
+            Large(digits) => <Op as BinaryOpDigitsPrimitive<L, R>>::apply_ref(digits, rhs),
+        }
+    }
+
+    #[inline]
+    fn apply_val_ref(lhs: L, rhs: &R) -> L {
+        Self::apply_val_val(lhs, *rhs)
+    }
+
+    #[inline]
+    fn apply_val_val(lhs: L, rhs: R) -> L {
+        match lhs.into_digits() {
+            Small(digit) => <Op as BinaryOpDigitsPrimitive<L, R>>::apply_digit(digit, rhs),
+            Large(digits) => <Op as BinaryOpDigitsPrimitive<L, R>>::apply_val(digits, rhs),
         }
     }
 }

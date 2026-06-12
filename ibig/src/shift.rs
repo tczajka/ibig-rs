@@ -1,60 +1,24 @@
 //! Bit shift operators (`Shl`, `Shr`) for [`UBig`] and [`IBig`] by a `usize` amount.
 
-use crate::ops::{BinaryOp, impl_binary_operator};
-use crate::repr::{
-    AsDigits,
-    AsDigitsResult::{Large, Small},
-    Digits, MAX_DIGITS, number_too_large,
-};
+use crate::ops::{BinaryOpDigitsPrimitive, PrimitiveRhs, impl_binary_operator};
+use crate::repr::{Digits, MAX_DIGITS, number_too_large};
 use crate::{IBig, UBig};
 use core::iter::repeat_n;
 use core::ops::{Shl, ShlAssign, Shr, ShrAssign};
 use ibig_core::{BitIndex, DIGIT_BITS_USIZE, Digit, SignedDigit};
 
 /// Left shift.
-enum ShlOperation {}
+struct ShlOperation;
 
-impl BinaryOp<UBig, usize> for ShlOperation {
+impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
     #[inline]
-    fn apply_ref_ref(lhs: &UBig, rhs: &usize) -> UBig {
-        Self::apply_ref_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_ref_val(lhs: &UBig, rhs: usize) -> UBig {
-        match lhs.as_digits() {
-            Small(digit) => UBig::shl_digit(digit, rhs),
-            Large(digits) => UBig::shl_ref(digits, rhs),
-        }
-    }
-
-    #[inline]
-    fn apply_val_ref(lhs: UBig, rhs: &usize) -> UBig {
-        Self::apply_val_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_val_val(lhs: UBig, rhs: usize) -> UBig {
-        match lhs.into_digits() {
-            Small(digit) => UBig::shl_digit(digit, rhs),
-            Large(digits) => UBig::shl_val(digits, rhs),
-        }
-    }
-}
-
-impl_binary_operator!(UBig, usize, Shl::shl, ShlAssign::shl_assign, ShlOperation);
-
-impl UBig {
-    /// Shifts a single-digit [`UBig`] left by `rhs` bits. The shifted digit spans at most two
-    /// digits, sitting above `rhs / DIGIT_BITS` prepended zero digits.
-    #[inline]
-    fn shl_digit(digit: Digit, rhs: usize) -> UBig {
+    fn apply_digit(lhs: Digit, rhs: usize) -> UBig {
         // Shifting zero is zero (and avoids allocating `rhs / DIGIT_BITS` zero digits).
-        if digit == Digit::ZERO {
+        if lhs == Digit::ZERO {
             return UBig::ZERO;
         }
         let index = BitIndex::from(rhs);
-        let (low, high) = ibig_core::shl_small_digit(digit, index.bit_index());
+        let (low, high) = ibig_core::shl_small_digit(lhs, index.bit_index());
         // With no whole-digit offset, the pair is the entire result.
         if index.digit_index() == 0 {
             return UBig::from_two_digits(low, high);
@@ -62,6 +26,7 @@ impl UBig {
         if index.digit_index() >= MAX_DIGITS {
             number_too_large();
         }
+        // The shifted pair sits above `digit_index` prepended zero digits.
         let mut digits = Digits::with_capacity(index.digit_index() + 2);
         digits.resize(index.digit_index(), Digit::ZERO);
         digits.push(low);
@@ -69,75 +34,49 @@ impl UBig {
         UBig::from_digits(digits)
     }
 
-    /// Shifts `digits` left by `rhs` bits into a freshly allocated buffer.
-    fn shl_ref(digits: &[Digit], rhs: usize) -> UBig {
+    fn apply_ref(lhs: &[Digit], rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
-        if index.digit_index() > MAX_DIGITS - digits.len() {
+        if index.digit_index() > MAX_DIGITS - lhs.len() {
             number_too_large();
         }
-        let mut new_digits = Digits::with_capacity(index.digit_index() + digits.len() + 1);
-        new_digits.resize(index.digit_index(), Digit::ZERO);
-        new_digits.extend_from_slice(digits);
-        let overflow =
-            ibig_core::shl_small(&mut new_digits[index.digit_index()..], index.bit_index());
-        new_digits.push(overflow);
-        UBig::from_digits(new_digits)
-    }
-
-    /// Shifts the owned `digits` left by `rhs` bits, reusing the buffer.
-    fn shl_val(mut digits: Digits, rhs: usize) -> UBig {
-        let index = BitIndex::from(rhs);
-        if index.digit_index() > MAX_DIGITS - digits.len() {
-            number_too_large();
-        }
-        // Shift the bits in place, then prepend the whole zero digits.
-        let overflow = ibig_core::shl_small(&mut digits, index.bit_index());
-        digits.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
+        let mut digits = Digits::with_capacity(index.digit_index() + lhs.len() + 1);
+        digits.resize(index.digit_index(), Digit::ZERO);
+        digits.extend_from_slice(lhs);
+        let overflow = ibig_core::shl_small(&mut digits[index.digit_index()..], index.bit_index());
         digits.push(overflow);
         UBig::from_digits(digits)
     }
-}
 
-impl BinaryOp<IBig, usize> for ShlOperation {
-    #[inline]
-    fn apply_ref_ref(lhs: &IBig, rhs: &usize) -> IBig {
-        Self::apply_ref_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_ref_val(lhs: &IBig, rhs: usize) -> IBig {
-        match lhs.as_digits() {
-            Small(d) => IBig::shl_digit(d, rhs),
-            Large(digits) => IBig::shl_ref(digits, rhs),
+    fn apply_val(mut lhs: Digits, rhs: usize) -> UBig {
+        let index = BitIndex::from(rhs);
+        if index.digit_index() > MAX_DIGITS - lhs.len() {
+            number_too_large();
         }
-    }
-
-    #[inline]
-    fn apply_val_ref(lhs: IBig, rhs: &usize) -> IBig {
-        Self::apply_val_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_val_val(lhs: IBig, rhs: usize) -> IBig {
-        match lhs.into_digits() {
-            Small(d) => IBig::shl_digit(d, rhs),
-            Large(buffer) => IBig::shl_val(buffer, rhs),
-        }
+        // Shift the bits in place, then prepend the whole zero digits.
+        let overflow = ibig_core::shl_small(&mut lhs, index.bit_index());
+        lhs.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
+        lhs.push(overflow);
+        UBig::from_digits(lhs)
     }
 }
 
-impl_binary_operator!(IBig, usize, Shl::shl, ShlAssign::shl_assign, ShlOperation);
+impl_binary_operator!(
+    UBig,
+    usize,
+    Shl::shl,
+    ShlAssign::shl_assign,
+    PrimitiveRhs<ShlOperation>
+);
 
-impl IBig {
-    /// Shifts a single-digit [`IBig`] left by `rhs` bits. The shifted digit spans at most two
-    /// digits, sitting above `rhs / DIGIT_BITS` prepended zero digits.
+impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
     #[inline]
-    fn shl_digit(digit: SignedDigit, rhs: usize) -> IBig {
-        if digit == SignedDigit::ZERO {
+    fn apply_digit(lhs: SignedDigit, rhs: usize) -> IBig {
+        // Shifting zero is zero (and avoids allocating `rhs / DIGIT_BITS` zero digits).
+        if lhs == SignedDigit::ZERO {
             return IBig::ZERO;
         }
         let index = BitIndex::from(rhs);
-        let (low, high) = ibig_core::shl_small_signed_digit(digit, index.bit_index());
+        let (low, high) = ibig_core::shl_small_signed_digit(lhs, index.bit_index());
         // With no whole-digit offset, the pair is the entire result.
         if index.digit_index() == 0 {
             return IBig::from_two_digits(low, high);
@@ -145,6 +84,7 @@ impl IBig {
         if index.digit_index() >= MAX_DIGITS {
             number_too_large();
         }
+        // The shifted pair sits above `digit_index` prepended zero digits.
         let mut digits = Digits::with_capacity(index.digit_index() + 2);
         digits.resize(index.digit_index(), Digit::ZERO);
         digits.push(low);
@@ -152,166 +92,124 @@ impl IBig {
         IBig::from_digits(digits)
     }
 
-    /// Shifts the signed two's complement `digits` left by `rhs` bits into a freshly allocated
-    /// buffer.
-    fn shl_ref(digits: &[Digit], rhs: usize) -> IBig {
+    fn apply_ref(lhs: &[Digit], rhs: usize) -> IBig {
         let index = BitIndex::from(rhs);
-        if index.digit_index() > MAX_DIGITS - digits.len() {
+        if index.digit_index() > MAX_DIGITS - lhs.len() {
             number_too_large();
         }
-        let mut new_digits = Digits::with_capacity(index.digit_index() + digits.len() + 1);
-        new_digits.resize(index.digit_index(), Digit::ZERO);
-        new_digits.extend_from_slice(digits);
+        let mut digits = Digits::with_capacity(index.digit_index() + lhs.len() + 1);
+        digits.resize(index.digit_index(), Digit::ZERO);
+        digits.extend_from_slice(lhs);
+        // The sign-extended overflow keeps the top digit two's-complement correct.
         let overflow =
-            ibig_core::shl_small_signed(&mut new_digits[index.digit_index()..], index.bit_index());
-        new_digits.push(overflow.cast_unsigned());
-        IBig::from_digits(new_digits)
-    }
-
-    /// Shifts the owned signed two's complement `digits` left by `rhs` bits, reusing the buffer.
-    fn shl_val(mut digits: Digits, rhs: usize) -> IBig {
-        let index = BitIndex::from(rhs);
-        if index.digit_index() > MAX_DIGITS - digits.len() {
-            number_too_large();
-        }
-        // Shift the bits in place (sign-extending the overflow), then prepend zeros.
-        let overflow = ibig_core::shl_small_signed(&mut digits, index.bit_index());
-        digits.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
+            ibig_core::shl_small_signed(&mut digits[index.digit_index()..], index.bit_index());
         digits.push(overflow.cast_unsigned());
         IBig::from_digits(digits)
     }
+
+    fn apply_val(mut lhs: Digits, rhs: usize) -> IBig {
+        let index = BitIndex::from(rhs);
+        if index.digit_index() > MAX_DIGITS - lhs.len() {
+            number_too_large();
+        }
+        // Shift the bits in place (sign-extending the overflow), then prepend zeros.
+        let overflow = ibig_core::shl_small_signed(&mut lhs, index.bit_index());
+        lhs.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
+        lhs.push(overflow.cast_unsigned());
+        IBig::from_digits(lhs)
+    }
 }
+
+impl_binary_operator!(
+    IBig,
+    usize,
+    Shl::shl,
+    ShlAssign::shl_assign,
+    PrimitiveRhs<ShlOperation>
+);
 
 /// Right shift.
-enum ShrOperation {}
+struct ShrOperation;
 
-impl BinaryOp<UBig, usize> for ShrOperation {
+impl BinaryOpDigitsPrimitive<UBig, usize> for ShrOperation {
     #[inline]
-    fn apply_ref_ref(lhs: &UBig, rhs: &usize) -> UBig {
-        Self::apply_ref_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_ref_val(lhs: &UBig, rhs: usize) -> UBig {
-        match lhs.as_digits() {
-            Small(d) => UBig::shr_digit(d, rhs),
-            Large(digits) => UBig::shr_ref(digits, rhs),
-        }
-    }
-
-    #[inline]
-    fn apply_val_ref(lhs: UBig, rhs: &usize) -> UBig {
-        Self::apply_val_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_val_val(lhs: UBig, rhs: usize) -> UBig {
-        match lhs.into_digits() {
-            Small(d) => UBig::shr_digit(d, rhs),
-            Large(buffer) => UBig::shr_val(buffer, rhs),
-        }
-    }
-}
-
-impl_binary_operator!(UBig, usize, Shr::shr, ShrAssign::shr_assign, ShrOperation);
-
-impl UBig {
-    /// Shifts a single-digit [`UBig`] right by `rhs` bits.
-    #[inline]
-    fn shr_digit(d: Digit, rhs: usize) -> UBig {
+    fn apply_digit(lhs: Digit, rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
         if index.digit_index() != 0 {
             return UBig::ZERO;
         }
-        UBig::from_digit(d >> index.bit_index())
+        UBig::from_digit(lhs >> index.bit_index())
     }
 
-    /// Shifts `digits` right by `rhs` bits into a freshly allocated buffer.
-    fn shr_ref(digits: &[Digit], rhs: usize) -> UBig {
+    fn apply_ref(lhs: &[Digit], rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
-        if index.digit_index() >= digits.len() {
+        if index.digit_index() >= lhs.len() {
             return UBig::ZERO;
         }
-        let mut new_digits = Digits::from_slice(&digits[index.digit_index()..]);
-        ibig_core::shr_small(&mut new_digits, index.bit_index());
-        UBig::from_digits(new_digits)
-    }
-
-    /// Shifts the owned `digits` right by `rhs` bits, reusing the buffer.
-    fn shr_val(mut digits: Digits, rhs: usize) -> UBig {
-        let index = BitIndex::from(rhs);
-        if index.digit_index() >= digits.len() {
-            return UBig::ZERO;
-        }
-        digits.drain(..index.digit_index());
+        // Copy only the surviving high digits.
+        let mut digits = Digits::from_slice(&lhs[index.digit_index()..]);
         ibig_core::shr_small(&mut digits, index.bit_index());
         UBig::from_digits(digits)
     }
-}
 
-impl BinaryOp<IBig, usize> for ShrOperation {
-    #[inline]
-    fn apply_ref_ref(lhs: &IBig, rhs: &usize) -> IBig {
-        Self::apply_ref_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_ref_val(lhs: &IBig, rhs: usize) -> IBig {
-        match lhs.as_digits() {
-            Small(d) => IBig::shr_digit(d, rhs),
-            Large(digits) => IBig::shr_ref(digits, rhs),
-        }
-    }
-
-    #[inline]
-    fn apply_val_ref(lhs: IBig, rhs: &usize) -> IBig {
-        Self::apply_val_val(lhs, *rhs)
-    }
-
-    #[inline]
-    fn apply_val_val(lhs: IBig, rhs: usize) -> IBig {
-        match lhs.into_digits() {
-            Small(d) => IBig::shr_digit(d, rhs),
-            Large(buffer) => IBig::shr_val(buffer, rhs),
-        }
-    }
-}
-
-impl_binary_operator!(IBig, usize, Shr::shr, ShrAssign::shr_assign, ShrOperation);
-
-impl IBig {
-    /// Shifts a single-digit [`IBig`] right by `rhs` bits (an arithmetic shift).
-    #[inline]
-    fn shr_digit(digit: SignedDigit, rhs: usize) -> IBig {
-        let small: u32 = rhs.min(DIGIT_BITS_USIZE - 1).try_into().unwrap();
-        IBig::from_digit(digit >> small)
-    }
-
-    /// Shifts the signed two's complement `digits` right by `rhs` bits (an arithmetic shift)
-    /// into a freshly allocated buffer.
-    fn shr_ref(digits: &[Digit], rhs: usize) -> IBig {
+    fn apply_val(mut lhs: Digits, rhs: usize) -> UBig {
         let index = BitIndex::from(rhs);
-        if index.digit_index() >= digits.len() {
-            return IBig::shr_whole(digits);
+        if index.digit_index() >= lhs.len() {
+            return UBig::ZERO;
+        }
+        lhs.drain(..index.digit_index());
+        ibig_core::shr_small(&mut lhs, index.bit_index());
+        UBig::from_digits(lhs)
+    }
+}
+
+impl_binary_operator!(
+    UBig,
+    usize,
+    Shr::shr,
+    ShrAssign::shr_assign,
+    PrimitiveRhs<ShrOperation>
+);
+
+impl BinaryOpDigitsPrimitive<IBig, usize> for ShrOperation {
+    #[inline]
+    fn apply_digit(lhs: SignedDigit, rhs: usize) -> IBig {
+        // Beyond `DIGIT_BITS - 1`, the arithmetic shift saturates to the sign.
+        let small: u32 = rhs.min(DIGIT_BITS_USIZE - 1).try_into().unwrap();
+        IBig::from_digit(lhs >> small)
+    }
+
+    fn apply_ref(lhs: &[Digit], rhs: usize) -> IBig {
+        let index = BitIndex::from(rhs);
+        if index.digit_index() >= lhs.len() {
+            return IBig::shr_whole(lhs);
         }
         // Copy only the surviving high digits.
-        let mut new_digits = Digits::from_slice(&digits[index.digit_index()..]);
-        ibig_core::shr_small_signed(&mut new_digits, index.bit_index());
-        IBig::from_digits(new_digits)
-    }
-
-    /// Shifts the owned signed two's complement `digits` right by `rhs` bits (an arithmetic
-    /// shift), reusing the buffer.
-    fn shr_val(mut digits: Digits, rhs: usize) -> IBig {
-        let index = BitIndex::from(rhs);
-        if index.digit_index() >= digits.len() {
-            return IBig::shr_whole(&digits);
-        }
-        digits.drain(..index.digit_index());
+        let mut digits = Digits::from_slice(&lhs[index.digit_index()..]);
         ibig_core::shr_small_signed(&mut digits, index.bit_index());
         IBig::from_digits(digits)
     }
 
+    fn apply_val(mut lhs: Digits, rhs: usize) -> IBig {
+        let index = BitIndex::from(rhs);
+        if index.digit_index() >= lhs.len() {
+            return IBig::shr_whole(&lhs);
+        }
+        lhs.drain(..index.digit_index());
+        ibig_core::shr_small_signed(&mut lhs, index.bit_index());
+        IBig::from_digits(lhs)
+    }
+}
+
+impl_binary_operator!(
+    IBig,
+    usize,
+    Shr::shr,
+    ShrAssign::shr_assign,
+    PrimitiveRhs<ShrOperation>
+);
+
+impl IBig {
     /// The result of right-shifting the two's complement `digits` past all of its digits: the
     /// sign, `0` or `-1`.
     #[inline]

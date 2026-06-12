@@ -1,7 +1,7 @@
 //! Bitwise operators for [`UBig`] and [`IBig`].
 
 use crate::ops::{
-    CommutativeBinaryOpDigits, UnaryOpDigits, impl_binary_operator, impl_unary_operator,
+    CommutativeBinaryOpDigits, DigitsRhs, UnaryOpDigits, impl_binary_operator, impl_unary_operator,
 };
 use crate::repr::{
     AsDigits,
@@ -49,7 +49,7 @@ impl UBig {
 }
 
 /// Bitwise NOT operation.
-enum NotOperation {}
+struct NotOperation;
 
 impl UnaryOpDigits<IBig> for NotOperation {
     #[inline]
@@ -72,7 +72,7 @@ impl UnaryOpDigits<IBig> for NotOperation {
 impl_unary_operator!(IBig, Not::not, NotOperation);
 
 /// Bitwise AND operation.
-enum BitAndOperation {}
+struct BitAndOperation;
 
 impl CommutativeBinaryOpDigits<UBig> for BitAndOperation {
     #[inline]
@@ -122,7 +122,7 @@ impl_binary_operator!(
     UBig,
     BitAnd::bitand,
     BitAndAssign::bitand_assign,
-    BitAndOperation
+    DigitsRhs<BitAndOperation>
 );
 
 impl CommutativeBinaryOpDigits<IBig> for BitAndOperation {
@@ -212,11 +212,11 @@ impl_binary_operator!(
     IBig,
     BitAnd::bitand,
     BitAndAssign::bitand_assign,
-    BitAndOperation
+    DigitsRhs<BitAndOperation>
 );
 
 /// Bitwise OR operation.
-enum BitOrOperation {}
+struct BitOrOperation;
 
 impl CommutativeBinaryOpDigits<UBig> for BitOrOperation {
     #[inline]
@@ -275,7 +275,7 @@ impl_binary_operator!(
     UBig,
     BitOr::bitor,
     BitOrAssign::bitor_assign,
-    BitOrOperation
+    DigitsRhs<BitOrOperation>
 );
 
 impl CommutativeBinaryOpDigits<IBig> for BitOrOperation {
@@ -366,11 +366,11 @@ impl_binary_operator!(
     IBig,
     BitOr::bitor,
     BitOrAssign::bitor_assign,
-    BitOrOperation
+    DigitsRhs<BitOrOperation>
 );
 
 /// Bitwise XOR operation.
-enum BitXorOperation {}
+struct BitXorOperation;
 
 impl CommutativeBinaryOpDigits<UBig> for BitXorOperation {
     #[inline]
@@ -429,7 +429,7 @@ impl_binary_operator!(
     UBig,
     BitXor::bitxor,
     BitXorAssign::bitxor_assign,
-    BitXorOperation
+    DigitsRhs<BitXorOperation>
 );
 
 impl CommutativeBinaryOpDigits<IBig> for BitXorOperation {
@@ -503,5 +503,5 @@ impl_binary_operator!(
     IBig,
     BitXor::bitxor,
     BitXorAssign::bitxor_assign,
-    BitXorOperation
+    DigitsRhs<BitXorOperation>
 );
