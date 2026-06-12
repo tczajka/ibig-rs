@@ -13,6 +13,7 @@
 
 #![no_std]
 
+mod add;
 mod bits;
 mod bitwise;
 mod bytes;
@@ -20,6 +21,7 @@ mod len;
 mod shift;
 mod sign;
 
+pub use add::{add, add_carry, add_digit, add_same_len};
 pub use bits::{
     BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit, bit_signed, count_ones, highest_one,
     is_power_of_two, lowest_one, lowest_zero, next_power_of_two, set_bit,
