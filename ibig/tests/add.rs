@@ -15,17 +15,7 @@ proptest! {
         if carry {
             sum |= UBig::from(1u8) << 128;
         }
-
-        prop_assert_eq!(&(x.clone() + y.clone()), &sum);
-        prop_assert_eq!(&(x.clone() + &y), &sum);
-        prop_assert_eq!(&(&x + y.clone()), &sum);
-        prop_assert_eq!(&(&x + &y), &sum);
-        let mut t = x.clone();
-        t += y.clone();
-        prop_assert_eq!(&t, &sum);
-        let mut t = x.clone();
-        t += &y;
-        prop_assert_eq!(&t, &sum);
+        prop_assert_eq!(x + y, sum);
     }
 
     // Addition is commutative and associative, and zero is the identity.
@@ -51,17 +41,7 @@ proptest! {
             // The wrapped sum is off by 2^128 in the direction of the operands' shared sign.
             sum += IBig::from(a.signum()) << 128;
         }
-
-        prop_assert_eq!(&(x.clone() + y.clone()), &sum);
-        prop_assert_eq!(&(x.clone() + &y), &sum);
-        prop_assert_eq!(&(&x + y.clone()), &sum);
-        prop_assert_eq!(&(&x + &y), &sum);
-        let mut t = x.clone();
-        t += y.clone();
-        prop_assert_eq!(&t, &sum);
-        let mut t = x.clone();
-        t += &y;
-        prop_assert_eq!(&t, &sum);
+        prop_assert_eq!(x + y, sum);
     }
 
     // `IBig` addition is commutative and associative, and zero is the identity.

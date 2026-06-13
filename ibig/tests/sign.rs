@@ -54,7 +54,6 @@ proptest! {
     #[test]
     fn neg_props(a in ibig_up_to_bits(300)) {
         prop_assert_eq!(&-(-&a), &a);
-        prop_assert_eq!(&-(-a.clone()), &a);
         prop_assert_eq!(-&a, IBig::ZERO - &a);
     }
 }

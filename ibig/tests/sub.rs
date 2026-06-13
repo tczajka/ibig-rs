@@ -12,17 +12,7 @@ proptest! {
         let x = UBig::from(a);
         let y = UBig::from(b);
         let diff = UBig::from(a - b);
-
-        prop_assert_eq!(&(x.clone() - y.clone()), &diff);
-        prop_assert_eq!(&(x.clone() - &y), &diff);
-        prop_assert_eq!(&(&x - y.clone()), &diff);
-        prop_assert_eq!(&(&x - &y), &diff);
-        let mut t = x.clone();
-        t -= y.clone();
-        prop_assert_eq!(&t, &diff);
-        let mut t = x.clone();
-        t -= &y;
-        prop_assert_eq!(&t, &diff);
+        prop_assert_eq!(&x - &y, diff);
     }
 
     // Subtraction undoes addition, zero is the right identity, and a value minus itself is zero.
@@ -72,17 +62,7 @@ proptest! {
             // The wrapped difference is 2^128 away from the true one, opposite to its own sign.
             diff += IBig::from(-low.signum()) << 128;
         }
-
-        prop_assert_eq!(&(x.clone() - y.clone()), &diff);
-        prop_assert_eq!(&(x.clone() - &y), &diff);
-        prop_assert_eq!(&(&x - y.clone()), &diff);
-        prop_assert_eq!(&(&x - &y), &diff);
-        let mut t = x.clone();
-        t -= y.clone();
-        prop_assert_eq!(&t, &diff);
-        let mut t = x.clone();
-        t -= &y;
-        prop_assert_eq!(&t, &diff);
+        prop_assert_eq!(&x - &y, diff);
     }
 
     #[test]

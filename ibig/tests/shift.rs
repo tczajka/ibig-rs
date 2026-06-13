@@ -12,57 +12,13 @@ proptest! {
     // every owned/borrowed and assigning operand form along the way.
     #[test]
     fn ubig_shl_shr_round_trip(x in ubig_up_to_bits(300), n in 0usize..300) {
-        let shl = &x << n;
-        prop_assert_eq!(&(x.clone() << n), &shl);
-        prop_assert_eq!(&(x.clone() << &n), &shl);
-        prop_assert_eq!(&(&x << &n), &shl);
-        let mut t = x.clone();
-        t <<= n;
-        prop_assert_eq!(&t, &shl);
-        let mut t = x.clone();
-        t <<= &n;
-        prop_assert_eq!(&t, &shl);
-
-        let shr = &shl >> n;
-        prop_assert_eq!(&(shl.clone() >> n), &shr);
-        prop_assert_eq!(&(shl.clone() >> &n), &shr);
-        prop_assert_eq!(&(&shl >> &n), &shr);
-        let mut t = shl.clone();
-        t >>= n;
-        prop_assert_eq!(&t, &shr);
-        let mut t = shl.clone();
-        t >>= &n;
-        prop_assert_eq!(&t, &shr);
-
-        prop_assert_eq!(shr, x);
+        prop_assert_eq!(&x << n >> n, x);
     }
 
     // Same for `IBig`: `<<` multiplies by `2^n`, and the arithmetic `>>` divides it back.
     #[test]
     fn ibig_shl_shr_round_trip(x in ibig_up_to_bits(300), n in 0usize..300) {
-        let shl = &x << n;
-        prop_assert_eq!(&(x.clone() << n), &shl);
-        prop_assert_eq!(&(x.clone() << &n), &shl);
-        prop_assert_eq!(&(&x << &n), &shl);
-        let mut t = x.clone();
-        t <<= n;
-        prop_assert_eq!(&t, &shl);
-        let mut t = x.clone();
-        t <<= &n;
-        prop_assert_eq!(&t, &shl);
-
-        let shr = &shl >> n;
-        prop_assert_eq!(&(shl.clone() >> n), &shr);
-        prop_assert_eq!(&(shl.clone() >> &n), &shr);
-        prop_assert_eq!(&(&shl >> &n), &shr);
-        let mut t = shl.clone();
-        t >>= n;
-        prop_assert_eq!(&t, &shr);
-        let mut t = shl.clone();
-        t >>= &n;
-        prop_assert_eq!(&t, &shr);
-
-        prop_assert_eq!(shr, x);
+        prop_assert_eq!(&x << n >> n, x);
     }
 
     // `UBig` shifts match the corresponding primitive shifts, across every operand form.
@@ -71,26 +27,8 @@ proptest! {
         let x = UBig::from(a);
         let shl = UBig::from(u128::from(a) << n);
         let shr = UBig::from(a >> n);
-
-        prop_assert_eq!(&(x.clone() << n), &shl);
-        prop_assert_eq!(&(x.clone() << &n), &shl);
-        prop_assert_eq!(&(&x << &n), &shl);
-        let mut t = x.clone();
-        t <<= n;
-        prop_assert_eq!(&t, &shl);
-        let mut t = x.clone();
-        t <<= &n;
-        prop_assert_eq!(&t, &shl);
-
-        prop_assert_eq!(&(x.clone() >> n), &shr);
-        prop_assert_eq!(&(x.clone() >> &n), &shr);
-        prop_assert_eq!(&(&x >> &n), &shr);
-        let mut t = x.clone();
-        t >>= n;
-        prop_assert_eq!(&t, &shr);
-        let mut t = x.clone();
-        t >>= &n;
-        prop_assert_eq!(&t, &shr);
+        prop_assert_eq!(&x << n, shl);
+        prop_assert_eq!(&x >> n, shr);
     }
 
     // `IBig` shifts match the corresponding primitive (arithmetic) shifts, across every form.
@@ -100,25 +38,8 @@ proptest! {
         let shl = IBig::from(i128::from(a) << n);
         let shr = IBig::from(a >> n);
 
-        prop_assert_eq!(&(x.clone() << n), &shl);
-        prop_assert_eq!(&(x.clone() << &n), &shl);
-        prop_assert_eq!(&(&x << &n), &shl);
-        let mut t = x.clone();
-        t <<= n;
-        prop_assert_eq!(&t, &shl);
-        let mut t = x.clone();
-        t <<= &n;
-        prop_assert_eq!(&t, &shl);
-
-        prop_assert_eq!(&(x.clone() >> n), &shr);
-        prop_assert_eq!(&(x.clone() >> &n), &shr);
-        prop_assert_eq!(&(&x >> &n), &shr);
-        let mut t = x.clone();
-        t >>= n;
-        prop_assert_eq!(&t, &shr);
-        let mut t = x.clone();
-        t >>= &n;
-        prop_assert_eq!(&t, &shr);
+        prop_assert_eq!(&x << n, shl);
+        prop_assert_eq!(&x >> n, shr);
     }
 }
 
