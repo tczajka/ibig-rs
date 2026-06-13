@@ -29,7 +29,7 @@ impl UBig {
             (Small(_), Large(_)) => None,
             // A multi-digit `lhs` minus a single digit never underflows.
             (Large(lhs), Small(b)) => Some(SubOperation::apply_ref_digit(lhs, b)),
-            (Large(lhs), Large(rhs)) => checked_sub_large(lhs, rhs),
+            (Large(lhs), Large(rhs)) => Self::checked_sub_large(lhs, rhs),
         }
     }
 
@@ -45,6 +45,21 @@ impl UBig {
     #[inline]
     pub fn saturating_sub(&self, rhs: &UBig) -> UBig {
         self.checked_sub(rhs).unwrap_or(UBig::ZERO)
+    }
+
+    /// Checked subtraction of multi-digit values.
+    #[inline]
+    fn checked_sub_large(lhs: &[Digit], rhs: &[Digit]) -> Option<UBig> {
+        // A shorter `lhs` is necessarily smaller, and `ibig_core::sub_unsigned_unsigned` requires
+        // `rhs` to not be longer than `lhs`.
+        if lhs.len() < rhs.len() {
+            return None;
+        }
+        let mut digits = Digits::from_slice(lhs);
+        if ibig_core::sub_unsigned_unsigned(&mut digits, rhs) {
+            return None;
+        }
+        Some(UBig::from_digits(digits))
     }
 }
 
@@ -202,18 +217,3 @@ impl_binary_operator!(
     SubAssign::sub_assign,
     DigitsRhs<SubOperation>
 );
-
-/// Checked subtraction of multi-digit values.
-#[inline]
-fn checked_sub_large(lhs: &[Digit], rhs: &[Digit]) -> Option<UBig> {
-    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub_unsigned_unsigned` requires
-    // `rhs` to not be longer than `lhs`.
-    if lhs.len() < rhs.len() {
-        return None;
-    }
-    let mut digits = Digits::from_slice(lhs);
-    if ibig_core::sub_unsigned_unsigned(&mut digits, rhs) {
-        return None;
-    }
-    Some(UBig::from_digits(digits))
-}
