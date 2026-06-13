@@ -1,6 +1,7 @@
 //! Sign and sign-extension of signed digit and byte slices.
 
-use crate::{Digit, SignedDigit};
+use crate::add::add_unsigned_1;
+use crate::{Digit, SignedDigit, not};
 
 /// Returns `true` if the non-empty signed `digits` represent a negative value (the
 /// most-significant digit's sign bit is set).
@@ -20,6 +21,35 @@ use crate::{Digit, SignedDigit};
 #[inline]
 pub const fn is_negative(digits: &[Digit]) -> bool {
     digits.last().unwrap().cast_signed().is_negative()
+}
+
+/// Negates the signed value in the non-empty `digits` in place, returning a sign digit (0 or -1)
+/// that should be appended to `digits`.
+///
+/// The extra digit is needed because negating the most-negative value does not fit in the same
+/// number of digits.
+///
+/// # Panics
+///
+/// Panics if `digits` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, neg};
+/// // -1 negates to 1.
+/// let mut a = [Digit::MAX];
+/// let high = neg(&mut a);
+/// assert_eq!(a, [Digit::from(1u8)]);
+/// assert_eq!(high, SignedDigit::ZERO);
+/// ```
+#[inline]
+pub fn neg(digits: &mut [Digit]) -> SignedDigit {
+    // -x == !x + 1.
+    not(digits);
+    let extension = sign_extension(digits);
+    let carry = add_unsigned_1(digits);
+    extension + SignedDigit::from(carry)
 }
 
 /// Sign-extends the signed value held in `digits[..len]` to fill the rest of

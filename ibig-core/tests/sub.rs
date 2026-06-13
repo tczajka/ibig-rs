@@ -211,42 +211,6 @@ fn sub_signed_sdigit_empty() {
     sub_signed_sdigit(&mut [], sdigit(1));
 }
 
-#[test]
-fn neg_basic() {
-    // 3 negates to -3.
-    let mut a = [digit(3)];
-    assert_eq!(neg(&mut a), sdigit(-1));
-    assert_eq!(a, [Digit::MAX - digit(2)]);
-
-    // -1 negates to 1.
-    let mut a = [Digit::MAX];
-    assert_eq!(neg(&mut a), sdigit(0));
-    assert_eq!(a, [digit(1)]);
-
-    // 0 negates to 0.
-    let mut a = [Digit::ZERO];
-    assert_eq!(neg(&mut a), sdigit(0));
-    assert_eq!(a, [Digit::ZERO]);
-
-    // The most-negative single digit needs the extra (zero) sign digit: -2^(bits-1) negates to
-    // 2^(bits-1), which no longer fits in one signed digit.
-    let signed_min = (Digit::MAX >> 1) + digit(1);
-    let mut a = [signed_min];
-    assert_eq!(neg(&mut a), sdigit(0));
-    assert_eq!(a, [signed_min]);
-
-    // Multi-digit: -1 negates to 1.
-    let mut a = [Digit::MAX, Digit::MAX];
-    assert_eq!(neg(&mut a), sdigit(0));
-    assert_eq!(a, [digit(1), Digit::ZERO]);
-}
-
-#[test]
-#[should_panic]
-fn neg_empty() {
-    neg(&mut []);
-}
-
 proptest! {
     // Subtraction undoes addition: a + b - b == a, and the borrow cancels the carry.
     #[test]

@@ -48,12 +48,12 @@ pub use shift::{
     shr_small_unsigned,
 };
 pub use sign::{
-    extend_signed, extend_signed_bytes, is_negative, sign_extension, sign_extension_byte,
+    extend_signed, extend_signed_bytes, is_negative, neg, sign_extension, sign_extension_byte,
     sign_extension_sdigit,
 };
 pub use sub::{
-    neg, sub_signed_sdigit, sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow,
-    sub_unsigned_digit, sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
+    sub_signed_sdigit, sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
+    sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
 };
 use unative::{INative, UNative};
 

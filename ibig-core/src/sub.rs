@@ -1,7 +1,7 @@
 //! Subtraction.
 
-use crate::add::{add_unsigned_1, add_unsigned_scarry};
-use crate::{Digit, SignedDigit, not, sign_extension, sign_extension_sdigit};
+use crate::add::add_unsigned_scarry;
+use crate::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
 
 /// Subtracts `rhs` from `lhs` in place, returning the borrow out of the most-significant digit.
 ///
@@ -176,33 +176,4 @@ pub fn sub_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
     *low = diff;
     let low_carry = -SignedDigit::from(borrow) - sign_extension_sdigit(rhs);
     add_unsigned_scarry(high, low_carry) + lhs_extension
-}
-
-/// Negates the signed value in the non-empty `digits` in place, returning a sign digit (0 or -1)
-/// that should be appended to `digits`.
-///
-/// The extra digit is needed because negating the most-negative value does not fit in the same
-/// number of digits.
-///
-/// # Panics
-///
-/// Panics if `digits` is empty.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{Digit, SignedDigit, neg};
-/// // -1 negates to 1.
-/// let mut a = [Digit::MAX];
-/// let high = neg(&mut a);
-/// assert_eq!(a, [Digit::from(1u8)]);
-/// assert_eq!(high, SignedDigit::ZERO);
-/// ```
-#[inline]
-pub fn neg(digits: &mut [Digit]) -> SignedDigit {
-    // -x == !x + 1.
-    not(digits);
-    let extension = sign_extension(digits);
-    let carry = add_unsigned_1(digits);
-    extension + SignedDigit::from(carry)
 }
