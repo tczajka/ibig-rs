@@ -1,11 +1,12 @@
 //! Sign operations on [`IBig`].
 
 use crate::IBig;
+use crate::repr::Digits;
 use crate::repr::{
     AsDigits,
     AsDigitsResult::{Large, Small},
 };
-use ibig_core::Digit;
+use ibig_core::{Digit, SignedDigit, sign_extension};
 
 impl IBig {
     /// Returns `true` if the number is negative (less than zero).
@@ -57,5 +58,14 @@ impl IBig {
         } else {
             IBig::from(1i8)
         }
+    }
+}
+
+/// Appends the sign digit returned by a signed addition or subtraction, unless it is a
+/// redundant sign-extension of the digit below it.
+#[inline]
+pub(crate) fn push_sign(digits: &mut Digits, high: SignedDigit) {
+    if high != sign_extension(digits) {
+        digits.push(high.cast_unsigned());
     }
 }

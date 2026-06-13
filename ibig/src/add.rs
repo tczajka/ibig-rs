@@ -2,6 +2,7 @@
 
 use crate::ops::{CommutativeBinaryOpDigits, DigitsRhs, impl_binary_operator};
 use crate::repr::Digits;
+use crate::sign::push_sign;
 use crate::{IBig, UBig};
 use core::ops::{Add, AddAssign};
 use ibig_core::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
@@ -161,14 +162,5 @@ impl_binary_operator!(
 fn push_carry(digits: &mut Digits, carry: bool) {
     if carry {
         digits.push(Digit::from(1u8));
-    }
-}
-
-/// Appends the sign digit of a signed addition, unless it is a redundant sign-extension of
-/// the digit below it.
-#[inline]
-fn push_sign(digits: &mut Digits, high: SignedDigit) {
-    if high != sign_extension(digits) {
-        digits.push(high.cast_unsigned());
     }
 }

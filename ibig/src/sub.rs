@@ -1,14 +1,15 @@
 //! Subtraction.
 
-use crate::UBig;
 use crate::ops::{BinaryOpDigits, DigitsRhs, impl_binary_operator};
 use crate::repr::{
     AsDigits,
     AsDigitsResult::{Large, Small},
     Digits,
 };
+use crate::sign::push_sign;
+use crate::{IBig, UBig};
 use core::ops::{Sub, SubAssign};
-use ibig_core::Digit;
+use ibig_core::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
 
 impl UBig {
     /// Subtracts `rhs` from `self`, returning `None` if the result would be negative.
@@ -48,8 +49,6 @@ impl UBig {
 }
 
 /// Subtraction operation.
-///
-/// Panics when the result would be negative.
 struct SubOperation;
 
 impl BinaryOpDigits<UBig> for SubOperation {
@@ -117,6 +116,89 @@ impl BinaryOpDigits<UBig> for SubOperation {
 impl_binary_operator!(
     UBig,
     UBig,
+    Sub::sub,
+    SubAssign::sub_assign,
+    DigitsRhs<SubOperation>
+);
+
+impl BinaryOpDigits<IBig> for SubOperation {
+    #[inline]
+    fn apply_digit_digit(lhs: SignedDigit, rhs: SignedDigit) -> IBig {
+        let (diff, overflow) = lhs.overflowing_sub(rhs);
+        if overflow {
+            // On overflow `lhs` and `rhs` have opposite signs, and the result's sign is `lhs`'s.
+            IBig::from_two_digits(diff.cast_unsigned(), sign_extension_sdigit(lhs))
+        } else {
+            IBig::from_digit(diff)
+        }
+    }
+
+    #[inline]
+    fn apply_digit_ref(lhs: SignedDigit, rhs: &[Digit]) -> IBig {
+        // `rhs` is longer than the single digit `lhs`; sign-extend `lhs` to match in `apply_val_ref`.
+        let mut digits = Digits::with_capacity(rhs.len() + 1);
+        digits.push(lhs.cast_unsigned());
+        Self::apply_val_ref(digits, rhs)
+    }
+
+    #[inline]
+    fn apply_digit_val(lhs: SignedDigit, rhs: Digits) -> IBig {
+        Self::apply_digit_ref(lhs, &rhs)
+    }
+
+    #[inline]
+    fn apply_ref_digit(lhs: &[Digit], rhs: SignedDigit) -> IBig {
+        // Clone `lhs` with room for a possible sign digit.
+        let mut digits = Digits::with_capacity(lhs.len() + 1);
+        digits.extend_from_slice(lhs);
+        Self::apply_val_digit(digits, rhs)
+    }
+
+    #[inline]
+    fn apply_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
+        // Clone `lhs`, with room for sign-extension up to `rhs`'s length and a possible sign digit.
+        let mut digits = Digits::with_capacity(lhs.len().max(rhs.len()) + 1);
+        digits.extend_from_slice(lhs);
+        Self::apply_val_ref(digits, rhs)
+    }
+
+    #[inline]
+    fn apply_ref_val(lhs: &[Digit], rhs: Digits) -> IBig {
+        Self::apply_ref_ref(lhs, &rhs)
+    }
+
+    #[inline]
+    fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
+        // `lhs` has at least two digits, so it is not shorter than the single-digit `rhs`.
+        let high = ibig_core::sub_signed_signed(&mut lhs, &[rhs.cast_unsigned()]);
+        push_sign(&mut lhs, high);
+        IBig::from_digits(lhs)
+    }
+
+    fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
+        let lhs_len = lhs.len();
+        if lhs_len < rhs.len() {
+            // Sign-extend `lhs` to the length of `rhs`. Reserve for the extension digits
+            // and a possible sign digit.
+            lhs.reserve(rhs.len() - lhs_len + 1);
+            let fill = sign_extension(&lhs).cast_unsigned();
+            lhs.resize(rhs.len(), fill);
+        }
+        let high = ibig_core::sub_signed_signed(&mut lhs, rhs);
+        push_sign(&mut lhs, high);
+        IBig::from_digits(lhs)
+    }
+
+    #[inline]
+    fn apply_val_val(lhs: Digits, rhs: Digits) -> IBig {
+        // Reuse `lhs`'s storage.
+        Self::apply_val_ref(lhs, &rhs)
+    }
+}
+
+impl_binary_operator!(
+    IBig,
+    IBig,
     Sub::sub,
     SubAssign::sub_assign,
     DigitsRhs<SubOperation>
