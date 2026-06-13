@@ -221,8 +221,6 @@ impl IBig {
     /// sign, `0` or `-1`.
     #[inline]
     fn shr_whole(digits: &[Digit]) -> IBig {
-        IBig::from_digit(ibig_core::sign_extension(
-            digits.last().unwrap().cast_signed(),
-        ))
+        IBig::from_digit(ibig_core::sign_extension(digits))
     }
 }

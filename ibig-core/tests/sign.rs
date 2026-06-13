@@ -2,7 +2,7 @@
 
 use ibig_core::{
     Digit, SignedDigit, extend_signed, extend_signed_bytes, is_negative, sign_extension,
-    sign_extension_byte,
+    sign_extension_byte, sign_extension_sdigit,
 };
 
 fn digit(n: u8) -> Digit {
@@ -101,14 +101,30 @@ fn test_extend_signed_bytes_empty() {
 }
 
 #[test]
-fn sign_extension_digit() {
+fn sign_extension_basic() {
+    // A negative value extends with all-ones (-1); a non-negative one with zeros.
+    assert_eq!(sign_extension(&[Digit::MAX]), sdigit(-1)); // -1
+    assert_eq!(sign_extension(&[digit(5)]), SignedDigit::ZERO); // +5
+    // The sign comes from the most-significant digit of a multi-digit value.
+    assert_eq!(sign_extension(&[digit(5), Digit::MAX]), sdigit(-1));
+    assert_eq!(sign_extension(&[Digit::MAX, digit(0)]), SignedDigit::ZERO);
+}
+
+#[test]
+#[should_panic]
+fn sign_extension_empty() {
+    sign_extension(&[]);
+}
+
+#[test]
+fn sign_extension_sdigit_basic() {
     // A negative top digit extends with all-ones (-1); a non-negative one with zeros.
-    assert_eq!(sign_extension(sdigit(-1)), sdigit(-1));
-    assert_eq!(sign_extension(sdigit(5)), SignedDigit::ZERO);
-    assert_eq!(sign_extension(SignedDigit::ZERO), SignedDigit::ZERO);
+    assert_eq!(sign_extension_sdigit(sdigit(-1)), sdigit(-1));
+    assert_eq!(sign_extension_sdigit(sdigit(5)), SignedDigit::ZERO);
+    assert_eq!(sign_extension_sdigit(SignedDigit::ZERO), SignedDigit::ZERO);
     // Only the sign bit matters, not the lower bits.
-    assert_eq!(sign_extension(SignedDigit::MIN), sdigit(-1));
-    assert_eq!(sign_extension(SignedDigit::MAX), SignedDigit::ZERO);
+    assert_eq!(sign_extension_sdigit(SignedDigit::MIN), sdigit(-1));
+    assert_eq!(sign_extension_sdigit(SignedDigit::MAX), SignedDigit::ZERO);
 }
 
 #[test]

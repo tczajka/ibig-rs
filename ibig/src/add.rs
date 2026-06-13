@@ -124,7 +124,7 @@ impl CommutativeBinaryOpDigits<IBig> for AddOperation {
             // Sign-extend `lhs` to the length of `rhs`. Reserve for the extension digits
             // and a possible sign digit.
             lhs.reserve(rhs.len() - lhs_len + 1);
-            let fill = sign_extension(lhs[lhs_len - 1].cast_signed()).cast_unsigned();
+            let fill = sign_extension(&lhs).cast_unsigned();
             lhs.resize(rhs.len(), fill);
         }
         let high = ibig_core::add_signed_signed(&mut lhs, rhs);
@@ -163,7 +163,7 @@ fn push_carry(digits: &mut Digits, carry: bool) {
 /// the digit below it.
 #[inline]
 fn push_sign(digits: &mut Digits, high: SignedDigit) {
-    if high != sign_extension(digits.last().unwrap().cast_signed()) {
+    if high != sign_extension(digits) {
         digits.push(high.cast_unsigned());
     }
 }

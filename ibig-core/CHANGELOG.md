@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `usize`.
 - Replaced `bit_width`, `trailing_zeros` and `trailing_ones` with `highest_one`, `lowest_one`
   and `lowest_zero`, which return `Option<BitIndex>`.
-- `sign_extension` now takes and returns `SignedDigit` instead of `Digit`.
+- `sign_extension` now operates on a signed slice (returning its `SignedDigit` sign digit); the
+  single-digit version is `sign_extension_sdigit`.
 
 ## [0.0.1] - 2026-06-05
 

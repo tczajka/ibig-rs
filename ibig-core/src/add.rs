@@ -1,7 +1,7 @@
 //! Addition.
 
 use crate::sub::sub_unsigned_1;
-use crate::{Digit, SignedDigit, sign_extension};
+use crate::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
 
 /// Adds `rhs` to `lhs` in place, returning the carry out of the most-significant digit.
 ///
@@ -143,8 +143,8 @@ pub fn add_unsigned_1(lhs: &mut [Digit]) -> bool {
 /// ```
 #[inline]
 pub fn add_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
-    let lhs_extension = sign_extension(lhs.last().expect("lhs is empty").cast_signed());
-    let rhs_extension = sign_extension(rhs.last().expect("rhs is empty").cast_signed());
+    let lhs_extension = sign_extension(lhs);
+    let rhs_extension = sign_extension(rhs);
     let (low, high) = lhs.split_at_mut(rhs.len());
     let low_carry = SignedDigit::from(add_unsigned_unsigned_same_len(low, rhs)) + rhs_extension;
     add_signed_scarry(high, low_carry) + lhs_extension
@@ -169,11 +169,11 @@ pub fn add_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
 /// ```
 #[inline]
 pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
-    let lhs_extension = sign_extension(lhs.last().expect("lhs is empty").cast_signed());
+    let lhs_extension = sign_extension(lhs);
     let (low, high) = lhs.split_first_mut().expect("lhs is empty");
     let (sum, carry) = low.overflowing_add(rhs.cast_unsigned());
     *low = sum;
-    let low_carry = SignedDigit::from(carry) + sign_extension(rhs);
+    let low_carry = SignedDigit::from(carry) + sign_extension_sdigit(rhs);
     add_signed_scarry(high, low_carry) + lhs_extension
 }
 
@@ -197,7 +197,7 @@ pub fn add_sdigit_sdigit(lhs: SignedDigit, rhs: SignedDigit) -> (Digit, SignedDi
     let (sum, overflow) = lhs.overflowing_add(rhs);
     // On overflow the true sign is the operands' shared sign; otherwise the high digit is
     // the sum's own (redundant) sign extension.
-    let high = sign_extension(if overflow { lhs } else { sum });
+    let high = sign_extension_sdigit(if overflow { lhs } else { sum });
     (sum.cast_unsigned(), high)
 }
 

@@ -48,7 +48,7 @@ pub fn extend_signed(digits: &mut [Digit], len: usize) {
         len > 0 && len <= digits.len(),
         "len must be in 1..=digits.len()"
     );
-    let fill = sign_extension(digits[len - 1].cast_signed()).cast_unsigned();
+    let fill = sign_extension(&digits[..len]).cast_unsigned();
     digits[len..].fill(fill);
 }
 
@@ -82,18 +82,41 @@ pub fn extend_signed_bytes(bytes: &mut [u8], len: usize) {
     bytes[len..].fill(fill);
 }
 
+/// The sign-extension digit of the signed value in the non-empty `digits`: `-1` (all-ones) if
+/// the value is negative, `0` otherwise. This is the digit that fills positions above the
+/// value.
+///
+/// # Panics
+///
+/// Panics if `digits` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, sign_extension};
+/// assert_eq!(sign_extension(&[Digit::MAX]), SignedDigit::from(-1i8)); // -1
+/// assert_eq!(sign_extension(&[Digit::from(5u8)]), SignedDigit::ZERO); // +5
+/// // The sign comes from the most-significant digit.
+/// assert_eq!(sign_extension(&[Digit::from(5u8), Digit::MAX]), SignedDigit::from(-1i8));
+/// ```
+#[inline]
+pub const fn sign_extension(digits: &[Digit]) -> SignedDigit {
+    let last = digits.last().expect("signed digits are empty");
+    sign_extension_sdigit(last.cast_signed())
+}
+
 /// The sign-extension digit for a signed value whose most-significant digit is
 /// `high`: `-1` (all-ones) if `high` is negative, `0` otherwise.
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{SignedDigit, sign_extension};
-/// assert_eq!(sign_extension(SignedDigit::from(-2i8)), SignedDigit::from(-1i8));
-/// assert_eq!(sign_extension(SignedDigit::from(5i8)), SignedDigit::ZERO);
+/// # use ibig_core::{SignedDigit, sign_extension_sdigit};
+/// assert_eq!(sign_extension_sdigit(SignedDigit::from(-2i8)), SignedDigit::from(-1i8));
+/// assert_eq!(sign_extension_sdigit(SignedDigit::from(5i8)), SignedDigit::ZERO);
 /// ```
 #[inline]
-pub const fn sign_extension(high: SignedDigit) -> SignedDigit {
+pub const fn sign_extension_sdigit(high: SignedDigit) -> SignedDigit {
     // Smear the sign bit across the whole digit: arithmetic-shifting it down to every bit
     // yields all-ones for a negative `high` and all-zeros otherwise.
     high.checked_shr(SignedDigit::BITS - 1).unwrap()

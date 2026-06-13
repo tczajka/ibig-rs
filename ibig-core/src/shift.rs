@@ -1,6 +1,6 @@
 //! Bit shifts.
 
-use crate::{Digit, SignedDigit, sign::sign_extension};
+use crate::{Digit, SignedDigit, sign::sign_extension_sdigit};
 
 /// Shifts `digits` left by `shift` bits in place, returning the overflow.
 ///
@@ -160,7 +160,7 @@ pub fn shl_small_sdigit(digit: SignedDigit, shift: u32) -> (Digit, SignedDigit) 
     assert!(shift < Digit::BITS);
     if shift == 0 {
         // The high digit is pure sign extension.
-        return (digit.cast_unsigned(), sign_extension(digit));
+        return (digit.cast_unsigned(), sign_extension_sdigit(digit));
     }
     // The arithmetic shift sign-extends the high digit.
     (

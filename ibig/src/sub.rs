@@ -111,8 +111,8 @@ impl_binary_operator!(
 /// Checked subtraction of multi-digit values.
 #[inline]
 fn checked_sub_large(lhs: &[Digit], rhs: &[Digit]) -> Option<UBig> {
-    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub_unsigned_unsigned` requires `rhs`
-    //to not be longer than `lhs`.
+    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub_unsigned_unsigned` requires
+    // `rhs` to not be longer than `lhs`.
     if lhs.len() < rhs.len() {
         return None;
     }

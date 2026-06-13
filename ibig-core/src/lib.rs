@@ -49,6 +49,7 @@ pub use shift::{
 };
 pub use sign::{
     extend_signed, extend_signed_bytes, is_negative, sign_extension, sign_extension_byte,
+    sign_extension_sdigit,
 };
 pub use sub::{
     sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,

@@ -2,7 +2,7 @@
 
 use core::hint::assert_unchecked;
 use ibig_core::{
-    DIGIT_BITS_USIZE, Digit, SignedDigit, min_len_signed, min_len_unsigned, sign_extension,
+    DIGIT_BITS_USIZE, Digit, SignedDigit, min_len_signed, min_len_unsigned, sign_extension_sdigit,
 };
 use smallvec::{SmallVec, smallvec};
 
@@ -160,7 +160,7 @@ impl IBig {
     /// where `high` carries the sign.
     #[inline]
     pub(crate) fn from_two_digits(low: Digit, high: SignedDigit) -> IBig {
-        if high == sign_extension(low.cast_signed()) {
+        if high == sign_extension_sdigit(low.cast_signed()) {
             IBig::from_digit(low.cast_signed())
         } else {
             IBig(smallvec![low, high.cast_unsigned()])
