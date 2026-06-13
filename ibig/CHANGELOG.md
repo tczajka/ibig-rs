@@ -11,6 +11,10 @@ Work in progress. This release is a ground-up rewrite of the library, with
 substantial internal changes to representation and algorithms. Expect breaking
 API changes.
 
+### Added
+
+- `UBig::checked_sub`.
+
 ## [0.3.6] - 2022-09-18
 
 ### Added

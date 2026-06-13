@@ -1,10 +1,37 @@
-//! Subtraction operators (`Sub`) for [`UBig`].
+//! Subtraction operators (`Sub`) and checked subtraction for [`UBig`].
 
 use crate::UBig;
 use crate::ops::{BinaryOpDigits, DigitsRhs, impl_binary_operator};
-use crate::repr::Digits;
+use crate::repr::{
+    AsDigits,
+    AsDigitsResult::{Large, Small},
+    Digits,
+};
 use core::ops::{Sub, SubAssign};
 use ibig_core::Digit;
+
+impl UBig {
+    /// Subtracts `rhs` from `self`, returning `None` if the result would be negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(5u8).checked_sub(&UBig::from(3u8)), Some(UBig::from(2u8)));
+    /// assert_eq!(UBig::from(3u8).checked_sub(&UBig::from(5u8)), None);
+    /// ```
+    #[inline]
+    pub fn checked_sub(&self, rhs: &UBig) -> Option<UBig> {
+        match (self.as_digits(), rhs.as_digits()) {
+            (Small(a), Small(b)) => a.checked_sub(b).map(UBig::from_digit),
+            // A multi-digit `rhs` is bigger than any single digit.
+            (Small(_), Large(_)) => None,
+            // A multi-digit `lhs` minus a single digit never underflows.
+            (Large(lhs), Small(b)) => Some(SubOperation::apply_ref_digit(lhs, b)),
+            (Large(lhs), Large(rhs)) => checked_sub_large(lhs, rhs),
+        }
+    }
+}
 
 /// Subtraction operation.
 ///
@@ -80,3 +107,18 @@ impl_binary_operator!(
     SubAssign::sub_assign,
     DigitsRhs<SubOperation>
 );
+
+/// Checked subtraction of multi-digit values.
+#[inline]
+fn checked_sub_large(lhs: &[Digit], rhs: &[Digit]) -> Option<UBig> {
+    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub` requires `rhs` to not be
+    // longer than `lhs`.
+    if lhs.len() < rhs.len() {
+        return None;
+    }
+    let mut digits = Digits::from_slice(lhs);
+    if ibig_core::sub(&mut digits, rhs) {
+        return None;
+    }
+    Some(UBig::from_digits(digits))
+}

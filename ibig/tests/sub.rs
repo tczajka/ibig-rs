@@ -35,6 +35,23 @@ proptest! {
         prop_assert_eq!(&(&a - UBig::ZERO), &a);
         prop_assert_eq!(&a - &a, UBig::ZERO);
     }
+
+    // `UBig::checked_sub` matches `u128::checked_sub`.
+    #[test]
+    fn checked_sub_vs_u128(a: u128, b: u128) {
+        let x = UBig::from(a);
+        let y = UBig::from(b);
+        prop_assert_eq!(x.checked_sub(&y), a.checked_sub(b).map(UBig::from));
+    }
+
+    // `checked_sub` agrees with `-` when the result exists.
+    #[test]
+    fn checked_sub_algebra(
+        a in ubig_up_to_bits(300),
+        b in ubig_up_to_bits(300),
+    ) {
+        prop_assert_eq!((&a + &b).checked_sub(&b), Some(a));
+    }
 }
 
 #[test]
@@ -50,6 +67,26 @@ fn sub_basic() {
     let big = UBig::from(1u8) << 256;
     let almost = UBig::from_le_bytes(&[0xff; 32]);
     assert_eq!(big - UBig::from(1u8), almost);
+}
+
+#[test]
+fn checked_sub_basic() {
+    assert_eq!(
+        UBig::from(5u8).checked_sub(&UBig::from(3u8)),
+        Some(UBig::from(2u8))
+    );
+    assert_eq!(UBig::from(2u8).checked_sub(&UBig::from(3u8)), None);
+    // A single digit is smaller than any multi-digit value.
+    assert_eq!(UBig::from(3u8).checked_sub(&(UBig::from(1u8) << 100)), None);
+    // A multi-digit value minus a single digit never underflows.
+    let big = UBig::from(1u8) << 100;
+    assert_eq!(
+        (&big + UBig::from(1u8)).checked_sub(&UBig::from(1u8)),
+        Some(big.clone())
+    );
+    // Multi-digit underflow: a shorter `lhs`, and a smaller `lhs` of the same length.
+    assert_eq!(big.checked_sub(&(UBig::from(1u8) << 200)), None);
+    assert_eq!(big.checked_sub(&(&big + UBig::from(1u8))), None);
 }
 
 #[test]
