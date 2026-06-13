@@ -4,7 +4,7 @@ use crate::ops::{CommutativeBinaryOpDigits, DigitsRhs, impl_binary_operator};
 use crate::repr::Digits;
 use crate::{IBig, UBig};
 use core::ops::{Add, AddAssign};
-use ibig_core::{Digit, SignedDigit, sign_extension};
+use ibig_core::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
 
 /// Addition operation.
 struct AddOperation;
@@ -85,8 +85,13 @@ impl_binary_operator!(
 impl CommutativeBinaryOpDigits<IBig> for AddOperation {
     #[inline]
     fn apply_digit_digit(lhs: SignedDigit, rhs: SignedDigit) -> IBig {
-        let (low, high) = ibig_core::add_sdigit_sdigit(lhs, rhs);
-        IBig::from_two_digits(low, high)
+        let (sum, overflow) = lhs.overflowing_add(rhs);
+        if overflow {
+            // On overflow `lhs` and `rhs` share a sign, which is the sign of the two-digit result.
+            IBig::from_two_digits(sum.cast_unsigned(), sign_extension_sdigit(lhs))
+        } else {
+            IBig::from_digit(sum)
+        }
     }
 
     #[inline]

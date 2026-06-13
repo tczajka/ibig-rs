@@ -115,3 +115,27 @@ fn ibig_add_basic() {
         IBig::from(UBig::from_le_bytes(&[0xff; 24]))
     );
 }
+
+#[test]
+fn ibig_add_digit_boundary() {
+    // Adding two values at a signed-integer boundary. On the matching word size each pair is a
+    // single-digit-plus-single-digit addition that overflows into a second digit; on the others
+    // it still has to come out right. `i128::from` keeps the expected sum exact.
+    fn check(a: i128, b: i128) {
+        assert_eq!(IBig::from(a) + IBig::from(b), IBig::from(a + b));
+    }
+
+    // The boundaries of each digit width.
+    check(i128::from(i16::MAX), i128::from(i16::MAX));
+    check(i128::from(i16::MIN), i128::from(i16::MIN));
+    check(i128::from(i32::MAX), i128::from(i32::MAX));
+    check(i128::from(i32::MIN), i128::from(i32::MIN));
+    check(i128::from(i64::MAX), i128::from(i64::MAX));
+    check(i128::from(i64::MIN), i128::from(i64::MIN));
+
+    // The smallest additions that overflow a single digit at each width.
+    check(i128::from(i16::MAX), 1);
+    check(i128::from(i16::MIN), -1);
+    check(i128::from(i64::MAX), 1);
+    check(i128::from(i64::MIN), -1);
+}

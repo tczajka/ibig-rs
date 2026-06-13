@@ -177,30 +177,6 @@ pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
     add_signed_scarry(high, low_carry) + lhs_extension
 }
 
-/// Adds two signed digits, returning the two-digit result `(low, high)`.
-///
-/// The two-digit signed number formed by `low` and `high` equals `lhs + rhs`; `high` is a
-/// sign digit (0 or -1).
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{Digit, SignedDigit, add_sdigit_sdigit};
-/// // -1 + -1 == -2
-/// assert_eq!(
-///     add_sdigit_sdigit(SignedDigit::from(-1i8), SignedDigit::from(-1i8)),
-///     (Digit::MAX - Digit::from(1u8), SignedDigit::from(-1i8))
-/// );
-/// ```
-#[inline]
-pub fn add_sdigit_sdigit(lhs: SignedDigit, rhs: SignedDigit) -> (Digit, SignedDigit) {
-    let (sum, overflow) = lhs.overflowing_add(rhs);
-    // On overflow the true sign is the operands' shared sign; otherwise the high digit is
-    // the sum's own (redundant) sign extension.
-    let high = sign_extension_sdigit(if overflow { lhs } else { sum });
-    (sum.cast_unsigned(), high)
-}
-
 /// Adds a signed carry (-1, 0, or 1) to `lhs` in place, returning the carry out of the
 /// most-significant digit (-1, 0, or 1).
 #[inline]

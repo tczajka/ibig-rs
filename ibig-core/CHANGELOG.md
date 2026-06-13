@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`
+- Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`.
 - Addition.
 - Subtraction.
 - Small bit shifts.
-- The sign-extension byte for a most-significant byte: `sign_extension_byte`.
+- More sign extension functions.
 
 ### Changed
 

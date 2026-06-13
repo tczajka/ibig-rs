@@ -1,9 +1,8 @@
 //! Integration tests for addition.
 
 use ibig_core::{
-    Digit, SignedDigit, add_sdigit_sdigit, add_signed_sdigit, add_signed_signed, add_unsigned_1,
-    add_unsigned_carry, add_unsigned_digit, add_unsigned_unsigned, add_unsigned_unsigned_same_len,
-    extend_signed,
+    Digit, SignedDigit, add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry,
+    add_unsigned_digit, add_unsigned_unsigned, add_unsigned_unsigned_same_len, extend_signed,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -202,32 +201,6 @@ fn add_signed_sdigit_empty() {
 }
 
 #[test]
-fn add_sdigit_sdigit_basic() {
-    assert_eq!(
-        add_sdigit_sdigit(sdigit(2), sdigit(3)),
-        (digit(5), sdigit(0))
-    );
-    assert_eq!(
-        add_sdigit_sdigit(sdigit(5), sdigit(-3)),
-        (digit(2), sdigit(0))
-    );
-    assert_eq!(
-        add_sdigit_sdigit(sdigit(-1), sdigit(-1)),
-        (Digit::MAX - digit(1), sdigit(-1))
-    );
-    // A positive sum that overflows into the high digit.
-    assert_eq!(
-        add_sdigit_sdigit(SignedDigit::MAX, SignedDigit::MAX),
-        (Digit::MAX - digit(1), sdigit(0))
-    );
-    // A negative sum that overflows into the high digit.
-    assert_eq!(
-        add_sdigit_sdigit(SignedDigit::MIN, SignedDigit::MIN),
-        (Digit::ZERO, sdigit(-1))
-    );
-}
-
-#[test]
 #[should_panic]
 fn add_signed_signed_rhs_longer() {
     add_signed_signed(&mut [digit(1)], &[digit(1), digit(2)]);
@@ -331,13 +304,5 @@ proptest! {
         let high_slice = add_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
         prop_assert_eq!(via_digit, via_slice);
         prop_assert_eq!(high_digit, high_slice);
-    }
-
-    // `add_sdigit_sdigit` agrees with `add_signed_sdigit` on a one-digit slice.
-    #[test]
-    fn add_sdigit_sdigit_matches_signed_sdigit(a: SignedDigit, b: SignedDigit) {
-        let mut digits = [a.cast_unsigned()];
-        let high = add_signed_sdigit(&mut digits, b);
-        prop_assert_eq!(add_sdigit_sdigit(a, b), (digits[0], high));
     }
 }
