@@ -1,4 +1,4 @@
-//! Addition operators (`Add`) for [`UBig`] and [`IBig`].
+//! Addition.
 
 use crate::ops::{CommutativeBinaryOpDigits, DigitsRhs, impl_binary_operator};
 use crate::repr::Digits;

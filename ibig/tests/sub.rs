@@ -1,4 +1,4 @@
-//! Integration tests for the `UBig` subtraction operator.
+//! Integration tests for subtraction.
 
 use ibig::UBig;
 use ibig::proptest::ubig_up_to_bits;
@@ -52,6 +52,14 @@ proptest! {
     ) {
         prop_assert_eq!((&a + &b).checked_sub(&b), Some(a));
     }
+
+    // `UBig::saturating_sub` matches `u128::saturating_sub`.
+    #[test]
+    fn saturating_sub_vs_u128(a: u128, b: u128) {
+        let x = UBig::from(a);
+        let y = UBig::from(b);
+        prop_assert_eq!(x.saturating_sub(&y), UBig::from(a.saturating_sub(b)));
+    }
 }
 
 #[test]
@@ -87,6 +95,26 @@ fn checked_sub_basic() {
     // Multi-digit underflow: a shorter `lhs`, and a smaller `lhs` of the same length.
     assert_eq!(big.checked_sub(&(UBig::from(1u8) << 200)), None);
     assert_eq!(big.checked_sub(&(&big + UBig::from(1u8))), None);
+}
+
+#[test]
+fn saturating_sub_basic() {
+    assert_eq!(
+        UBig::from(5u8).saturating_sub(&UBig::from(3u8)),
+        UBig::from(2u8)
+    );
+    // Underflow saturates at zero.
+    assert_eq!(UBig::from(3u8).saturating_sub(&UBig::from(5u8)), UBig::ZERO);
+    assert_eq!(
+        UBig::from(3u8).saturating_sub(&(UBig::from(1u8) << 100)),
+        UBig::ZERO
+    );
+    // A large non-underflowing difference is preserved.
+    let big = UBig::from(1u8) << 100;
+    assert_eq!(
+        (&big + UBig::from(7u8)).saturating_sub(&UBig::from(7u8)),
+        big
+    );
 }
 
 #[test]

@@ -1,4 +1,4 @@
-//! Subtraction operators (`Sub`) and checked subtraction for [`UBig`].
+//! Subtraction.
 
 use crate::UBig;
 use crate::ops::{BinaryOpDigits, DigitsRhs, impl_binary_operator};
@@ -30,6 +30,20 @@ impl UBig {
             (Large(lhs), Small(b)) => Some(SubOperation::apply_ref_digit(lhs, b)),
             (Large(lhs), Large(rhs)) => checked_sub_large(lhs, rhs),
         }
+    }
+
+    /// Subtracts `rhs` from `self`, saturating at zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::UBig;
+    /// assert_eq!(UBig::from(5u8).saturating_sub(&UBig::from(3u8)), UBig::from(2u8));
+    /// assert_eq!(UBig::from(3u8).saturating_sub(&UBig::from(5u8)), UBig::ZERO);
+    /// ```
+    #[inline]
+    pub fn saturating_sub(&self, rhs: &UBig) -> UBig {
+        self.checked_sub(rhs).unwrap_or(UBig::ZERO)
     }
 }
 
