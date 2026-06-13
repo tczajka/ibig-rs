@@ -1,9 +1,9 @@
 //! Integration tests for subtraction.
 
 use ibig_core::{
-    Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, sub_signed_sdigit,
-    sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
-    sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
+    Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, neg,
+    sign_extension, sub_signed_sdigit, sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow,
+    sub_unsigned_digit, sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -211,6 +211,42 @@ fn sub_signed_sdigit_empty() {
     sub_signed_sdigit(&mut [], sdigit(1));
 }
 
+#[test]
+fn neg_basic() {
+    // 3 negates to -3.
+    let mut a = [digit(3)];
+    assert_eq!(neg(&mut a), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(2)]);
+
+    // -1 negates to 1.
+    let mut a = [Digit::MAX];
+    assert_eq!(neg(&mut a), sdigit(0));
+    assert_eq!(a, [digit(1)]);
+
+    // 0 negates to 0.
+    let mut a = [Digit::ZERO];
+    assert_eq!(neg(&mut a), sdigit(0));
+    assert_eq!(a, [Digit::ZERO]);
+
+    // The most-negative single digit needs the extra (zero) sign digit: -2^(bits-1) negates to
+    // 2^(bits-1), which no longer fits in one signed digit.
+    let signed_min = (Digit::MAX >> 1) + digit(1);
+    let mut a = [signed_min];
+    assert_eq!(neg(&mut a), sdigit(0));
+    assert_eq!(a, [signed_min]);
+
+    // Multi-digit: -1 negates to 1.
+    let mut a = [Digit::MAX, Digit::MAX];
+    assert_eq!(neg(&mut a), sdigit(0));
+    assert_eq!(a, [digit(1), Digit::ZERO]);
+}
+
+#[test]
+#[should_panic]
+fn neg_empty() {
+    neg(&mut []);
+}
+
 proptest! {
     // Subtraction undoes addition: a + b - b == a, and the borrow cancels the carry.
     #[test]
@@ -322,5 +358,32 @@ proptest! {
         let high_slice = sub_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
         prop_assert_eq!(via_digit, via_slice);
         prop_assert_eq!(high_digit, high_slice);
+    }
+
+    // `a - b == a + (-b)`: subtraction equals adding the negation. `a` and `b` share a length,
+    // and both sides are taken to `a.len() + 2` digits so every result fits exactly.
+    #[test]
+    fn sub_equals_add_neg(
+        (a, b) in (1usize..20)
+            .prop_flat_map(|len| (vec(any::<Digit>(), len), vec(any::<Digit>(), len))),
+    ) {
+        // a - b, sign-extended to a.len() + 2 digits.
+        let mut diff = a.clone();
+        let top = sub_signed_signed(&mut diff, &b);
+        diff.push(top.cast_unsigned());
+        diff.push(sign_extension(&diff).cast_unsigned());
+
+        // -b, exact in b.len() + 1 digits.
+        let mut neg_b = b;
+        let neg_top = neg(&mut neg_b);
+        neg_b.push(neg_top.cast_unsigned());
+
+        // a + (-b), with `a` sign-extended to the same length as `neg_b`.
+        let mut sum = a;
+        sum.push(sign_extension(&sum).cast_unsigned());
+        let sum_top = add_signed_signed(&mut sum, &neg_b);
+        sum.push(sum_top.cast_unsigned());
+
+        prop_assert_eq!(diff, sum);
     }
 }
