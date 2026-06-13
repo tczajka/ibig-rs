@@ -118,8 +118,8 @@ pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
     index.digit_index() < digits.len() && digit_bit(digits[index.digit_index()], index.bit_index())
 }
 
-/// Returns the bit at `index` of the non-empty `digits`, interpreted as a two's complement
-/// signed value. An `index` whose digit is at or above `digits.len()` reads as the sign bit,
+/// Returns the bit at `index` of the non-empty `digits`, interpreted as a signed value.
+/// An `index` whose digit is at or above `digits.len()` reads as the sign bit,
 /// since the value is sign-extended.
 ///
 /// # Panics

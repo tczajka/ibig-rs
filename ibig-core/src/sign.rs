@@ -1,8 +1,8 @@
-//! Sign and sign-extension of two's complement digit and byte slices.
+//! Sign and sign-extension of signed digit and byte slices.
 
 use crate::{Digit, SignedDigit};
 
-/// Returns `true` if the non-empty two's complement `digits` represent a negative value (the
+/// Returns `true` if the non-empty signed `digits` represent a negative value (the
 /// most-significant digit's sign bit is set).
 ///
 /// # Panics
@@ -22,7 +22,7 @@ pub const fn is_negative(digits: &[Digit]) -> bool {
     digits.last().unwrap().cast_signed().is_negative()
 }
 
-/// Sign-extends the two's complement value held in `digits[..len]` to fill the rest of
+/// Sign-extends the signed value held in `digits[..len]` to fill the rest of
 /// `digits` in place: every digit from index `len` onward is set to the value's sign
 /// (all-ones if negative, zero otherwise).
 ///
@@ -52,7 +52,7 @@ pub fn extend_signed(digits: &mut [Digit], len: usize) {
     digits[len..].fill(fill);
 }
 
-/// Sign-extends the two's complement value held in `bytes[..len]` to fill the rest of `bytes`
+/// Sign-extends the signed value held in `bytes[..len]` to fill the rest of `bytes`
 /// in place: every byte from index `len` onward is set to the value's sign (all-ones if
 /// negative, zero otherwise).
 ///
@@ -82,7 +82,7 @@ pub fn extend_signed_bytes(bytes: &mut [u8], len: usize) {
     bytes[len..].fill(fill);
 }
 
-/// The sign-extension digit for a two's complement value whose most-significant digit is
+/// The sign-extension digit for a signed value whose most-significant digit is
 /// `high`: `-1` (all-ones) if `high` is negative, `0` otherwise.
 ///
 /// # Examples
@@ -99,7 +99,7 @@ pub const fn sign_extension(high: SignedDigit) -> SignedDigit {
     high.checked_shr(SignedDigit::BITS - 1).unwrap()
 }
 
-/// The sign-extension byte for a two's complement value whose most-significant byte is `high`:
+/// The sign-extension byte for a signed value whose most-significant byte is `high`:
 /// `-1` (all-ones) if `high` is negative, `0` otherwise.
 ///
 /// # Examples

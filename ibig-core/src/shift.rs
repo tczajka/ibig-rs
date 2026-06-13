@@ -103,10 +103,10 @@ pub fn shr_small(digits: &mut [Digit], shift: u32) {
     }
 }
 
-/// Shifts the signed two's complement value in `digits` left by `shift` bits in place,
-/// returning the sign-extended overflow.
+/// Shifts the signed value in `digits` left by `shift` bits in place, returning the
+/// sign-extended overflow.
 ///
-/// `shift` must be less than [`Digit::BITS`]. The `(len + 1)`-digit two's complement number
+/// `shift` must be less than [`Digit::BITS`]. The `(len + 1)`-digit signed number
 /// formed by the shifted digits followed by the overflow equals the original value shifted
 /// left by `shift`.
 ///
@@ -134,10 +134,10 @@ pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> SignedDigit {
     overflow
 }
 
-/// Shifts a single signed two's complement `digit` left by `shift` bits, returning the
-/// two-digit result `(low, high)`.
+/// Shifts a single signed `digit` left by `shift` bits, returning the two-digit result
+/// `(low, high)`.
 ///
-/// `shift` must be less than [`Digit::BITS`]. The two-digit two's complement number formed by
+/// `shift` must be less than [`Digit::BITS`]. The two-digit signed number formed by
 /// `low` and `high` equals `digit` shifted left by `shift`; the high `BITS - shift` bits of
 /// `high` are filled with the sign of `digit`.
 ///
@@ -169,7 +169,7 @@ pub fn shl_small_signed_digit(digit: SignedDigit, shift: u32) -> (Digit, SignedD
     )
 }
 
-/// Shifts the signed two's complement value in `digits` right by `shift` bits in place (an
+/// Shifts the signed value in `digits` right by `shift` bits in place (an
 /// arithmetic shift, sign-extending). The bits shifted out below the least-significant digit
 /// are discarded.
 ///

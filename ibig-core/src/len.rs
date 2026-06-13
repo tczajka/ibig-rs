@@ -24,7 +24,7 @@ pub const fn min_len(digits: &[Digit]) -> usize {
     len
 }
 
-/// Given non-empty two's complement `digits`, returns the minimum number of digits needed to
+/// Given non-empty signed `digits`, returns the minimum number of digits needed to
 /// represent the value.
 ///
 /// This is the length with redundant most-significant sign-extension digits removed (a top
@@ -81,7 +81,7 @@ pub fn min_len_bytes(bytes: &[u8]) -> usize {
     len
 }
 
-/// Given a non-empty little-endian slice of two's complement bytes, returns the minimum
+/// Given a non-empty slice of signed bytes, returns the minimum
 /// number of bytes needed to represent the value: the length with redundant
 /// most-significant sign-extension bytes removed, but always at least 1.
 ///

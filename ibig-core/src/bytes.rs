@@ -24,7 +24,7 @@ pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
     bytes[len..].fill(0);
 }
 
-/// Writes the little-endian two's complement byte representation of `digits` into `bytes`,
+/// Writes the little-endian signed byte representation of `digits` into `bytes`,
 /// sign-extending to fill `bytes`.
 ///
 /// `bytes.len()` must be at least `digits.len() * Digit::BYTES`.
@@ -121,7 +121,7 @@ pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
     assert!(digit_iter.next().is_none());
 }
 
-/// Fills `digits` from the little-endian two's complement `bytes`.
+/// Fills `digits` from the little-endian signed `bytes`.
 ///
 /// `digits.len()` must equal `bytes.len().div_ceil(Digit::BYTES)`.
 ///
@@ -160,7 +160,7 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
     assert!(i == digits.len());
 }
 
-/// Fills `digits` from the big-endian two's complement `bytes`, sign-extending the
+/// Fills `digits` from the big-endian signed `bytes`, sign-extending the
 /// most-significant digit.
 ///
 /// `digits.len()` must equal `bytes.len().div_ceil(Digit::BYTES)`.
@@ -176,7 +176,7 @@ pub const fn from_bytes_signed(bytes: &[u8], digits: &mut [Digit]) {
 /// let mut digits = [Digit::ZERO; 1];
 /// from_be_bytes_signed(&[1, 2], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
-/// // 0xff is -1 in two's complement; it sign-extends to fill the digit with ones.
+/// // [0xff] is -1; it sign-extends to fill the digit with ones.
 /// from_be_bytes_signed(&[0xff], &mut digits);
 /// assert_eq!(digits, [Digit::MAX]);
 /// ```

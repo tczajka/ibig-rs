@@ -8,8 +8,10 @@
 //! layout is the same on big-endian machines).
 //!
 //! Unless a function's documentation states otherwise, the digits are interpreted as an
-//! unsigned (non-negative) value. Functions that work with signed two's complement values say
-//! so explicitly (and typically have a `_signed` suffix).
+//! unsigned (non-negative) value.
+//!
+//! Functions that work with signed values say so explicitly
+//! (and typically have a `_signed` suffix); signed values are always two's complement.
 
 #![no_std]
 
@@ -49,9 +51,9 @@ use unative::{INative, UNative};
 /// arithmetic.
 pub type Digit = UNative;
 
-/// A [`Digit`] interpreted as a signed (two's complement) value.
+/// A [`Digit`] interpreted as a signed value.
 ///
 /// This is the platform's native signed integer type ([`INative`]), the same width as
-/// [`Digit`]. It is used as the most-significant digit of a signed two's complement
-/// number, where the sign bit lives.
+/// [`Digit`]. It is used as the most-significant digit of a signed number, where the sign
+/// bit lives.
 pub type SignedDigit = INative;

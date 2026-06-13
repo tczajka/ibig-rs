@@ -122,8 +122,8 @@ pub fn add_1(lhs: &mut [Digit]) -> bool {
     true
 }
 
-/// Adds the signed two's complement `rhs` to the signed two's complement `lhs` in place,
-/// returning a sign digit (0 or -1) that should be appended to `lhs`.
+/// Adds the signed `rhs` to the signed `lhs` in place, returning a sign digit (0 or -1) that
+/// should be appended to `lhs`.
 ///
 /// `rhs` must be non-empty and not longer than `lhs`.
 ///
