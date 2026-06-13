@@ -180,7 +180,7 @@ pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
 /// Adds a signed carry (-1, 0, or 1) to `lhs` in place, returning the carry out of the
 /// most-significant digit (-1, 0, or 1).
 #[inline]
-fn add_signed_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
+pub(crate) fn add_signed_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
     if carry > SignedDigit::ZERO {
         SignedDigit::from(add_unsigned_1(lhs))
     } else if carry < SignedDigit::ZERO {

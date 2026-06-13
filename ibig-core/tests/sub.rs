@@ -1,14 +1,19 @@
 //! Integration tests for subtraction.
 
 use ibig_core::{
-    Digit, add_unsigned_unsigned, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
-    sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
+    Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, sub_signed_signed,
+    sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,
+    sub_unsigned_unsigned_same_len,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
+}
+
+fn sdigit(n: i8) -> SignedDigit {
+    SignedDigit::from(n)
 }
 
 #[test]
@@ -128,6 +133,55 @@ fn sub_unsigned_1_basic() {
     assert!(sub_unsigned_1(&mut []));
 }
 
+#[test]
+fn sub_signed_signed_basic() {
+    // Two non-negative values.
+    let mut a = [digit(7), digit(3)];
+    assert_eq!(sub_signed_signed(&mut a, &[digit(5)]), sdigit(0));
+    assert_eq!(a, [digit(2), digit(3)]);
+
+    // 3 - 5 == -2.
+    let mut a = [digit(3)];
+    assert_eq!(sub_signed_signed(&mut a, &[digit(5)]), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+
+    // -1 - -1 == 0.
+    let mut a = [Digit::MAX];
+    assert_eq!(sub_signed_signed(&mut a, &[Digit::MAX]), sdigit(0));
+    assert_eq!(a, [Digit::ZERO]);
+
+    // Subtracting a negative adds: 5 - -3 == 8 (`Digit::MAX - 2` is -3).
+    let mut a = [digit(5)];
+    assert_eq!(
+        sub_signed_signed(&mut a, &[Digit::MAX - digit(2)]),
+        sdigit(0)
+    );
+    assert_eq!(a, [digit(8)]);
+
+    // A negative result that overflows into the returned digit: signed_min - 1.
+    let signed_min = (Digit::MAX >> 1) + digit(1);
+    let mut a = [signed_min];
+    assert_eq!(sub_signed_signed(&mut a, &[digit(1)]), sdigit(-1));
+    assert_eq!(a, [signed_min - digit(1)]);
+
+    // A borrow ripples through the high zero digits: 2^(2*bits) - 1.
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(sub_signed_signed(&mut a, &[digit(1)]), sdigit(0));
+    assert_eq!(a, [Digit::MAX, Digit::MAX, Digit::ZERO]);
+}
+
+#[test]
+#[should_panic]
+fn sub_signed_signed_rhs_longer() {
+    sub_signed_signed(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn sub_signed_signed_rhs_empty() {
+    sub_signed_signed(&mut [digit(1)], &[]);
+}
+
 proptest! {
     // Subtraction undoes addition: a + b - b == a, and the borrow cancels the carry.
     #[test]
@@ -142,6 +196,29 @@ proptest! {
         let borrow = sub_unsigned_unsigned(&mut sum, &shorter);
         prop_assert_eq!(sum, longer);
         prop_assert_eq!(borrow, carry);
+    }
+
+    // Signed subtraction undoes signed addition: a + b - b == a. Each operation's returned sign
+    // digit is appended so the running value stays exact even when it overflows a digit.
+    #[test]
+    fn add_sub_signed_signed_roundtrip(
+        a in vec(any::<Digit>(), 1..20),
+        b in vec(any::<Digit>(), 1..20),
+    ) {
+        let (longer, shorter) = if a.len() >= b.len() { (a, b) } else { (b, a) };
+        let n = longer.len();
+
+        let mut value = longer.clone();
+        let add_top = add_signed_signed(&mut value, &shorter);
+        value.push(add_top.cast_unsigned());
+        let sub_top = sub_signed_signed(&mut value, &shorter);
+        value.push(sub_top.cast_unsigned());
+
+        // The original value, sign-extended to the grown length.
+        let mut expected = longer;
+        expected.resize(value.len(), Digit::ZERO);
+        extend_signed(&mut expected, n);
+        prop_assert_eq!(value, expected);
     }
 
     // `sub_unsigned_unsigned` with a zero-extended `rhs` agrees with
@@ -182,5 +259,28 @@ proptest! {
         let digit_borrow_out = sub_unsigned_digit(&mut via_digit, Digit::from(u8::from(borrow)));
         prop_assert_eq!(via_borrow, via_digit);
         prop_assert_eq!(borrow_out, digit_borrow_out);
+    }
+
+    // `sub_signed_signed` agrees with unsigned subtraction of the operands sign-extended one
+    // digit past `lhs` (a signed difference always fits there, so the unsigned borrow can be
+    // discarded).
+    #[test]
+    fn sub_signed_signed_matches_extended(
+        a in vec(any::<Digit>(), 1..20),
+        b in vec(any::<Digit>(), 1..20),
+    ) {
+        let (mut longer, shorter) = if a.len() >= b.len() { (a, b) } else { (b, a) };
+        let n = longer.len() + 1;
+        let mut x = longer.clone();
+        x.resize(n, Digit::ZERO);
+        extend_signed(&mut x, longer.len());
+        let mut y = shorter.clone();
+        y.resize(n, Digit::ZERO);
+        extend_signed(&mut y, shorter.len());
+        let _ = sub_unsigned_unsigned_same_len(&mut x, &y);
+
+        let top = sub_signed_signed(&mut longer, &shorter);
+        longer.push(top.cast_unsigned());
+        prop_assert_eq!(longer, x);
     }
 }
