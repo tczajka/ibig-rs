@@ -1,7 +1,7 @@
-//! Integration tests for the `UBig` addition operator.
+//! Integration tests for the `UBig` and `IBig` addition operators.
 
-use ibig::UBig;
-use ibig::proptest::ubig_up_to_bits;
+use ibig::proptest::{ibig_up_to_bits, ubig_up_to_bits};
+use ibig::{IBig, UBig};
 use proptest::prelude::*;
 
 proptest! {
@@ -39,6 +39,42 @@ proptest! {
         prop_assert_eq!((&a + &b) + &c, &a + (&b + &c));
         prop_assert_eq!(&(&a + UBig::ZERO), &a);
     }
+
+    // `IBig` addition matches `i128` addition, across every operand form.
+    #[test]
+    fn ibig_vs_i128(a: i128, b: i128) {
+        let x = IBig::from(a);
+        let y = IBig::from(b);
+        let (low, overflow) = a.overflowing_add(b);
+        let mut sum = IBig::from(low);
+        if overflow {
+            // The wrapped sum is off by 2^128 in the direction of the operands' shared sign.
+            sum += IBig::from(a.signum()) << 128;
+        }
+
+        prop_assert_eq!(&(x.clone() + y.clone()), &sum);
+        prop_assert_eq!(&(x.clone() + &y), &sum);
+        prop_assert_eq!(&(&x + y.clone()), &sum);
+        prop_assert_eq!(&(&x + &y), &sum);
+        let mut t = x.clone();
+        t += y.clone();
+        prop_assert_eq!(&t, &sum);
+        let mut t = x.clone();
+        t += &y;
+        prop_assert_eq!(&t, &sum);
+    }
+
+    // `IBig` addition is commutative and associative, and zero is the identity.
+    #[test]
+    fn ibig_algebra(
+        a in ibig_up_to_bits(300),
+        b in ibig_up_to_bits(300),
+        c in ibig_up_to_bits(300),
+    ) {
+        prop_assert_eq!(&a + &b, &b + &a);
+        prop_assert_eq!((&a + &b) + &c, &a + (&b + &c));
+        prop_assert_eq!(&(&a + IBig::ZERO), &a);
+    }
 }
 
 #[test]
@@ -54,4 +90,28 @@ fn add_basic() {
     let almost = UBig::from_le_bytes(&[0xff; 32]);
     let one_more = UBig::from(1u8) << 256;
     assert_eq!(almost + UBig::from(1u8), one_more);
+}
+
+#[test]
+fn ibig_add_basic() {
+    assert_eq!(IBig::from(2) + IBig::from(3), IBig::from(5));
+    assert_eq!(IBig::from(-2) + IBig::from(-3), IBig::from(-5));
+    assert_eq!(IBig::from(5) + IBig::from(-3), IBig::from(2));
+    assert_eq!(IBig::ZERO + IBig::ZERO, IBig::ZERO);
+
+    // A positive sum that grows by a sign digit.
+    assert_eq!(
+        (IBig::from(1) << 255) + (IBig::from(1) << 255),
+        IBig::from(1) << 256
+    );
+
+    // Opposite large values cancel to zero.
+    assert_eq!((IBig::from(1) << 256) + (IBig::from(-1) << 256), IBig::ZERO);
+
+    // A negative single digit sign-extends across a long positive operand:
+    // 2^192 + -1 == 2^192 - 1.
+    assert_eq!(
+        (IBig::from(1) << 192) + IBig::from(-1),
+        IBig::from(UBig::from_le_bytes(&[0xff; 24]))
+    );
 }

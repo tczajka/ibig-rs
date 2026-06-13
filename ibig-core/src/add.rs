@@ -141,17 +141,75 @@ pub fn add_1(lhs: &mut [Digit]) -> bool {
 /// assert_eq!(a, [Digit::MAX - Digit::from(1u8)]);
 /// assert_eq!(high, SignedDigit::from(-1i8));
 /// ```
+#[inline]
 pub fn add_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     let lhs_extension = sign_extension(lhs.last().expect("lhs is empty").cast_signed());
     let rhs_extension = sign_extension(rhs.last().expect("rhs is empty").cast_signed());
     let (low, high) = lhs.split_at_mut(rhs.len());
     let low_carry = SignedDigit::from(add_same_len(low, rhs)) + rhs_extension;
-    let high_carry = if low_carry > SignedDigit::ZERO {
-        SignedDigit::from(add_1(high))
-    } else if low_carry < SignedDigit::ZERO {
-        -SignedDigit::from(sub_1(high))
+    add_signed_carry(high, low_carry) + lhs_extension
+}
+
+/// Adds the signed digit `rhs` to the non-empty signed `lhs` in place, returning a signed digit
+/// (0 or -1) that should be appended to `lhs`.
+///
+/// # Panics
+///
+/// Panics if `lhs` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_signed_digit};
+/// // -1 + -1 == -2
+/// let mut a = [Digit::MAX];
+/// let high = add_signed_digit(&mut a, SignedDigit::from(-1i8));
+/// assert_eq!(a, [Digit::MAX - Digit::from(1u8)]);
+/// assert_eq!(high, SignedDigit::from(-1i8));
+/// ```
+#[inline]
+pub fn add_signed_digit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs.last().expect("lhs is empty").cast_signed());
+    let (low, high) = lhs.split_first_mut().expect("lhs is empty");
+    let (sum, carry) = low.overflowing_add(rhs.cast_unsigned());
+    *low = sum;
+    let low_carry = SignedDigit::from(carry) + sign_extension(rhs);
+    add_signed_carry(high, low_carry) + lhs_extension
+}
+
+/// Adds two signed digits, returning the two-digit result `(low, high)`.
+///
+/// The two-digit signed number formed by `low` and `high` equals `lhs + rhs`; `high` is a
+/// sign digit (0 or -1).
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, carrying_add_signed_digit};
+/// // -1 + -1 == -2
+/// assert_eq!(
+///     carrying_add_signed_digit(SignedDigit::from(-1i8), SignedDigit::from(-1i8)),
+///     (Digit::MAX - Digit::from(1u8), SignedDigit::from(-1i8))
+/// );
+/// ```
+#[inline]
+pub fn carrying_add_signed_digit(lhs: SignedDigit, rhs: SignedDigit) -> (Digit, SignedDigit) {
+    let (sum, overflow) = lhs.overflowing_add(rhs);
+    // On overflow the true sign is the operands' shared sign; otherwise the high digit is
+    // the sum's own (redundant) sign extension.
+    let high = sign_extension(if overflow { lhs } else { sum });
+    (sum.cast_unsigned(), high)
+}
+
+/// Adds a signed carry (-1, 0, or 1) to `lhs` in place, returning the carry out of the
+/// most-significant digit (-1, 0, or 1).
+#[inline]
+fn add_signed_carry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
+    if carry > SignedDigit::ZERO {
+        SignedDigit::from(add_1(lhs))
+    } else if carry < SignedDigit::ZERO {
+        -SignedDigit::from(sub_1(lhs))
     } else {
         SignedDigit::ZERO
-    };
-    high_carry + lhs_extension
+    }
 }

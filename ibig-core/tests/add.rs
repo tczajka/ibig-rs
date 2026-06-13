@@ -1,7 +1,8 @@
 //! Integration tests for addition.
 
 use ibig_core::{
-    Digit, SignedDigit, add, add_1, add_carry, add_digit, add_same_len, add_signed, extend_signed,
+    Digit, SignedDigit, add, add_1, add_carry, add_digit, add_same_len, add_signed,
+    add_signed_digit, carrying_add_signed_digit, extend_signed,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -162,6 +163,61 @@ fn add_signed_basic() {
 }
 
 #[test]
+fn add_signed_digit_basic() {
+    // Two non-negative values.
+    let mut a = [digit(2), digit(3)];
+    assert_eq!(add_signed_digit(&mut a, sdigit(5)), sdigit(0));
+    assert_eq!(a, [digit(7), digit(3)]);
+
+    // -1 + -1 == -2.
+    let mut a = [Digit::MAX];
+    assert_eq!(add_signed_digit(&mut a, sdigit(-1)), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+
+    // The carry propagates into the high digits.
+    let mut a = [Digit::MAX, Digit::ZERO];
+    assert_eq!(add_signed_digit(&mut a, sdigit(1)), sdigit(0));
+    assert_eq!(a, [Digit::ZERO, digit(1)]);
+
+    // A negative digit borrows through all-zeros digits: 2^(2*bits) + -1.
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(add_signed_digit(&mut a, sdigit(-1)), sdigit(0));
+    assert_eq!(a, [Digit::MAX, Digit::MAX, Digit::ZERO]);
+}
+
+#[test]
+#[should_panic]
+fn add_signed_digit_empty() {
+    add_signed_digit(&mut [], sdigit(1));
+}
+
+#[test]
+fn carrying_add_signed_digit_basic() {
+    assert_eq!(
+        carrying_add_signed_digit(sdigit(2), sdigit(3)),
+        (digit(5), sdigit(0))
+    );
+    assert_eq!(
+        carrying_add_signed_digit(sdigit(5), sdigit(-3)),
+        (digit(2), sdigit(0))
+    );
+    assert_eq!(
+        carrying_add_signed_digit(sdigit(-1), sdigit(-1)),
+        (Digit::MAX - digit(1), sdigit(-1))
+    );
+    // A positive sum that overflows into the high digit.
+    assert_eq!(
+        carrying_add_signed_digit(SignedDigit::MAX, SignedDigit::MAX),
+        (Digit::MAX - digit(1), sdigit(0))
+    );
+    // A negative sum that overflows into the high digit.
+    assert_eq!(
+        carrying_add_signed_digit(SignedDigit::MIN, SignedDigit::MIN),
+        (Digit::ZERO, sdigit(-1))
+    );
+}
+
+#[test]
 #[should_panic]
 fn add_signed_rhs_longer() {
     add_signed(&mut [digit(1)], &[digit(1), digit(2)]);
@@ -253,5 +309,24 @@ proptest! {
         let top = add_signed(&mut longer, &shorter);
         longer.push(top.cast_unsigned());
         prop_assert_eq!(longer, x);
+    }
+
+    // `add_signed_digit` agrees with `add_signed` of a one-digit slice.
+    #[test]
+    fn add_signed_digit_matches_add_signed(a in vec(any::<Digit>(), 1..20), d: SignedDigit) {
+        let mut via_digit = a.clone();
+        let mut via_slice = a;
+        let high_digit = add_signed_digit(&mut via_digit, d);
+        let high_slice = add_signed(&mut via_slice, &[d.cast_unsigned()]);
+        prop_assert_eq!(via_digit, via_slice);
+        prop_assert_eq!(high_digit, high_slice);
+    }
+
+    // `carrying_add_signed_digit` agrees with `add_signed_digit` on a one-digit slice.
+    #[test]
+    fn carrying_add_signed_digit_matches_add_signed_digit(a: SignedDigit, b: SignedDigit) {
+        let mut digits = [a.cast_unsigned()];
+        let high = add_signed_digit(&mut digits, b);
+        prop_assert_eq!(carrying_add_signed_digit(a, b), (digits[0], high));
     }
 }
