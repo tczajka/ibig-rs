@@ -1,11 +1,13 @@
 //! Sign operations on [`IBig`].
 
 use crate::IBig;
+use crate::ops::{UnaryOpDigits, impl_unary_operator};
 use crate::repr::Digits;
 use crate::repr::{
     AsDigits,
     AsDigitsResult::{Large, Small},
 };
+use core::ops::Neg;
 use ibig_core::{Digit, SignedDigit, sign_extension};
 
 impl IBig {
@@ -60,6 +62,39 @@ impl IBig {
         }
     }
 }
+
+/// Negation operation.
+struct NegOperation;
+
+impl UnaryOpDigits<IBig> for NegOperation {
+    #[inline]
+    fn apply_digit(operand: SignedDigit) -> IBig {
+        let (neg, overflow) = operand.overflowing_neg();
+        if overflow {
+            // Only `SignedDigit::MIN` overflows; -MIN == 2^(bits-1) needs a second digit.
+            IBig::from_two_digits(neg.cast_unsigned(), SignedDigit::ZERO)
+        } else {
+            IBig::from_digit(neg)
+        }
+    }
+
+    #[inline]
+    fn apply_ref(operand: &[Digit]) -> IBig {
+        // Clone with room for a possible sign digit.
+        let mut digits = Digits::with_capacity(operand.len() + 1);
+        digits.extend_from_slice(operand);
+        Self::apply_val(digits)
+    }
+
+    #[inline]
+    fn apply_val(mut operand: Digits) -> IBig {
+        let high = ibig_core::neg(&mut operand);
+        push_sign(&mut operand, high);
+        IBig::from_digits(operand)
+    }
+}
+
+impl_unary_operator!(IBig, Neg::neg, NegOperation);
 
 /// Appends the sign digit returned by a signed addition or subtraction, unless it is a
 /// redundant sign-extension of the digit below it.

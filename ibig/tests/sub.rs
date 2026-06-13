@@ -85,8 +85,6 @@ proptest! {
         prop_assert_eq!(&t, &diff);
     }
 
-    // `IBig` subtraction undoes addition, zero is the right identity, and a value minus itself
-    // is zero.
     #[test]
     fn ibig_algebra(
         a in ibig_up_to_bits(300),
@@ -95,6 +93,7 @@ proptest! {
         prop_assert_eq!(&((&a + &b) - &b), &a);
         prop_assert_eq!(&(&a - IBig::ZERO), &a);
         prop_assert_eq!(&a - &a, IBig::ZERO);
+        prop_assert_eq!(&a - &b, &a + (-&b));
     }
 }
 
