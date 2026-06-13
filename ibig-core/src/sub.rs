@@ -1,6 +1,6 @@
 //! Subtraction.
 
-use crate::add::add_signed_scarry;
+use crate::add::add_unsigned_scarry;
 use crate::{Digit, SignedDigit, sign_extension};
 
 /// Subtracts `rhs` from `lhs` in place, returning the borrow out of the most-significant digit.
@@ -148,5 +148,5 @@ pub fn sub_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     let (low, high) = lhs.split_at_mut(rhs.len());
     let low_borrow = sub_unsigned_unsigned_same_len(low, rhs);
     let low_carry = -SignedDigit::from(low_borrow) - rhs_extension;
-    add_signed_scarry(high, low_carry) + lhs_extension
+    add_unsigned_scarry(high, low_carry) + lhs_extension
 }

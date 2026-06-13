@@ -78,27 +78,6 @@ pub fn add_unsigned_digit(lhs: &mut [Digit], rhs: Digit) -> bool {
     add_unsigned_carry(high, carry)
 }
 
-/// Adds a carry (0 or 1) to `lhs` in place, returning the carry out of the most-significant
-/// digit.
-///
-/// # Examples
-///
-/// ```
-/// # use ibig_core::{Digit, add_unsigned_carry};
-/// let mut a = [Digit::MAX, Digit::ZERO];
-/// let carry = add_unsigned_carry(&mut a, true);
-/// assert_eq!(a, [Digit::ZERO, Digit::from(1u8)]);
-/// assert!(!carry);
-///
-/// // Without an incoming carry nothing changes.
-/// let mut a = [Digit::MAX];
-/// assert!(!add_unsigned_carry(&mut a, false));
-/// ```
-#[inline]
-pub fn add_unsigned_carry(lhs: &mut [Digit], carry: bool) -> bool {
-    carry && add_unsigned_1(lhs)
-}
-
 /// Adds 1 to `lhs` in place, returning the carry out of the most-significant digit (`true`
 /// exactly when `lhs` is all ones).
 ///
@@ -120,6 +99,42 @@ pub fn add_unsigned_1(lhs: &mut [Digit]) -> bool {
         }
     }
     true
+}
+
+/// Adds a carry (0 or 1) to `lhs` in place, returning the carry out of the most-significant
+/// digit.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, add_unsigned_carry};
+/// let mut a = [Digit::MAX, Digit::ZERO];
+/// let carry = add_unsigned_carry(&mut a, true);
+/// assert_eq!(a, [Digit::ZERO, Digit::from(1u8)]);
+/// assert!(!carry);
+///
+/// // Without an incoming carry nothing changes.
+/// let mut a = [Digit::MAX];
+/// assert!(!add_unsigned_carry(&mut a, false));
+/// ```
+#[inline]
+pub fn add_unsigned_carry(lhs: &mut [Digit], carry: bool) -> bool {
+    carry && add_unsigned_1(lhs)
+}
+
+/// Adds a signed carry (-1, 0, or 1) to unsigned `lhs` in place, returning the carry out of the
+/// most-significant digit (-1, 0, or 1).
+#[inline]
+pub(crate) fn add_unsigned_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
+    if carry == SignedDigit::from(-1i8) {
+        -SignedDigit::from(sub_unsigned_1(lhs))
+    } else if carry == SignedDigit::ZERO {
+        SignedDigit::ZERO
+    } else if carry == SignedDigit::from(1i8) {
+        SignedDigit::from(add_unsigned_1(lhs))
+    } else {
+        panic!("invalid signed carry: {carry}")
+    }
 }
 
 /// Adds the signed `rhs` to the signed `lhs` in place, returning a sign digit (0 or -1) that
@@ -147,7 +162,7 @@ pub fn add_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     let rhs_extension = sign_extension(rhs);
     let (low, high) = lhs.split_at_mut(rhs.len());
     let low_carry = SignedDigit::from(add_unsigned_unsigned_same_len(low, rhs)) + rhs_extension;
-    add_signed_scarry(high, low_carry) + lhs_extension
+    add_unsigned_scarry(high, low_carry) + lhs_extension
 }
 
 /// Adds the signed digit `rhs` to the non-empty signed `lhs` in place, returning a sign digit
@@ -174,18 +189,5 @@ pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
     let (sum, carry) = low.overflowing_add(rhs.cast_unsigned());
     *low = sum;
     let low_carry = SignedDigit::from(carry) + sign_extension_sdigit(rhs);
-    add_signed_scarry(high, low_carry) + lhs_extension
-}
-
-/// Adds a signed carry (-1, 0, or 1) to `lhs` in place, returning the carry out of the
-/// most-significant digit (-1, 0, or 1).
-#[inline]
-pub(crate) fn add_signed_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
-    if carry.is_positive() {
-        SignedDigit::from(add_unsigned_1(lhs))
-    } else if carry.is_negative() {
-        -SignedDigit::from(sub_unsigned_1(lhs))
-    } else {
-        SignedDigit::ZERO
-    }
+    add_unsigned_scarry(high, low_carry) + lhs_extension
 }
