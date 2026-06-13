@@ -181,9 +181,9 @@ pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
 /// most-significant digit (-1, 0, or 1).
 #[inline]
 pub(crate) fn add_signed_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
-    if carry > SignedDigit::ZERO {
+    if carry.is_positive() {
         SignedDigit::from(add_unsigned_1(lhs))
-    } else if carry < SignedDigit::ZERO {
+    } else if carry.is_negative() {
         -SignedDigit::from(sub_unsigned_1(lhs))
     } else {
         SignedDigit::ZERO
