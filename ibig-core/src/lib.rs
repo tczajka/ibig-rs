@@ -52,7 +52,7 @@ pub use sign::{
     sign_extension_sdigit,
 };
 pub use sub::{
-    sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
+    sub_signed_sdigit, sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
     sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
 };
 use unative::{INative, UNative};

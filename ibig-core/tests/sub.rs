@@ -1,9 +1,9 @@
 //! Integration tests for subtraction.
 
 use ibig_core::{
-    Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, sub_signed_signed,
-    sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,
-    sub_unsigned_unsigned_same_len,
+    Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, sub_signed_sdigit,
+    sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit,
+    sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -182,6 +182,35 @@ fn sub_signed_signed_rhs_empty() {
     sub_signed_signed(&mut [digit(1)], &[]);
 }
 
+#[test]
+fn sub_signed_sdigit_basic() {
+    // Two non-negative values.
+    let mut a = [digit(7), digit(3)];
+    assert_eq!(sub_signed_sdigit(&mut a, sdigit(5)), sdigit(0));
+    assert_eq!(a, [digit(2), digit(3)]);
+
+    // 3 - 5 == -2.
+    let mut a = [digit(3)];
+    assert_eq!(sub_signed_sdigit(&mut a, sdigit(5)), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+
+    // Subtracting a negative adds: 5 - -3 == 8.
+    let mut a = [digit(5)];
+    assert_eq!(sub_signed_sdigit(&mut a, sdigit(-3)), sdigit(0));
+    assert_eq!(a, [digit(8)]);
+
+    // A borrow ripples through the high zero digits: 2^(2*bits) - 1.
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(sub_signed_sdigit(&mut a, sdigit(1)), sdigit(0));
+    assert_eq!(a, [Digit::MAX, Digit::MAX, Digit::ZERO]);
+}
+
+#[test]
+#[should_panic]
+fn sub_signed_sdigit_empty() {
+    sub_signed_sdigit(&mut [], sdigit(1));
+}
+
 proptest! {
     // Subtraction undoes addition: a + b - b == a, and the borrow cancels the carry.
     #[test]
@@ -282,5 +311,16 @@ proptest! {
         let top = sub_signed_signed(&mut longer, &shorter);
         longer.push(top.cast_unsigned());
         prop_assert_eq!(longer, x);
+    }
+
+    // `sub_signed_sdigit` agrees with `sub_signed_signed` of a one-digit slice.
+    #[test]
+    fn sub_signed_sdigit_matches_signed_signed(a in vec(any::<Digit>(), 1..20), d: SignedDigit) {
+        let mut via_digit = a.clone();
+        let mut via_slice = a;
+        let high_digit = sub_signed_sdigit(&mut via_digit, d);
+        let high_slice = sub_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
+        prop_assert_eq!(via_digit, via_slice);
+        prop_assert_eq!(high_digit, high_slice);
     }
 }

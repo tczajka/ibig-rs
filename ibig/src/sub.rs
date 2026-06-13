@@ -169,8 +169,7 @@ impl BinaryOpDigits<IBig> for SubOperation {
 
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
-        // `lhs` has at least two digits, so it is not shorter than the single-digit `rhs`.
-        let high = ibig_core::sub_signed_signed(&mut lhs, &[rhs.cast_unsigned()]);
+        let high = ibig_core::sub_signed_sdigit(&mut lhs, rhs);
         push_sign(&mut lhs, high);
         IBig::from_digits(lhs)
     }
