@@ -1,6 +1,7 @@
 //! Addition.
 
-use crate::Digit;
+use crate::sub::sub_1;
+use crate::{Digit, SignedDigit, sign_extension};
 
 /// Adds `rhs` to `lhs` in place, returning the carry out of the most-significant digit.
 ///
@@ -119,4 +120,38 @@ pub fn add_1(lhs: &mut [Digit]) -> bool {
         }
     }
     true
+}
+
+/// Adds the signed two's complement `rhs` to the signed two's complement `lhs` in place,
+/// returning a sign digit (0 or -1) that should be appended to `lhs`.
+///
+/// `rhs` must be non-empty and not longer than `lhs`.
+///
+/// # Panics
+///
+/// Panics if `rhs` is empty or longer than `lhs`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_signed};
+/// // -1 + -1 == -2
+/// let mut a = [Digit::MAX];
+/// let high = add_signed(&mut a, &[Digit::MAX]);
+/// assert_eq!(a, [Digit::MAX - Digit::from(1u8)]);
+/// assert_eq!(high, SignedDigit::from(-1i8));
+/// ```
+pub fn add_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs.last().expect("lhs is empty").cast_signed());
+    let rhs_extension = sign_extension(rhs.last().expect("rhs is empty").cast_signed());
+    let (low, high) = lhs.split_at_mut(rhs.len());
+    let low_carry = SignedDigit::from(add_same_len(low, rhs)) + rhs_extension;
+    let high_carry = if low_carry > SignedDigit::ZERO {
+        SignedDigit::from(add_1(high))
+    } else if low_carry < SignedDigit::ZERO {
+        -SignedDigit::from(sub_1(high))
+    } else {
+        SignedDigit::ZERO
+    };
+    high_carry + lhs_extension
 }

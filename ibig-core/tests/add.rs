@@ -1,11 +1,17 @@
 //! Integration tests for addition.
 
-use ibig_core::{Digit, add, add_1, add_carry, add_digit, add_same_len};
+use ibig_core::{
+    Digit, SignedDigit, add, add_1, add_carry, add_digit, add_same_len, add_signed, extend_signed,
+};
 use proptest::collection::vec;
 use proptest::prelude::*;
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
+}
+
+fn sdigit(n: i8) -> SignedDigit {
+    SignedDigit::from(n)
 }
 
 #[test]
@@ -119,6 +125,54 @@ fn add_1_basic() {
     assert!(add_1(&mut []));
 }
 
+#[test]
+fn add_signed_basic() {
+    // Two non-negative values.
+    let mut a = [digit(2), digit(3)];
+    assert_eq!(add_signed(&mut a, &[digit(5)]), sdigit(0));
+    assert_eq!(a, [digit(7), digit(3)]);
+
+    // -1 + -1 == -2.
+    let mut a = [Digit::MAX];
+    assert_eq!(add_signed(&mut a, &[Digit::MAX]), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+
+    // A positive sum that overflows into the returned digit.
+    let signed_max = Digit::MAX >> 1;
+    let mut a = [signed_max];
+    assert_eq!(add_signed(&mut a, &[digit(1)]), sdigit(0));
+    assert_eq!(a, [signed_max + digit(1)]);
+
+    // A negative sum that overflows into the returned digit: -2^(bits-1) + -2^(bits-1).
+    let signed_min = signed_max + digit(1);
+    let mut a = [signed_min];
+    assert_eq!(add_signed(&mut a, &[signed_min]), sdigit(-1));
+    assert_eq!(a, [Digit::ZERO]);
+
+    // A negative `rhs` sign-extends across the high digits of `lhs` and borrows through
+    // all-zeros digits: 2^(2*bits) + -1.
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(add_signed(&mut a, &[Digit::MAX]), sdigit(0));
+    assert_eq!(a, [Digit::MAX, Digit::MAX, Digit::ZERO]);
+
+    // Mixed signs without overflow: 5 + -3 == 2.
+    let mut a = [digit(5)];
+    assert_eq!(add_signed(&mut a, &[Digit::MAX - digit(2)]), sdigit(0));
+    assert_eq!(a, [digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn add_signed_rhs_longer() {
+    add_signed(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn add_signed_rhs_empty() {
+    add_signed(&mut [digit(1)], &[]);
+}
+
 proptest! {
     // `add` with a zero-extended `rhs` agrees with `add_same_len`.
     #[test]
@@ -177,5 +231,27 @@ proptest! {
         let digit_carry_out = add_digit(&mut via_digit, Digit::from(u8::from(carry)));
         prop_assert_eq!(via_carry, via_digit);
         prop_assert_eq!(carry_out, digit_carry_out);
+    }
+
+    // `add_signed` agrees with unsigned addition of the operands sign-extended one digit past
+    // `lhs` (a signed sum always fits there, so the unsigned carry can be discarded).
+    #[test]
+    fn add_signed_matches_extended_add(
+        a in vec(any::<Digit>(), 1..20),
+        b in vec(any::<Digit>(), 1..20),
+    ) {
+        let (mut longer, shorter) = if a.len() >= b.len() { (a, b) } else { (b, a) };
+        let n = longer.len() + 1;
+        let mut x = longer.clone();
+        x.resize(n, Digit::ZERO);
+        extend_signed(&mut x, longer.len());
+        let mut y = shorter.clone();
+        y.resize(n, Digit::ZERO);
+        extend_signed(&mut y, shorter.len());
+        let _ = add_same_len(&mut x, &y);
+
+        let top = add_signed(&mut longer, &shorter);
+        longer.push(top.cast_unsigned());
+        prop_assert_eq!(longer, x);
     }
 }

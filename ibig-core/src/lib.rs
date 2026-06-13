@@ -22,7 +22,7 @@ mod shift;
 mod sign;
 mod sub;
 
-pub use add::{add, add_1, add_carry, add_digit, add_same_len};
+pub use add::{add, add_1, add_carry, add_digit, add_same_len, add_signed};
 pub use bits::{
     BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit, bit_signed, count_ones, highest_one,
     is_power_of_two, lowest_one, lowest_zero, next_power_of_two, set_bit,

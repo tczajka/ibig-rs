@@ -11,7 +11,7 @@ fn digit(n: u8) -> Digit {
     Digit::from(n)
 }
 
-fn signed(n: i8) -> SignedDigit {
+fn sdigit(n: i8) -> SignedDigit {
     SignedDigit::from(n)
 }
 
@@ -75,7 +75,7 @@ fn shl_small_digit_basic() {
 fn shl_small_signed_basic() {
     // -1 << 1 == -2, with a sign-extended overflow.
     let mut a = [Digit::MAX];
-    assert_eq!(shl_small_signed(&mut a, 1), signed(-1));
+    assert_eq!(shl_small_signed(&mut a, 1), sdigit(-1));
     assert_eq!(a, [!digit(1)]);
 
     // A non-negative value sign-extends to zero overflow.
@@ -85,7 +85,7 @@ fn shl_small_signed_basic() {
 
     // A zero shift yields the sign extension as the overflow digit.
     let mut a = [Digit::MAX]; // -1
-    assert_eq!(shl_small_signed(&mut a, 0), signed(-1));
+    assert_eq!(shl_small_signed(&mut a, 0), sdigit(-1));
     assert_eq!(a, [Digit::MAX]);
     let mut a = [digit(7)]; // +7
     assert_eq!(shl_small_signed(&mut a, 0), SignedDigit::ZERO);
@@ -96,23 +96,23 @@ fn shl_small_signed_basic() {
 fn shl_small_signed_digit_basic() {
     // -1 << 1 == -2, spanning two digits.
     assert_eq!(
-        shl_small_signed_digit(signed(-1), 1),
-        (!digit(1), signed(-1))
+        shl_small_signed_digit(sdigit(-1), 1),
+        (!digit(1), sdigit(-1))
     );
 
     // A non-negative value has a sign-extended (zero) high digit.
     assert_eq!(
-        shl_small_signed_digit(signed(0b101), 2),
+        shl_small_signed_digit(sdigit(0b101), 2),
         (digit(0b10100), SignedDigit::ZERO)
     );
 
     // A zero shift yields the sign extension as the high digit.
     assert_eq!(
-        shl_small_signed_digit(signed(-1), 0),
-        (Digit::MAX, signed(-1))
+        shl_small_signed_digit(sdigit(-1), 0),
+        (Digit::MAX, sdigit(-1))
     );
     assert_eq!(
-        shl_small_signed_digit(signed(7), 0),
+        shl_small_signed_digit(sdigit(7), 0),
         (digit(7), SignedDigit::ZERO)
     );
 }

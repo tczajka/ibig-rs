@@ -9,7 +9,7 @@ fn digit(n: u8) -> Digit {
     Digit::from(n)
 }
 
-fn signed(n: i8) -> SignedDigit {
+fn sdigit(n: i8) -> SignedDigit {
     SignedDigit::from(n)
 }
 
@@ -103,11 +103,11 @@ fn test_extend_signed_bytes_empty() {
 #[test]
 fn sign_extension_digit() {
     // A negative top digit extends with all-ones (-1); a non-negative one with zeros.
-    assert_eq!(sign_extension(signed(-1)), signed(-1));
-    assert_eq!(sign_extension(signed(5)), SignedDigit::ZERO);
+    assert_eq!(sign_extension(sdigit(-1)), sdigit(-1));
+    assert_eq!(sign_extension(sdigit(5)), SignedDigit::ZERO);
     assert_eq!(sign_extension(SignedDigit::ZERO), SignedDigit::ZERO);
     // Only the sign bit matters, not the lower bits.
-    assert_eq!(sign_extension(SignedDigit::MIN), signed(-1));
+    assert_eq!(sign_extension(SignedDigit::MIN), sdigit(-1));
     assert_eq!(sign_extension(SignedDigit::MAX), SignedDigit::ZERO);
 }
 
