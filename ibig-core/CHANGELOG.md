@@ -10,17 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Bit operations: `BitIndex`, `DIGIT_BITS_USIZE`, `count_ones`
-- Addition: `add`, `add_same_len`, `add_digit`, `add_carry`, `add_1`.
-- Subtraction: `sub`, `sub_same_len`, `sub_digit`, `sub_borrow`, `sub_1`.
-- Signed addition: `add_signed`, `add_signed_digit`, `carrying_add_signed_digit`.
-- Small bit shifts (less than a digit): `shl_small`, `shr_small`, `shl_small_signed`,
-  `shr_small_signed`, `shl_small_digit`, `shl_small_signed_digit`.
+- Addition.
+- Subtraction.
+- Small bit shifts.
 - The sign-extension byte for a most-significant byte: `sign_extension_byte`.
 
 ### Changed
 
+- Function names now describe every operand explicitly rather than defaulting to unsigned, using
+  the vocabulary `unsigned`/`signed`/`digit`/`sdigit`/`carry`/`scarry`/`borrow` (e.g.
+  `min_len` → `min_len_unsigned`, `bit` → `bit_unsigned`, `to_bytes` → `to_bytes_unsigned`).
 - Renamed `next_power_of_two_in_place` to `next_power_of_two`.
-- `bit`, `bit_signed` and `set_bit` now take a `BitIndex` instead of a bit position `usize`.
+- `bit_unsigned`, `bit_signed` and `set_bit` now take a `BitIndex` instead of a bit position
+  `usize`.
 - Replaced `bit_width`, `trailing_zeros` and `trailing_ones` with `highest_one`, `lowest_one`
   and `lowest_zero`, which return `Option<BitIndex>`.
 - `sign_extension` now takes and returns `SignedDigit` instead of `Digit`.

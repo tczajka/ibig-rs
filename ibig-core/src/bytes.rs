@@ -13,13 +13,13 @@ use crate::sign::{extend_signed_bytes, sign_extension_byte};
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, to_bytes};
+/// # use ibig_core::{Digit, to_bytes_unsigned};
 /// let mut bytes = vec![0xffu8; 20];
-/// to_bytes(&[Digit::from(0x0102u16)], &mut bytes);
+/// to_bytes_unsigned(&[Digit::from(0x0102u16)], &mut bytes);
 /// assert_eq!(&bytes[..2], &[0x02, 0x01]);
 /// assert!(bytes[2..].iter().all(|&b| b == 0));
 /// ```
-pub fn to_bytes(digits: &[Digit], bytes: &mut [u8]) {
+pub fn to_bytes_unsigned(digits: &[Digit], bytes: &mut [u8]) {
     let len = to_bytes_prefix(digits, bytes);
     bytes[len..].fill(0);
 }
@@ -69,13 +69,13 @@ fn to_bytes_prefix(digits: &[Digit], bytes: &mut [u8]) -> usize {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, from_bytes};
+/// # use ibig_core::{Digit, from_bytes_unsigned};
 /// // Two bytes fit in a single digit at every digit width.
 /// let mut digits = [Digit::ZERO];
-/// from_bytes(&[0x02, 0x01], &mut digits);
+/// from_bytes_unsigned(&[0x02, 0x01], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
 /// ```
-pub const fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
+pub const fn from_bytes_unsigned(bytes: &[u8], digits: &mut [Digit]) {
     assert!(digits.len() == bytes.len().div_ceil(Digit::BYTES));
     let (chunks, rem) = bytes.as_chunks::<{ Digit::BYTES }>();
     let mut i = 0;
@@ -100,13 +100,13 @@ pub const fn from_bytes(bytes: &[u8], digits: &mut [Digit]) {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, from_be_bytes};
+/// # use ibig_core::{Digit, from_be_bytes_unsigned};
 /// // Two bytes fit in a single digit at every digit width.
 /// let mut digits = [Digit::ZERO; 1];
-/// from_be_bytes(&[0x01, 0x02], &mut digits);
+/// from_be_bytes_unsigned(&[0x01, 0x02], &mut digits);
 /// assert_eq!(digits, [Digit::from(0x0102u16)]);
 /// ```
-pub fn from_be_bytes(bytes: &[u8], digits: &mut [Digit]) {
+pub fn from_be_bytes_unsigned(bytes: &[u8], digits: &mut [Digit]) {
     assert_eq!(digits.len(), bytes.len().div_ceil(Digit::BYTES));
     let mut digit_iter = digits.iter_mut();
     let (rem, chunks) = bytes.as_rchunks::<{ Digit::BYTES }>();

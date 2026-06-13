@@ -13,17 +13,17 @@ use crate::Digit;
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sub};
+/// # use ibig_core::{Digit, sub_unsigned_unsigned};
 /// let mut a = [Digit::ZERO, Digit::from(3u8)];
-/// let borrow = sub(&mut a, &[Digit::from(1u8)]);
+/// let borrow = sub_unsigned_unsigned(&mut a, &[Digit::from(1u8)]);
 /// assert_eq!(a, [Digit::MAX, Digit::from(2u8)]);
 /// assert!(!borrow);
 /// ```
 #[inline]
-pub fn sub(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
+pub fn sub_unsigned_unsigned(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
     let (low, high) = lhs.split_at_mut(rhs.len());
-    let borrow = sub_same_len(low, rhs);
-    sub_borrow(high, borrow)
+    let borrow = sub_unsigned_unsigned_same_len(low, rhs);
+    sub_unsigned_borrow(high, borrow)
 }
 
 /// Subtracts `rhs` from `lhs` in place, returning the borrow out of the most-significant digit.
@@ -36,13 +36,13 @@ pub fn sub(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sub_same_len};
+/// # use ibig_core::{Digit, sub_unsigned_unsigned_same_len};
 /// let mut a = [Digit::ZERO, Digit::ZERO];
-/// let borrow = sub_same_len(&mut a, &[Digit::from(1u8), Digit::ZERO]);
+/// let borrow = sub_unsigned_unsigned_same_len(&mut a, &[Digit::from(1u8), Digit::ZERO]);
 /// assert_eq!(a, [Digit::MAX, Digit::MAX]);
 /// assert!(borrow);
 /// ```
-pub fn sub_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
+pub fn sub_unsigned_unsigned_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
     assert_eq!(lhs.len(), rhs.len());
     let mut borrow = false;
     for (l, r) in lhs.iter_mut().zip(rhs) {
@@ -63,18 +63,18 @@ pub fn sub_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sub_digit};
+/// # use ibig_core::{Digit, sub_unsigned_digit};
 /// let mut a = [Digit::ZERO, Digit::from(8u8)];
-/// let borrow = sub_digit(&mut a, Digit::from(1u8));
+/// let borrow = sub_unsigned_digit(&mut a, Digit::from(1u8));
 /// assert_eq!(a, [Digit::MAX, Digit::from(7u8)]);
 /// assert!(!borrow);
 /// ```
 #[inline]
-pub fn sub_digit(lhs: &mut [Digit], rhs: Digit) -> bool {
+pub fn sub_unsigned_digit(lhs: &mut [Digit], rhs: Digit) -> bool {
     let (low, high) = lhs.split_first_mut().expect("lhs is empty");
     let (diff, borrow) = low.overflowing_sub(rhs);
     *low = diff;
-    sub_borrow(high, borrow)
+    sub_unsigned_borrow(high, borrow)
 }
 
 /// Subtracts a borrow (0 or 1) from `lhs` in place, returning the borrow out of the
@@ -83,19 +83,19 @@ pub fn sub_digit(lhs: &mut [Digit], rhs: Digit) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sub_borrow};
+/// # use ibig_core::{Digit, sub_unsigned_borrow};
 /// let mut a = [Digit::ZERO, Digit::from(1u8)];
-/// let borrow = sub_borrow(&mut a, true);
+/// let borrow = sub_unsigned_borrow(&mut a, true);
 /// assert_eq!(a, [Digit::MAX, Digit::ZERO]);
 /// assert!(!borrow);
 ///
 /// // Without an incoming borrow nothing changes.
 /// let mut a = [Digit::ZERO];
-/// assert!(!sub_borrow(&mut a, false));
+/// assert!(!sub_unsigned_borrow(&mut a, false));
 /// ```
 #[inline]
-pub fn sub_borrow(lhs: &mut [Digit], borrow: bool) -> bool {
-    borrow && sub_1(lhs)
+pub fn sub_unsigned_borrow(lhs: &mut [Digit], borrow: bool) -> bool {
+    borrow && sub_unsigned_1(lhs)
 }
 
 /// Subtracts 1 from `lhs` in place, returning the borrow out of the most-significant digit
@@ -104,13 +104,13 @@ pub fn sub_borrow(lhs: &mut [Digit], borrow: bool) -> bool {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, sub_1};
+/// # use ibig_core::{Digit, sub_unsigned_1};
 /// let mut a = [Digit::ZERO, Digit::from(1u8)];
-/// let borrow = sub_1(&mut a);
+/// let borrow = sub_unsigned_1(&mut a);
 /// assert_eq!(a, [Digit::MAX, Digit::ZERO]);
 /// assert!(!borrow);
 /// ```
-pub fn sub_1(lhs: &mut [Digit]) -> bool {
+pub fn sub_unsigned_1(lhs: &mut [Digit]) -> bool {
     for d in lhs.iter_mut() {
         let (diff, overflow) = d.overflowing_sub(Digit::from(1u8));
         *d = diff;

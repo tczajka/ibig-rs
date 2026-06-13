@@ -11,12 +11,12 @@ use crate::sign::{sign_extension, sign_extension_byte};
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, min_len};
-/// assert_eq!(min_len(&[Digit::from(5u8), Digit::from(2u8)]), 2);
-/// assert_eq!(min_len(&[Digit::from(5u8), Digit::ZERO]), 1);
-/// assert_eq!(min_len(&[Digit::ZERO, Digit::ZERO]), 0);
+/// # use ibig_core::{Digit, min_len_unsigned};
+/// assert_eq!(min_len_unsigned(&[Digit::from(5u8), Digit::from(2u8)]), 2);
+/// assert_eq!(min_len_unsigned(&[Digit::from(5u8), Digit::ZERO]), 1);
+/// assert_eq!(min_len_unsigned(&[Digit::ZERO, Digit::ZERO]), 0);
 /// ```
-pub const fn min_len(digits: &[Digit]) -> usize {
+pub const fn min_len_unsigned(digits: &[Digit]) -> usize {
     let mut len = digits.len();
     while len > 0 && digits[len - 1].const_eq(Digit::ZERO) {
         len -= 1;
@@ -62,18 +62,18 @@ pub const fn min_len_signed(digits: &[Digit]) -> usize {
 /// represent the value: the length with the most-significant zero bytes removed.
 ///
 /// This is 0 for the value zero (an empty slice, or a slice of only zero bytes). It is the
-/// byte analogue of [`min_len`].
+/// byte analogue of [`min_len_unsigned`].
 ///
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::min_len_bytes;
-/// assert_eq!(min_len_bytes(&[]), 0);
-/// assert_eq!(min_len_bytes(&[0, 0]), 0);
-/// assert_eq!(min_len_bytes(&[5, 0]), 1);
-/// assert_eq!(min_len_bytes(&[0, 1]), 2);
+/// # use ibig_core::min_len_bytes_unsigned;
+/// assert_eq!(min_len_bytes_unsigned(&[]), 0);
+/// assert_eq!(min_len_bytes_unsigned(&[0, 0]), 0);
+/// assert_eq!(min_len_bytes_unsigned(&[5, 0]), 1);
+/// assert_eq!(min_len_bytes_unsigned(&[0, 1]), 2);
 /// ```
-pub fn min_len_bytes(bytes: &[u8]) -> usize {
+pub fn min_len_bytes_unsigned(bytes: &[u8]) -> usize {
     let mut len = bytes.len();
     while len > 0 && bytes[len - 1] == 0 {
         len -= 1;

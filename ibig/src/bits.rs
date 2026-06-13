@@ -28,7 +28,7 @@ impl UBig {
             Small(digit) => {
                 index < DIGIT_BITS_USIZE && (digit >> index) & Digit::from_u8(1) != Digit::ZERO
             }
-            Large(digits) => ibig_core::bit(digits, BitIndex::from(index)),
+            Large(digits) => ibig_core::bit_unsigned(digits, BitIndex::from(index)),
         }
     }
 

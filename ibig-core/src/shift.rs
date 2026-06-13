@@ -15,19 +15,19 @@ use crate::{Digit, SignedDigit, sign::sign_extension};
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, shl_small};
+/// # use ibig_core::{Digit, shl_small_unsigned};
 /// let mut a = [Digit::from(0b101u8)];
-/// let overflow = shl_small(&mut a, 2);
+/// let overflow = shl_small_unsigned(&mut a, 2);
 /// assert_eq!(a, [Digit::from(0b10100u8)]);
 /// assert_eq!(overflow, Digit::ZERO);
 ///
 /// // The top bit of the low digit is carried into the next digit.
 /// let mut a = [Digit::MAX, Digit::ZERO];
-/// let overflow = shl_small(&mut a, 1);
+/// let overflow = shl_small_unsigned(&mut a, 1);
 /// assert_eq!(a, [!Digit::from(1u8), Digit::from(1u8)]);
 /// assert_eq!(overflow, Digit::ZERO);
 /// ```
-pub fn shl_small(digits: &mut [Digit], shift: u32) -> Digit {
+pub fn shl_small_unsigned(digits: &mut [Digit], shift: u32) -> Digit {
     assert!(shift < Digit::BITS);
     if shift == 0 {
         return Digit::ZERO;
@@ -80,17 +80,17 @@ pub fn shl_small_digit(digit: Digit, shift: u32) -> (Digit, Digit) {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, shr_small};
+/// # use ibig_core::{Digit, shr_small_unsigned};
 /// let mut a = [Digit::from(0b10100u8)];
-/// shr_small(&mut a, 2);
+/// shr_small_unsigned(&mut a, 2);
 /// assert_eq!(a, [Digit::from(0b101u8)]);
 ///
 /// // The high bits of the low digit are pulled down from the next digit.
 /// let mut a = [Digit::ZERO, Digit::from(1u8)];
-/// shr_small(&mut a, 1);
+/// shr_small_unsigned(&mut a, 1);
 /// assert_eq!(a, [Digit::from(1u8) << (Digit::BITS - 1), Digit::ZERO]);
 /// ```
-pub fn shr_small(digits: &mut [Digit], shift: u32) {
+pub fn shr_small_unsigned(digits: &mut [Digit], shift: u32) {
     assert!(shift < Digit::BITS);
     if shift == 0 {
         return;
@@ -128,8 +128,8 @@ pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> SignedDigit {
     let (top, low) = digits.split_last_mut().expect("digits is empty");
     // Shift the lower digits as unsigned and the top digit as signed, stitching the carry
     // into the top digit.
-    let carry = shl_small(low, shift);
-    let (new_top, overflow) = shl_small_signed_digit(top.cast_signed(), shift);
+    let carry = shl_small_unsigned(low, shift);
+    let (new_top, overflow) = shl_small_sdigit(top.cast_signed(), shift);
     *top = new_top | carry;
     overflow
 }
@@ -148,15 +148,15 @@ pub fn shl_small_signed(digits: &mut [Digit], shift: u32) -> SignedDigit {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{Digit, SignedDigit, shl_small_signed_digit};
+/// # use ibig_core::{Digit, SignedDigit, shl_small_sdigit};
 /// // -1 << 1 == -2, spanning two digits.
 /// assert_eq!(
-///     shl_small_signed_digit(SignedDigit::from(-1i8), 1),
+///     shl_small_sdigit(SignedDigit::from(-1i8), 1),
 ///     (!Digit::from(1u8), SignedDigit::from(-1i8))
 /// );
 /// ```
 #[inline]
-pub fn shl_small_signed_digit(digit: SignedDigit, shift: u32) -> (Digit, SignedDigit) {
+pub fn shl_small_sdigit(digit: SignedDigit, shift: u32) -> (Digit, SignedDigit) {
     assert!(shift < Digit::BITS);
     if shift == 0 {
         // The high digit is pure sign extension.

@@ -1,7 +1,9 @@
 //! Contains the definitions of [`UBig`] and [`IBig`] and maintains their invariants.
 
 use core::hint::assert_unchecked;
-use ibig_core::{DIGIT_BITS_USIZE, Digit, SignedDigit, min_len, min_len_signed, sign_extension};
+use ibig_core::{
+    DIGIT_BITS_USIZE, Digit, SignedDigit, min_len_signed, min_len_unsigned, sign_extension,
+};
 use smallvec::{SmallVec, smallvec};
 
 /// Number of [`Digit`]s stored inline before the representation spills to the heap.
@@ -76,8 +78,8 @@ impl UBig {
     ///
     /// Panics if, after normalization, the value has more than [`MAX_DIGITS`] digits.
     pub(crate) fn from_digits(mut digits: Digits) -> UBig {
-        digits.truncate(min_len(&digits));
-        // `min_len` returns 0 for zero, but `UBig` always keeps at least one digit.
+        digits.truncate(min_len_unsigned(&digits));
+        // `min_len_unsigned` returns 0 for zero, but `UBig` always keeps at least one digit.
         if digits.is_empty() {
             digits.push(Digit::ZERO);
         }
@@ -102,7 +104,7 @@ impl UBig {
         assert!(digits.len() <= INLINE_DIGITS);
 
         let mut buffer = [Digit::ZERO; INLINE_DIGITS];
-        let mut len = min_len(digits);
+        let mut len = min_len_unsigned(digits);
         let (dest, _) = buffer.split_at_mut(len);
         let (src, _) = digits.split_at(len);
         dest.copy_from_slice(src);

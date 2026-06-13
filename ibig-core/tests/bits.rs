@@ -1,8 +1,8 @@
 //! Integration tests for bit operations.
 
 use ibig_core::{
-    BitIndex, BitIndexOutOfRange, Digit, bit, bit_signed, count_ones, highest_one, is_power_of_two,
-    lowest_one, lowest_zero, next_power_of_two,
+    BitIndex, BitIndexOutOfRange, Digit, bit_signed, bit_unsigned, count_ones, highest_one,
+    is_power_of_two, lowest_one, lowest_zero, next_power_of_two,
 };
 use proptest::prelude::*;
 
@@ -41,27 +41,27 @@ fn test_bit_index_new_bad_bit() {
 }
 
 #[test]
-fn test_bit() {
+fn test_bit_unsigned() {
     // 0b101 = 5.
     let d = [digit(0b101)];
-    assert!(bit(&d, idx(0)));
-    assert!(!bit(&d, idx(1)));
-    assert!(bit(&d, idx(2)));
-    assert!(!bit(&d, idx(3)));
+    assert!(bit_unsigned(&d, idx(0)));
+    assert!(!bit_unsigned(&d, idx(1)));
+    assert!(bit_unsigned(&d, idx(2)));
+    assert!(!bit_unsigned(&d, idx(3)));
     // The value is zero-extended above its bits.
-    assert!(!bit(&d, idx(BITS - 1)));
-    assert!(!bit(&d, idx(BITS)));
-    assert!(!bit(&d, idx(1000)));
+    assert!(!bit_unsigned(&d, idx(BITS - 1)));
+    assert!(!bit_unsigned(&d, idx(BITS)));
+    assert!(!bit_unsigned(&d, idx(1000)));
     // An empty slice is the value zero: every bit is clear.
-    assert!(!bit(&[], idx(0)));
-    assert!(!bit(&[], idx(1000)));
+    assert!(!bit_unsigned(&[], idx(0)));
+    assert!(!bit_unsigned(&[], idx(1000)));
     // Bits across a digit boundary: low digit all ones, high digit 0b10.
     let d2 = [Digit::MAX, digit(0b10)];
-    assert!(bit(&d2, idx(0)));
-    assert!(bit(&d2, idx(BITS - 1)));
-    assert!(!bit(&d2, idx(BITS))); // bit 0 of 0b10
-    assert!(bit(&d2, idx(BITS + 1))); // bit 1 of 0b10
-    assert!(!bit(&d2, idx(BITS + 2)));
+    assert!(bit_unsigned(&d2, idx(0)));
+    assert!(bit_unsigned(&d2, idx(BITS - 1)));
+    assert!(!bit_unsigned(&d2, idx(BITS))); // bit 0 of 0b10
+    assert!(bit_unsigned(&d2, idx(BITS + 1))); // bit 1 of 0b10
+    assert!(!bit_unsigned(&d2, idx(BITS + 2)));
 }
 
 #[test]

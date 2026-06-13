@@ -41,7 +41,8 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
         let mut digits = Digits::with_capacity(index.digit_index() + lhs.len() + 1);
         digits.resize(index.digit_index(), Digit::ZERO);
         digits.extend_from_slice(lhs);
-        let overflow = ibig_core::shl_small(&mut digits[index.digit_index()..], index.bit_index());
+        let overflow =
+            ibig_core::shl_small_unsigned(&mut digits[index.digit_index()..], index.bit_index());
         digits.push(overflow);
         UBig::from_digits(digits)
     }
@@ -54,7 +55,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShlOperation {
         // The result grows by exactly the prepended zero digits plus the overflow digit.
         lhs.reserve_exact(index.digit_index() + 1);
         // Shift the bits in place, then prepend the whole zero digits.
-        let overflow = ibig_core::shl_small(&mut lhs, index.bit_index());
+        let overflow = ibig_core::shl_small_unsigned(&mut lhs, index.bit_index());
         lhs.insert_many(0, repeat_n(Digit::ZERO, index.digit_index()));
         lhs.push(overflow);
         UBig::from_digits(lhs)
@@ -76,7 +77,7 @@ impl BinaryOpDigitsPrimitive<IBig, usize> for ShlOperation {
             return IBig::ZERO;
         }
         let index = BitIndex::from(rhs);
-        let (low, high) = ibig_core::shl_small_signed_digit(lhs, index.bit_index());
+        let (low, high) = ibig_core::shl_small_sdigit(lhs, index.bit_index());
         // With no whole-digit offset, the pair is the entire result.
         if index.digit_index() == 0 {
             return IBig::from_two_digits(low, high);
@@ -151,7 +152,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShrOperation {
         }
         // Copy only the surviving high digits.
         let mut digits = Digits::from_slice(&lhs[index.digit_index()..]);
-        ibig_core::shr_small(&mut digits, index.bit_index());
+        ibig_core::shr_small_unsigned(&mut digits, index.bit_index());
         UBig::from_digits(digits)
     }
 
@@ -162,7 +163,7 @@ impl BinaryOpDigitsPrimitive<UBig, usize> for ShrOperation {
             return UBig::ZERO;
         }
         lhs.drain(..index.digit_index());
-        ibig_core::shr_small(&mut lhs, index.bit_index());
+        ibig_core::shr_small_unsigned(&mut lhs, index.bit_index());
         UBig::from_digits(lhs)
     }
 }

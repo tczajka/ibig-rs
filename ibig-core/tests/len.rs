@@ -1,13 +1,15 @@
 //! Integration tests for minimal canonical length helpers.
 
-use ibig_core::{Digit, min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
+use ibig_core::{
+    Digit, min_len_bytes_signed, min_len_bytes_unsigned, min_len_signed, min_len_unsigned,
+};
 
 fn digit(n: u8) -> Digit {
     Digit::from(n)
 }
 
 #[test]
-fn test_min_len() {
+fn test_min_len_unsigned() {
     let cases: &[(&[Digit], usize)] = &[
         // Zero needs no digits: empty and all-zero slices collapse to 0.
         (&[], 0),
@@ -23,7 +25,7 @@ fn test_min_len() {
         (&[digit(1), digit(2), digit(3)], 3),
     ];
     for &(digits, expected) in cases {
-        assert_eq!(min_len(digits), expected);
+        assert_eq!(min_len_unsigned(digits), expected);
     }
 }
 
@@ -59,7 +61,7 @@ fn test_min_len_signed_empty() {
 }
 
 #[test]
-fn test_min_len_bytes() {
+fn test_min_len_bytes_unsigned() {
     let cases: &[(&[u8], usize)] = &[
         (&[], 0),
         (&[0], 0),
@@ -70,7 +72,7 @@ fn test_min_len_bytes() {
         (&[0, 1], 2),
     ];
     for &(bytes, expected) in cases {
-        assert_eq!(min_len_bytes(bytes), expected);
+        assert_eq!(min_len_bytes_unsigned(bytes), expected);
     }
 }
 

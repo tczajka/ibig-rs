@@ -165,7 +165,7 @@ macro_rules! try_from_ubig_unsigned {
                             return Err(TryFromBigError);
                         }
                         let mut arr = [0u8; N];
-                        ibig_core::to_bytes(digits, &mut arr);
+                        ibig_core::to_bytes_unsigned(digits, &mut arr);
                         Ok(<$t>::from_le_bytes(arr))
                     }
                 }
@@ -427,7 +427,7 @@ macro_rules! unsigned_from_ibig {
                             return Err(TryFromBigError);
                         }
                         let mut arr = [0u8; N];
-                        ibig_core::to_bytes(digits, &mut arr);
+                        ibig_core::to_bytes_unsigned(digits, &mut arr);
                         Ok(<$t>::from_le_bytes(arr))
                     }
                 }

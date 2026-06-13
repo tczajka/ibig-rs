@@ -26,7 +26,7 @@ impl UBig {
             Small(digit) => digit.to_le_bytes().to_vec(),
             Large(digits) => UBig::to_le_bytes_ref(digits),
         };
-        bytes.truncate(ibig_core::min_len_bytes(&bytes));
+        bytes.truncate(ibig_core::min_len_bytes_unsigned(&bytes));
         bytes
     }
 
@@ -34,7 +34,7 @@ impl UBig {
     #[inline]
     fn to_le_bytes_ref(digits: &[Digit]) -> Vec<u8> {
         let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-        ibig_core::to_bytes(digits, &mut bytes);
+        ibig_core::to_bytes_unsigned(digits, &mut bytes);
         bytes
     }
 
@@ -69,7 +69,7 @@ impl UBig {
     pub fn from_le_bytes(bytes: &[u8]) -> UBig {
         let mut digits = Digits::new();
         digits.resize(bytes.len().div_ceil(Digit::BYTES), Digit::ZERO);
-        ibig_core::from_bytes(bytes, &mut digits);
+        ibig_core::from_bytes_unsigned(bytes, &mut digits);
         UBig::from_digits(digits)
     }
 
@@ -84,7 +84,7 @@ impl UBig {
         let mut digits = [Digit::ZERO; INLINE_DIGITS];
         let n = bytes.len().div_ceil(Digit::BYTES);
         let (used, _) = digits.split_at_mut(n);
-        ibig_core::from_bytes(bytes, used);
+        ibig_core::from_bytes_unsigned(bytes, used);
         UBig::const_from_digits(used)
     }
 
@@ -101,7 +101,7 @@ impl UBig {
     pub fn from_be_bytes(bytes: &[u8]) -> UBig {
         let mut digits = Digits::new();
         digits.resize(bytes.len().div_ceil(Digit::BYTES), Digit::ZERO);
-        ibig_core::from_be_bytes(bytes, &mut digits);
+        ibig_core::from_be_bytes_unsigned(bytes, &mut digits);
         UBig::from_digits(digits)
     }
 }
@@ -134,7 +134,7 @@ impl IBig {
     #[inline]
     fn to_le_bytes_ref(digits: &[Digit]) -> Vec<u8> {
         let mut bytes = vec![0u8; digits.len() * Digit::BYTES];
-        ibig_core::to_bytes(digits, &mut bytes);
+        ibig_core::to_bytes_unsigned(digits, &mut bytes);
         bytes
     }
 

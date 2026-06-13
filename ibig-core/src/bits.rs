@@ -1,6 +1,6 @@
 //! Bit operations.
 
-use crate::{Digit, is_negative, min_len};
+use crate::{Digit, is_negative, min_len_unsigned};
 
 /// The width of a [`Digit`] in bits, as a `usize`.
 pub const DIGIT_BITS_USIZE: usize = Digit::BITS as usize;
@@ -104,17 +104,17 @@ impl TryFrom<BitIndex> for usize {
 /// # Examples
 ///
 /// ```
-/// # use ibig_core::{BitIndex, Digit, bit};
-/// assert!(bit(&[Digit::from(0b101u8)], BitIndex::from(0)));
-/// assert!(!bit(&[Digit::from(0b101u8)], BitIndex::from(1)));
-/// assert!(bit(&[Digit::from(0b101u8)], BitIndex::from(2)));
+/// # use ibig_core::{BitIndex, Digit, bit_unsigned};
+/// assert!(bit_unsigned(&[Digit::from(0b101u8)], BitIndex::from(0)));
+/// assert!(!bit_unsigned(&[Digit::from(0b101u8)], BitIndex::from(1)));
+/// assert!(bit_unsigned(&[Digit::from(0b101u8)], BitIndex::from(2)));
 /// // Above the value's bits.
-/// assert!(!bit(&[Digit::from(5u8)], BitIndex::from(100)));
+/// assert!(!bit_unsigned(&[Digit::from(5u8)], BitIndex::from(100)));
 /// // The low bit of the second digit.
-/// assert!(bit(&[Digit::ZERO, Digit::from(1u8)], BitIndex::new(1, 0)));
+/// assert!(bit_unsigned(&[Digit::ZERO, Digit::from(1u8)], BitIndex::new(1, 0)));
 /// ```
 #[inline]
-pub fn bit(digits: &[Digit], index: BitIndex) -> bool {
+pub fn bit_unsigned(digits: &[Digit], index: BitIndex) -> bool {
     index.digit_index() < digits.len() && digit_bit(digits[index.digit_index()], index.bit_index())
 }
 
@@ -186,7 +186,7 @@ pub fn set_bit(digits: &mut [Digit], index: BitIndex, value: bool) {
 /// ```
 #[inline]
 pub fn highest_one(digits: &[Digit]) -> Option<BitIndex> {
-    let len = min_len(digits);
+    let len = min_len_unsigned(digits);
     if len == 0 {
         None
     } else {
@@ -267,11 +267,11 @@ pub fn count_ones(digits: &[Digit]) -> usize {
 /// ```
 #[inline]
 pub fn is_power_of_two(digits: &[Digit]) -> bool {
-    let len = min_len(digits);
+    let len = min_len_unsigned(digits);
     let Some((top, low)) = digits[..len].split_last() else {
         return false;
     };
-    top.is_power_of_two() && min_len(low) == 0
+    top.is_power_of_two() && min_len_unsigned(low) == 0
 }
 
 /// Replaces the value with the smallest power of two greater than or equal to it.
@@ -296,13 +296,13 @@ pub fn is_power_of_two(digits: &[Digit]) -> bool {
 /// assert_eq!(digits, [Digit::ZERO]);
 /// ```
 pub fn next_power_of_two(digits: &mut [Digit]) -> bool {
-    let len = min_len(digits);
+    let len = min_len_unsigned(digits);
     let top_overflow = 'top_overflow: {
         let Some((top, low)) = digits[..len].split_last_mut() else {
             // len == 0, so overflow
             break 'top_overflow true;
         };
-        let min_len_low = min_len(low);
+        let min_len_low = min_len_unsigned(low);
         if min_len_low != 0 {
             // Clear `low` and add 1 to top.
             low[..min_len_low].fill(Digit::ZERO);

@@ -80,14 +80,14 @@ impl BinaryOpDigits<UBig> for SubOperation {
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
         // `lhs` has at least two digits, so subtracting a single digit cannot underflow.
-        let borrow = ibig_core::sub_digit(&mut lhs, rhs);
+        let borrow = ibig_core::sub_unsigned_digit(&mut lhs, rhs);
         assert!(!borrow);
         UBig::from_digits(lhs)
     }
 
     #[inline]
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
-        if lhs.len() < rhs.len() || ibig_core::sub(&mut lhs, rhs) {
+        if lhs.len() < rhs.len() || ibig_core::sub_unsigned_unsigned(&mut lhs, rhs) {
             UBig::panic_negative();
         }
         UBig::from_digits(lhs)
@@ -111,13 +111,13 @@ impl_binary_operator!(
 /// Checked subtraction of multi-digit values.
 #[inline]
 fn checked_sub_large(lhs: &[Digit], rhs: &[Digit]) -> Option<UBig> {
-    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub` requires `rhs` to not be
-    // longer than `lhs`.
+    // A shorter `lhs` is necessarily smaller, and `ibig_core::sub_unsigned_unsigned` requires `rhs`
+    //to not be longer than `lhs`.
     if lhs.len() < rhs.len() {
         return None;
     }
     let mut digits = Digits::from_slice(lhs);
-    if ibig_core::sub(&mut digits, rhs) {
+    if ibig_core::sub_unsigned_unsigned(&mut digits, rhs) {
         return None;
     }
     Some(UBig::from_digits(digits))

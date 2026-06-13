@@ -7,11 +7,16 @@
 //! least-significant digit first — regardless of the platform's native byte order (so the
 //! layout is the same on big-endian machines).
 //!
-//! Unless a function's documentation states otherwise, the digits are interpreted as an
-//! unsigned (non-negative) value.
+//! Function names describe each operand explicitly. The
+//! operand vocabulary is:
 //!
-//! Functions that work with signed values say so explicitly
-//! (and typically have a `_signed` suffix); signed values are always two's complement.
+//! * `unsigned` — a slice of digits interpreted as an unsigned (non-negative) value
+//! * `signed` — a slice of digits interpreted as a signed value (always two's complement)
+//! * `digit` — a single [`Digit`]
+//! * `sdigit` — a single [`SignedDigit`]
+//! * `carry` — a `bool` carry (0 or 1)
+//! * `scarry` — a [`SignedDigit`] carry (-1, 0, or 1)
+//! * `borrow` — a `bool` borrow (0 or 1)
 
 #![no_std]
 
@@ -25,26 +30,30 @@ mod sign;
 mod sub;
 
 pub use add::{
-    add, add_1, add_carry, add_digit, add_same_len, add_signed, add_signed_digit,
-    carrying_add_signed_digit,
+    add_sdigit_sdigit, add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry,
+    add_unsigned_digit, add_unsigned_unsigned, add_unsigned_unsigned_same_len,
 };
 pub use bits::{
-    BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit, bit_signed, count_ones, highest_one,
-    is_power_of_two, lowest_one, lowest_zero, next_power_of_two, set_bit,
+    BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit_signed, bit_unsigned, count_ones,
+    highest_one, is_power_of_two, lowest_one, lowest_zero, next_power_of_two, set_bit,
 };
 pub use bitwise::{bitand_same_len, bitandnot_same_len, bitor_same_len, bitxor_same_len, not};
 pub use bytes::{
-    from_be_bytes, from_be_bytes_signed, from_bytes, from_bytes_signed, to_bytes, to_bytes_signed,
+    from_be_bytes_signed, from_be_bytes_unsigned, from_bytes_signed, from_bytes_unsigned,
+    to_bytes_signed, to_bytes_unsigned,
 };
-pub use len::{min_len, min_len_bytes, min_len_bytes_signed, min_len_signed};
+pub use len::{min_len_bytes_signed, min_len_bytes_unsigned, min_len_signed, min_len_unsigned};
 pub use shift::{
-    shl_small, shl_small_digit, shl_small_signed, shl_small_signed_digit, shr_small,
-    shr_small_signed,
+    shl_small_digit, shl_small_sdigit, shl_small_signed, shl_small_unsigned, shr_small_signed,
+    shr_small_unsigned,
 };
 pub use sign::{
     extend_signed, extend_signed_bytes, is_negative, sign_extension, sign_extension_byte,
 };
-pub use sub::{sub, sub_1, sub_borrow, sub_digit, sub_same_len};
+pub use sub::{
+    sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,
+    sub_unsigned_unsigned_same_len,
+};
 use unative::{INative, UNative};
 
 /// A single digit of a big integer.

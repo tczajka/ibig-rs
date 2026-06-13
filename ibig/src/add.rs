@@ -26,7 +26,7 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
 
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
-        let carry = ibig_core::add_digit(&mut lhs, rhs);
+        let carry = ibig_core::add_unsigned_digit(&mut lhs, rhs);
         push_carry(&mut lhs, carry);
         UBig::from_digits(lhs)
     }
@@ -47,7 +47,7 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
 
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> UBig {
         let carry = if lhs.len() >= rhs.len() {
-            ibig_core::add(&mut lhs, rhs)
+            ibig_core::add_unsigned_unsigned(&mut lhs, rhs)
         } else {
             // Add the overlapping low digits, then append the high digits of `rhs` and
             // propagate the carry through them. Reserve for the appended digits and a
@@ -55,9 +55,9 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
             let lhs_len = lhs.len();
             lhs.reserve(rhs.len() - lhs_len + 1);
             let (rhs_low, rhs_high) = rhs.split_at(lhs_len);
-            let low_carry = ibig_core::add_same_len(&mut lhs, rhs_low);
+            let low_carry = ibig_core::add_unsigned_unsigned_same_len(&mut lhs, rhs_low);
             lhs.extend_from_slice(rhs_high);
-            ibig_core::add_carry(&mut lhs[lhs_len..], low_carry)
+            ibig_core::add_unsigned_carry(&mut lhs[lhs_len..], low_carry)
         };
         push_carry(&mut lhs, carry);
         UBig::from_digits(lhs)
@@ -85,7 +85,7 @@ impl_binary_operator!(
 impl CommutativeBinaryOpDigits<IBig> for AddOperation {
     #[inline]
     fn apply_digit_digit(lhs: SignedDigit, rhs: SignedDigit) -> IBig {
-        let (low, high) = ibig_core::carrying_add_signed_digit(lhs, rhs);
+        let (low, high) = ibig_core::add_sdigit_sdigit(lhs, rhs);
         IBig::from_two_digits(low, high)
     }
 
@@ -99,7 +99,7 @@ impl CommutativeBinaryOpDigits<IBig> for AddOperation {
 
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
-        let high = ibig_core::add_signed_digit(&mut lhs, rhs);
+        let high = ibig_core::add_signed_sdigit(&mut lhs, rhs);
         push_sign(&mut lhs, high);
         IBig::from_digits(lhs)
     }
@@ -127,7 +127,7 @@ impl CommutativeBinaryOpDigits<IBig> for AddOperation {
             let fill = sign_extension(lhs[lhs_len - 1].cast_signed()).cast_unsigned();
             lhs.resize(rhs.len(), fill);
         }
-        let high = ibig_core::add_signed(&mut lhs, rhs);
+        let high = ibig_core::add_signed_signed(&mut lhs, rhs);
         push_sign(&mut lhs, high);
         IBig::from_digits(lhs)
     }
