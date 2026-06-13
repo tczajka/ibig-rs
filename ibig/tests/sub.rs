@@ -110,6 +110,13 @@ fn ubig_sub_basic() {
     let big = UBig::from(1u8) << 256;
     let almost = UBig::from_le_bytes(&[0xff; 32]);
     assert_eq!(big - UBig::from(1u8), almost);
+
+    // `&lhs - owned_rhs`
+    let a = (UBig::from(1u8) << 200) + UBig::from(123u8);
+    let same_len = (UBig::from(1u8) << 200) - UBig::from(1u8);
+    assert_eq!(&a - same_len.clone(), &a - &same_len);
+    let shorter = UBig::from(5u8) << 100;
+    assert_eq!(&a - shorter.clone(), &a - &shorter);
 }
 
 #[test]

@@ -54,6 +54,34 @@ pub fn sub_unsigned_unsigned_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool 
     borrow
 }
 
+/// Assigns `lhs = rhs - lhs` in place, returning the borrow out of the most-significant digit.
+/// The slices must have the same length.
+///
+/// # Panics
+///
+/// Panics if `lhs` and `rhs` have different lengths.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, sub_reverse_unsigned_unsigned_same_len};
+/// // 5 - 3 stored back into the first slice.
+/// let mut a = [Digit::from(3u8)];
+/// let borrow = sub_reverse_unsigned_unsigned_same_len(&mut a, &[Digit::from(5u8)]);
+/// assert_eq!(a, [Digit::from(2u8)]);
+/// assert!(!borrow);
+/// ```
+pub fn sub_reverse_unsigned_unsigned_same_len(lhs: &mut [Digit], rhs: &[Digit]) -> bool {
+    assert_eq!(lhs.len(), rhs.len());
+    let mut borrow = false;
+    for (l, r) in lhs.iter_mut().zip(rhs) {
+        let (diff, new_borrow) = r.borrowing_sub(*l, borrow);
+        *l = diff;
+        borrow = new_borrow;
+    }
+    borrow
+}
+
 /// Subtracts a single digit from the non-empty `lhs` in place, returning the borrow out of the
 /// most-significant digit.
 ///

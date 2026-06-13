@@ -2,8 +2,9 @@
 
 use ibig_core::{
     Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, neg,
-    sign_extension, sub_signed_sdigit, sub_signed_signed, sub_unsigned_1, sub_unsigned_borrow,
-    sub_unsigned_digit, sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
+    sign_extension, sub_reverse_unsigned_unsigned_same_len, sub_signed_sdigit, sub_signed_signed,
+    sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,
+    sub_unsigned_unsigned_same_len,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -69,6 +70,34 @@ fn sub_unsigned_unsigned_same_len_basic() {
 #[should_panic]
 fn sub_unsigned_unsigned_same_len_mismatched() {
     sub_unsigned_unsigned_same_len(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+fn sub_reverse_unsigned_unsigned_same_len_basic() {
+    // a = b - a == [7, 9] - [4, 6] == [3, 3].
+    let mut a = [digit(4), digit(6)];
+    assert!(!sub_reverse_unsigned_unsigned_same_len(
+        &mut a,
+        &[digit(7), digit(9)]
+    ));
+    assert_eq!(a, [digit(3), digit(3)]);
+
+    // A borrow propagates across digits and out the top: [0, 0] - [1, 0].
+    let mut a = [digit(1), Digit::ZERO];
+    assert!(sub_reverse_unsigned_unsigned_same_len(
+        &mut a,
+        &[Digit::ZERO, Digit::ZERO]
+    ));
+    assert_eq!(a, [Digit::MAX, Digit::MAX]);
+
+    // Empty slices are allowed.
+    assert!(!sub_reverse_unsigned_unsigned_same_len(&mut [], &[]));
+}
+
+#[test]
+#[should_panic]
+fn sub_reverse_unsigned_unsigned_same_len_mismatched() {
+    sub_reverse_unsigned_unsigned_same_len(&mut [digit(1)], &[digit(1), digit(2)]);
 }
 
 #[test]
@@ -266,6 +295,21 @@ proptest! {
         let same_len_borrow = sub_unsigned_unsigned_same_len(&mut same_len, &padded);
         prop_assert_eq!(longer, same_len);
         prop_assert_eq!(borrow, same_len_borrow);
+    }
+
+    // `sub_reverse_unsigned_unsigned_same_len(a, b)` (a = b - a) matches the forward
+    // `sub_unsigned_unsigned_same_len(b, a)` (b = b - a).
+    #[test]
+    fn sub_reverse_matches_forward(
+        (a, b) in (0usize..20)
+            .prop_flat_map(|n| (vec(any::<Digit>(), n), vec(any::<Digit>(), n))),
+    ) {
+        let mut via_reverse = a.clone();
+        let reverse_borrow = sub_reverse_unsigned_unsigned_same_len(&mut via_reverse, &b);
+        let mut via_forward = b;
+        let forward_borrow = sub_unsigned_unsigned_same_len(&mut via_forward, &a);
+        prop_assert_eq!(via_reverse, via_forward);
+        prop_assert_eq!(reverse_borrow, forward_borrow);
     }
 
     // `sub_unsigned_digit` agrees with `sub_unsigned_unsigned` of a one-digit slice.

@@ -100,9 +100,19 @@ impl BinaryOpDigits<UBig> for SubOperation {
         Self::apply_val_ref(Digits::from_slice(lhs), rhs)
     }
 
-    #[inline]
-    fn apply_ref_val(lhs: &[Digit], rhs: Digits) -> UBig {
-        Self::apply_ref_ref(lhs, &rhs)
+    fn apply_ref_val(lhs: &[Digit], mut rhs: Digits) -> UBig {
+        let rhs_len = rhs.len();
+        if lhs.len() < rhs_len {
+            UBig::panic_negative();
+        }
+        rhs.reserve(lhs.len() - rhs_len);
+        let (lhs_low, lhs_high) = lhs.split_at(rhs_len);
+        let borrow = ibig_core::sub_reverse_unsigned_unsigned_same_len(&mut rhs, lhs_low);
+        rhs.extend_from_slice(lhs_high);
+        if ibig_core::sub_unsigned_borrow(&mut rhs[rhs_len..], borrow) {
+            UBig::panic_negative();
+        }
+        UBig::from_digits(rhs)
     }
 
     #[inline]
