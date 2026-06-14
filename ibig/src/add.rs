@@ -139,6 +139,77 @@ impl UBig {
     }
 }
 
+impl IBig {
+    /// Adds the unsigned `rhs` to `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::{IBig, UBig};
+    /// assert_eq!(IBig::from(5).add_unsigned(&UBig::from(3u8)), IBig::from(8));
+    /// assert_eq!(IBig::from(-5).add_unsigned(&UBig::from(3u8)), IBig::from(-2));
+    /// ```
+    #[inline]
+    pub fn add_unsigned(&self, rhs: &UBig) -> IBig {
+        match (self.as_digits(), rhs.as_digits()) {
+            (Small(a), Small(b)) => IBig::add_unsigned_sdigit_digit(a, b),
+            (Small(a), Large(rhs)) => IBig::add_unsigned_sdigit_ref(a, rhs),
+            (Large(lhs), Small(b)) => IBig::add_unsigned_ref_digit(lhs, b),
+            (Large(lhs), Large(rhs)) => IBig::add_unsigned_ref_ref(lhs, rhs),
+        }
+    }
+
+    /// `add_unsigned` for a single signed digit `lhs` and a single unsigned digit `rhs`.
+    #[inline]
+    fn add_unsigned_sdigit_digit(lhs: SignedDigit, rhs: Digit) -> IBig {
+        let (sum, carry) = lhs.cast_unsigned().overflowing_add(rhs);
+        IBig::from_two_digits(sum, SignedDigit::from(carry) + sign_extension_sdigit(lhs))
+    }
+
+    /// `add_unsigned` for a single signed digit `lhs` and an unsigned slice `rhs`.
+    fn add_unsigned_sdigit_ref(lhs: SignedDigit, rhs: &[Digit]) -> IBig {
+        // Clone the unsigned `rhs` (the longer operand) and add the signed digit `lhs`.
+        let mut digits = Digits::with_capacity(rhs.len() + 1);
+        digits.extend_from_slice(rhs);
+        let high = ibig_core::add_unsigned_sdigit(&mut digits, lhs);
+        IBig::add_unsigned_finish(digits, high)
+    }
+
+    /// `add_unsigned` for a signed slice `lhs` and a single unsigned digit `rhs`.
+    fn add_unsigned_ref_digit(lhs: &[Digit], rhs: Digit) -> IBig {
+        // Clone the signed `lhs` (the longer operand) and add the unsigned digit `rhs`.
+        let mut digits = Digits::with_capacity(lhs.len() + 1);
+        digits.extend_from_slice(lhs);
+        let high = ibig_core::add_signed_digit(&mut digits, rhs);
+        IBig::add_unsigned_finish(digits, high)
+    }
+
+    /// `add_unsigned` for a signed `lhs` and an unsigned `rhs`, both as digit slices.
+    fn add_unsigned_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
+        let mut digits;
+        let high;
+        if lhs.len() >= rhs.len() {
+            // Clone the signed `lhs` (the longer operand) and add the unsigned `rhs`.
+            digits = Digits::with_capacity(lhs.len() + 1);
+            digits.extend_from_slice(lhs);
+            high = ibig_core::add_signed_unsigned(&mut digits, rhs);
+        } else {
+            // Clone the unsigned `rhs` (the longer operand) and add the signed `lhs`.
+            digits = Digits::with_capacity(rhs.len() + 1);
+            digits.extend_from_slice(rhs);
+            high = ibig_core::add_unsigned_signed(&mut digits, lhs);
+        }
+        IBig::add_unsigned_finish(digits, high)
+    }
+
+    /// Finishes an `add_unsigned`: appends the sign digit `high` and normalizes.
+    #[inline]
+    fn add_unsigned_finish(mut digits: Digits, high: SignedDigit) -> IBig {
+        push_sign(&mut digits, high);
+        IBig::from_digits(digits)
+    }
+}
+
 /// Addition operation.
 struct AddOperation;
 

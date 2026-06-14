@@ -77,6 +77,12 @@ proptest! {
             prop_assert_eq!(a.strict_add_signed(&b), expected);
         }
     }
+
+    // `IBig::add_unsigned(a, b)` (a signed, b unsigned) equals `IBig` addition `a + b`.
+    #[test]
+    fn ibig_add_unsigned_vs_ibig(a in ibig_up_to_bits(300), b in ubig_up_to_bits(300)) {
+        prop_assert_eq!(a.add_unsigned(&b), &a + IBig::from(&b));
+    }
 }
 
 #[test]
@@ -223,4 +229,45 @@ fn ubig_strict_add_signed_basic() {
 #[should_panic(expected = "negative UBig")]
 fn ubig_strict_add_signed_negative() {
     UBig::from(5u8).strict_add_signed(&IBig::from(-8));
+}
+
+#[test]
+fn ibig_add_unsigned_basic() {
+    // Single-digit cases.
+    assert_eq!(IBig::from(5).add_unsigned(&UBig::from(3u8)), IBig::from(8));
+    assert_eq!(
+        IBig::from(-5).add_unsigned(&UBig::from(3u8)),
+        IBig::from(-2)
+    );
+    assert_eq!(IBig::from(-3).add_unsigned(&UBig::from(5u8)), IBig::from(2));
+    assert_eq!(IBig::from(-5).add_unsigned(&UBig::ZERO), IBig::from(-5));
+    // A single-digit sum that overflows the 16-bit digit width into a second digit.
+    assert_eq!(
+        IBig::from(30000).add_unsigned(&UBig::from(40000u32)),
+        IBig::from(70000)
+    );
+
+    // A single-digit signed value plus a large unsigned value.
+    let big = UBig::from(1u8) << 256;
+    assert_eq!(
+        IBig::from(-1).add_unsigned(&big),
+        IBig::from(&big) - IBig::from(1)
+    );
+
+    // A large signed value plus a single unsigned digit.
+    assert_eq!(
+        (IBig::from(-1) << 256).add_unsigned(&UBig::from(1u8)),
+        (IBig::from(-1) << 256) + IBig::from(1)
+    );
+
+    // Large + large, with the signed operand longer.
+    assert_eq!(
+        (IBig::from(-1) << 256).add_unsigned(&(UBig::from(1u8) << 100)),
+        (IBig::from(-1) << 256) + (IBig::from(1) << 100)
+    );
+    // Large + large, with the unsigned operand longer.
+    assert_eq!(
+        (IBig::from(-1) << 100).add_unsigned(&(UBig::from(1u8) << 256)),
+        (IBig::from(1) << 256) - (IBig::from(1) << 100)
+    );
 }
