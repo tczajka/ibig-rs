@@ -2,7 +2,8 @@
 
 use ibig_core::{
     Digit, SignedDigit, add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry,
-    add_unsigned_digit, add_unsigned_unsigned, add_unsigned_unsigned_same_len, extend_signed,
+    add_unsigned_digit, add_unsigned_scarry, add_unsigned_unsigned, add_unsigned_unsigned_same_len,
+    extend_signed,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -130,6 +131,40 @@ fn add_unsigned_1_basic() {
 
     // An empty slice overflows immediately.
     assert!(add_unsigned_1(&mut []));
+}
+
+#[test]
+fn add_unsigned_scarry_basic() {
+    // Carry 0 leaves the slice unchanged.
+    let mut a = [digit(7), digit(2)];
+    assert_eq!(add_unsigned_scarry(&mut a, sdigit(0)), sdigit(0));
+    assert_eq!(a, [digit(7), digit(2)]);
+
+    // Carry +1 adds 1; here it ripples out the top.
+    let mut a = [Digit::MAX, Digit::MAX];
+    assert_eq!(add_unsigned_scarry(&mut a, sdigit(1)), sdigit(1));
+    assert_eq!(a, [Digit::ZERO, Digit::ZERO]);
+
+    // Carry -1 subtracts 1; here it borrows out the top.
+    let mut a = [Digit::ZERO, Digit::ZERO];
+    assert_eq!(add_unsigned_scarry(&mut a, sdigit(-1)), sdigit(-1));
+    assert_eq!(a, [Digit::MAX, Digit::MAX]);
+
+    // No carry/borrow out the top.
+    let mut a = [Digit::ZERO, digit(1)];
+    assert_eq!(add_unsigned_scarry(&mut a, sdigit(-1)), sdigit(0));
+    assert_eq!(a, [Digit::MAX, digit(0)]);
+
+    // An empty slice passes the carry straight through.
+    assert_eq!(add_unsigned_scarry(&mut [], sdigit(1)), sdigit(1));
+    assert_eq!(add_unsigned_scarry(&mut [], sdigit(-1)), sdigit(-1));
+    assert_eq!(add_unsigned_scarry(&mut [], sdigit(0)), sdigit(0));
+}
+
+#[test]
+#[should_panic]
+fn add_unsigned_scarry_out_of_range() {
+    add_unsigned_scarry(&mut [digit(1)], sdigit(2));
 }
 
 #[test]

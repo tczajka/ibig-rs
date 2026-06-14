@@ -31,7 +31,7 @@ mod sub;
 
 pub use add::{
     add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry, add_unsigned_digit,
-    add_unsigned_unsigned, add_unsigned_unsigned_same_len,
+    add_unsigned_scarry, add_unsigned_unsigned, add_unsigned_unsigned_same_len,
 };
 pub use bits::{
     BitIndex, BitIndexOutOfRange, DIGIT_BITS_USIZE, bit_signed, bit_unsigned, count_ones,

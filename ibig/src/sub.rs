@@ -191,16 +191,20 @@ impl BinaryOpDigits<IBig> for SubOperation {
     }
 
     fn apply_ref_val(lhs: &[Digit], mut rhs: Digits) -> IBig {
-        let rhs_len = rhs.len();
-        if rhs_len < lhs.len() {
-            // Sign-extend `rhs` to `lhs`'s length so it is not shorter than the subtrahend.
-            // Reserve for the extension digits and a possible sign digit.
-            rhs.reserve(lhs.len() - rhs_len + 1);
-            let fill = sign_extension(&rhs).cast_unsigned();
-            rhs.resize(lhs.len(), fill);
-        }
         // Reuse `rhs`'s storage: `rhs = lhs - rhs`.
-        let high = ibig_core::sub_reverse_signed_signed(&mut rhs, lhs);
+        let rhs_len = rhs.len();
+        let high = if rhs_len >= lhs.len() {
+            ibig_core::sub_reverse_signed_signed(&mut rhs, lhs)
+        } else {
+            let lhs_extension = sign_extension(lhs);
+            let rhs_extension = sign_extension(&rhs);
+            rhs.reserve(lhs.len() - rhs_len + 1);
+            let (lhs_low, lhs_high) = lhs.split_at(rhs_len);
+            let borrow = ibig_core::sub_reverse_unsigned_unsigned_same_len(&mut rhs, lhs_low);
+            rhs.extend_from_slice(lhs_high);
+            let low_carry = -SignedDigit::from(borrow) - rhs_extension; // -1..=1
+            ibig_core::add_unsigned_scarry(&mut rhs[rhs_len..], low_carry) + lhs_extension
+        };
         push_sign(&mut rhs, high);
         IBig::from_digits(rhs)
     }

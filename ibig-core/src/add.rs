@@ -124,8 +124,27 @@ pub fn add_unsigned_carry(lhs: &mut [Digit], carry: bool) -> bool {
 
 /// Adds a signed carry (-1, 0, or 1) to unsigned `lhs` in place, returning the carry out of the
 /// most-significant digit (-1, 0, or 1).
+///
+/// # Panics
+///
+/// Panics if `carry` is not -1, 0, or 1.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_unsigned_scarry};
+/// // Adding -1 borrows through the low zero digit.
+/// let mut a = [Digit::ZERO, Digit::from(1u8)];
+/// assert_eq!(add_unsigned_scarry(&mut a, SignedDigit::from(-1i8)), SignedDigit::ZERO);
+/// assert_eq!(a, [Digit::MAX, Digit::ZERO]);
+///
+/// // Adding +1 to all ones carries out.
+/// let mut a = [Digit::MAX];
+/// assert_eq!(add_unsigned_scarry(&mut a, SignedDigit::from(1i8)), SignedDigit::from(1i8));
+/// assert_eq!(a, [Digit::ZERO]);
+/// ```
 #[inline]
-pub(crate) fn add_unsigned_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
+pub fn add_unsigned_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit {
     if carry == SignedDigit::from(-1i8) {
         -SignedDigit::from(sub_unsigned_1(lhs))
     } else if carry == SignedDigit::ZERO {
