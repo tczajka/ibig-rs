@@ -6,7 +6,6 @@ use crate::repr::{
     AsDigitsResult::{Large, Small},
     Digits,
 };
-use crate::sign::push_sign;
 use crate::{IBig, UBig};
 use core::ops::{Add, AddAssign};
 use ibig_core::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
@@ -171,8 +170,8 @@ impl IBig {
         // Clone the unsigned `rhs` (the longer operand) and add the signed digit `lhs`.
         let mut digits = Digits::with_capacity(rhs.len() + 1);
         digits.extend_from_slice(rhs);
-        let high = ibig_core::add_unsigned_sdigit(&mut digits, lhs);
-        IBig::add_unsigned_finish(digits, high)
+        let scarry = ibig_core::add_unsigned_sdigit(&mut digits, lhs);
+        IBig::from_digits_scarry(digits, scarry)
     }
 
     /// `add_unsigned` for a signed slice `lhs` and a single unsigned digit `rhs`.
@@ -180,33 +179,26 @@ impl IBig {
         // Clone the signed `lhs` (the longer operand) and add the unsigned digit `rhs`.
         let mut digits = Digits::with_capacity(lhs.len() + 1);
         digits.extend_from_slice(lhs);
-        let high = ibig_core::add_signed_digit(&mut digits, rhs);
-        IBig::add_unsigned_finish(digits, high)
+        let scarry = ibig_core::add_signed_digit(&mut digits, rhs);
+        IBig::from_digits_scarry(digits, scarry)
     }
 
     /// `add_unsigned` for a signed `lhs` and an unsigned `rhs`, both as digit slices.
     fn add_unsigned_ref_ref(lhs: &[Digit], rhs: &[Digit]) -> IBig {
         let mut digits;
-        let high;
+        let scarry;
         if lhs.len() >= rhs.len() {
             // Clone the signed `lhs` (the longer operand) and add the unsigned `rhs`.
             digits = Digits::with_capacity(lhs.len() + 1);
             digits.extend_from_slice(lhs);
-            high = ibig_core::add_signed_unsigned(&mut digits, rhs);
+            scarry = ibig_core::add_signed_unsigned(&mut digits, rhs);
         } else {
             // Clone the unsigned `rhs` (the longer operand) and add the signed `lhs`.
             digits = Digits::with_capacity(rhs.len() + 1);
             digits.extend_from_slice(rhs);
-            high = ibig_core::add_unsigned_signed(&mut digits, lhs);
+            scarry = ibig_core::add_unsigned_signed(&mut digits, lhs);
         }
-        IBig::add_unsigned_finish(digits, high)
-    }
-
-    /// Finishes an `add_unsigned`: appends the sign digit `high` and normalizes.
-    #[inline]
-    fn add_unsigned_finish(mut digits: Digits, high: SignedDigit) -> IBig {
-        push_sign(&mut digits, high);
-        IBig::from_digits(digits)
+        IBig::from_digits_scarry(digits, scarry)
     }
 }
 
@@ -231,8 +223,7 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: Digit) -> UBig {
         let carry = ibig_core::add_unsigned_digit(&mut lhs, rhs);
-        push_carry(&mut lhs, carry);
-        UBig::from_digits(lhs)
+        UBig::from_digits_carry(lhs, carry)
     }
 
     #[inline]
@@ -263,8 +254,7 @@ impl CommutativeBinaryOpDigits<UBig> for AddOperation {
             lhs.extend_from_slice(rhs_high);
             ibig_core::add_unsigned_carry(&mut lhs[lhs_len..], low_carry)
         };
-        push_carry(&mut lhs, carry);
-        UBig::from_digits(lhs)
+        UBig::from_digits_carry(lhs, carry)
     }
 
     #[inline]
@@ -308,9 +298,8 @@ impl CommutativeBinaryOpDigits<IBig> for AddOperation {
 
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
-        let high = ibig_core::add_signed_sdigit(&mut lhs, rhs);
-        push_sign(&mut lhs, high);
-        IBig::from_digits(lhs)
+        let scarry = ibig_core::add_signed_sdigit(&mut lhs, rhs);
+        IBig::from_digits_scarry(lhs, scarry)
     }
 
     #[inline]
@@ -336,9 +325,8 @@ impl CommutativeBinaryOpDigits<IBig> for AddOperation {
             let fill = sign_extension(&lhs).cast_unsigned();
             lhs.resize(rhs.len(), fill);
         }
-        let high = ibig_core::add_signed_signed(&mut lhs, rhs);
-        push_sign(&mut lhs, high);
-        IBig::from_digits(lhs)
+        let scarry = ibig_core::add_signed_signed(&mut lhs, rhs);
+        IBig::from_digits_scarry(lhs, scarry)
     }
 
     #[inline]
@@ -359,11 +347,3 @@ impl_binary_operator!(
     AddAssign::add_assign,
     DigitsRhs<AddOperation>
 );
-
-/// Appends the carry out of an addition as a most-significant `1` digit.
-#[inline]
-fn push_carry(digits: &mut Digits, carry: bool) {
-    if carry {
-        digits.push(Digit::from(1u8));
-    }
-}

@@ -2,7 +2,8 @@
 
 use core::hint::assert_unchecked;
 use ibig_core::{
-    DIGIT_BITS_USIZE, Digit, SignedDigit, min_len_signed, min_len_unsigned, sign_extension_sdigit,
+    DIGIT_BITS_USIZE, Digit, SignedDigit, min_len_signed, min_len_unsigned, sign_extension,
+    sign_extension_sdigit,
 };
 use smallvec::{SmallVec, smallvec};
 
@@ -83,6 +84,34 @@ impl UBig {
         if digits.is_empty() {
             digits.push(Digit::ZERO);
         }
+        UBig::shrink(digits)
+    }
+
+    /// Construct from little-endian digits plus the carry out of an addition, appended as a
+    /// most-significant `1` digit when set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the resulting value has more than [`MAX_DIGITS`] digits.
+    #[inline]
+    pub(crate) fn from_digits_carry(mut digits: Digits, carry: bool) -> UBig {
+        if carry {
+            // The appended `1` is a nonzero most-significant digit, so `digits` is already at
+            // its canonical length and non-empty; only the buffer capacity may need shrinking.
+            digits.push(Digit::from(1u8));
+            UBig::shrink(digits)
+        } else {
+            UBig::from_digits(digits)
+        }
+    }
+
+    /// Wraps `digits` — already trimmed to its canonical length and non-empty — as a `UBig`,
+    /// shrinking an over-allocated heap buffer and enforcing the [`MAX_DIGITS`] cap.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` has more than [`MAX_DIGITS`] digits.
+    fn shrink(mut digits: Digits) -> UBig {
         if digits.spilled() {
             let len = digits.len();
             if len > MAX_DIGITS {
@@ -175,6 +204,36 @@ impl IBig {
     /// [`MAX_DIGITS`] digits.
     pub(crate) fn from_digits(mut digits: Digits) -> IBig {
         digits.truncate(min_len_signed(&digits));
+        IBig::shrink(digits)
+    }
+
+    /// Construct from little-endian two's complement digits plus the sign digit `scarry`
+    /// returned by a signed addition or subtraction, appended unless it is a redundant
+    /// sign-extension of the digit below it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` is empty, or if, after normalization, the value has more than
+    /// [`MAX_DIGITS`] digits.
+    #[inline]
+    pub(crate) fn from_digits_scarry(mut digits: Digits, scarry: SignedDigit) -> IBig {
+        if scarry != sign_extension(&digits) {
+            // `scarry` is a non-redundant most-significant digit, so `digits` is already at its
+            // canonical length; only the buffer capacity may need shrinking.
+            digits.push(scarry.cast_unsigned());
+            IBig::shrink(digits)
+        } else {
+            IBig::from_digits(digits)
+        }
+    }
+
+    /// Wraps `digits` — already trimmed to its canonical length — as an `IBig`, shrinking an
+    /// over-allocated heap buffer and enforcing the [`MAX_DIGITS`] cap.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `digits` has more than [`MAX_DIGITS`] digits.
+    fn shrink(mut digits: Digits) -> IBig {
         if digits.spilled() {
             let len = digits.len();
             if len > MAX_DIGITS {

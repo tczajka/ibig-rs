@@ -8,7 +8,7 @@ use crate::repr::{
     AsDigitsResult::{Large, Small},
 };
 use core::ops::Neg;
-use ibig_core::{Digit, SignedDigit, sign_extension};
+use ibig_core::{Digit, SignedDigit};
 
 impl IBig {
     /// Returns `true` if the number is negative (less than zero).
@@ -88,19 +88,9 @@ impl UnaryOpDigits<IBig> for NegOperation {
 
     #[inline]
     fn apply_val(mut operand: Digits) -> IBig {
-        let high = ibig_core::neg(&mut operand);
-        push_sign(&mut operand, high);
-        IBig::from_digits(operand)
+        let scarry = ibig_core::neg(&mut operand);
+        IBig::from_digits_scarry(operand, scarry)
     }
 }
 
 impl_unary_operator!(IBig, Neg::neg, NegOperation);
-
-/// Appends the sign digit returned by a signed addition or subtraction, unless it is a
-/// redundant sign-extension of the digit below it.
-#[inline]
-pub(crate) fn push_sign(digits: &mut Digits, high: SignedDigit) {
-    if high != sign_extension(digits) {
-        digits.push(high.cast_unsigned());
-    }
-}

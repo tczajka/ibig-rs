@@ -6,7 +6,6 @@ use crate::repr::{
     AsDigitsResult::{Large, Small},
     Digits,
 };
-use crate::sign::push_sign;
 use crate::{IBig, UBig};
 use core::ops::{Sub, SubAssign};
 use ibig_core::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
@@ -169,9 +168,8 @@ impl BinaryOpDigits<IBig> for SubOperation {
     #[inline]
     fn apply_digit_val(lhs: SignedDigit, mut rhs: Digits) -> IBig {
         // Reuse `rhs`'s storage: `rhs = lhs - rhs`.
-        let high = ibig_core::sub_reverse_signed_sdigit(&mut rhs, lhs);
-        push_sign(&mut rhs, high);
-        IBig::from_digits(rhs)
+        let scarry = ibig_core::sub_reverse_signed_sdigit(&mut rhs, lhs);
+        IBig::from_digits_scarry(rhs, scarry)
     }
 
     #[inline]
@@ -193,7 +191,7 @@ impl BinaryOpDigits<IBig> for SubOperation {
     fn apply_ref_val(lhs: &[Digit], mut rhs: Digits) -> IBig {
         // Reuse `rhs`'s storage: `rhs = lhs - rhs`.
         let rhs_len = rhs.len();
-        let high = if rhs_len >= lhs.len() {
+        let scarry = if rhs_len >= lhs.len() {
             ibig_core::sub_reverse_signed_signed(&mut rhs, lhs)
         } else {
             let lhs_extension = sign_extension(lhs);
@@ -205,15 +203,13 @@ impl BinaryOpDigits<IBig> for SubOperation {
             let low_carry = -SignedDigit::from(borrow) - rhs_extension; // -1..=1
             ibig_core::add_unsigned_scarry(&mut rhs[rhs_len..], low_carry) + lhs_extension
         };
-        push_sign(&mut rhs, high);
-        IBig::from_digits(rhs)
+        IBig::from_digits_scarry(rhs, scarry)
     }
 
     #[inline]
     fn apply_val_digit(mut lhs: Digits, rhs: SignedDigit) -> IBig {
-        let high = ibig_core::sub_signed_sdigit(&mut lhs, rhs);
-        push_sign(&mut lhs, high);
-        IBig::from_digits(lhs)
+        let scarry = ibig_core::sub_signed_sdigit(&mut lhs, rhs);
+        IBig::from_digits_scarry(lhs, scarry)
     }
 
     fn apply_val_ref(mut lhs: Digits, rhs: &[Digit]) -> IBig {
@@ -225,9 +221,8 @@ impl BinaryOpDigits<IBig> for SubOperation {
             let fill = sign_extension(&lhs).cast_unsigned();
             lhs.resize(rhs.len(), fill);
         }
-        let high = ibig_core::sub_signed_signed(&mut lhs, rhs);
-        push_sign(&mut lhs, high);
-        IBig::from_digits(lhs)
+        let scarry = ibig_core::sub_signed_signed(&mut lhs, rhs);
+        IBig::from_digits_scarry(lhs, scarry)
     }
 
     #[inline]
