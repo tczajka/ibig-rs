@@ -213,6 +213,40 @@ pub fn add_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     add_unsigned_signed(lhs, rhs) + lhs_extension
 }
 
+/// Adds the unsigned `rhs` to the signed `lhs` in place, returning a digit (-1, 0, or 1) that
+/// should be appended to `lhs`. The `(lhs.len() + 1)`-digit signed number formed by the new
+/// `lhs` digits followed by the returned digit equals the original (signed) `lhs` plus the
+/// (unsigned) `rhs`.
+///
+/// Unlike [`add_signed_signed`], the returned digit can be `1`: a large positive `lhs` plus a
+/// large `rhs` overflows into it.
+///
+/// `lhs` must be non-empty and `rhs` must not be longer than `lhs`.
+///
+/// # Panics
+///
+/// Panics if `lhs` is empty or `rhs` is longer than `lhs`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_signed_unsigned};
+/// // -1 + 5 == 4.
+/// let mut a = [Digit::MAX]; // -1
+/// assert_eq!(add_signed_unsigned(&mut a, &[Digit::from(5u8)]), SignedDigit::ZERO);
+/// assert_eq!(a, [Digit::from(4u8)]);
+///
+/// // A large positive value plus a large unsigned value overflows to a +1 top digit.
+/// let mut a = [Digit::MAX >> 1]; // the largest positive single digit
+/// assert_eq!(add_signed_unsigned(&mut a, &[Digit::MAX]), SignedDigit::from(1i8));
+/// assert_eq!(a, [(Digit::MAX >> 1) - Digit::from(1u8)]);
+/// ```
+#[inline]
+pub fn add_signed_unsigned(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs);
+    SignedDigit::from(add_unsigned_unsigned(lhs, rhs)) + lhs_extension
+}
+
 /// Adds the signed digit `rhs` to the non-empty signed `lhs` in place, returning a sign digit
 /// (0 or -1) that should be appended to `lhs`.
 ///

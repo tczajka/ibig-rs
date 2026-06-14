@@ -1,9 +1,9 @@
 //! Integration tests for addition.
 
 use ibig_core::{
-    Digit, SignedDigit, add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry,
-    add_unsigned_digit, add_unsigned_scarry, add_unsigned_signed, add_unsigned_unsigned,
-    add_unsigned_unsigned_same_len, extend_signed,
+    Digit, SignedDigit, add_signed_sdigit, add_signed_signed, add_signed_unsigned, add_unsigned_1,
+    add_unsigned_carry, add_unsigned_digit, add_unsigned_scarry, add_unsigned_signed,
+    add_unsigned_unsigned, add_unsigned_unsigned_same_len, extend_signed,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -290,6 +290,47 @@ fn add_signed_signed_rhs_empty() {
     add_signed_signed(&mut [digit(1)], &[]);
 }
 
+#[test]
+fn add_signed_unsigned_basic() {
+    // Two non-negative values: 3 + 5 == 8.
+    let mut a = [digit(3), digit(2)];
+    assert_eq!(add_signed_unsigned(&mut a, &[digit(5)]), sdigit(0));
+    assert_eq!(a, [digit(8), digit(2)]);
+
+    // A negative `lhs`: -1 + 5 == 4.
+    let mut a = [Digit::MAX];
+    assert_eq!(add_signed_unsigned(&mut a, &[digit(5)]), sdigit(0));
+    assert_eq!(a, [digit(4)]);
+
+    // A negative result: -2 + 1 == -1, sign digit -1.
+    let mut a = [Digit::MAX - digit(1)];
+    assert_eq!(add_signed_unsigned(&mut a, &[digit(1)]), sdigit(-1));
+    assert_eq!(a, [Digit::MAX]);
+
+    // A positive overflow into a +1 digit: the largest positive single digit plus all-ones.
+    let signed_max = Digit::MAX >> 1;
+    let mut a = [signed_max];
+    assert_eq!(add_signed_unsigned(&mut a, &[Digit::MAX]), sdigit(1));
+    assert_eq!(a, [signed_max - digit(1)]);
+
+    // An empty `rhs` is a no-op returning `lhs`'s sign.
+    let mut a = [Digit::MAX]; // -1
+    assert_eq!(add_signed_unsigned(&mut a, &[]), sdigit(-1));
+    assert_eq!(a, [Digit::MAX]);
+}
+
+#[test]
+#[should_panic]
+fn add_signed_unsigned_rhs_longer() {
+    add_signed_unsigned(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn add_signed_unsigned_lhs_empty() {
+    add_signed_unsigned(&mut [], &[]);
+}
+
 proptest! {
     // `add_unsigned_unsigned` with a zero-extended `rhs` agrees with
     // `add_unsigned_unsigned_same_len`.
@@ -382,5 +423,22 @@ proptest! {
         let high_slice = add_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
         prop_assert_eq!(via_digit, via_slice);
         prop_assert_eq!(high_digit, high_slice);
+    }
+
+    // `add_signed_unsigned(a, b)` (a signed, b unsigned) equals `add_unsigned_signed(b, a)`
+    // (the same sum, commuted). `a` and `b` share a length so both length preconditions hold.
+    #[test]
+    fn add_signed_unsigned_commutes(
+        (a, b) in (1usize..20).prop_flat_map(|n| (vec(any::<Digit>(), n), vec(any::<Digit>(), n))),
+    ) {
+        let mut via_signed = a.clone();
+        let top = add_signed_unsigned(&mut via_signed, &b);
+        via_signed.push(top.cast_unsigned());
+
+        let mut via_unsigned = b;
+        let carry = add_unsigned_signed(&mut via_unsigned, &a);
+        via_unsigned.push(carry.cast_unsigned());
+
+        prop_assert_eq!(via_signed, via_unsigned);
     }
 }
