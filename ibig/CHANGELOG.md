@@ -15,6 +15,7 @@ API changes.
 
 - `UBig::checked_sub`.
 - `UBig::saturating_sub`.
+- `UBig::checked_add_signed`.
 
 ## [0.3.6] - 2022-09-18
 

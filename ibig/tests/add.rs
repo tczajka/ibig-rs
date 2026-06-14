@@ -55,6 +55,13 @@ proptest! {
         prop_assert_eq!((&a + &b) + &c, &a + (&b + &c));
         prop_assert_eq!(&(&a + IBig::ZERO), &a);
     }
+
+    // `UBig::checked_add_signed` equals `a + b` when non-negative, else `None`.
+    #[test]
+    fn checked_add_signed_vs_ibig(a in ubig_up_to_bits(300), b in ibig_up_to_bits(300)) {
+        let sum = IBig::from(&a) + &b;
+        prop_assert_eq!(a.checked_add_signed(&b), UBig::try_from(&sum).ok());
+    }
 }
 
 #[test]
@@ -118,4 +125,40 @@ fn ibig_add_digit_boundary() {
     check(i128::from(i16::MIN), -1);
     check(i128::from(i64::MAX), 1);
     check(i128::from(i64::MIN), -1);
+}
+
+#[test]
+fn checked_add_signed_basic() {
+    // Single-digit cases.
+    assert_eq!(
+        UBig::from(5u8).checked_add_signed(&IBig::from(3)),
+        Some(UBig::from(8u8))
+    );
+    assert_eq!(
+        UBig::from(5u8).checked_add_signed(&IBig::from(-3)),
+        Some(UBig::from(2u8))
+    );
+    assert_eq!(
+        UBig::from(5u8).checked_add_signed(&IBig::from(-5)),
+        Some(UBig::ZERO)
+    );
+    // A negative result.
+    assert_eq!(UBig::from(5u8).checked_add_signed(&IBig::from(-8)), None);
+    // `self` shorter than a negative `rhs`.
+    assert_eq!(
+        UBig::from(3u8).checked_add_signed(&(IBig::from(-1) << 200)),
+        None
+    );
+
+    // A carry grows the value by a digit: (2^256 - 1) + 1 == 2^256.
+    let big = UBig::from(1u8) << 256;
+    assert_eq!(
+        (&big - UBig::from(1u8)).checked_add_signed(&IBig::from(1)),
+        Some(big.clone())
+    );
+    // A large negative `rhs`: 2^256 + -(2^100) == 2^256 - 2^100.
+    assert_eq!(
+        big.checked_add_signed(&(IBig::from(-1) << 100)),
+        Some(&big - (UBig::from(1u8) << 100))
+    );
 }

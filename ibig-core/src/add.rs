@@ -188,6 +188,38 @@ pub fn add_unsigned_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     add_unsigned_scarry(high, low_carry)
 }
 
+/// Adds the signed digit `rhs` to the non-empty unsigned `lhs` in place, returning a signed
+/// carry (-1, 0, or 1).
+///
+/// This is the single-digit form of [`add_unsigned_signed`].
+///
+/// # Panics
+///
+/// Panics if `lhs` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_unsigned_sdigit};
+/// // 5 + -3 == 2
+/// let mut a = [Digit::from(5u8)];
+/// assert_eq!(add_unsigned_sdigit(&mut a, SignedDigit::from(-3i8)), SignedDigit::ZERO);
+/// assert_eq!(a, [Digit::from(2u8)]);
+///
+/// // 0 + -1 == -1, a borrow out of the most-significant digit.
+/// let mut a = [Digit::ZERO];
+/// assert_eq!(add_unsigned_sdigit(&mut a, SignedDigit::from(-1i8)), SignedDigit::from(-1i8));
+/// assert_eq!(a, [Digit::MAX]);
+/// ```
+#[inline]
+pub fn add_unsigned_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
+    let (low, high) = lhs.split_first_mut().expect("lhs is empty");
+    let (sum, carry) = low.overflowing_add(rhs.cast_unsigned());
+    *low = sum;
+    let low_carry = SignedDigit::from(carry) + sign_extension_sdigit(rhs);
+    add_unsigned_scarry(high, low_carry)
+}
+
 /// Adds the signed `rhs` to the signed `lhs` in place, returning a sign digit (0 or -1) that
 /// should be appended to `lhs`.
 ///
@@ -247,6 +279,31 @@ pub fn add_signed_unsigned(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     SignedDigit::from(add_unsigned_unsigned(lhs, rhs)) + lhs_extension
 }
 
+/// Adds the unsigned digit `rhs` to the non-empty signed `lhs` in place, returning a digit
+/// (-1, 0, or 1) that should be appended to `lhs`.
+///
+/// This is the single-digit form of [`add_signed_unsigned`]; like it, the returned digit can
+/// be `1`.
+///
+/// # Panics
+///
+/// Panics if `lhs` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_signed_digit};
+/// // -1 + 5 == 4
+/// let mut a = [Digit::MAX]; // -1
+/// assert_eq!(add_signed_digit(&mut a, Digit::from(5u8)), SignedDigit::ZERO);
+/// assert_eq!(a, [Digit::from(4u8)]);
+/// ```
+#[inline]
+pub fn add_signed_digit(lhs: &mut [Digit], rhs: Digit) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs);
+    SignedDigit::from(add_unsigned_digit(lhs, rhs)) + lhs_extension
+}
+
 /// Adds the signed digit `rhs` to the non-empty signed `lhs` in place, returning a sign digit
 /// (0 or -1) that should be appended to `lhs`.
 ///
@@ -267,9 +324,5 @@ pub fn add_signed_unsigned(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
 #[inline]
 pub fn add_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
     let lhs_extension = sign_extension(lhs);
-    let (low, high) = lhs.split_first_mut().expect("lhs is empty");
-    let (sum, carry) = low.overflowing_add(rhs.cast_unsigned());
-    *low = sum;
-    let low_carry = SignedDigit::from(carry) + sign_extension_sdigit(rhs);
-    add_unsigned_scarry(high, low_carry) + lhs_extension
+    add_unsigned_sdigit(lhs, rhs) + lhs_extension
 }
