@@ -156,6 +156,38 @@ pub fn add_unsigned_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit
     }
 }
 
+/// Adds the signed `rhs` to the unsigned `lhs` in place, returning a signed carry (-1, 0, or 1).
+/// The `(lhs.len() + 1)`-digit signed number formed by the new `lhs` digits followed by the
+/// returned carry equals the original (unsigned) `lhs` plus the (signed) `rhs`.
+///
+/// `rhs` must be non-empty and not longer than `lhs`.
+///
+/// # Panics
+///
+/// Panics if `rhs` is empty or longer than `lhs`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, add_unsigned_signed};
+/// // 5 + -1 == 4, no carry.
+/// let mut a = [Digit::from(5u8)];
+/// assert_eq!(add_unsigned_signed(&mut a, &[Digit::MAX]), SignedDigit::ZERO);
+/// assert_eq!(a, [Digit::from(4u8)]);
+///
+/// // 0 + -1 == -1: the result is negative, so the carry is -1.
+/// let mut a = [Digit::ZERO];
+/// assert_eq!(add_unsigned_signed(&mut a, &[Digit::MAX]), SignedDigit::from(-1i8));
+/// assert_eq!(a, [Digit::MAX]);
+/// ```
+#[inline]
+pub fn add_unsigned_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
+    let rhs_extension = sign_extension(rhs);
+    let (low, high) = lhs.split_at_mut(rhs.len());
+    let low_carry = SignedDigit::from(add_unsigned_unsigned_same_len(low, rhs)) + rhs_extension;
+    add_unsigned_scarry(high, low_carry)
+}
+
 /// Adds the signed `rhs` to the signed `lhs` in place, returning a sign digit (0 or -1) that
 /// should be appended to `lhs`.
 ///
@@ -178,10 +210,7 @@ pub fn add_unsigned_scarry(lhs: &mut [Digit], carry: SignedDigit) -> SignedDigit
 #[inline]
 pub fn add_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
     let lhs_extension = sign_extension(lhs);
-    let rhs_extension = sign_extension(rhs);
-    let (low, high) = lhs.split_at_mut(rhs.len());
-    let low_carry = SignedDigit::from(add_unsigned_unsigned_same_len(low, rhs)) + rhs_extension;
-    add_unsigned_scarry(high, low_carry) + lhs_extension
+    add_unsigned_signed(lhs, rhs) + lhs_extension
 }
 
 /// Adds the signed digit `rhs` to the non-empty signed `lhs` in place, returning a sign digit

@@ -2,8 +2,8 @@
 
 use ibig_core::{
     Digit, SignedDigit, add_signed_sdigit, add_signed_signed, add_unsigned_1, add_unsigned_carry,
-    add_unsigned_digit, add_unsigned_scarry, add_unsigned_unsigned, add_unsigned_unsigned_same_len,
-    extend_signed,
+    add_unsigned_digit, add_unsigned_scarry, add_unsigned_signed, add_unsigned_unsigned,
+    add_unsigned_unsigned_same_len, extend_signed,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -165,6 +165,49 @@ fn add_unsigned_scarry_basic() {
 #[should_panic]
 fn add_unsigned_scarry_out_of_range() {
     add_unsigned_scarry(&mut [digit(1)], sdigit(2));
+}
+
+#[test]
+fn add_unsigned_signed_basic() {
+    // Two non-negative values: 5 + 3 == 8.
+    let mut a = [digit(5), digit(2)];
+    assert_eq!(add_unsigned_signed(&mut a, &[digit(3)]), sdigit(0));
+    assert_eq!(a, [digit(8), digit(2)]);
+
+    // A negative `rhs` reduces `lhs`: 5 + -1 == 4.
+    let mut a = [digit(5)];
+    assert_eq!(add_unsigned_signed(&mut a, &[Digit::MAX]), sdigit(0));
+    assert_eq!(a, [digit(4)]);
+
+    // A negative result: 2 + -3 == -1, carry -1.
+    let mut a = [digit(2)];
+    assert_eq!(
+        add_unsigned_signed(&mut a, &[Digit::MAX - digit(2)]),
+        sdigit(-1)
+    );
+    assert_eq!(a, [Digit::MAX]);
+
+    // An overflow: (2^bits - 1) + 1 == 2^bits, carry +1.
+    let mut a = [Digit::MAX];
+    assert_eq!(add_unsigned_signed(&mut a, &[digit(1)]), sdigit(1));
+    assert_eq!(a, [Digit::ZERO]);
+
+    // A negative `rhs` sign-extends and borrows through the high digits: 2^(2*bits) + -1.
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(add_unsigned_signed(&mut a, &[Digit::MAX]), sdigit(0));
+    assert_eq!(a, [Digit::MAX, Digit::MAX, Digit::ZERO]);
+}
+
+#[test]
+#[should_panic]
+fn add_unsigned_signed_rhs_longer() {
+    add_unsigned_signed(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn add_unsigned_signed_rhs_empty() {
+    add_unsigned_signed(&mut [digit(1)], &[]);
 }
 
 #[test]
