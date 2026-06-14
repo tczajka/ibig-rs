@@ -1,7 +1,7 @@
 //! Subtraction.
 
 use crate::add::add_unsigned_scarry;
-use crate::{Digit, SignedDigit, sign_extension, sign_extension_sdigit};
+use crate::{Digit, SignedDigit, not, sign_extension, sign_extension_sdigit};
 
 /// Subtracts `rhs` from `lhs` in place, returning the borrow out of the most-significant digit.
 ///
@@ -204,4 +204,69 @@ pub fn sub_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
     *low = diff;
     let low_carry = -SignedDigit::from(borrow) - sign_extension_sdigit(rhs);
     add_unsigned_scarry(high, low_carry) + lhs_extension
+}
+
+/// Subtracts the signed `lhs` from the signed `rhs`, assigning `lhs = rhs - lhs` in place and
+/// returning a sign digit (0 or -1) that should be appended to `lhs`.
+///
+/// `rhs` must be non-empty and not longer than `lhs`.
+///
+/// # Panics
+///
+/// Panics if `rhs` is empty or longer than `lhs`.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, sub_reverse_signed_signed};
+/// // 5 - 3 == 2
+/// let mut a = [Digit::from(3u8)];
+/// let high = sub_reverse_signed_signed(&mut a, &[Digit::from(5u8)]);
+/// assert_eq!(a, [Digit::from(2u8)]);
+/// assert_eq!(high, SignedDigit::ZERO);
+/// ```
+#[inline]
+pub fn sub_reverse_signed_signed(lhs: &mut [Digit], rhs: &[Digit]) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs);
+    let rhs_extension = sign_extension(rhs);
+    let (low, high) = lhs.split_at_mut(rhs.len());
+    let low_borrow = sub_reverse_unsigned_unsigned_same_len(low, rhs);
+    let low_carry = rhs_extension - SignedDigit::from(low_borrow); // -2..=0
+    // negate the top part: -x = !x + 1
+    not(high);
+    let low_carry = low_carry + SignedDigit::from(1u8); // -1..=1
+    let high_carry = add_unsigned_scarry(high, low_carry);
+    !lhs_extension + high_carry
+}
+
+/// Subtracts the signed `lhs` from the signed digit `rhs`, assigning `lhs = rhs - lhs` in the
+/// non-empty `lhs` in place and returning a sign digit (0 or -1) that should be appended to `lhs`.
+///
+/// # Panics
+///
+/// Panics if `lhs` is empty.
+///
+/// # Examples
+///
+/// ```
+/// # use ibig_core::{Digit, SignedDigit, sub_reverse_signed_sdigit};
+/// // 5 - 3 == 2
+/// let mut a = [Digit::from(3u8)];
+/// let high = sub_reverse_signed_sdigit(&mut a, SignedDigit::from(5i8));
+/// assert_eq!(a, [Digit::from(2u8)]);
+/// assert_eq!(high, SignedDigit::ZERO);
+/// ```
+#[inline]
+pub fn sub_reverse_signed_sdigit(lhs: &mut [Digit], rhs: SignedDigit) -> SignedDigit {
+    let lhs_extension = sign_extension(lhs);
+    let rhs_extension = sign_extension_sdigit(rhs);
+    let (low, high) = lhs.split_first_mut().expect("lhs is empty");
+    let (diff, low_borrow) = rhs.cast_unsigned().overflowing_sub(*low);
+    *low = diff;
+    let low_carry = rhs_extension - SignedDigit::from(low_borrow); // -2..=0
+    // negate the top part: -x = !x + 1
+    not(high);
+    let low_carry = low_carry + SignedDigit::from(1u8); // -1..=1
+    let high_carry = add_unsigned_scarry(high, low_carry);
+    !lhs_extension + high_carry
 }

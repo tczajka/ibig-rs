@@ -2,9 +2,9 @@
 
 use ibig_core::{
     Digit, SignedDigit, add_signed_signed, add_unsigned_unsigned, extend_signed, neg,
-    sign_extension, sub_reverse_unsigned_unsigned_same_len, sub_signed_sdigit, sub_signed_signed,
-    sub_unsigned_1, sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned,
-    sub_unsigned_unsigned_same_len,
+    sign_extension, sub_reverse_signed_sdigit, sub_reverse_signed_signed,
+    sub_reverse_unsigned_unsigned_same_len, sub_signed_sdigit, sub_signed_signed, sub_unsigned_1,
+    sub_unsigned_borrow, sub_unsigned_digit, sub_unsigned_unsigned, sub_unsigned_unsigned_same_len,
 };
 use proptest::collection::vec;
 use proptest::prelude::*;
@@ -240,6 +240,66 @@ fn sub_signed_sdigit_empty() {
     sub_signed_sdigit(&mut [], sdigit(1));
 }
 
+#[test]
+fn sub_reverse_signed_signed_basic() {
+    // a = b - a == 5 - 3 == 2.
+    let mut a = [digit(3)];
+    assert_eq!(sub_reverse_signed_signed(&mut a, &[digit(5)]), sdigit(0));
+    assert_eq!(a, [digit(2)]);
+
+    // 3 - 5 == -2.
+    let mut a = [digit(5)];
+    assert_eq!(sub_reverse_signed_signed(&mut a, &[digit(3)]), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+
+    // -1 - -1 == 0.
+    let mut a = [Digit::MAX];
+    assert_eq!(sub_reverse_signed_signed(&mut a, &[Digit::MAX]), sdigit(0));
+    assert_eq!(a, [Digit::ZERO]);
+
+    // Overflow into the returned digit: 1 - (-2^(bits-1)) == 2^(bits-1) + 1.
+    let signed_min = (Digit::MAX >> 1) + digit(1);
+    let mut a = [signed_min];
+    assert_eq!(sub_reverse_signed_signed(&mut a, &[digit(1)]), sdigit(0));
+    assert_eq!(a, [signed_min + digit(1)]);
+
+    // A borrow ripples through the high zero digits: 1 - 2^(2*bits) == -(2^(2*bits) - 1).
+    let mut a = [Digit::ZERO, Digit::ZERO, digit(1)];
+    assert_eq!(sub_reverse_signed_signed(&mut a, &[digit(1)]), sdigit(-1));
+    assert_eq!(a, [digit(1), Digit::ZERO, Digit::MAX]);
+}
+
+#[test]
+#[should_panic]
+fn sub_reverse_signed_signed_rhs_longer() {
+    sub_reverse_signed_signed(&mut [digit(1)], &[digit(1), digit(2)]);
+}
+
+#[test]
+#[should_panic]
+fn sub_reverse_signed_signed_rhs_empty() {
+    sub_reverse_signed_signed(&mut [digit(1)], &[]);
+}
+
+#[test]
+fn sub_reverse_signed_sdigit_basic() {
+    // a = d - a == 5 - 3 == 2.
+    let mut a = [digit(3)];
+    assert_eq!(sub_reverse_signed_sdigit(&mut a, sdigit(5)), sdigit(0));
+    assert_eq!(a, [digit(2)]);
+
+    // 3 - 5 == -2.
+    let mut a = [digit(5)];
+    assert_eq!(sub_reverse_signed_sdigit(&mut a, sdigit(3)), sdigit(-1));
+    assert_eq!(a, [Digit::MAX - digit(1)]);
+}
+
+#[test]
+#[should_panic]
+fn sub_reverse_signed_sdigit_empty() {
+    sub_reverse_signed_sdigit(&mut [], sdigit(1));
+}
+
 proptest! {
     // Subtraction undoes addition: a + b - b == a, and the borrow cancels the carry.
     #[test]
@@ -364,6 +424,44 @@ proptest! {
         let mut via_slice = a;
         let high_digit = sub_signed_sdigit(&mut via_digit, d);
         let high_slice = sub_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
+        prop_assert_eq!(via_digit, via_slice);
+        prop_assert_eq!(high_digit, high_slice);
+    }
+
+    // `sub_reverse_signed_signed(a, b)` (a = b - a) matches the forward `sub_signed_signed`
+    // with `b` sign-extended to `a`'s length (so the operands can be swapped).
+    #[test]
+    fn sub_reverse_signed_signed_matches_forward(
+        a in vec(any::<Digit>(), 1..20),
+        b in vec(any::<Digit>(), 1..20),
+    ) {
+        let (longer, shorter) = if a.len() >= b.len() { (a, b) } else { (b, a) };
+
+        // Reverse: `longer = shorter - longer`.
+        let mut via_reverse = longer.clone();
+        let rev_top = sub_reverse_signed_signed(&mut via_reverse, &shorter);
+        via_reverse.push(rev_top.cast_unsigned());
+
+        // Forward with `shorter` sign-extended to `longer`'s length.
+        let mut shorter_ext = shorter.clone();
+        shorter_ext.resize(longer.len(), Digit::ZERO);
+        extend_signed(&mut shorter_ext, shorter.len());
+        let fwd_top = sub_signed_signed(&mut shorter_ext, &longer);
+        shorter_ext.push(fwd_top.cast_unsigned());
+
+        prop_assert_eq!(via_reverse, shorter_ext);
+    }
+
+    // `sub_reverse_signed_sdigit` agrees with `sub_reverse_signed_signed` of a one-digit slice.
+    #[test]
+    fn sub_reverse_signed_sdigit_matches_signed_signed(
+        a in vec(any::<Digit>(), 1..20),
+        d: SignedDigit,
+    ) {
+        let mut via_digit = a.clone();
+        let mut via_slice = a;
+        let high_digit = sub_reverse_signed_sdigit(&mut via_digit, d);
+        let high_slice = sub_reverse_signed_signed(&mut via_slice, &[d.cast_unsigned()]);
         prop_assert_eq!(via_digit, via_slice);
         prop_assert_eq!(high_digit, high_slice);
     }
