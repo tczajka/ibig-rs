@@ -58,9 +58,24 @@ proptest! {
 
     // `UBig::checked_add_signed` equals `a + b` when non-negative, else `None`.
     #[test]
-    fn checked_add_signed_vs_ibig(a in ubig_up_to_bits(300), b in ibig_up_to_bits(300)) {
+    fn ubig_checked_add_signed_vs_ibig(a in ubig_up_to_bits(300), b in ibig_up_to_bits(300)) {
         let sum = IBig::from(&a) + &b;
         prop_assert_eq!(a.checked_add_signed(&b), UBig::try_from(&sum).ok());
+    }
+
+    // `UBig::saturating_add_signed` equals `a + b` clamped at zero.
+    #[test]
+    fn ubig_saturating_add_signed_vs_ibig(a in ubig_up_to_bits(300), b in ibig_up_to_bits(300)) {
+        let sum = IBig::from(&a) + &b;
+        prop_assert_eq!(a.saturating_add_signed(&b), UBig::try_from(&sum).unwrap_or(UBig::ZERO));
+    }
+
+    // `UBig::strict_add_signed` agrees with `checked_add_signed` whenever the result exists.
+    #[test]
+    fn ubig_strict_add_signed_matches_checked(a in ubig_up_to_bits(300), b in ibig_up_to_bits(300)) {
+        if let Some(expected) = a.checked_add_signed(&b) {
+            prop_assert_eq!(a.strict_add_signed(&b), expected);
+        }
     }
 }
 
@@ -128,7 +143,7 @@ fn ibig_add_digit_boundary() {
 }
 
 #[test]
-fn checked_add_signed_basic() {
+fn ubig_checked_add_signed_basic() {
     // Single-digit cases.
     assert_eq!(
         UBig::from(5u8).checked_add_signed(&IBig::from(3)),
@@ -161,4 +176,51 @@ fn checked_add_signed_basic() {
         big.checked_add_signed(&(IBig::from(-1) << 100)),
         Some(&big - (UBig::from(1u8) << 100))
     );
+}
+
+#[test]
+fn ubig_saturating_add_signed_basic() {
+    assert_eq!(
+        UBig::from(5u8).saturating_add_signed(&IBig::from(3)),
+        UBig::from(8u8)
+    );
+    assert_eq!(
+        UBig::from(5u8).saturating_add_signed(&IBig::from(-3)),
+        UBig::from(2u8)
+    );
+    // The result saturates at zero rather than going negative.
+    assert_eq!(
+        UBig::from(5u8).saturating_add_signed(&IBig::from(-5)),
+        UBig::ZERO
+    );
+    assert_eq!(
+        UBig::from(5u8).saturating_add_signed(&IBig::from(-8)),
+        UBig::ZERO
+    );
+    assert_eq!(
+        UBig::from(3u8).saturating_add_signed(&(IBig::from(-1) << 200)),
+        UBig::ZERO
+    );
+}
+
+#[test]
+fn ubig_strict_add_signed_basic() {
+    assert_eq!(
+        UBig::from(5u8).strict_add_signed(&IBig::from(3)),
+        UBig::from(8u8)
+    );
+    assert_eq!(
+        UBig::from(5u8).strict_add_signed(&IBig::from(-3)),
+        UBig::from(2u8)
+    );
+    assert_eq!(
+        UBig::from(5u8).strict_add_signed(&IBig::from(-5)),
+        UBig::ZERO
+    );
+}
+
+#[test]
+#[should_panic(expected = "negative UBig")]
+fn ubig_strict_add_signed_negative() {
+    UBig::from(5u8).strict_add_signed(&IBig::from(-8));
 }

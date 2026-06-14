@@ -32,6 +32,38 @@ impl UBig {
         }
     }
 
+    /// Adds the signed `rhs` to `self`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the result would be negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::{IBig, UBig};
+    /// assert_eq!(UBig::from(5u8).strict_add_signed(&IBig::from(-3)), UBig::from(2u8));
+    /// ```
+    #[inline]
+    pub fn strict_add_signed(&self, rhs: &IBig) -> UBig {
+        self.checked_add_signed(rhs)
+            .unwrap_or_else(|| UBig::panic_negative())
+    }
+
+    /// Adds the signed `rhs` to `self`, saturating at zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ibig::{IBig, UBig};
+    /// assert_eq!(UBig::from(5u8).saturating_add_signed(&IBig::from(-3)), UBig::from(2u8));
+    /// assert_eq!(UBig::from(5u8).saturating_add_signed(&IBig::from(-8)), UBig::ZERO);
+    /// ```
+    #[inline]
+    pub fn saturating_add_signed(&self, rhs: &IBig) -> UBig {
+        self.checked_add_signed(rhs).unwrap_or(UBig::ZERO)
+    }
+
     /// `checked_add_signed` for a single unsigned digit `a` and a single signed digit `b`.
     #[inline]
     fn checked_add_signed_digit_sdigit(a: Digit, b: SignedDigit) -> Option<UBig> {
