@@ -167,8 +167,11 @@ impl BinaryOpDigits<IBig> for SubOperation {
     }
 
     #[inline]
-    fn apply_digit_val(lhs: SignedDigit, rhs: Digits) -> IBig {
-        Self::apply_digit_ref(lhs, &rhs)
+    fn apply_digit_val(lhs: SignedDigit, mut rhs: Digits) -> IBig {
+        // Reuse `rhs`'s storage: `rhs = lhs - rhs`.
+        let high = ibig_core::sub_reverse_signed_sdigit(&mut rhs, lhs);
+        push_sign(&mut rhs, high);
+        IBig::from_digits(rhs)
     }
 
     #[inline]
@@ -187,9 +190,19 @@ impl BinaryOpDigits<IBig> for SubOperation {
         Self::apply_val_ref(digits, rhs)
     }
 
-    #[inline]
-    fn apply_ref_val(lhs: &[Digit], rhs: Digits) -> IBig {
-        Self::apply_ref_ref(lhs, &rhs)
+    fn apply_ref_val(lhs: &[Digit], mut rhs: Digits) -> IBig {
+        let rhs_len = rhs.len();
+        if rhs_len < lhs.len() {
+            // Sign-extend `rhs` to `lhs`'s length so it is not shorter than the subtrahend.
+            // Reserve for the extension digits and a possible sign digit.
+            rhs.reserve(lhs.len() - rhs_len + 1);
+            let fill = sign_extension(&rhs).cast_unsigned();
+            rhs.resize(lhs.len(), fill);
+        }
+        // Reuse `rhs`'s storage: `rhs = lhs - rhs`.
+        let high = ibig_core::sub_reverse_signed_signed(&mut rhs, lhs);
+        push_sign(&mut rhs, high);
+        IBig::from_digits(rhs)
     }
 
     #[inline]
